@@ -21,7 +21,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal }) =
       
       <div className="flex flex-1 flex-col min-w-0">
         {/* Mobile Header System */}
-        <Header />
+        <Header onLogDeal={onLogDeal} />
         
         {/* Desktop TopBar System */}
         <TopBar />

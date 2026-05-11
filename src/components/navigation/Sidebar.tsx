@@ -25,6 +25,8 @@ import { ComingSoonIndicator } from '../ui/ComingSoonIndicator';
 import { Feature, featureAccessService } from '@/src/services/featureAccessService';
 import { SubscriptionTier } from '@/src/types';
 
+import { navigationConfig } from './NavigationItems';
+
 /**
  * StripeItSidebarSystem
  * Premium navigation system matching the futuristic SaaS visual target.
@@ -33,7 +35,7 @@ interface SidebarProps {
   onLogDeal?: () => void;
 }
 
-const TierBadge: React.FC<{ tier?: SubscriptionTier }> = ({ tier }) => {
+export const TierBadge: React.FC<{ tier?: SubscriptionTier }> = ({ tier }) => {
   const getTierStyles = (t?: SubscriptionTier) => {
     switch (t) {
       case SubscriptionTier.BASIC:
@@ -74,19 +76,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal }) => {
     }
   };
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-    { id: 'log', label: 'Sales Log', icon: ClipboardList, path: '/sales-log' },
-    { id: 'activity', label: 'Activity', icon: Activity, path: '/activity', featureId: Feature.ACTIVITY_FEED },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/analytics', featureId: Feature.ADVANCED_ANALYTICS },
-    { id: 'goals', label: 'Goals', icon: Target, path: '/goals', featureId: Feature.GOALS },
-    { id: 'reports', label: 'Reports', icon: FileText, path: '/reports', featureId: Feature.ADVANCED_ANALYTICS },
-    { id: 'inventory', label: 'Inventory', icon: Archive, path: '/inventory', featureId: Feature.INVENTORY_MANAGEMENT },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
-  ];
-
   // StripeItFeatureAccessSystem - Filter items based on tier
-  const visibleNavItems = navItems.filter(item => {
+  const visibleNavItems = navigationConfig.main.filter(item => {
     // Basic items always visible
     if (!item.featureId) return true;
     

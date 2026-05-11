@@ -1,0 +1,6 @@
+{
+  "name": "StripeIt Deal Tracker",
+  "description": "Multi-tenant SaaS car deal and commission tracking platform for dealerships.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

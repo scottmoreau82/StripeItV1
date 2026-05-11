@@ -1,0 +1,209 @@
+{
+  "entities": {
+    "Organization": {
+      "title": "Organization",
+      "description": "A top-level organization that can manage multiple dealerships.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "subscriptionTier": { "type": "string", "enum": ["free", "basic", "pro", "organization"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "name", "ownerId", "subscriptionTier", "createdAt"]
+    },
+    "Dealership": {
+      "title": "Dealership",
+      "description": "A specific car dealership location.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "name": { "type": "string" },
+        "location": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "orgId", "name", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user profile containing role and affiliation data.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["sales", "manager", "gm", "admin"] },
+        "dealershipId": { "type": "string" },
+        "orgId": { "type": "string" },
+        "subscriptionTier": { "type": "string", "enum": ["free", "basic", "pro", "organization"] },
+        "dashboardPreference": { "type": "object" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["uid", "email", "role", "subscriptionTier", "createdAt"]
+    },
+    "Deal": {
+      "title": "Deal",
+      "description": "A car deal record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "dealershipId": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdByUserId": { "type": "string" },
+        "assignedSalespersonId": { "type": "string" },
+        "date": { "type": "string" },
+        "dealNumber": { "type": "string" },
+        "stockNumber": { "type": "string" },
+        "customerName": { "type": "string" },
+        "purchasedVehicle": { "type": "string" },
+        "tradedVehicle": { "type": "string" },
+        "newOrUsed": { "type": "string", "enum": ["new", "used"] },
+        "frontEndGross": { "type": "number" },
+        "backEndGross": { "type": "number" },
+        "isSplitDeal": { "type": "boolean" },
+        "splitSalespersonId": { "type": "string" },
+        "splitPercentage": { "type": "number" },
+        "notes": { "type": "string" },
+        "status": { "type": "string", "enum": ["working", "pending", "closed", "lost"] },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "orgId", "dealershipId", "userId", "createdByUserId", "assignedSalespersonId", "date", "customerName", "purchasedVehicle", "newOrUsed", "status", "createdAt"]
+    },
+    "PayPlan": {
+      "title": "PayPlan",
+      "description": "A salesperson's payout structure configurations.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "miniAmount": { "type": "number" },
+        "frontEndPercentage": { "type": "number" },
+        "backEndPercentage": { "type": "number" },
+        "flatPerUnitAmount": { "type": "number" },
+        "splitDealBehavior": { "type": "string", "enum": ["standard", "half_mini"] },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "organizationId", "userId", "name"]
+    },
+    "QuickNote": {
+      "title": "QuickNote",
+      "description": "A short note or reminder related to sales activity.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "userId": { "type": "string" },
+        "text": { "type": "string" },
+        "customerName": { "type": "string" },
+        "dealId": { "type": "string" },
+        "stockNumber": { "type": "string" },
+        "reminderDate": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "orgId", "userId", "text", "createdAt"]
+    },
+    "Competition": {
+      "title": "Competition",
+      "description": "A leaderboard-based sales competition.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "createdByUserId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["units", "front_end_gross", "back_end_gross", "total_gross", "commission"] },
+        "status": { "type": "string", "enum": ["draft", "active", "completed", "cancelled"] },
+        "startDate": { "type": "number" },
+        "endDate": { "type": "number" },
+        "rewardDescription": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "orgId", "createdByUserId", "title", "type", "status", "startDate", "endDate"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "A user's monthly sales unit goal.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "orgId": { "type": "string" },
+        "unitGoal": { "type": "number" },
+        "month": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "orgId", "unitGoal", "month"]
+    }
+  },
+  "firestore": {
+    "/organizations/{orgId}": {
+      "schema": "Organization",
+      "description": "Collection of organizations."
+    },
+    "/organizations/{orgId}/dealerships/{dealershipId}": {
+      "schema": "Dealership",
+      "description": "Dealerships within an organization."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "/users/{userId}/notifications": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string" },
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "message": { "type": "string" },
+          "read": { "type": "boolean" },
+          "createdAt": { "type": "number" }
+        }
+      },
+      "description": "User-specific alerts."
+    },
+    "/organizations/{orgId}/activity": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string" },
+          "userId": { "type": "string" },
+          "userName": { "type": "string" },
+          "message": { "type": "string" },
+          "createdAt": { "type": "number" }
+        }
+      },
+      "description": "Shared event timeline."
+    },
+    "/organizations/{orgId}/deals/{dealId}": {
+      "schema": "Deal",
+      "description": "Deals tracked within an organization (multi-dealership scoping)."
+    },
+    "/organizations/{orgId}/users/{userId}/payPlans/{planId}": {
+      "schema": "PayPlan",
+      "description": "Personalized pay plans for users."
+    },
+    "/organizations/{orgId}/notes/{noteId}": {
+      "schema": "QuickNote",
+      "description": "Quick notes and reminders."
+    },
+    "/organizations/{orgId}/competitions/{compId}": {
+      "schema": "Competition",
+      "description": "Dealership sales competitions and spiffs."
+    },
+    "/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "Sales unit goals for users."
+    }
+  }
+}

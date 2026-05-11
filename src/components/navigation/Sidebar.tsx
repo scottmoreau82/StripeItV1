@@ -97,7 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal }) => {
     <aside className="hidden h-screen w-72 flex-col border-r border-white/5 bg-bg-deep p-6 lg:flex sticky top-0 shrink-0">
       {/* Brand Identity */}
       <div className="mb-10 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
+        <Link to="/dashboard" className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary to-brand-deep flex items-center justify-center shadow-glow glow-primary">
             <TrendingUp className="text-white h-6 w-6" />
           </div>

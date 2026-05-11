@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
   return (
     <>
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-white/5 bg-bg-main/80 backdrop-blur-md px-6 lg:hidden">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/dashboard" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-deep flex items-center justify-center shadow-glow glow-primary">
             <TrendingUp className="text-white h-5 w-5" />
           </div>

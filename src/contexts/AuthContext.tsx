@@ -27,6 +27,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateProfileData: (data: Partial<UserProfile>) => Promise<void>;
   addToast: (message: string, type: 'success' | 'error' | 'info') => void;
+  isAdmin: boolean;
   tierOverride: SubscriptionTier | null;
   setTierOverride: (tier: SubscriptionTier | null) => void;
 }
@@ -40,6 +41,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
   updateProfileData: async () => {},
   addToast: () => {},
+  isAdmin: false,
   tierOverride: null,
   setTierOverride: () => {},
 });
@@ -334,6 +336,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ? { ...profile, subscriptionTier: tierOverride }
     : profile;
 
+  /**
+   * StripeItAdminAccessSystem
+   * Centralized admin detection logic.
+   */
+  const isAdmin = user?.email?.toLowerCase() === developerEmail.toLowerCase() || profile?.isAdmin === true;
+
   const value = {
     user,
     profile: effectiveProfile,
@@ -343,6 +351,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     updateProfileData,
     addToast,
+    isAdmin,
     tierOverride: isDeveloper ? tierOverride : null,
     setTierOverride: isDeveloper ? setTierOverride : () => {},
   };

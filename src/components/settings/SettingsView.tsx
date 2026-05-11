@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -20,7 +21,11 @@ import {
   RefreshCw,
   FlaskConical,
   AlertTriangle,
-  Sparkles
+  Sparkles,
+  MessageSquarePlus,
+  Bug,
+  Lightbulb,
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, UserRole, UserPreferences } from '@/src/types';
@@ -42,9 +47,10 @@ interface SettingsViewProps {
   isMobile: boolean;
 }
 
-type SettingsSection = 'profile' | 'appearance' | 'notifications' | 'account' | 'organization' | 'testing';
+type SettingsSection = 'profile' | 'appearance' | 'notifications' | 'account' | 'organization' | 'testing' | 'feedback' | 'admin';
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, isMobile }) => {
+  const { isAdmin } = useAuth();
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
   const [isUpdating, setIsUpdating] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -68,9 +74,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
     { id: 'appearance', label: 'Appearance', icon: Moon },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'account', label: 'Account', icon: Shield },
+    { id: 'feedback', label: 'Feedback', icon: MessageSquarePlus },
+    isAdmin ? { id: 'admin', label: 'Admin', icon: Shield } : null,
     { id: 'organization', label: 'Organization', icon: Building2, roles: [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN] },
     { id: 'testing', label: 'Testing & Demo', icon: FlaskConical },
-  ];
+  ].filter((item): item is any => item !== null);
 
   const filteredSections = sectionItems.filter(item => 
     !item.roles || (profile?.role && item.roles.includes(profile.role))
@@ -163,6 +171,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
             {activeSection === 'appearance' && <AppearancePanel preferences={preferences} onUpdate={handleUpdatePreference} />}
             {activeSection === 'notifications' && <NotificationsPanel userId={profile?.uid} notifications={preferences.notifications} />}
             {activeSection === 'account' && <AccountPanel profile={profile} />}
+            {activeSection === 'feedback' && <FeedbackPanel />}
+            {activeSection === 'admin' && <AdminPanel />}
             {activeSection === 'organization' && <OrganizationPanel profile={profile} />}
             {activeSection === 'testing' && <TestingPanel profile={profile} />}
           </motion.div>
@@ -190,6 +200,87 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
       header={header}
       main={mainContent}
     />
+  );
+};
+
+const FeedbackPanel = () => {
+  return (
+    <div className="space-y-8">
+      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Support & Feedback</Typography>
+      <Card className="p-8 bg-bg-card/20 border-white/5 space-y-8">
+        <Typography variant="p" className="text-slate-400">
+          Encountered an issue or have a vision for a new tool? Use the modules below to transmit your report directly to the engineering team.
+        </Typography>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <Button 
+            className="h-20 bg-rose-500/5 border border-rose-500/10 text-rose-500 font-extrabold uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 hover:bg-rose-500/10 transition-all rounded-2xl group shadow-sm"
+            onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-feedback', { detail: { type: 'bug' } }))}
+           >
+             <Bug className="h-5 w-5 group-hover:scale-110 transition-transform" />
+             Report Bug
+           </Button>
+           <Button 
+            className="h-20 bg-brand-primary/5 border border-brand-primary/10 text-brand-primary font-extrabold uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 hover:bg-brand-primary/10 transition-all rounded-2xl group shadow-sm"
+            onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-feedback', { detail: { type: 'feature' } }))}
+           >
+             <Lightbulb className="h-5 w-5 group-hover:scale-110 transition-transform" />
+             Request Feature
+           </Button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const AdminPanel = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="space-y-8">
+      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Admin Tools</Typography>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-8 bg-brand-primary/5 border border-brand-primary/10 space-y-6 flex flex-col justify-between">
+          <div className="space-y-2">
+            <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+              <MessageSquarePlus className="h-5 w-5 text-brand-primary" />
+            </div>
+            <Typography variant="h4" className="text-white">Feedback Review</Typography>
+            <Typography variant="small" className="text-slate-400 block pb-4">
+              Monitor, categorize, and respond to incoming bug reports and feature requests from all users.
+            </Typography>
+          </div>
+          <Button 
+            onClick={() => navigate('/admin/feedback')}
+            className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] h-12"
+          >
+            Review Feedback
+          </Button>
+        </Card>
+
+        {/* User Management Placeholder */}
+        <Card className="p-8 bg-white/[0.02] border border-white/5 space-y-6 grayscale opacity-60">
+          <div className="space-y-2">
+            <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center">
+              <User className="h-5 w-5 text-slate-400" />
+            </div>
+            <Typography variant="h4" className="text-white">User Management</Typography>
+            <Typography variant="small" className="text-slate-400 block">
+              Manage accounts, reset passwords, and adjust user roles across the entire platform.
+            </Typography>
+          </div>
+          <Button disabled variant="outline" className="w-full border-white/10 text-slate-500 text-[10px] uppercase font-black tracking-widest">
+            Coming Soon
+          </Button>
+        </Card>
+      </div>
+
+      <Card className="p-6 bg-amber-500/5 border border-amber-500/10 flex items-center gap-4">
+        <ShieldCheck className="h-5 w-5 text-amber-500" />
+        <Typography variant="small" className="text-amber-500/80 font-bold">
+          Admin Access Active. You have unrestricted access to system-level tools and feedback databases.
+        </Typography>
+      </Card>
+    </div>
   );
 };
 

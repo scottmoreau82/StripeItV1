@@ -95,55 +95,80 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-bg-deep flex flex-col shadow-2xl border-r border-white/5 lg:hidden overflow-hidden"
             >
-              <div className="p-6 overflow-y-auto flex-1 flex flex-col">
-                <div className="mb-8 flex items-center gap-2">
-                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary to-brand-deep flex items-center justify-center shadow-glow">
-                    <TrendingUp className="text-white h-6 w-6" />
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="p-6 border-b border-white/5 bg-bg-deep/50 backdrop-blur-md z-10">
+                  <div className="flex items-center gap-2">
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary to-brand-deep flex items-center justify-center shadow-glow">
+                      <TrendingUp className="text-white h-6 w-6" />
+                    </div>
+                    <Typography variant="h3" className="font-display font-black italic text-white uppercase tracking-tighter">
+                      StripeIt
+                    </Typography>
                   </div>
-                  <Typography variant="h3" className="font-display font-black italic text-white uppercase tracking-tighter">
-                    StripeIt
-                  </Typography>
                 </div>
 
-                <nav className="flex flex-col gap-1 mb-8">
-                  {visibleNavItems.map((item) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                      <Link
-                        key={item.id}
-                        to={item.path}
-                        onClick={() => setIsOpen(false)}
-                        className={cn(
-                          "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
-                          isActive 
-                            ? "bg-white/[0.03] text-brand-primary" 
-                            : "text-slate-500 hover:bg-white/5 hover:text-white"
-                        )}
-                      >
-                        {isActive && (
-                          <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-[0_0_10px_#00F2FF]" />
-                        )}
-                        <item.icon size={20} className={cn(isActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </nav>
+                <div className="p-6 overflow-y-auto flex-1 flex flex-col custom-scrollbar">
+                  <nav className="flex flex-col gap-1 mb-8">
+                    {visibleNavItems.map((item) => {
+                      const isActive = location.pathname === item.path;
 
-                <div className="space-y-3 mb-8">
-                  <Button 
-                    className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-xs h-14 shadow-glow glow-primary rounded-xl"
-                    onClick={() => {
-                      setIsOpen(false);
-                      onLogDeal?.();
-                    }}
-                  >
-                    Log New Deal
-                  </Button>
+                      if (item.id === 'feedback') {
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => {
+                              setIsOpen(false);
+                              window.dispatchEvent(new CustomEvent('stripeit:open-feedback'));
+                            }}
+                            className={cn(
+                              "flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
+                              "text-slate-500 hover:bg-white/5 hover:text-white"
+                            )}
+                          >
+                            <item.icon size={20} />
+                            {item.label}
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <Link
+                          key={item.id}
+                          to={item.path}
+                          onClick={() => setIsOpen(false)}
+                          className={cn(
+                            "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
+                            isActive 
+                              ? "bg-white/[0.03] text-brand-primary" 
+                              : "text-slate-500 hover:bg-white/5 hover:text-white"
+                          )}
+                        >
+                          {isActive && (
+                            <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-[0_0_10px_#00F2FF]" />
+                          )}
+                          <item.icon size={20} className={cn(isActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </nav>
+
+                  <div className="space-y-3 mb-10">
+                    <Button 
+                      className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-xs h-14 shadow-glow glow-primary rounded-xl"
+                      onClick={() => {
+                        setIsOpen(false);
+                        onLogDeal?.();
+                      }}
+                    >
+                      Log New Deal
+                    </Button>
+                  </div>
+                  <div className="h-4 shrink-0" />
                 </div>
 
-                {/* Footer Section */}
-                <div className="mt-auto space-y-4 pt-6 border-t border-white/5">
+                {/* Footer Section (Pinned) */}
+                <div className="p-6 space-y-4 border-t border-white/5 bg-bg-deep/80 backdrop-blur-md z-10">
                    {/* StripeItDeveloperTierOverrideSystem */}
                   {isDeveloper && (
                     <div className="px-4 py-3 bg-brand-primary/[0.03] border border-brand-primary/10 rounded-2xl space-y-2">

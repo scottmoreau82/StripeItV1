@@ -38,6 +38,7 @@
         "dealershipId": { "type": "string" },
         "orgId": { "type": "string" },
         "subscriptionTier": { "type": "string", "enum": ["free", "basic", "pro", "organization"] },
+        "isAdmin": { "type": "boolean" },
         "dashboardPreference": { "type": "object" },
         "createdAt": { "type": "number" },
         "updatedAt": { "type": "number" }
@@ -143,9 +144,44 @@
         "createdAt": { "type": "number" }
       },
       "required": ["userId", "orgId", "unitGoal", "month"]
+    },
+    "FeedbackReport": {
+      "title": "FeedbackReport",
+      "description": "A user-submitted bug report or feature request.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["bug", "feature"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "pageArea": { "type": "string" },
+        "severity": { "type": "string" },
+        "importance": { "type": "string" },
+        "notes": { "type": "string" },
+        "screenshotUrl": { "type": "string" },
+        "attachmentPath": { "type": "string" },
+        "attachmentFileName": { "type": "string" },
+        "attachmentContentType": { "type": "string" },
+        "attachmentSize": { "type": "number" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "displayName": { "type": "string" },
+        "subscriptionTier": { "type": "string" },
+        "developerOverrideTier": { "type": "string" },
+        "route": { "type": "string" },
+        "deviceInfo": { "type": "object" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "type", "title", "description", "userId", "userEmail", "status", "createdAt", "updatedAt"]
     }
   },
   "firestore": {
+    "/feedbackReports/{reportId}": {
+      "schema": "FeedbackReport",
+      "description": "Central collection for all user feedback."
+    },
     "/organizations/{orgId}": {
       "schema": "Organization",
       "description": "Collection of organizations."

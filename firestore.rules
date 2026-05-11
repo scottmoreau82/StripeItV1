@@ -33,7 +33,8 @@ service cloud.firestore {
     }
 
     function isAnyAdmin() {
-      return isBootstrapAdmin() || getRole() in ['gm', 'admin'];
+      let user = getUserSafe(request.auth.uid);
+      return isBootstrapAdmin() || (user != null && (user.role.lower() in ['gm', 'admin'] || user.get('isAdmin', false) == true));
     }
 
     function isAnyManager() {
@@ -73,19 +74,35 @@ service cloud.firestore {
              data.month is string;
     }
 
+    function isValidFeedback(data) {
+      return data.userId == request.auth.uid &&
+             data.title is string && data.title.size() <= 200 &&
+             data.description is string && data.description.size() <= 5000 &&
+             data.type in ['bug', 'feature'] &&
+             data.status == 'New';
+    }
+
     // --- COLLECTION RULES ---
+
+    // Feedback Collection
+    match /feedbackReports/{reportId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAnyAdmin());
+      allow list: if isAnyAdmin();
+      allow create: if isSignedIn() && isValidFeedback(incoming());
+      allow update, delete: if isAnyAdmin();
+    }
 
     // User Collection
     match /users/{userId} {
       // isOwner is primary gate. Managers can see profiles within their org.
       allow get: if isOwner(userId) || (isSignedIn() && isAnyManager() && isOrgMember(getUserSafe(userId).orgId));
-      allow list: if isSignedIn() && (isAnyManager() || isBootstrapAdmin()); 
-      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow list: if isSignedIn() && (isAnyManager() || isAnyAdmin()); 
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().get('isAdmin', false) == false;
       allow update: if isOwner(userId) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId'])
       ) || (
-        isAnyManager() && isOrgMember(existing().orgId) && 
-        incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt'])
+        isAnyAdmin() && 
+        incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt', 'isAdmin', 'subscriptionTier'])
       );
       
       match /notifications/{notifId} {

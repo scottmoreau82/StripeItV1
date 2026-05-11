@@ -38,12 +38,15 @@ import { CreateCompetitionForm } from './components/competitions/CreateCompetiti
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { ContextHint } from './components/onboarding/ContextHint';
 import { UpgradePrompt } from './components/ui/UpgradePrompt';
+import { FeedbackSystem } from './components/feedback/FeedbackSystem';
+import { FeedbackReviewPage } from './components/feedback/FeedbackReviewPage';
 
 import { AppDataProvider, useAppData } from './contexts/AppDataContext';
 import { permissionService } from './services/permissionService';
 import { featureAccessService, Feature } from './services/featureAccessService';
 import { SubscriptionTier } from './types';
 import { UpgradeAccessScreen } from './components/subscription/UpgradeAccessScreen';
+import { FeedbackType } from './types';
 
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 
@@ -52,11 +55,13 @@ function MainAppFlow() {
   const [isPayPlanOpen, setIsPayPlanOpen] = useState(false);
   const [isQuickNoteOpen, setIsQuickNoteOpen] = useState(false);
   const [isCompetitionOpen, setIsCompetitionOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<FeedbackType | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
 
   const { isMobile } = useResponsive();
-  const { profile, user } = useAuth();
+  const { profile, user, isAdmin } = useAuth();
   
   const { 
     deals,
@@ -81,7 +86,21 @@ function MainAppFlow() {
     };
     
     window.addEventListener('stripeit:create-random-deal', handleRandomDealEvent);
-    return () => window.removeEventListener('stripeit:create-random-deal', handleRandomDealEvent);
+    
+    const handleFeedbackEvent = (e: any) => {
+      if (e.detail?.type) {
+        setFeedbackType(e.detail.type);
+      } else {
+        setFeedbackType(undefined);
+      }
+      setIsFeedbackOpen(true);
+    };
+    window.addEventListener('stripeit:open-feedback', handleFeedbackEvent);
+
+    return () => {
+      window.removeEventListener('stripeit:create-random-deal', handleRandomDealEvent);
+      window.removeEventListener('stripeit:open-feedback', handleFeedbackEvent);
+    };
   }, [handleCreateRandomDeal]);
 
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
@@ -251,7 +270,22 @@ function MainAppFlow() {
             />
           } 
         />
+        <Route 
+          path="/admin/feedback" 
+          element={
+            isAdmin 
+              ? <FeedbackReviewPage /> 
+              : <Navigate to="/" />
+          } 
+        />
       </Routes>
+
+      {/* Feedback System */}
+      <FeedbackSystem 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+        initialType={feedbackType}
+      />
 
       {/* Shared Modals */}
       {isMobile ? (

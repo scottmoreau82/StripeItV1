@@ -7,7 +7,8 @@ import {
   Settings, 
   Archive, 
   Plus,
-  FileText
+  FileText,
+  MessageSquarePlus
 } from 'lucide-react';
 import { Feature } from '@/src/services/featureAccessService';
 
@@ -21,6 +22,7 @@ export const navigationConfig = {
     { id: 'reports', label: 'Reports', icon: FileText, path: '/reports', featureId: Feature.ADVANCED_ANALYTICS },
     { id: 'inventory', label: 'Inventory', icon: Archive, path: '/inventory', featureId: Feature.INVENTORY_MANAGEMENT },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
+    { id: 'feedback', label: 'Feedback', icon: MessageSquarePlus, path: '#feedback' },
   ],
   quickActions: [
     { id: 'log-deal', label: 'Log Deal', icon: Plus, variant: 'primary' as const },

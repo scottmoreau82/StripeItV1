@@ -14,10 +14,25 @@ interface RootLayoutProps {
 }
 
 export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal }) => {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('stripeit_sidebar_collapsed') === 'true';
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('stripeit_sidebar_collapsed', String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
   return (
     <div className="flex min-h-screen flex-col lg:flex-row bg-bg-deep select-none">
       {/* Desktop Sidebar System */}
-      <Sidebar onLogDeal={onLogDeal} />
+      <Sidebar 
+        onLogDeal={onLogDeal} 
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
       
       <div className="flex flex-1 flex-col min-w-0">
         {/* Mobile Header System */}

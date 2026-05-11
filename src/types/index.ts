@@ -66,6 +66,7 @@ export interface UserProfile {
   orgId: string;
   photoURL?: string;
   subscriptionTier: SubscriptionTier;
+  isAdmin?: boolean;
   dashboardPreference?: UserDashboardPreference;
   createdAt: number;
   preferences?: UserPreferences;
@@ -232,7 +233,69 @@ export enum ActivityEventType {
   COMPETITION_STARTED = 'competition_started',
   COMPETITION_ENDED = 'competition_ended',
   ANNOUNCEMENT = 'announcement',
-  REMINDER = 'reminder'
+  REMINDER = 'reminder',
+  FEEDBACK_SUBMITTED = 'feedback_submitted'
+}
+
+export enum FeedbackType {
+  BUG = 'bug',
+  FEATURE = 'feature'
+}
+
+export enum FeedbackStatus {
+  NEW = 'New',
+  REVIEWED = 'Reviewed',
+  IN_PROGRESS = 'In Progress',
+  FIXED = 'Fixed',
+  CLOSED = 'Closed',
+  REJECTED = 'Rejected',
+  PLANNED = 'Planned'
+}
+
+export enum FeedbackSeverity {
+  LOW = 'Low',
+  MEDIUM = 'Medium',
+  HIGH = 'High',
+  CRITICAL = 'Critical'
+}
+
+export enum FeedbackImportance {
+  NICE_TO_HAVE = 'Nice to have',
+  IMPORTANT = 'Important',
+  MUST_HAVE = 'Must have'
+}
+
+export interface FeedbackReport {
+  id: string;
+  type: FeedbackType;
+  title: string;
+  description: string;
+  pageArea: string;
+  severity?: FeedbackSeverity;
+  importance?: FeedbackImportance;
+  notes?: string;
+  screenshotUrl?: string;
+  attachmentPath?: string;
+  attachmentFileName?: string;
+  attachmentContentType?: string;
+  attachmentSize?: number;
+  userId: string;
+  userEmail: string;
+  displayName?: string;
+  subscriptionTier: SubscriptionTier;
+  developerOverrideTier?: string;
+  route: string;
+  deviceInfo: {
+    browser: string;
+    os: string;
+    userAgent: string;
+    screenSize: string;
+    viewportSize: string;
+    isMobile: boolean;
+  };
+  status: FeedbackStatus;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface ActivityEvent {

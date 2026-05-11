@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { UserProfile, SubscriptionTier } from '../types';
 import { Typography } from '../components/ui/Typography';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
@@ -25,6 +25,7 @@ interface AuthContextType {
   initialized: boolean;
   connectionError: string | null;
   logout: () => Promise<void>;
+  updateProfileData: (data: Partial<UserProfile>) => Promise<void>;
   addToast: (message: string, type: 'success' | 'error' | 'info') => void;
   tierOverride: SubscriptionTier | null;
   setTierOverride: (tier: SubscriptionTier | null) => void;
@@ -37,6 +38,7 @@ const AuthContext = createContext<AuthContextType>({
   initialized: false,
   connectionError: null,
   logout: async () => {},
+  updateProfileData: async () => {},
   addToast: () => {},
   tierOverride: null,
   setTierOverride: () => {},
@@ -225,6 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setConnectionError("Account initialization failed. Please contact support.");
                 setLoading(false);
                 setInitialized(true);
+                handleFirestoreError(err, OperationType.WRITE, 'batch-init');
               }
             }
           }
@@ -244,11 +247,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setConnectionError("Permission issues loading your profile.");
               setLoading(false);
               setInitialized(true);
+              handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
             }
           } else {
             setConnectionError("Unable to load profile data.");
             setLoading(false);
             setInitialized(true);
+            handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
           }
         });
       };
@@ -281,6 +286,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
+   * StripeItProfileSyncSystem
+   * Centralized update logic for profile data across Firestore and Firebase Auth.
+   */
+  const updateProfileData = async (data: Partial<UserProfile>) => {
+    if (!user) return;
+
+    try {
+      const { updateDoc, doc, serverTimestamp } = await import('firebase/firestore');
+      const { updateProfile: updateAuthProfile } = await import('firebase/auth');
+      
+      const userRef = doc(db, 'users', user.uid);
+      
+      // Prepare Firestore updates
+      const firestoreUpdates: any = {
+        ...data,
+        updatedAt: serverTimestamp()
+      };
+      
+      // Update Firestore
+      await updateDoc(userRef, firestoreUpdates);
+      
+      // Sync with Firebase Auth if displayName or photoURL changed
+      if (data.displayName || data.photoURL) {
+        await updateAuthProfile(user, {
+          displayName: data.displayName || user.displayName,
+          photoURL: data.photoURL || user.photoURL
+        });
+      }
+      
+      addToast('Profile updated successfully.', 'success');
+    } catch (error) {
+      console.error("Profile update error:", error);
+      addToast('Failed to update profile.', 'error');
+      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
+    }
+  };
+
+  /**
    * StripeItDeveloperTierOverrideSystem
    * Only allows the specific developer account to simulate different subscription tiers.
    */
@@ -298,6 +341,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initialized,
     connectionError,
     logout,
+    updateProfileData,
     addToast,
     tierOverride: isDeveloper ? tierOverride : null,
     setTierOverride: isDeveloper ? setTierOverride : () => {},

@@ -13,7 +13,7 @@ import { Feature } from '@/src/services/featureAccessService';
 
 export const navigationConfig = {
   main: [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
+    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
     { id: 'sales-log', label: 'Sales Log', icon: ClipboardList, path: '/sales-log' },
     { id: 'activity', label: 'Activity', icon: Activity, path: '/activity', featureId: Feature.ACTIVITY_FEED },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/analytics', featureId: Feature.ADVANCED_ANALYTICS },

@@ -12,7 +12,7 @@ import { activityService } from '../services/activityService';
 import { notificationService } from '../services/notificationService';
 import { Deal, PayPlan, Goal, DealStatus, QuickNote, Competition, SubscriptionTier, DashboardLayout, ActivityEventType } from '../types';
 import { onSnapshot, query, collection, orderBy, where } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 
 /**
  * StripeItAppDataSystem
@@ -153,6 +153,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       console.error("Deals subscription error:", error);
       setIsLoading(false);
       clearTimeout(loadTimeout);
+      if (error.message.includes('permission')) {
+        handleFirestoreError(error, OperationType.LIST, `organizations/${profile.orgId}/deals`);
+      }
     });
 
     // 2. Subscription to Notes
@@ -173,6 +176,11 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         } as QuickNote;
       });
       setNotes(noteData);
+    }, (error) => {
+      console.error("Notes subscription error:", error);
+      if (error.message.includes('permission')) {
+        handleFirestoreError(error, OperationType.LIST, `organizations/${profile.orgId}/notes`);
+      }
     });
 
     // 3. Subscription to Competitions
@@ -194,6 +202,11 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         } as Competition;
       });
       setCompetitions(compData);
+    }, (error) => {
+      console.error("Competitions subscription error:", error);
+      if (error.message.includes('permission')) {
+        handleFirestoreError(error, OperationType.LIST, `organizations/${profile.orgId}/competitions`);
+      }
     });
 
     return () => {
@@ -269,12 +282,13 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const handleDeleteDeal = async (dealId: string) => {
     if (!profile) return;
-    if (!window.confirm("Are you sure you want to delete this deal?")) return;
     try {
       await dealService.deleteDeal(profile.orgId, dealId);
       triggerSuccess('Deal deleted.');
     } catch (error) {
+      console.error("Deal deletion error:", error);
       triggerError('Failed to delete deal.');
+      handleFirestoreError(error, OperationType.DELETE, `organizations/${profile.orgId}/deals/${dealId}`);
     }
   };
 

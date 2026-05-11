@@ -19,10 +19,12 @@ import {
   Target,
   RefreshCw,
   FlaskConical,
-  AlertTriangle
+  AlertTriangle,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, UserRole, UserPreferences } from '@/src/types';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { preferenceService, DEFAULT_PREFERENCES } from '@/src/services/preferenceService';
 import { demoSeedService } from '@/src/services/demoSeedService';
 import { testingService } from '@/src/services/testingService';
@@ -162,7 +164,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
             {activeSection === 'notifications' && <NotificationsPanel userId={profile?.uid} notifications={preferences.notifications} />}
             {activeSection === 'account' && <AccountPanel profile={profile} />}
             {activeSection === 'organization' && <OrganizationPanel profile={profile} />}
-            {activeSection === 'testing' && <TestingPanel profile={profile} onReset={() => window.location.reload()} />}
+            {activeSection === 'testing' && <TestingPanel profile={profile} />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -193,48 +195,76 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
 
 /* --- Sub-Panels --- */
 
-const ProfilePanel = ({ profile }: { profile: UserProfile | null }) => (
-  <div className="space-y-8">
-    <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Profile Details</Typography>
-    
-    <Card className="p-8 bg-bg-card/20 border-white/5 space-y-8">
-      <div className="flex items-center gap-8">
-        <div className="h-24 w-24 rounded-[2rem] bg-brand-primary/10 border-2 border-brand-primary/20 flex items-center justify-center relative group overflow-hidden">
-          {profile?.photoURL ? (
-            <img src={profile.photoURL} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <User className="h-10 w-10 text-brand-primary" />
-          )}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
-            <Typography variant="mono" className="text-[10px] text-white uppercase font-black">Edit</Typography>
-          </div>
-        </div>
-        <div className="space-y-1">
-          <Typography variant="h2" className="text-white leading-none">{profile?.displayName}</Typography>
-          <Typography variant="p" className="text-slate-500 font-bold">{profile?.email}</Typography>
-          <div className="inline-flex mt-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-widest text-brand-primary">
-            {profile?.role}
-          </div>
-        </div>
-      </div>
+const ProfilePanel = ({ profile }: { profile: UserProfile | null }) => {
+  const { updateProfileData } = useAuth();
+  const [displayName, setDisplayName] = useState(profile?.displayName || '');
+  const [isSaving, setIsSaving] = useState(false);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-white/5">
-        <div className="space-y-2">
-          <Typography variant="label" className="text-slate-500 ml-1">Display Name</Typography>
-          <Input defaultValue={profile?.displayName} className="bg-white/[0.02]" />
-        </div>
-        <div className="space-y-2">
-          <Typography variant="label" className="text-slate-500 ml-1">Email Address</Typography>
-          <Input defaultValue={profile?.email} disabled className="bg-white/[0.02] opacity-50" />
-        </div>
-      </div>
+  const handleSave = async () => {
+    const trimmedName = displayName.trim();
+    if (!trimmedName) return;
+    
+    setIsSaving(true);
+    try {
+      await updateProfileData({ displayName: trimmedName });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Profile Details</Typography>
       
-      <Button className="bg-brand-primary text-bg-deep font-black uppercase tracking-[0.2em] px-10">
-        Save Profile
-      </Button>
-    </Card>
-  </div>
-);
+      <Card className="p-8 bg-bg-card/20 border-white/5 space-y-8">
+        <div className="flex items-center gap-8">
+          <div className="h-24 w-24 rounded-[2rem] bg-brand-primary/10 border-2 border-brand-primary/20 flex items-center justify-center relative group overflow-hidden">
+            {profile?.photoURL ? (
+              <img src={profile.photoURL} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <User className="h-10 w-10 text-brand-primary" />
+            )}
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
+              <Typography variant="mono" className="text-[10px] text-white uppercase font-black">Edit</Typography>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Typography variant="h2" className="text-white leading-none">{profile?.displayName}</Typography>
+            <Typography variant="p" className="text-slate-500 font-bold">{profile?.email}</Typography>
+            <div className="inline-flex mt-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-widest text-brand-primary">
+              {profile?.role}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-white/5">
+          <div className="space-y-2">
+            <Typography variant="label" className="text-slate-500 ml-1">Display Name</Typography>
+            <Input 
+              value={displayName} 
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Enter display name..."
+              className="bg-white/[0.02]" 
+            />
+          </div>
+          <div className="space-y-2">
+            <Typography variant="label" className="text-slate-500 ml-1">Email Address</Typography>
+            <Input defaultValue={profile?.email} disabled className="bg-white/[0.02] opacity-50" />
+          </div>
+        </div>
+        
+        <Button 
+          onClick={handleSave}
+          isLoading={isSaving}
+          disabled={isSaving || !displayName.trim()}
+          className="bg-brand-primary text-bg-deep font-black uppercase tracking-[0.2em] px-10"
+        >
+          Save Profile
+        </Button>
+      </Card>
+    </div>
+  );
+};
 
 const AppearancePanel = ({ preferences, onUpdate }: { preferences: UserPreferences, onUpdate: (u: any) => void }) => (
   <div className="space-y-8">
@@ -396,22 +426,52 @@ const AccountPanel = ({ profile }: { profile: UserProfile | null }) => {
   );
 };
 
-const TestingPanel = ({ profile, onReset }: { profile: UserProfile | null, onReset: () => void }) => {
+const TestingPanel = ({ profile }: { profile: UserProfile | null }) => {
+  const { updateProfileData, addToast } = useAuth();
   const [isResetting, setIsResetting] = useState(false);
+  const [isResettingIntro, setIsResettingIntro] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirmReset, setShowConfirmReset] = useState(false);
+  const [displayName, setDisplayName] = useState(profile?.displayName || '');
+  const [isSavingName, setIsSavingName] = useState(false);
 
-  const handleReset = async () => {
+  const handleSaveName = async () => {
+    const trimmed = displayName.trim();
+    if (!trimmed) return;
+    setIsSavingName(true);
+    try {
+      await updateProfileData({ displayName: trimmed });
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  const handleClearDeals = async () => {
     if (!profile) return;
     setIsResetting(true);
     try {
-      await testingService.resetUserData(profile);
-      setShowConfirm(false);
-      onReset();
+      await testingService.clearUserDeals(profile);
+      setShowConfirmReset(false);
+      addToast('All deals cleared for testing.', 'success');
     } catch (err) {
       console.error(err);
+      addToast('Failed to clear deals.', 'error');
     } finally {
       setIsResetting(false);
+    }
+  };
+
+  const handleResetIntro = async () => {
+    if (!profile?.uid) return;
+    setIsResettingIntro(true);
+    try {
+      await testingService.resetOnboarding(profile.uid);
+      addToast('First-login introduction reset. You can go through it again.', 'success');
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to reset introduction.', 'error');
+    } finally {
+      setIsResettingIntro(false);
     }
   };
 
@@ -420,55 +480,93 @@ const TestingPanel = ({ profile, onReset }: { profile: UserProfile | null, onRes
     setIsSeeding(true);
     try {
       await demoSeedService.seedSalespersonDemo(profile);
+      addToast('Demo deals seeded successfully.', 'success');
     } catch (err) {
       console.error(err);
+      addToast('Failed to seed demo deals.', 'error');
     } finally {
       setIsSeeding(false);
     }
   };
 
   return (
-    <div className="space-y-8">
-      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Testing Mode</Typography>
+    <div className="space-y-8 pb-20">
+      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Testing & Demo</Typography>
       
       <div className="space-y-6">
+        {/* Display Name Override */}
+        <Card className="p-8 bg-bg-card/20 border-white/5 space-y-6">
+          <div className="flex items-center gap-6">
+            <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center shrink-0">
+              <User className="h-6 w-6 text-brand-primary" />
+            </div>
+            <div className="space-y-1 flex-1">
+              <Typography variant="label" className="text-white block">Display Name Override</Typography>
+              <Typography variant="small" className="text-slate-500 block">Change how your name appears across the system for demo purposes.</Typography>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Input 
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="New Display Name"
+              className="bg-white/[0.02] flex-1"
+            />
+            <Button 
+              onClick={handleSaveName}
+              isLoading={isSavingName}
+              disabled={isSavingName || !displayName.trim()}
+              className="bg-brand-primary text-bg-deep font-black uppercase tracking-widest px-8"
+            >
+              Save
+            </Button>
+          </div>
+        </Card>
+
+        {/* Surgical Deal Reset */}
         <Card className="p-8 bg-orange-500/5 border border-orange-500/20 space-y-6">
           <div className="flex items-start gap-6">
             <div className="h-12 w-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
               <RefreshCw className="h-6 w-6 text-orange-500" />
             </div>
             <div className="space-y-2">
-              <Typography variant="label" className="text-white block">Full Demo Reset</Typography>
+              <Typography variant="label" className="text-white block uppercase tracking-widest text-[11px] font-black">Reset for Testing</Typography>
               <Typography variant="small" className="text-slate-500 block leading-relaxed">
-                This will delete <span className="text-white">ALL</span> your current deals, notes, and activity, reset your onboarding progress, and re-seed the standard demo data (6 deals). Perfect for repeatable Free Tier testing.
+                Delete all your current deals, notes, and activity. This will <span className="text-white font-bold">NOT</span> reset your profile, subscription, or settings.
               </Typography>
             </div>
           </div>
 
-          {!showConfirm ? (
+          {!showConfirmReset ? (
             <Button 
-              onClick={() => setShowConfirm(true)}
-              className="bg-orange-500 hover:bg-orange-600 shadow-glow glow-orange font-black uppercase tracking-widest px-8"
+              onClick={() => setShowConfirmReset(true)}
+              className="bg-orange-500 hover:bg-orange-600 shadow-glow glow-orange font-black uppercase tracking-widest px-8 h-12 text-[11px]"
             >
               Reset for Testing
             </Button>
           ) : (
             <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-2xl space-y-4">
-              <div className="flex items-center gap-3 text-rose-500">
-                <AlertTriangle className="h-5 w-5" />
-                <Typography variant="label" className="font-black uppercase tracking-widest text-[11px]">Are you absolutely sure?</Typography>
+              <div className="flex items-start gap-3 text-rose-500">
+                <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <Typography variant="label" className="font-black uppercase tracking-widest text-[11px] block">Confirm Deal Deletion</Typography>
+                  <Typography variant="small" className="text-rose-500/80 block text-[11px] leading-tight">
+                    Clear all deals for this account? This will only remove your deal data. Your profile, settings, subscription tier, and tutorial status will not be changed.
+                  </Typography>
+                </div>
               </div>
               <div className="flex gap-3">
                 <Button 
-                  onClick={handleReset}
+                  onClick={handleClearDeals}
                   isLoading={isResetting}
                   className="bg-rose-500 hover:bg-rose-600 text-white font-black uppercase tracking-widest px-6 h-10 text-[10px]"
                 >
-                  Yes, Wipe Everything
+                  Yes, Clear Deals
                 </Button>
                 <Button 
                   variant="ghost"
-                  onClick={() => setShowConfirm(false)}
+                  onClick={() => setShowConfirmReset(false)}
                   className="text-slate-400 hover:text-white font-black uppercase tracking-widest px-6 h-10 text-[10px]"
                 >
                   Cancel
@@ -478,13 +576,36 @@ const TestingPanel = ({ profile, onReset }: { profile: UserProfile | null, onRes
           )}
         </Card>
 
-        <Card className="p-8 bg-bg-card/20 border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center shrink-0">
-              <Target className="h-6 w-6 text-brand-primary" />
+        {/* Replay Onboarding */}
+        <Card className="p-8 bg-indigo-500/5 border border-indigo-500/20 space-y-6">
+          <div className="flex items-start gap-6">
+            <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+              <Sparkles className="h-6 w-6 text-indigo-500" />
             </div>
             <div className="space-y-1">
-              <Typography variant="label" className="text-white block">Incremental Seed</Typography>
+              <Typography variant="label" className="text-white block uppercase tracking-widest text-[11px] font-black">Demo Experience</Typography>
+              <Typography variant="small" className="text-slate-500 block leading-relaxed">
+                Reset the first-login introduction flow. The onboarding guide will reappear immediately so you can walk through the system again.
+              </Typography>
+            </div>
+          </div>
+          <Button 
+            onClick={handleResetIntro}
+            isLoading={isResettingIntro}
+            className="bg-indigo-500 hover:bg-indigo-600 shadow-glow glow-indigo font-black uppercase tracking-widest px-8 h-12 text-[11px]"
+          >
+            Replay First-Login Introduction
+          </Button>
+        </Card>
+
+        {/* Incremental Seed */}
+        <Card className="p-8 bg-white/[0.02] border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <Target className="h-6 w-6 text-emerald-500" />
+            </div>
+            <div className="space-y-1">
+              <Typography variant="label" className="text-white block uppercase tracking-widest text-[11px] font-black">Incremental Seed</Typography>
               <Typography variant="small" className="text-slate-500 block">Add another 6 demo deals without deleting existing data.</Typography>
             </div>
           </div>

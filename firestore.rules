@@ -21,26 +21,28 @@ service cloud.firestore {
       return exists(path) ? get(path).data : null;
     }
     
-    function isOrgMember(orgId) {
-      let user = getUserSafe(request.auth.uid);
-      return isSignedIn() && user != null && user.orgId == orgId;
+    function isBootstrapAdmin() {
+      return isSignedIn() && 
+             request.auth.token.email.lower() == 'scottmoreau82@gmail.com' && 
+             request.auth.token.email_verified == true;
     }
-    
+
     function getRole() {
       let user = getUserSafe(request.auth.uid);
-      return user != null ? user.role : 'none';
-    }
-    
-    function isAnyManager() {
-      return getRole() in ['manager', 'gm', 'admin'];
-    }
-    
-    function isManager(orgId) {
-      return isOrgMember(orgId) && isAnyManager();
+      return user != null ? user.role.lower() : 'none';
     }
 
     function isAnyAdmin() {
-      return getRole() in ['gm', 'admin'];
+      return isBootstrapAdmin() || getRole() in ['gm', 'admin'];
+    }
+
+    function isAnyManager() {
+      return isAnyAdmin() || getRole() == 'manager';
+    }
+
+    function isOrgMember(orgId) {
+      let user = getUserSafe(request.auth.uid);
+      return isBootstrapAdmin() || (isSignedIn() && user != null && user.orgId == orgId);
     }
 
     // --- VALIDATION HELPERS ---
@@ -48,15 +50,15 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.uid == request.auth.uid &&
              data.email is string &&
-             data.role in ['sales', 'manager', 'gm', 'admin'] &&
-             data.subscriptionTier in ['free', 'basic', 'pro', 'organization'];
+             data.role.lower() in ['sales', 'manager', 'gm', 'admin'] &&
+             data.subscriptionTier.lower() in ['free', 'basic', 'pro', 'organization'];
     }
 
     function isValidDeal(data) {
       return data.customerName is string && 
              data.userId is string && 
              data.orgId is string &&
-             data.status in ['working', 'pending', 'Submitted', 'Finalized', 'Cancelled', 'Draft'];
+             data.status is string;
     }
 
     function isValidNote(data) {
@@ -75,8 +77,9 @@ service cloud.firestore {
 
     // User Collection
     match /users/{userId} {
+      // isOwner is primary gate. Managers can see profiles within their org.
       allow get: if isOwner(userId) || (isSignedIn() && isAnyManager() && isOrgMember(getUserSafe(userId).orgId));
-      allow list: if false; 
+      allow list: if isSignedIn() && (isAnyManager() || isBootstrapAdmin()); 
       allow create: if isOwner(userId) && isValidUser(incoming());
       allow update: if isOwner(userId) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId'])
@@ -92,20 +95,22 @@ service cloud.firestore {
 
     // Organization Collection
     match /organizations/{orgId} {
-      allow get: if isSignedIn() && (isOrgMember(orgId) || (resource != null && resource.data.ownerId == request.auth.uid));
+      allow get: if isSignedIn() && (isOrgMember(orgId) || isBootstrapAdmin() || (resource != null && resource.data.ownerId == request.auth.uid));
+      allow list: if isSignedIn() && isBootstrapAdmin();
       allow create: if isSignedIn(); 
       allow update: if isSignedIn() && (isAnyAdmin() || (resource != null && resource.data.ownerId == request.auth.uid));
 
       match /activity/{eventId} {
         allow get, list: if isOrgMember(orgId);
         allow create: if isOrgMember(orgId);
+        allow delete: if isOrgMember(orgId) && (isAnyAdmin() || (resource != null && resource.data.userId == request.auth.uid));
       }
 
       match /deals/{dealId} {
         allow get, list: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.userId == request.auth.uid));
         allow create: if isOrgMember(orgId) && isValidDeal(incoming());
         allow update: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.userId == request.auth.uid));
-        allow delete: if isOrgMember(orgId) && isAnyManager();
+        allow delete: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.userId == request.auth.uid));
       }
 
       match /dealerships/{dsId} {

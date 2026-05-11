@@ -20,10 +20,10 @@ import { UserProfile } from '../types';
 
 export const testingService = {
   /**
-   * StripeItDemoResetSystem
-   * Cleans a user's data and restores the original seeded experience for repeatable testing.
+   * StripeItDealClearingSystem
+   * surgical deletion of current user's deals and associated data.
    */
-  async resetUserData(profile: UserProfile): Promise<void> {
+  async clearUserDeals(profile: UserProfile): Promise<void> {
     const { uid: userId, orgId } = profile;
 
     // 1. Delete all Deals
@@ -33,7 +33,7 @@ export const testingService = {
     const dealDeletions = dealsSnap.docs.map(d => deleteDoc(d.ref));
     await Promise.all(dealDeletions);
 
-    // 2. Delete all Notes
+    // 2. Delete all Notes (associated with deals)
     const notesRef = collection(db, 'organizations', orgId, 'notes');
     const notesQuery = query(notesRef, where('userId', '==', userId));
     const notesSnap = await getDocs(notesQuery);
@@ -46,19 +46,15 @@ export const testingService = {
     const activitySnap = await getDocs(activityQuery);
     const activityDeletions = activitySnap.docs.map(a => deleteDoc(a.ref));
     await Promise.all(activityDeletions);
+    
+    // We do NOT clear goals, pay plans, or profile data here as requested.
+  },
 
-    // 4. Delete Goals for this user
-    const goalsRef = collection(db, 'goals');
-    const goalsQuery = query(goalsRef, where('userId', '==', userId));
-    const goalsSnap = await getDocs(goalsQuery);
-    const goalDeletions = goalsSnap.docs.map(g => deleteDoc(g.ref));
-    await Promise.all(goalDeletions);
-
-    // 5. Delete Pay Plan
-    const payPlanRef = doc(db, 'organizations', orgId, 'users', userId, 'payPlans', 'primary');
-    await deleteDoc(payPlanRef);
-
-    // 6. Reset Onboarding Status
+  /**
+   * StripeItOnboardingResetSystem
+   * Resets the onboarding progress so the user can experience the first-login flow again.
+   */
+  async resetOnboarding(userId: string): Promise<void> {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
       'preferences.onboarding': {
@@ -68,9 +64,32 @@ export const testingService = {
         seenHints: []
       }
     });
+  },
 
-    // 7. StripeItFreeTierTestFlowSystem
-    // Re-seed the demo data to return the user to a clean "ready to test" state
+  /**
+   * StripeItDemoResetSystem
+   * Original reset logic, now optionally available if needed, but we'll prioritize the new split actions.
+   */
+  async resetUserData(profile: UserProfile): Promise<void> {
+    const { uid: userId, orgId } = profile;
+
+    await this.clearUserDeals(profile);
+
+    // clear Goals for this user
+    const goalsRef = collection(db, 'goals');
+    const goalsQuery = query(goalsRef, where('userId', '==', userId));
+    const goalsSnap = await getDocs(goalsQuery);
+    const goalDeletions = goalsSnap.docs.map(g => deleteDoc(g.ref));
+    await Promise.all(goalDeletions);
+
+    // clear Pay Plan
+    const payPlanRef = doc(db, 'organizations', orgId, 'users', userId, 'payPlans', 'primary');
+    await deleteDoc(payPlanRef);
+
+    // clear Onboarding
+    await this.resetOnboarding(userId);
+
+    // Re-seed to return to clean state
     await demoSeedService.seedSalespersonDemo(profile);
   }
 };

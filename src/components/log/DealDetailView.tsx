@@ -22,6 +22,7 @@ import { Card } from '../ui/Card';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { Modal } from '../ui/Modal';
 import { Deal, DealStatus, PayPlan } from '@/src/types';
 
 /**
@@ -47,12 +48,59 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
   onStatusChange
 }) => {
   const [showGross, setShowGross] = React.useState(false);
-  const commission = payPlan ? estimateCommission(deal, payPlan) : null;
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [showConfirm, setShowConfirm] = React.useState(false);
   
+  const commission = payPlan ? estimateCommission(deal, payPlan) : null;
   const isFinalized = deal.status === DealStatus.FINALIZED;
+
+  const handleConfirmDelete = async () => {
+    if (!onDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(deal);
+      setShowConfirm(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
+      {/* 
+        StripeItConfirmationSystem - centralized modal for critical actions
+      */}
+      <Modal 
+        isOpen={showConfirm} 
+        onClose={() => !isDeleting && setShowConfirm(false)}
+        title="Confirm Deletion"
+        className="max-w-md"
+      >
+        <div className="space-y-6">
+          <Typography variant="p" className="text-slate-400">
+            Are you sure you want to permanently delete the deal for <span className="text-white font-black">{deal.customerName}</span>? This action cannot be undone.
+          </Typography>
+          
+          <div className="flex gap-4">
+            <Button 
+              variant="outline" 
+              className="flex-1 rounded-2xl border-white/5"
+              onClick={() => setShowConfirm(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="flex-1 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black uppercase tracking-widest"
+              onClick={handleConfirmDelete}
+              isLoading={isDeleting}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Header Info */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -255,7 +303,7 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
             "flex-1 rounded-2xl border-rose-500/20 text-rose-500 hover:bg-rose-500/5 hover:border-rose-500/40",
             isFinalized && "opacity-50 cursor-not-allowed"
           )}
-          onClick={() => !isFinalized && onDelete?.(deal)}
+          onClick={() => !isFinalized && setShowConfirm(true)}
           disabled={isFinalized}
         >
           <Trash2 className="mr-2 h-4 w-4" />

@@ -46,7 +46,6 @@ import { SubscriptionTier } from './types';
 import { UpgradeAccessScreen } from './components/subscription/UpgradeAccessScreen';
 
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
-import { LandingPage } from './components/home/LandingPage';
 
 function MainAppFlow() {
   const [isNewDealOpen, setIsNewDealOpen] = useState(false);
@@ -166,29 +165,6 @@ function MainAppFlow() {
       <Routes>
         <Route 
           path="/" 
-          element={
-            permissionService.isManager(profile) ? (
-              <ManagerView 
-                onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
-                onQuickNote={() => setIsQuickNoteOpen(true)}
-                onConfigPayPlan={() => setIsPayPlanOpen(true)}
-                onDealClick={(deal) => {
-                   setEditingDeal(deal);
-                   setIsNewDealOpen(true);
-                }}
-                onCreateCompetition={() => setIsCompetitionOpen(true)}
-              />
-            ) : (
-              <HomeView 
-                onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
-                onQuickNote={() => setIsQuickNoteOpen(true)}
-                onConfigPayPlan={() => setIsPayPlanOpen(true)}
-              />
-            )
-          } 
-        />
-        <Route 
-          path="/dashboard" 
           element={
             permissionService.isManager(profile) ? (
               <ManagerView 
@@ -421,8 +397,7 @@ function AppContent() {
     <AppDataProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/dashboard" replace />} />
+          <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/" />} />
           <Route 
             path="/*" 
             element={

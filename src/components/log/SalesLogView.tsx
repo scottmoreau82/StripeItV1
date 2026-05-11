@@ -166,8 +166,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                 payPlan={payPlan}
                 onClose={() => setSelectedDeal(null)}
                 onEdit={onEdit}
-                onDelete={(deal) => {
-                  handleDeleteDeal?.(deal.id);
+                onDelete={async (deal) => {
+                  await handleDeleteDeal?.(deal.id);
                   setSelectedDeal(null);
                 }}
                 onStatusChange={(deal, status) => handleUpdateDealStatus(deal.id, status)}
@@ -184,8 +184,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                 payPlan={payPlan}
                 onClose={() => setSelectedDeal(null)}
                 onEdit={onEdit}
-                onDelete={(deal) => {
-                  handleDeleteDeal?.(deal.id);
+                onDelete={async (deal) => {
+                  await handleDeleteDeal?.(deal.id);
                   setSelectedDeal(null);
                 }}
                 onStatusChange={(deal, status) => handleUpdateDealStatus(deal.id, status)}

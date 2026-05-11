@@ -66,12 +66,10 @@ export const LoginForm: React.FC = () => {
           </motion.div>
           <div className="space-y-1">
             <Typography variant="h2" className="text-white">
-              {mode === 'signin' ? 'Welcome Back' : 'Get Started Free'}
+              Access Stripe It
             </Typography>
             <Typography variant="p" className="text-slate-400">
-              {mode === 'signin' 
-                ? 'Sign in to access your dashboard' 
-                : 'Track deals, commissions, and goals in seconds.'}
+              Sign in or create your account to start tracking deals, commissions, goals, and performance.
             </Typography>
           </div>
         </div>

@@ -210,16 +210,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, isCollapsed, onTogg
         </nav>
 
         {/* Action Area within Scrollable for better UX with many items */}
-        <div className="space-y-3 pb-12">
+        <div className={cn("space-y-3 pb-12", isCollapsed && "flex flex-col items-center")}>
           <Button 
             onClick={onLogDeal}
             title={isCollapsed ? "Log New Deal" : undefined}
             className={cn(
-              "w-full bg-brand-primary hover:bg-brand-primary/90 text-bg-deep font-black rounded-xl shadow-glow glow-primary transition-all flex items-center justify-center gap-2",
-              isCollapsed ? "h-12 w-12 p-0 rounded-full mx-auto" : "py-6"
+              "bg-brand-primary hover:bg-brand-primary/90 text-bg-deep font-black rounded-xl shadow-glow glow-primary transition-all flex items-center justify-center",
+              isCollapsed ? "h-12 w-12 p-0 rounded-full" : "w-full py-6 gap-2"
             )}
           >
-            <Plus className={cn("shrink-0 stroke-[3px]", isCollapsed ? "h-5 w-5" : "h-6 w-6")} />
+            <Plus className={cn("shrink-0 stroke-[3px]", isCollapsed ? "h-6 w-6" : "h-6 w-6")} />
             {!isCollapsed && <span className="tracking-widest uppercase truncate">Log New Deal</span>}
           </Button>
           
@@ -227,8 +227,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, isCollapsed, onTogg
             variant="secondary"
             title={isCollapsed ? "Create Random" : undefined}
             className={cn(
-              "w-full bg-white/5 border-white/10 text-slate-300 font-bold rounded-xl flex items-center justify-center gap-2 group transition-all hover:bg-white/10 overflow-hidden",
-              isCollapsed ? "h-10 w-10 p-0 rounded-full mx-auto" : "py-4"
+              "bg-white/5 border-white/10 text-slate-300 font-bold rounded-xl flex items-center justify-center group transition-all hover:bg-white/10 overflow-hidden",
+              isCollapsed ? "h-10 w-10 p-0 rounded-full" : "w-full py-4 gap-2"
             )}
             onClick={() => {
               const randomDeal = randomDealService.generateRandomDeal();
@@ -277,13 +277,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, isCollapsed, onTogg
           "relative bg-bg-card/50 border border-white/5 rounded-2xl flex items-center transition-all overflow-hidden",
           isCollapsed ? "p-2 justify-center" : "p-4 gap-3"
         )}>
-          {/* StripeItTierBadgeSystem */}
-          <div className={cn(
-            "absolute",
-            isCollapsed ? "inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100" : "top-2 right-2"
-          )}>
-            <TierBadge tier={profile?.subscriptionTier} isCollapsed={isCollapsed} />
-          </div>
+          {/* StripeItTierBadgeSystem - Collapsed Overlay */}
+          {isCollapsed && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <TierBadge tier={tierOverride || profile?.subscriptionTier} isCollapsed={isCollapsed} />
+            </div>
+          )}
 
           <div className={cn(
             "rounded-full bg-slate-800 flex items-center justify-center border border-white/10 text-white font-bold uppercase overflow-hidden shrink-0",
@@ -300,11 +299,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, isCollapsed, onTogg
               <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 pr-12">
                 {profile?.displayName || 'User'}
               </Typography>
-              <div className="flex items-center gap-2 opacity-80">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_#22C55E]" />
-                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-[0.1em]">
+              <div className="flex items-center gap-2 opacity-80 overflow-hidden">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_#22C55E] shrink-0" />
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-[0.1em] truncate">
                   {profile?.role || 'Sales'}
                 </Typography>
+                <TierBadge tier={tierOverride || profile?.subscriptionTier} />
               </div>
             </div>
           )}

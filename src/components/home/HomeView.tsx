@@ -116,7 +116,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
       <div className="flex-1">
         <div className="flex items-center gap-3 mb-2">
-          <Typography variant="h1">
+          <Typography variant="h1" className="italic text-[50px]">
             MTD<br />Performance
           </Typography>
           {profile?.subscriptionTier === SubscriptionTier.FREE && (

@@ -195,9 +195,6 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
 
                   {/* User Profile Info */}
                   <div className="relative bg-bg-card/50 border border-white/5 rounded-2xl p-4 flex items-center gap-3 overflow-hidden">
-                    <div className="absolute top-2 right-2 scale-75 origin-top-right">
-                      <TierBadge tier={profile?.subscriptionTier} />
-                    </div>
 
                     <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 text-white font-bold uppercase overflow-hidden shrink-0">
                       {profile?.photoURL ? (
@@ -210,11 +207,12 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
                       <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 pr-8 text-xs">
                         {profile?.displayName || 'User'}
                       </Typography>
-                      <div className="flex items-center gap-2 opacity-80">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_#22C55E]" />
-                        <Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-black tracking-[0.1em]">
+                      <div className="flex items-center gap-2 opacity-80 overflow-hidden">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_#22C55E] shrink-0" />
+                        <Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-black tracking-[0.1em] truncate">
                           {profile?.role || 'Sales'}
                         </Typography>
+                        <TierBadge tier={tierOverride || profile?.subscriptionTier} />
                       </div>
                     </div>
                   </div>

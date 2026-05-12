@@ -1,4 +1,4 @@
-import { Deal, PayPlan, PayPlanRule, PayPlanTier, VolumeBonus, VolumeBonusType, VolumeBonusScope, VolumeBonusFilter, MiniAppliesTo } from '../types';
+import { Deal, PayPlan, PayPlanRule, PayPlanTier, VolumeBonus, VolumeBonusType, VolumeBonusScope, VolumeBonusFilter, MiniLadderTier } from '../types';
 
 /**
  * StripeItBasicCommissionSystem & StripeItCommissionEstimateSystem
@@ -168,51 +168,49 @@ export const getDealUnitPosition = (deal: Deal, allDealsForMonth: Deal[]): numbe
 };
 
 /**
+ * Find the active mini tier for a given unit count.
+ */
+export const getActiveMiniTier = (unitCount: number, tiers: MiniLadderTier[]): MiniLadderTier | null => {
+  if (!tiers || tiers.length === 0) return null;
+  const sorted = [...tiers].filter(t => t.active).sort((a, b) => Number(a.threshold) - Number(b.threshold));
+  let activeTier: MiniLadderTier | null = null;
+  for (const tier of sorted) {
+    if (unitCount >= Number(tier.threshold)) {
+      activeTier = tier;
+    }
+  }
+  return activeTier;
+};
+
+/**
  * Helper to resolve the correct mini amount based on current system configuration.
  */
-const resolveMiniAmount = (
-  deal: Deal, 
-  plan: PayPlan, 
-  totalUnitsAtMonthEnd: number, 
-  unitPosition: number,
-  overrides?: { newMini?: number; usedMini?: number }
-): number => {
-  if (!plan.isMinisActive || !plan.miniConfig) return plan.miniAmount || 0;
+const resolveMiniAmount = (deal: Deal, plan: PayPlan, totalUnits: number, overrides?: { newMini?: number; usedMini?: number }): number => {
+  // If no mini system active, use base mini
+  if (!plan.isMinisActive) return plan.miniAmount || 0;
   
-  const config = plan.miniConfig;
-  let mini = deal.newOrUsed === 'used' || deal.newOrUsed === 'cpo' ? config.baseUsedMini : config.baseNewMini;
+  let mini = 0;
 
-  // Handle Linked overrides (Legacy or user-linked mode)
-  if (config.isLinked && overrides) {
+  // 1. Check for Ladder Overrides (highest priority if provided via calculateDealCommission)
+  if (overrides) {
     if ((deal.newOrUsed === 'used' || deal.newOrUsed === 'cpo') && overrides.usedMini !== undefined) {
       mini = overrides.usedMini;
     } else if (deal.newOrUsed === 'new' && overrides.newMini !== undefined) {
       mini = overrides.newMini;
     }
-    return mini; // Linked mode takes precedence if active
-  } 
+  }
 
-  // --- MINI LADDER LOGIC ---
-  if (!config.isLinked && config.independentThresholds) {
-    // 1. Filter active rules that apply to this deal type
-    const applicableRules = config.independentThresholds.filter(t => {
-      if (!t.active) return false;
-      if (t.appliesTo === MiniAppliesTo.ALL) return true;
-      if (t.appliesTo === MiniAppliesTo.NEW && deal.newOrUsed === 'new') return true;
-      if (t.appliesTo === MiniAppliesTo.USED && (deal.newOrUsed === 'used' || deal.newOrUsed === 'cpo')) return true;
-      if (t.appliesTo === MiniAppliesTo.CPO && deal.newOrUsed === 'cpo') return true;
-      return false;
-    });
-
-    // 2. Sort thresholds descending to find the highest qualifying one
-    const sortedRules = [...applicableRules].sort((a, b) => b.threshold - a.threshold);
-
-    for (const rule of sortedRules) {
-      const qualifyingUnits = rule.isRetro ? totalUnitsAtMonthEnd : unitPosition;
-      if (qualifyingUnits >= rule.threshold) {
-        return rule.amount; // Rules replace base mini correctly
-      }
+  // 2. Fallback to Mini Ladder Logic if no overrides provided (e.g. estimateCommission called directly)
+  if (mini === 0 && plan.miniTiers && plan.miniTiers.length > 0) {
+    const tier = getActiveMiniTier(totalUnits, plan.miniTiers);
+    if (tier) {
+      mini = (deal.newOrUsed === 'used' || deal.newOrUsed === 'cpo') ? tier.usedMini : tier.newMini;
     }
+  }
+
+  // 3. Final fallback to legacy miniAmount
+  if (mini === 0) {
+    mini = plan.miniAmount || 0;
   }
 
   return mini;
@@ -254,25 +252,14 @@ const evaluateRules = (deal: Deal, rules: PayPlanRule[]): { bonus: number; appli
 export const estimateCommission = (
   deal: Deal, 
   plan: PayPlan, 
-  overrides?: { 
-    frontRate?: number; 
-    backRate?: number; 
-    newMini?: number; 
-    usedMini?: number; 
-    totalUnitsAtMonthEnd?: number;
-    unitPosition?: number;
-  }
+  overrides?: { frontRate?: number; backRate?: number; newMini?: number; usedMini?: number; totalUnitsAtMonthEnd?: number }
 ): CommissionResult => {
   // 1. Calculate raw percentages
   const frontRate = overrides?.frontRate ?? plan.frontEndPercentage;
   const backRate = overrides?.backRate ?? plan.backEndPercentage;
 
   const frontComm = deal.frontEndGross * (frontRate / 100);
-  let backComm = deal.backEndGross * (backRate / 100);
-  
-  if (plan.isBackEndThresholdActive && deal.frontEndGross < (plan.backEndThreshold || 0)) {
-    backComm = 0;
-  }
+  const backComm = deal.backEndGross * (backRate / 100);
   
   const flatComm = (plan.flatPerUnitAmount || 0);
 
@@ -299,7 +286,7 @@ export const estimateCommission = (
   let isMini = false;
 
   // 4. Resolve "Mini"
-  const miniAmount = resolveMiniAmount(deal, plan, overrides?.totalUnitsAtMonthEnd || 0, overrides?.unitPosition || 0, {
+  const miniAmount = resolveMiniAmount(deal, plan, overrides?.totalUnitsAtMonthEnd || 0, {
     newMini: overrides?.newMini,
     usedMini: overrides?.usedMini
   });
@@ -359,17 +346,29 @@ export const calculateDealCommission = (deal: Deal, plan: PayPlan, allDealsForMo
     ? highestTierReached.backRate
     : (tierAtSale?.backRate ?? plan.backEndPercentage);
 
-  // Determine Mini Overrides (for Linked Mode)
-  const newMini = highestTierReached?.newMiniOverride ?? tierAtSale?.newMiniOverride;
-  const usedMini = highestTierReached?.usedMiniOverride ?? tierAtSale?.usedMiniOverride;
+  // 3. Determine Mini Overrides from Mini Ladder
+  let newMini = undefined;
+  let usedMini = undefined;
+
+  if (plan.isMinisActive && plan.miniTiers && plan.miniTiers.length > 0) {
+    const miniTierAtSale = getActiveMiniTier(unitPosition, plan.miniTiers);
+    const highestMiniTierReached = getActiveMiniTier(totalUnits, plan.miniTiers);
+
+    if (highestMiniTierReached?.isRetroactive) {
+      newMini = highestMiniTierReached.newMini;
+      usedMini = highestMiniTierReached.usedMini;
+    } else {
+      newMini = miniTierAtSale?.newMini;
+      usedMini = miniTierAtSale?.usedMini;
+    }
+  }
 
   return estimateCommission(deal, plan, { 
     frontRate, 
     backRate, 
     newMini, 
     usedMini,
-    totalUnitsAtMonthEnd: totalUnits,
-    unitPosition
+    totalUnitsAtMonthEnd: totalUnits 
   });
 };
 

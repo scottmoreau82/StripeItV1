@@ -52,7 +52,8 @@ export const demoSeedService = {
           operator: 'gte',
           threshold: 3000,
           rewardType: 'fixed_bonus',
-          rewardValue: 100
+          rewardValue: 100,
+          active: true
         }
       ],
       tiers: [

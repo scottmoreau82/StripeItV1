@@ -11,10 +11,8 @@ import {
   VolumeBonusFilter,
   HourlyPayoutModel,
   HourlyConfig,
-  MiniConfig,
+  MiniLadderTier,
   CustomMini,
-  MiniThreshold,
-  MiniAppliesTo
 } from '@/src/types';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
@@ -34,10 +32,11 @@ import {
   Settings2,
   Filter,
   Layers,
-  History
+  History,
+  Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { calculatePeriodEarnings } from '@/src/lib/commissionLogic';
+import { calculatePeriodEarnings, getActiveCommissionTier, getActiveMiniTier } from '@/src/lib/commissionLogic';
 import { cn } from '@/src/lib/utils';
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { 
@@ -50,6 +49,100 @@ import {
  * StripeItPayPlanFormSystem & StripeItAdvancedPayPlanSystem
  * Guided setup flow with optional advanced rules and volume tiers.
  */
+
+interface MatrixSectionProps {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  isActive?: boolean;
+  onActiveChange?: (active: boolean) => void;
+  summary?: React.ReactNode;
+  children: React.ReactNode;
+  isExpanded: boolean;
+  onToggle: () => void;
+  className?: string;
+  iconColor?: string;
+}
+
+const MatrixSection: React.FC<MatrixSectionProps> = ({
+  title,
+  subtitle,
+  icon,
+  isActive,
+  onActiveChange,
+  summary,
+  children,
+  isExpanded,
+  onToggle,
+  className,
+  iconColor = "brand-primary"
+}) => {
+  return (
+    <div className={cn("space-y-6", className)}>
+      <div 
+        className="flex items-center justify-between px-2 cursor-pointer group/header"
+        onClick={onToggle}
+      >
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "h-10 w-10 rounded-xl flex items-center justify-center border transition-all duration-300",
+            isActive 
+              ? `bg-${iconColor}/10 border-${iconColor}/20 text-${iconColor}` 
+              : "bg-slate-500/10 border-slate-500/20 text-slate-500"
+          )}>
+            {icon}
+          </div>
+          <div className="flex flex-col">
+            <Typography variant="h3" className="text-white text-xl group-hover/header:text-brand-primary transition-colors">{title}</Typography>
+            <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">{subtitle}</Typography>
+          </div>
+        </div>
+        <div className="flex items-center gap-6">
+          {!isExpanded && summary && (
+            <div className="hidden md:flex items-center gap-4 animate-in fade-in duration-500">
+              {summary}
+            </div>
+          )}
+          <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
+            {onActiveChange && (
+              <ActiveChip 
+                active={isActive ?? false} 
+                onClick={() => onActiveChange(!isActive)} 
+              />
+            )}
+            <button 
+              type="button"
+              onClick={onToggle}
+              className={cn(
+                "p-2 rounded-xl bg-white/[0.02] border border-white/5 text-slate-500 hover:text-white transition-all shrink-0",
+                isExpanded && "bg-brand-primary/10 border-brand-primary/20 text-brand-primary"
+              )}
+            >
+              {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="pb-2">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 interface MatrixItemChipProps {
   label: string;
@@ -119,191 +212,112 @@ interface VolumeBonusRowProps {
 }
 
 const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemove }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const getTypeColor = (type: VolumeBonusType) => {
-    switch (type) {
-      case VolumeBonusType.FLAT: return 'cyan';
-      case VolumeBonusType.CUMULATIVE: return 'green';
-      case VolumeBonusType.NON_CUMULATIVE: return 'amber';
-      case VolumeBonusType.RETRO_PER_UNIT: return 'purple';
-      default: return 'slate';
-    }
-  };
-
-  const getFilterLabel = (filter: VolumeBonusFilter) => {
-    if (filter === VolumeBonusFilter.ANY) return 'Any Deal';
-    return filter.toUpperCase();
-  };
+  const isRetro = bonus.type === VolumeBonusType.RETRO_PER_UNIT;
 
   return (
     <div className={cn(
-      "group overflow-hidden rounded-[2rem] border transition-all duration-300",
-      bonus.active 
-        ? (isExpanded ? "bg-[#0A0C12] border-white/10 shadow-2xl" : "bg-white/[0.01] border-white/5 hover:border-white/10")
-        : "bg-black/20 border-white/[0.02] opacity-60"
+      "group bg-[#0A0C12] border border-white/5 p-4 md:p-5 rounded-2xl transition-all duration-300 relative",
+      !bonus.active ? "opacity-40 grayscale-[0.5]" : "hover:border-white/10"
     )}>
-      {/* Collapsed Content / Header */}
-      <div 
-        className="flex items-center gap-6 p-6 cursor-pointer select-none"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center gap-4 min-w-[120px]">
-          <div className={cn(
-            "h-10 w-10 rounded-xl flex items-center justify-center border",
-            bonus.active ? "bg-white/5 border-white/10" : "bg-white/[0.02] border-white/[0.02]"
-          )}>
-            <Typography variant="h3" className="text-white text-lg">{bonus.threshold}</Typography>
+      <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
+        {/* Threshold */}
+        <div className="flex items-center gap-3 min-w-[120px]">
+          <div className="w-[60px]">
+            <Input 
+              type="number"
+              value={bonus.threshold} 
+              onChange={(e) => onUpdate({ threshold: parseInt(e.target.value) || 0 })} 
+              className="h-10 bg-black/40 border-white/5 font-bold text-center px-2 focus:ring-brand-primary"
+            />
           </div>
-          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">UNITS</Typography>
+          <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Units</Typography>
         </div>
 
-        <div className="flex-1 flex items-center gap-4">
-          <Typography variant="h3" className="text-white text-xl">
-            ${bonus.amount.toLocaleString()}
-            {bonus.type === VolumeBonusType.RETRO_PER_UNIT && <span className="text-xs text-slate-500 ml-1">/ UNIT</span>}
-          </Typography>
-          
+        {/* Payout/Amount */}
+        <div className="flex-1 flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-3">
+             <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Payout</Typography>
+             <div className="w-[120px]">
+               <CurrencyInput
+                 value={bonus.amount}
+                 onChange={(e) => onUpdate({ amount: normalizeCurrencyNumber(e.target.value) })}
+                 hideLabel
+                 className="h-10 bg-black/40 border-white/5 font-black text-white"
+               />
+             </div>
+             {isRetro && (
+                <Typography variant="mono" className="text-slate-600 font-black tracking-widest text-[9px] mt-1">/ UNIT</Typography>
+             )}
+          </div>
+
+          {/* Model Toggle/Select */}
           <div className="flex items-center gap-2">
-            <MatrixItemChip 
-              label={bonus.type.replace(/_/g, ' ')} 
-              active={true} 
-              onClick={() => {}} 
-              color={getTypeColor(bonus.type)}
+            <Select
+              options={[
+                { value: VolumeBonusType.FLAT, label: 'FLAT' },
+                { value: VolumeBonusType.CUMULATIVE, label: 'CUMULATIVE' },
+                { value: VolumeBonusType.NON_CUMULATIVE, label: 'NON-CUM' },
+                { value: VolumeBonusType.RETRO_PER_UNIT, label: 'RETRO UNIT' },
+              ]}
+              value={bonus.type}
+              onChange={(e) => onUpdate({ type: e.target.value as VolumeBonusType })}
+              className="h-10 bg-black/40 border-white/5 w-[130px] font-black text-[10px] uppercase"
             />
-            {bonus.filter !== VolumeBonusFilter.ANY && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/5">
-                <Filter size={8} className="text-slate-500" />
-                <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">{getFilterLabel(bonus.filter)}</span>
-              </div>
+
+            <Select
+              options={[
+                { value: VolumeBonusFilter.ANY, label: 'ANY DEAL' },
+                { value: VolumeBonusFilter.NEW, label: 'NEW ONLY' },
+                { value: VolumeBonusFilter.USED, label: 'USED ONLY' },
+                { value: VolumeBonusFilter.CPO, label: 'CPO ONLY' },
+              ]}
+              value={bonus.filter}
+              onChange={(e) => onUpdate({ filter: e.target.value as VolumeBonusFilter })}
+              className="h-10 bg-black/40 border-white/5 w-[110px] font-black text-[10px] uppercase"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            {isRetro && (
+               <button
+                 type="button"
+                 onClick={() => onUpdate({ scope: bonus.scope === VolumeBonusScope.ALL_UNITS ? VolumeBonusScope.THRESHOLD_PLUS : VolumeBonusScope.ALL_UNITS })}
+                 className={cn(
+                   "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
+                   bonus.scope === VolumeBonusScope.ALL_UNITS ? "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.1)]" : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-500"
+                 )}
+               >
+                 {bonus.scope === VolumeBonusScope.ALL_UNITS ? 'RETRO' : 'TIER+'}
+               </button>
+            )}
+            
+            {!isRetro && bonus.type === VolumeBonusType.CUMULATIVE && (
+               <div className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                 STACKS
+               </div>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <ActiveChip 
-            active={bonus.active} 
-            onClick={() => onUpdate({ active: !bonus.active })} 
-          />
-          <div className="text-slate-500 group-hover:text-white transition-colors">
-            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </div>
+        {/* Controls */}
+        <div className="flex items-center gap-4 shrink-0 self-end lg:self-center">
+          <ActiveChip active={bonus.active} onClick={() => onUpdate({ active: !bonus.active })} />
+          <button 
+            type="button"
+            onClick={onRemove} 
+            className="text-red-500/30 hover:text-red-400 transition-all p-2"
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       </div>
-
-      {/* Expanded Content */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'circOut' }}
-          >
-            <div className="p-8 pt-2 border-t border-white/5 bg-white/[0.01]">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 mb-8">
-                <div className="space-y-3">
-                  <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest px-1">Threshold Configuration</Typography>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1">
-                      <Input
-                        type="number"
-                        value={bonus.threshold}
-                        onChange={(e) => onUpdate({ threshold: parseInt(e.target.value) || 0 })}
-                        className="bg-black/40 border-white/5 h-11"
-                        placeholder="Threshold"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest px-1">Bonus Payout</Typography>
-                  <div className="flex-1">
-                    <CurrencyInput
-                      value={bonus.amount}
-                      onChange={(e) => onUpdate({ amount: normalizeCurrencyNumber(e.target.value) })}
-                      className="bg-black/40 border-white/5 h-11"
-                      hideLabel
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest px-1">Bonus Model</Typography>
-                  <Select
-                    options={[
-                      { value: VolumeBonusType.FLAT, label: 'Flat Bonus' },
-                      { value: VolumeBonusType.CUMULATIVE, label: 'Cumulative Bonus' },
-                      { value: VolumeBonusType.NON_CUMULATIVE, label: 'Non-Cumulative' },
-                      { value: VolumeBonusType.RETRO_PER_UNIT, label: 'Retro Per-Unit' },
-                    ]}
-                    value={bonus.type}
-                    onChange={(e) => onUpdate({ type: e.target.value as VolumeBonusType })}
-                    className="bg-black/40 border-white/5 h-11"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest px-1">Deal-Type Filter</Typography>
-                  <Select
-                    options={[
-                      { value: VolumeBonusFilter.ANY, label: 'Any Deal' },
-                      { value: VolumeBonusFilter.NEW, label: 'New Only' },
-                      { value: VolumeBonusFilter.USED, label: 'Used Only' },
-                      { value: VolumeBonusFilter.CPO, label: 'CPO Only' },
-                    ]}
-                    value={bonus.filter}
-                    onChange={(e) => onUpdate({ filter: e.target.value as VolumeBonusFilter })}
-                    className="bg-black/40 border-white/5 h-11"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col xl:flex-row gap-8 items-start xl:items-end justify-between">
-                <div className="flex-1 space-y-3 w-full">
-                  <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest px-1">Advanced Settings & Notes</Typography>
-                  <div className="flex flex-col md:flex-row gap-4">
-                    {bonus.type === VolumeBonusType.RETRO_PER_UNIT && (
-                      <div className="min-w-[200px]">
-                         <Select
-                          options={[
-                            { value: VolumeBonusScope.ALL_UNITS, label: 'Retroactive: All Units' },
-                            { value: VolumeBonusScope.THRESHOLD_PLUS, label: 'Threshold+ Units Only' },
-                          ]}
-                          value={bonus.scope}
-                          onChange={(e) => onUpdate({ scope: e.target.value as VolumeBonusScope })}
-                          className="bg-brand-primary/[0.03] border-brand-primary/20 h-11 text-brand-primary font-bold"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Internal notes (e.g. standard owner bonus)"
-                        value={bonus.notes || ''}
-                        onChange={(e) => onUpdate({ notes: e.target.value })}
-                        className="bg-black/40 border-white/5 h-11"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 h-11 mt-4 xl:mt-0">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={onRemove}
-                    className="text-red-500/40 hover:text-red-400 font-black uppercase tracking-[0.2em] text-[10px]"
-                  >
-                    <Trash2 size={14} className="mr-2" /> Remove Payout
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      
+      {/* Optional Note Row if present */}
+      {bonus.notes && (
+        <div className="mt-3 pt-3 border-t border-white/[0.03]">
+          <Typography variant="mono" className="text-[9px] text-slate-600 italic">Note: {bonus.notes}</Typography>
+        </div>
+      )}
     </div>
   );
 };
@@ -422,7 +436,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   onSubmit,
   isLoading
 }) => {
-  const { triggerError } = useAppData();
+  const { deals, triggerError } = useAppData();
 
   // Ensure we have at least one default row if none exist
   const getInitialTiers = () => {
@@ -451,6 +465,28 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     return tiers;
   };
 
+  // Ensure we have at least one default row for minis if none exist
+  const getInitialMiniTiers = () => {
+    let tiers: MiniLadderTier[] = [];
+    if (initialData?.miniTiers && initialData.miniTiers.length > 0) {
+      tiers = [...initialData.miniTiers];
+    } else {
+      tiers = [{
+        id: crypto.randomUUID(),
+        threshold: 0,
+        maxUnits: undefined,
+        newMini: initialData?.miniAmount || 200,
+        usedMini: initialData?.miniAmount || 200,
+        isRetroactive: false,
+        active: true
+      }];
+    }
+    if (tiers.length > 0) {
+      tiers[0] = { ...tiers[0], threshold: 0 };
+    }
+    return tiers;
+  };
+
   const [formData, setFormData] = useState({
     name: initialData?.name || 'Standard Pay Plan',
     miniAmount: initialData?.miniAmount || 200,
@@ -461,8 +497,6 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     isAdvanced: initialData?.isAdvanced !== undefined ? initialData.isAdvanced : true,
     isRulesEnabled: initialData?.rules && initialData.rules.length > 0 ? true : false,
     isVolumeBonusEngineActive: initialData?.isVolumeBonusEngineActive || false,
-    isBackEndThresholdActive: initialData?.isBackEndThresholdActive || false,
-    backEndThreshold: initialData?.backEndThreshold || 0,
     rules: initialData?.rules || [] as PayPlanRule[],
     tiers: getInitialTiers(),
     volumeBonuses: initialData?.volumeBonuses || [] as VolumeBonus[],
@@ -471,14 +505,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     isMinisAndHourlyActive: initialData?.isMinisAndHourlyActive ?? false,
     isMinisActive: initialData?.isMinisActive ?? false,
     isHourlyActive: initialData?.isHourlyActive ?? false,
-    miniConfig: initialData?.miniConfig || {
-      active: true,
-      isLinked: false, // Default to independent for the new Mini Ladder mental model
-      baseNewMini: initialData?.miniAmount || 200,
-      baseUsedMini: initialData?.miniAmount || 200,
-      baseCpoMini: initialData?.baseCpoMini || 250,
-      independentThresholds: []
-    } as MiniConfig,
+    miniTiers: getInitialMiniTiers(),
     customMinis: initialData?.customMinis || [] as CustomMini[],
     hourlyConfig: initialData?.hourlyConfig || {
       active: true,
@@ -487,6 +514,33 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
       model: HourlyPayoutModel.GUARANTEE
     } as HourlyConfig
   });
+
+  const currentUnits = useMemo(() => {
+    const currentMonthPrefix = new Date().toISOString().slice(0, 7);
+    return deals
+      .filter(d => d.date.startsWith(currentMonthPrefix) && (d.status === DealStatus.FINALIZED || d.status === DealStatus.SUBMITTED))
+      .reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
+  }, [deals]);
+
+  const activeTier = useMemo(() => {
+    return getActiveCommissionTier(currentUnits, formData.tiers);
+  }, [currentUnits, formData.tiers]);
+
+  const activeMiniTier = useMemo(() => {
+    return getActiveMiniTier(currentUnits, formData.miniTiers);
+  }, [currentUnits, formData.miniTiers]);
+
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    minis_hourly: false,
+    commission_ladder: true,
+    volume_bonus: false,
+    rules: false,
+    misc_defaults: false
+  });
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  };
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -534,8 +588,39 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
         }
       }
     }
+
+    // Mini Ladder Validation
+    const sortedMiniTiers = [...formData.miniTiers].sort((a, b) => {
+      const valA = a.threshold ?? (a.id === formData.miniTiers[0].id ? 0 : Number.MAX_SAFE_INTEGER);
+      const valB = b.threshold ?? (b.id === formData.miniTiers[0].id ? 0 : Number.MAX_SAFE_INTEGER);
+      return valA - valB;
+    });
+
+    for (let i = 0; i < sortedMiniTiers.length; i++) {
+      const current = sortedMiniTiers[i];
+      const next = sortedMiniTiers[i + 1];
+
+      const currentMin = current.threshold ?? (i === 0 ? 0 : undefined);
+      const currentMax = current.maxUnits;
+
+      if (currentMin !== undefined && currentMax != null && currentMin >= currentMax) {
+        errors[current.id] = "Min units must be less than max units";
+      }
+
+      if (next) {
+        const currentIsBlank = current.threshold == null && current.maxUnits == null && current.newMini == null && current.usedMini == null;
+        const nextIsBlank = next.threshold == null && next.maxUnits == null && next.newMini == null && next.usedMini == null;
+
+        if (currentMax == null && !currentIsBlank && !nextIsBlank) {
+          errors[next.id] = "Previous row is open-ended. Provide a Max Unit limit to add more rows.";
+        } else if (currentMax != null && next.threshold !== undefined && next.threshold <= currentMax) {
+          errors[next.id] = `Range overlaps with previous tier (${currentMin}-${currentMax})`;
+        }
+      }
+    }
+
     return errors;
-  }, [formData.tiers]);
+  }, [formData.tiers, formData.miniTiers]);
 
   // Rule Helpers
   const addRule = () => {
@@ -546,7 +631,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
       operator: 'gte',
       threshold: 3000,
       rewardType: 'fixed_bonus',
-      rewardValue: 50
+      rewardValue: 50,
+      active: true
     };
     handleChange('rules', [...formData.rules, newRule]);
   };
@@ -644,34 +730,56 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     handleChange('volumeBonuses', (formData.volumeBonuses || []).filter(b => b.id !== id));
   };
 
-  // Minis and Hourly Helpers
-  const addIndependentMiniThreshold = () => {
-    const newThreshold: MiniThreshold = {
+  // Mini Ladder Tier Helpers
+  const syncMiniTiers = (tiers: MiniLadderTier[]): MiniLadderTier[] => {
+    const sorted = [...tiers].sort((a, b) => {
+      const valA = a.threshold ?? Number.MAX_SAFE_INTEGER;
+      const valB = b.threshold ?? Number.MAX_SAFE_INTEGER;
+      return valA - valB;
+    });
+
+    if (sorted.length > 0) {
+      sorted[0] = { ...sorted[0], threshold: 0 };
+    }
+
+    return sorted.map((tier, i) => {
+      const next = sorted[i + 1];
+      if (next) {
+        if (next.threshold !== undefined) {
+          return { ...tier, maxUnits: next.threshold - 0.5 };
+        }
+        return { ...tier, maxUnits: undefined };
+      }
+      return { ...tier, maxUnits: undefined };
+    });
+  };
+
+  const addMiniTier = () => {
+    const newTier: MiniLadderTier = {
       id: crypto.randomUUID(),
-      threshold: 12,
-      amount: 250,
-      appliesTo: MiniAppliesTo.NEW,
-      isRetro: true,
+      threshold: undefined,
+      maxUnits: undefined,
+      newMini: 200,
+      usedMini: 200,
+      isRetroactive: false,
       active: true
     };
-    handleChange('miniConfig', {
-      ...formData.miniConfig,
-      independentThresholds: [...formData.miniConfig.independentThresholds, newThreshold]
-    });
+    handleChange('miniTiers', syncMiniTiers([...formData.miniTiers, newTier]));
   };
 
-  const updateIndependentMiniThreshold = (id: string, updates: Partial<MiniThreshold>) => {
-    handleChange('miniConfig', {
-      ...formData.miniConfig,
-      independentThresholds: formData.miniConfig.independentThresholds.map(t => t.id === id ? { ...t, ...updates } : t)
-    });
+  const updateMiniTier = (id: string, updates: Partial<MiniLadderTier>) => {
+    const newTiers = formData.miniTiers.map(t => t.id === id ? { ...t, ...updates } : t);
+    if (updates.threshold !== undefined || updates.maxUnits !== undefined) {
+      handleChange('miniTiers', syncMiniTiers(newTiers));
+    } else {
+      handleChange('miniTiers', newTiers);
+    }
   };
 
-  const removeIndependentMiniThreshold = (id: string) => {
-    handleChange('miniConfig', {
-      ...formData.miniConfig,
-      independentThresholds: formData.miniConfig.independentThresholds.filter(t => t.id !== id)
-    });
+  const removeMiniTier = (id: string) => {
+    if (formData.miniTiers.length <= 1) return;
+    const remaining = formData.miniTiers.filter(t => t.id !== id);
+    handleChange('miniTiers', syncMiniTiers(remaining));
   };
 
   const addCustomMini = () => {
@@ -761,19 +869,45 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
         }
     }
 
+    // 2. Pre-submission Validation for Minis
+    const miniTiers = formData.miniTiers;
+    for (let i = 0; i < miniTiers.length; i++) {
+        const t = miniTiers[i];
+        const rowNum = i + 1;
+        const minUnits = i === 0 ? 0 : t.threshold;
+        
+        if (minUnits == null || isNaN(minUnits)) {
+            triggerError(`Mini Row ${rowNum} is missing its starting unit threshold.`);
+            return;
+        }
+        if (t.newMini == null || isNaN(t.newMini)) {
+            triggerError(`Mini Row ${rowNum} is missing its New Mini amount.`);
+            return;
+        }
+        if (t.usedMini == null || isNaN(t.usedMini)) {
+            triggerError(`Mini Row ${rowNum} is missing its Used Mini amount.`);
+            return;
+        }
+        if (i < miniTiers.length - 1) {
+            if (t.maxUnits == null || isNaN(t.maxUnits)) {
+                triggerError(`Mini Row ${rowNum} must have a Max Unit limit.`);
+                return;
+            }
+        }
+    }
+
     if (Object.keys(validationErrors).length > 0) {
-        triggerError('Please fix the mathematical range overlaps in the Commission Matrix before saving.');
+        triggerError('Please fix the mathematical range overlaps before saving.');
         return;
     }
 
-    // 2. Normalization for Persistence
+    // 3. Normalization for Persistence
     const cleanTiers = tiers.map((t, i) => ({
       ...t,
       threshold: i === 0 ? 0 : (t.threshold ?? 0),
-      maxUnits: t.maxUnits ?? null, // Firestore-safe open end
+      maxUnits: t.maxUnits ?? null,
       frontRate: t.frontRate ?? 0,
       backRate: t.backRate ?? 0,
-      // Row 1 never has retro behavior active
       frontRetroactive: i === 0 ? false : (t.frontRetroactive ?? false),
       backRetroactive: i === 0 ? false : (t.backRetroactive ?? false),
       bonusAmount: t.bonusAmount || 0,
@@ -781,18 +915,28 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
       isRetroactive: t.isRetroactive || false
     }));
 
+    const cleanMiniTiers = miniTiers.map((t, i) => ({
+      ...t,
+      threshold: i === 0 ? 0 : (t.threshold ?? 0),
+      maxUnits: t.maxUnits ?? null,
+      newMini: t.newMini ?? 0,
+      usedMini: t.usedMini ?? 0,
+      isRetroactive: i === 0 ? false : (t.isRetroactive ?? false),
+      active: t.active ?? true
+    }));
+
     const cleanData = {
       ...formData,
       tiers: cleanTiers,
+      miniTiers: cleanMiniTiers,
       volumeBonuses: formData.volumeBonuses || [],
       isVolumeBonusEngineActive: formData.isVolumeBonusEngineActive || false,
       isMinisAndHourlyActive: formData.isMinisAndHourlyActive,
       isMinisActive: formData.isMinisActive,
       isHourlyActive: formData.isHourlyActive,
-      miniConfig: formData.miniConfig,
       customMinis: formData.customMinis,
       hourlyConfig: formData.hourlyConfig,
-      miniAmount: formData.miniConfig.baseNewMini // Sync for backward compatibility
+      miniAmount: cleanMiniTiers[0].newMini // Sync for backward compatibility
     };
 
     onSubmit(cleanData);
@@ -815,663 +959,650 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           </div>
         </div>
 
-        {/* StripeItMinisAndHourlySystem - Minis and Hourly Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
+        {/* StripeItMinisAndHourlySystem - Minis & Hourly Section */}
+        <MatrixSection
+          id="minis_hourly"
+          title="Minis & Hourly"
+          subtitle="Base Compensation & Protections"
+          icon={<ShieldCheck className="h-6 w-6" />}
+          iconColor="indigo-500"
+          isActive={formData.isMinisAndHourlyActive}
+          onActiveChange={(active) => handleChange('isMinisAndHourlyActive', active)}
+          isExpanded={expandedSections.minis_hourly}
+          onToggle={() => toggleSection('minis_hourly')}
+          summary={
             <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
-                <ShieldCheck className="h-6 w-6 text-indigo-500" />
-              </div>
-              <div className="flex flex-col">
-                <Typography variant="h3" className="text-white text-xl">Minis and Hourly</Typography>
-                <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Base Compensation & Protections</Typography>
-              </div>
+              {formData.isMinisActive && (
+                <>
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                    <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">New:</Typography>
+                    <Typography variant="mono" className="text-[10px] text-white font-black">
+                      ${activeMiniTier?.newMini ?? formData.miniTiers[0]?.newMini ?? 0}
+                    </Typography>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                    <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Used:</Typography>
+                    <Typography variant="mono" className="text-[10px] text-white font-black">
+                      ${activeMiniTier?.usedMini ?? formData.miniTiers[0]?.usedMini ?? 0}
+                    </Typography>
+                  </div>
+                </>
+              )}
+              {formData.isHourlyActive && (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                  <Typography variant="mono" className="text-[10px] text-slate-400 font-black uppercase">Hourly</Typography>
+                  <Typography variant="mono" className="text-[10px] text-white font-black">${formData.hourlyConfig.rate}/hr</Typography>
+                </div>
+              )}
             </div>
-            <ActiveChip 
-              active={formData.isMinisAndHourlyActive} 
-              onClick={() => handleChange('isMinisAndHourlyActive', !formData.isMinisAndHourlyActive)} 
-            />
-          </div>
+          }
+        >
+          <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Mini Ladder Subsection */}
+            <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
+              <div className="flex items-center justify-between mb-8">
+                <Typography variant="mono" className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Mini Ladder System</Typography>
+                <ActiveChip 
+                  active={formData.isMinisActive} 
+                  onClick={() => handleChange('isMinisActive', !formData.isMinisActive)} 
+                />
+              </div>
 
-          {formData.isMinisAndHourlyActive && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-              {/* Mini Ladder Subsection */}
-              <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-4">
-                    <Typography variant="mono" className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Mini Ladder</Typography>
-                    {!formData.miniConfig.isLinked && (
-                      <div className="h-1.5 w-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
-                    )}
-                  </div>
-                  <ActiveChip 
-                    active={formData.isMinisActive} 
-                    onClick={() => handleChange('isMinisActive', !formData.isMinisActive)} 
-                  />
-                </div>
-
-                {formData.isMinisActive && (
-                  <div className="space-y-10 animate-in fade-in duration-300">
-                    
-                    {/* 1. Base Minis */}
-                    <div className="space-y-4">
-                      <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest pl-1">1. Base Minis (Default Payouts)</Typography>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col gap-4">
-                          <Typography variant="mono" className="text-[10px] text-slate-400 font-black uppercase">New Mini</Typography>
-                          <CurrencyInput 
-                            value={formData.miniConfig.baseNewMini}
-                            onChange={(e) => handleChange('miniConfig', { ...formData.miniConfig, baseNewMini: normalizeCurrencyNumber(e.target.value) })}
-                            hideLabel
-                            className="bg-black/20 border-white/5"
-                          />
-                        </div>
-                        <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col gap-4">
-                          <Typography variant="mono" className="text-[10px] text-slate-400 font-black uppercase">Used Mini</Typography>
-                          <CurrencyInput 
-                            value={formData.miniConfig.baseUsedMini}
-                            onChange={(e) => handleChange('miniConfig', { ...formData.miniConfig, baseUsedMini: normalizeCurrencyNumber(e.target.value) })}
-                            hideLabel
-                            className="bg-black/20 border-white/5"
-                          />
-                        </div>
-                        <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col gap-4">
-                          <Typography variant="mono" className="text-[10px] text-slate-400 font-black uppercase">CPO Mini</Typography>
-                          <CurrencyInput 
-                            value={formData.miniConfig.baseCpoMini || 0}
-                            onChange={(e) => handleChange('miniConfig', { ...formData.miniConfig, baseCpoMini: normalizeCurrencyNumber(e.target.value) })}
-                            hideLabel
-                            className="bg-black/20 border-white/5"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 2. Mini Increase Rules */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between pl-1">
-                        <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest">2. Mini Increase Rules</Typography>
-                        <Button type="button" variant="ghost" size="sm" onClick={addIndependentMiniThreshold} className="text-brand-primary h-7 text-[9px] uppercase tracking-widest font-black">
-                          <Plus size={14} className="mr-2" /> Add Mini Increase
-                        </Button>
-                      </div>
+              {formData.isMinisActive && (
+                <div className="animate-in fade-in duration-300">
+                  <div className="grid grid-cols-1 gap-3">
+                    {formData.miniTiers.map((tier, index) => {
+                      const hasError = validationErrors[tier.id];
+                      const isFirstRow = index === 0;
+                      const isLastRow = index === formData.miniTiers.length - 1;
                       
-                      <div className="space-y-3">
-                        {formData.miniConfig.independentThresholds.length === 0 ? (
-                          <div className="h-24 rounded-2xl border border-dashed border-white/5 flex items-center justify-center text-slate-600 text-[10px] uppercase font-black">
-                            No increase rules active. Standard base minis will apply.
-                          </div>
-                        ) : (
-                          formData.miniConfig.independentThresholds.map((t) => (
-                            <div key={t.id} className={cn(
-                              "flex flex-col md:flex-row gap-6 items-center p-4 rounded-2xl border transition-all duration-300",
-                              t.active ? "bg-white/[0.03] border-white/10" : "bg-white/[0.01] border-white/5 opacity-60"
-                            )}>
-                              <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-6 items-center w-full">
-                                <div className="space-y-1.5">
-                                  <Typography variant="mono" className="text-[8px] text-slate-500 font-black uppercase ml-1">Threshold</Typography>
-                                  <div className="relative">
-                                    <Input 
-                                      type="number" 
-                                      value={t.threshold} 
-                                      onChange={(e) => updateIndependentMiniThreshold(t.id, { threshold: parseFloat(e.target.value) || 0 })}
-                                      className="h-10 bg-black/40 border-white/5 font-bold pr-10"
-                                    />
-                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-500 font-black uppercase">Units</div>
-                                  </div>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                  <Typography variant="mono" className="text-[8px] text-slate-500 font-black uppercase ml-1">Applies To</Typography>
-                                  <Select 
-                                    options={[
-                                      { value: MiniAppliesTo.ALL, label: 'All Deals' },
-                                      { value: MiniAppliesTo.NEW, label: 'New Only' },
-                                      { value: MiniAppliesTo.USED, label: 'Used Only' },
-                                      { value: MiniAppliesTo.CPO, label: 'CPO Only' },
-                                    ]}
-                                    value={t.appliesTo}
-                                    onChange={(e) => updateIndependentMiniThreshold(t.id, { appliesTo: e.target.value as any })}
-                                    className="h-10 bg-black/40 border-white/5 text-xs font-bold"
-                                  />
-                                </div>
-
-                                <div className="space-y-1.5">
-                                  <Typography variant="mono" className="text-[8px] text-slate-500 font-black uppercase ml-1">Mini Amount</Typography>
-                                  <CurrencyInput 
-                                    value={t.amount}
-                                    onChange={(e) => updateIndependentMiniThreshold(t.id, { amount: normalizeCurrencyNumber(e.target.value) })}
-                                    hideLabel
-                                    className="h-10 bg-black/40 border-white/5"
-                                  />
-                                </div>
-
-                                <div className="flex items-center gap-6 justify-end h-10 mt-auto md:mt-4">
-                                  <div className="flex items-center gap-4">
-                                    <Typography variant="mono" className="text-[8px] text-slate-500 font-black uppercase">Retro</Typography>
-                                    <button
-                                      type="button"
-                                      onClick={() => updateIndependentMiniThreshold(t.id, { isRetro: !t.isRetro })}
-                                      className={cn(
-                                        "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 border",
-                                        t.isRetro 
-                                          ? "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]"
-                                          : "bg-white/[0.02] text-slate-700 border-white/5"
-                                      )}
-                                    >
-                                      RETRO
-                                    </button>
-                                  </div>
-                                  <div className="h-6 w-px bg-white/5" />
-                                  <ActiveChip active={t.active} onClick={() => updateIndependentMiniThreshold(t.id, { active: !t.active })} />
-                                  <button type="button" onClick={() => removeIndependentMiniThreshold(t.id)} className="text-red-500/40 hover:text-red-400 transition-colors">
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Custom Mini Types */}
-                    {formData.customMinis.length > 0 && (
-                      <div className="space-y-4 pt-6 border-t border-white/[0.03]">
-                        <div className="flex items-center justify-between pl-1">
-                          <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Custom Mini Types</Typography>
-                          <Button type="button" variant="ghost" size="sm" onClick={addCustomMini} className="text-brand-primary h-7 text-[9px] uppercase tracking-widest font-black">
-                            <Plus size={14} className="mr-2" /> Add Custom
-                          </Button>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {formData.customMinis.map((m) => (
-                            <div key={m.id} className="bg-white/[0.02] p-4 rounded-2xl border border-white/5 space-y-4">
-                              <div className="flex items-center justify-between">
+                      return (
+                        <div 
+                          key={tier.id} 
+                          className={cn(
+                            "group bg-white/[0.02] border border-white/5 p-4 md:p-5 rounded-2xl transition-all duration-300",
+                            hasError && "ring-1 ring-red-500/30 border-red-500/20"
+                          )}
+                        >
+                          <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
+                            {/* Units Range */}
+                            <div className="flex items-center gap-3 min-w-[140px]">
+                              <div className="w-[55px]">
                                 <Input 
-                                  value={m.label} 
-                                  onChange={(e) => updateCustomMini(m.id, { label: e.target.value })}
-                                  className="h-9 bg-transparent border-none text-white font-bold p-0 focus-visible:ring-0"
-                                  placeholder="Mini Name"
+                                  type="number"
+                                  value={isFirstRow ? 0 : (tier.threshold ?? '')} 
+                                  onChange={(e) => updateMiniTier(tier.id, { threshold: e.target.value === '' ? undefined : normalizeMatrixNumber(e.target.value) })} 
+                                  disabled={isFirstRow}
+                                  placeholder="0"
+                                  className="h-10 bg-black/40 border-white/5 font-bold text-center px-2"
                                 />
-                                <div className="flex items-center gap-2">
-                                  <ActiveChip active={m.active} onClick={() => updateCustomMini(m.id, { active: !m.active })} />
-                                  <button type="button" onClick={() => removeCustomMini(m.id)} className="text-red-500/40 hover:text-red-400">
-                                    <Trash2 size={14} />
-                                  </button>
-                                </div>
                               </div>
-                              <div className="flex gap-4">
-                                <div className="flex-1">
-                                  <CurrencyInput 
-                                    value={m.amount}
-                                    onChange={(e) => updateCustomMini(m.id, { amount: normalizeCurrencyNumber(e.target.value) })}
-                                    hideLabel
-                                    className="h-10 bg-black/40 border-white/5"
-                                  />
-                                </div>
-                                <div className="w-[120px]">
-                                  <Select 
-                                    options={[
-                                      { value: VolumeBonusFilter.ANY, label: 'Any' },
-                                      { value: VolumeBonusFilter.NEW, label: 'New' },
-                                      { value: VolumeBonusFilter.USED, label: 'Used' },
-                                      { value: VolumeBonusFilter.CPO, label: 'CPO' },
-                                    ]}
-                                    value={m.filter}
-                                    onChange={(e) => updateCustomMini(m.id, { filter: e.target.value as any })}
-                                    className="h-10 bg-black/40 border-white/5"
-                                  />
-                                </div>
+                              <Typography variant="mono" className="text-slate-600 font-black">→</Typography>
+                              <div className="w-[55px]">
+                                <Input 
+                                  type="text"
+                                  value={tier.maxUnits ?? ''} 
+                                  onChange={(e) => updateMiniTier(tier.id, { maxUnits: e.target.value === '' ? undefined : normalizeMatrixNumber(e.target.value) })} 
+                                  placeholder="∞"
+                                  disabled={isLastRow && tier.maxUnits == null}
+                                  className={cn(
+                                    "h-10 bg-black/40 border-white/5 font-bold text-center px-2",
+                                    isLastRow && tier.maxUnits == null && "text-slate-500 bg-white/[0.02]"
+                                  )}
+                                />
                               </div>
                             </div>
-                          ))}
+
+                            {/* Payouts */}
+                            <div className="flex-1 flex flex-wrap items-center gap-6">
+                              <div className="flex items-center gap-3">
+                                <Typography variant="mono" className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">New</Typography>
+                                <div className="w-[110px]">
+                                  <CurrencyInput 
+                                    value={tier.newMini}
+                                    onChange={(e) => updateMiniTier(tier.id, { newMini: normalizeCurrencyNumber(e.target.value) })}
+                                    hideLabel
+                                    className="h-10 bg-black/40 border-white/5 font-black text-white"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Typography variant="mono" className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Used</Typography>
+                                <div className="w-[110px]">
+                                  <CurrencyInput 
+                                    value={tier.usedMini}
+                                    onChange={(e) => updateMiniTier(tier.id, { usedMini: normalizeCurrencyNumber(e.target.value) })}
+                                    hideLabel
+                                    className="h-10 bg-black/40 border-white/5 font-black text-white"
+                                  />
+                                </div>
+                              </div>
+                              
+                              {!isFirstRow && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateMiniTier(tier.id, { isRetroactive: !tier.isRetroactive })}
+                                  className={cn(
+                                    "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
+                                    tier.isRetroactive ? "bg-amber-500/20 text-amber-400 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]" : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-500"
+                                  )}
+                                >
+                                  RETRO
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Controls */}
+                            <div className="flex items-center gap-4 shrink-0">
+                              <ActiveChip active={tier.active} onClick={() => updateMiniTier(tier.id, { active: !tier.active })} />
+                              <button 
+                                type="button"
+                                onClick={() => removeMiniTier(tier.id)} 
+                                disabled={formData.miniTiers.length <= 1}
+                                className="text-red-500/30 hover:text-red-400 disabled:opacity-0 transition-all p-2"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                          {hasError && <Typography variant="mono" className="text-[9px] text-red-500 mt-2 uppercase font-bold px-1">{hasError}</Typography>}
                         </div>
-                      </div>
-                    )}
-                    
-                    {formData.customMinis.length === 0 && (
-                      <div className="flex justify-start">
-                         <Button type="button" variant="ghost" size="sm" onClick={addCustomMini} className="text-slate-500 hover:text-slate-300 h-7 text-[8px] uppercase tracking-widest font-black">
-                          <Plus size={12} className="mr-2" /> Add Custom Mini Type
-                        </Button>
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
-                )}
-              </Card>
 
-              {/* Hourly Subsection */}
-              <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
-                <div className="flex items-center justify-between mb-8">
-                  <Typography variant="mono" className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Hourly Compensation</Typography>
-                  <ActiveChip 
-                    active={formData.isHourlyActive} 
-                    onClick={() => handleChange('isHourlyActive', !formData.isHourlyActive)} 
-                  />
+                  <div className="flex justify-center mt-6">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={addMiniTier} 
+                      className="text-brand-primary h-10 px-6 hover:bg-brand-primary/5 rounded-xl border border-dashed border-brand-primary/20"
+                    >
+                      <Plus size={16} className="mr-2" /> Add Mini Range
+                    </Button>
+                  </div>
                 </div>
+              )}
+            </Card>
 
-                {formData.isHourlyActive && (
-                  <div className="space-y-8 animate-in fade-in duration-300">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      <CurrencyInput 
-                        label="Hourly Rate" 
-                        value={formData.hourlyConfig.rate}
-                        onChange={(e) => handleChange('hourlyConfig', { ...formData.hourlyConfig, rate: normalizeCurrencyNumber(e.target.value) })}
-                        labelClassName="text-[9px] uppercase tracking-widest text-slate-500"
+            {/* Hourly Subsection */}
+            <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
+              <div className="flex items-center justify-between mb-8">
+                <Typography variant="mono" className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Hourly Compensation</Typography>
+                <ActiveChip 
+                  active={formData.isHourlyActive} 
+                  onClick={() => handleChange('isHourlyActive', !formData.isHourlyActive)} 
+                />
+              </div>
+
+              {formData.isHourlyActive && (
+                <div className="space-y-8 animate-in fade-in duration-300">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <CurrencyInput 
+                      label="Hourly Rate" 
+                      value={formData.hourlyConfig.rate}
+                      onChange={(e) => handleChange('hourlyConfig', { ...formData.hourlyConfig, rate: normalizeCurrencyNumber(e.target.value) })}
+                      labelClassName="text-[9px] uppercase tracking-widest text-slate-500"
+                    />
+                    <div className="space-y-2.5">
+                      <Typography variant="mono" className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Hours Worked</Typography>
+                      <Input 
+                        type="number" 
+                        value={formData.hourlyConfig.hoursWorked} 
+                        onChange={(e) => handleChange('hourlyConfig', { ...formData.hourlyConfig, hoursWorked: parseInt(e.target.value) || 0 })}
+                        className="h-12 bg-black/40 border-white/5 font-bold"
                       />
-                      <div className="space-y-2.5">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Hours Worked</Typography>
-                        <Input 
-                          type="number" 
-                          value={formData.hourlyConfig.hoursWorked} 
-                          onChange={(e) => handleChange('hourlyConfig', { ...formData.hourlyConfig, hoursWorked: parseInt(e.target.value) || 0 })}
-                          className="h-12 bg-black/40 border-white/5 font-bold"
-                        />
-                      </div>
-                      <div className="space-y-2.5">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Monthly Total</Typography>
-                        <div className="h-12 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center px-5 font-black text-white">
-                          ${(formData.hourlyConfig.rate * formData.hourlyConfig.hoursWorked).toLocaleString()}
-                        </div>
+                    </div>
+                    <div className="space-y-2.5">
+                      <Typography variant="mono" className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Monthly Total</Typography>
+                      <div className="h-12 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center px-5 font-black text-white">
+                        ${(formData.hourlyConfig.rate * formData.hourlyConfig.hoursWorked).toLocaleString()}
                       </div>
                     </div>
+                  </div>
 
-                    <div className="space-y-4">
-                      <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Payout Model</Typography>
-                      <div className="flex flex-wrap gap-4">
-                        {[
-                          { id: HourlyPayoutModel.GUARANTEE, label: 'FLOOR (Higher of Both)', desc: 'Pay whichever is highest: Hourly vs Commission.' },
-                          { id: HourlyPayoutModel.ADDITIVE, label: 'ADDITIVE (Pay Both)', desc: 'Pay commission ladder PLUS hourly total.' },
-                          { id: HourlyPayoutModel.DRAW, label: 'RECOVERABLE DRAW', desc: 'Hourly total advances against future commission.' },
-                        ].map((model) => (
-                          <div 
-                            key={model.id}
-                            onClick={() => handleChange('hourlyConfig', { ...formData.hourlyConfig, model: model.id })}
-                            className={cn(
-                              "flex-1 min-w-[240px] p-5 rounded-2xl border transition-all duration-300 cursor-pointer group",
-                              formData.hourlyConfig.model === model.id 
-                                ? "bg-brand-primary/10 border-brand-primary/30 ring-1 ring-brand-primary/20"
-                                : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]"
-                            )}
-                          >
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className={cn(
-                                "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all",
-                                formData.hourlyConfig.model === model.id ? "border-brand-primary bg-brand-primary" : "border-slate-700"
-                              )}>
-                                {formData.hourlyConfig.model === model.id && <div className="w-1.5 h-1.5 rounded-full bg-bg-deep" />}
-                              </div>
-                              <Typography variant="mono" className={cn(
-                                "text-[10px] font-black uppercase tracking-widest",
-                                formData.hourlyConfig.model === model.id ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300"
-                              )}>
-                                {model.label}
-                              </Typography>
+                  <div className="space-y-4">
+                    <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Payout Model</Typography>
+                    <div className="flex flex-wrap gap-4">
+                      {[
+                        { id: HourlyPayoutModel.GUARANTEE, label: 'FLOOR (Higher of Both)', desc: 'Pay whichever is highest: Hourly vs Commission.' },
+                        { id: HourlyPayoutModel.ADDITIVE, label: 'ADDITIVE (Pay Both)', desc: 'Pay commission ladder PLUS hourly total.' },
+                        { id: HourlyPayoutModel.DRAW, label: 'RECOVERABLE DRAW', desc: 'Hourly total advances against future commission.' },
+                      ].map((model) => (
+                        <div 
+                          key={model.id}
+                          onClick={() => handleChange('hourlyConfig', { ...formData.hourlyConfig, model: model.id })}
+                          className={cn(
+                            "flex-1 min-w-[240px] p-5 rounded-2xl border transition-all duration-300 cursor-pointer group",
+                            formData.hourlyConfig.model === model.id 
+                              ? "bg-brand-primary/10 border-brand-primary/30 ring-1 ring-brand-primary/20"
+                              : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]"
+                          )}
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className={cn(
+                              "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all",
+                              formData.hourlyConfig.model === model.id ? "border-brand-primary bg-brand-primary" : "border-slate-700"
+                            )}>
+                              {formData.hourlyConfig.model === model.id && <div className="w-1.5 h-1.5 rounded-full bg-bg-deep" />}
                             </div>
-                            <Typography variant="small" className="text-slate-500 text-[11px] leading-relaxed pl-7">
-                              {model.desc}
+                            <Typography variant="mono" className={cn(
+                              "text-[10px] font-black uppercase tracking-widest",
+                              formData.hourlyConfig.model === model.id ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300"
+                            )}>
+                              {model.label}
                             </Typography>
                           </div>
-                        ))}
-                      </div>
+                          <Typography variant="small" className="text-slate-500 text-[11px] leading-relaxed pl-7">
+                            {model.desc}
+                          </Typography>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                )}
-              </Card>
-            </div>
-          )}
-        </div>
-
-        {/* Matrix Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                <TrendingUp className="h-6 w-6 text-cyan-500" />
-              </div>
-              <div className="flex flex-col">
-                <Typography variant="h3" className="text-white text-xl">Commission Ladder</Typography>
-                <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Unit-Based Payout Progression</Typography>
-              </div>
-            </div>
-            <ActiveChip 
-              active={formData.isAdvanced} 
-              onClick={() => handleChange('isAdvanced', !formData.isAdvanced)} 
-            />
+                </div>
+              )}
+            </Card>
           </div>
+        </MatrixSection>
 
-          {formData.isAdvanced && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+        {/* Commission Matrix Section */}
+        <MatrixSection
+          id="commission_ladder"
+          title="Commission Ladder"
+          subtitle="Unit-Based Payout Progression"
+          icon={<TrendingUp className="h-6 w-6" />}
+          iconColor="cyan-500"
+          isActive={formData.isAdvanced}
+          onActiveChange={(active) => handleChange('isAdvanced', active)}
+          isExpanded={expandedSections.commission_ladder}
+          onToggle={() => toggleSection('commission_ladder')}
+          summary={
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Front:</Typography>
+                <Typography variant="mono" className="text-[10px] text-white font-black">
+                  {activeTier?.frontRate ?? formData.tiers[0]?.frontRate ?? 0}%
+                </Typography>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Back:</Typography>
+                <Typography variant="mono" className="text-[10px] text-white font-black">
+                  {activeTier?.backRate ?? formData.tiers[0]?.backRate ?? 0}%
+                </Typography>
+              </div>
+            </div>
+          }
+        >
+          <div className="animate-in fade-in duration-500">
+            <div className="grid grid-cols-1 gap-3">
               {formData.tiers.map((tier, index) => {
                 const hasError = validationErrors[tier.id];
-                const isOnlyRow = formData.tiers.length === 1;
                 const isFirstRow = index === 0;
+                const isLastRow = index === formData.tiers.length - 1;
                 
                 return (
-                  <Card 
+                  <div 
                     key={tier.id} 
                     className={cn(
-                      "bg-[#0A0C12] border-white/5 p-8 rounded-[2rem] shadow-2xl relative transition-all duration-300",
+                      "group bg-[#0A0C12] border border-white/5 p-4 md:p-5 rounded-2xl transition-all duration-300 relative",
                       hasError ? "ring-1 ring-red-500/30 border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.05)]" : "hover:border-white/10"
                     )}
                   >
-                    <div className="flex flex-col xl:flex-row gap-8 items-start xl:items-end">
-                      <div className="flex flex-col md:flex-row gap-8 flex-1 w-full xl:w-auto">
-                        <MatrixInputGroup 
-                          label="Min Units" 
-                          value={isFirstRow ? 0 : (tier.threshold ?? '')} 
-                          onChange={(val) => updateTier(tier.id, { threshold: val === '' ? undefined : normalizeMatrixNumber(val) })} 
-                          color="neutral"
-                          disabled={isFirstRow}
-                        />
-                        <MatrixInputGroup 
-                          label="Max Units" 
-                          value={tier.maxUnits ?? ''} 
-                          onChange={(val) => updateTier(tier.id, { maxUnits: val === '' ? undefined : normalizeMatrixNumber(val) })} 
-                          color="neutral"
-                          placeholder="∞"
-                          isInfinite={(isOnlyRow || index === formData.tiers.length - 1) && tier.maxUnits == null}
-                        />
+                    <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
+                      {/* Units Range */}
+                      <div className="flex items-center gap-3 min-w-[140px]">
+                        <div className="w-[55px]">
+                          <Input 
+                            type="number"
+                            value={isFirstRow ? 0 : (tier.threshold ?? '')} 
+                            onChange={(e) => updateTier(tier.id, { threshold: e.target.value === '' ? undefined : normalizeMatrixNumber(e.target.value) })} 
+                            disabled={isFirstRow}
+                            placeholder="0"
+                            className="h-10 bg-black/40 border-white/5 font-bold text-center px-2 focus:ring-brand-primary"
+                          />
+                        </div>
+                        <Typography variant="mono" className="text-slate-600 font-black">→</Typography>
+                        <div className="w-[55px]">
+                          <Input 
+                            type="text"
+                            value={tier.maxUnits ?? ''} 
+                            onChange={(e) => updateTier(tier.id, { maxUnits: e.target.value === '' ? undefined : normalizeMatrixNumber(e.target.value) })} 
+                            placeholder="∞"
+                            disabled={isLastRow && tier.maxUnits == null}
+                            className={cn(
+                              "h-10 bg-black/40 border-white/5 font-bold text-center px-2",
+                              isLastRow && tier.maxUnits == null && "text-slate-500 bg-white/[0.02]"
+                            )}
+                          />
+                        </div>
                       </div>
 
-                      <div className="flex flex-col md:flex-row gap-8 flex-2 w-full xl:w-auto">
-                        <MatrixInputGroup 
-                          label="Front Rate (%)" 
-                          value={tier.frontRate ?? ''} 
-                          onChange={(val) => updateTier(tier.id, { frontRate: val === '' ? undefined : normalizeMatrixNumber(val) })} 
-                          color="cyan"
-                          suffix="%"
-                          isRetroactive={tier.frontRetroactive}
-                          onToggleRetroactive={isFirstRow ? undefined : () => updateTier(tier.id, { frontRetroactive: !tier.frontRetroactive })}
-                        />
+                      {/* Rates */}
+                      <div className="flex-1 flex flex-wrap items-center gap-8">
+                        <div className="flex items-center gap-4">
+                          <Typography variant="mono" className="text-[9px] text-cyan-500 font-black uppercase tracking-widest">Front End</Typography>
+                          <div className="w-[100px] relative">
+                            <Input 
+                              type="number"
+                              value={tier.frontRate ?? ''}
+                              onChange={(e) => updateTier(tier.id, { frontRate: normalizeMatrixNumber(e.target.value) })}
+                              className="h-10 bg-cyan-500/[0.03] border-cyan-500/20 text-cyan-400 font-black pr-6 text-center"
+                            />
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-cyan-500/50 font-bold">%</span>
+                          </div>
+                          {!isFirstRow && (
+                            <button
+                              type="button"
+                              onClick={() => updateTier(tier.id, { frontRetroactive: !tier.frontRetroactive })}
+                              className={cn(
+                                "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
+                                tier.frontRetroactive ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]" : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-500"
+                              )}
+                            >
+                              RETRO
+                            </button>
+                          )}
+                        </div>
 
-                        <MatrixInputGroup 
-                          label="Back Rate (%)" 
-                          value={tier.backRate ?? ''} 
-                          onChange={(val) => updateTier(tier.id, { backRate: val === '' ? undefined : normalizeMatrixNumber(val) })} 
-                          color="purple"
-                          suffix="%"
-                          isRetroactive={tier.backRetroactive}
-                          onToggleRetroactive={isFirstRow ? undefined : () => updateTier(tier.id, { backRetroactive: !tier.backRetroactive })}
-                        />
+                        <div className="flex items-center gap-4">
+                          <Typography variant="mono" className="text-[9px] text-purple-500 font-black uppercase tracking-widest">Back End</Typography>
+                          <div className="w-[100px] relative">
+                            <Input 
+                              type="number"
+                              value={tier.backRate ?? ''}
+                              onChange={(e) => updateTier(tier.id, { backRate: normalizeMatrixNumber(e.target.value) })}
+                              className="h-10 bg-purple-500/[0.03] border-purple-500/20 text-purple-400 font-black pr-6 text-center"
+                            />
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-purple-500/50 font-bold">%</span>
+                          </div>
+                          {!isFirstRow && (
+                            <button
+                              type="button"
+                              onClick={() => updateTier(tier.id, { backRetroactive: !tier.backRetroactive })}
+                              className={cn(
+                                "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
+                                tier.backRetroactive ? "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]" : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-500"
+                              )}
+                            >
+                              RETRO
+                            </button>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-4 self-end h-12">
-                        <Button 
+                      {/* Controls */}
+                      <div className="flex items-center gap-4 shrink-0">
+                        <button 
                           type="button" 
-                          variant="ghost" 
-                          size="icon" 
                           onClick={() => removeTier(tier.id)} 
                           disabled={formData.tiers.length <= 1}
-                          className="text-red-500/40 hover:text-red-400 disabled:opacity-0 transition-opacity"
+                          className="text-red-500/30 hover:text-red-400 disabled:opacity-0 transition-all p-2"
                         >
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </div>
 
                     {hasError && (
-                      <div className="mt-6 pt-4 border-t border-red-500/10 flex items-center gap-2 text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <ShieldCheck className="h-3 w-3" />
-                        <Typography variant="mono" className="text-[10px] uppercase tracking-wider font-bold">
+                      <div className="mt-3 pt-2 border-t border-red-500/10 flex items-center gap-2 text-red-400 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <Typography variant="mono" className="text-[9px] uppercase tracking-wider font-bold">
                           {hasError}
                         </Typography>
                       </div>
                     )}
-                  </Card>
+                  </div>
                 );
               })}
-
-              <div className="flex justify-center pt-2">
-                <Button 
-                  type="button" 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={addTier} 
-                  className="border-brand-primary/20 text-brand-primary hover:bg-brand-primary/10 rounded-xl h-11 px-8 transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.05)] active:scale-95"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Row
-                </Button>
-              </div>
             </div>
-          )}
-        </div>
 
-        {/* Back-End Eligibility Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
-                <ShieldCheck className="h-6 w-6 text-indigo-500" />
-              </div>
-              <div className="flex flex-col">
-                <Typography variant="h3" className="text-white text-xl">Back-End Eligibility Threshold</Typography>
-                <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Gross Profit Guardrails</Typography>
-              </div>
+            <div className="flex justify-center mt-6">
+              <Button 
+                type="button" 
+                size="sm" 
+                variant="outline" 
+                onClick={addTier} 
+                className="border-brand-primary/20 text-brand-primary hover:bg-brand-primary/10 rounded-xl h-11 px-10 transition-all duration-300 border-dashed"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Ladder Tier
+              </Button>
             </div>
-            <ActiveChip 
-              active={formData.isBackEndThresholdActive} 
-              onClick={() => handleChange('isBackEndThresholdActive', !formData.isBackEndThresholdActive)} 
-            />
           </div>
-
-          {formData.isBackEndThresholdActive && (
-            <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-              <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
-                <div className="max-w-md">
-                  <CurrencyInput 
-                    label="Minimum Front-End Gross for Back-End Eligibility"
-                    value={formData.backEndThreshold}
-                    onChange={(e) => handleChange('backEndThreshold', normalizeCurrencyNumber(e.target.value))}
-                    description="If front-end gross is below this amount, back-end commission is not paid."
-                    labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
-                  />
-                </div>
-              </Card>
-            </div>
-          )}
-        </div>
+        </MatrixSection>
 
         {/* StripeItVolumeBonusSystem - Volume Bonuses Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                <TrendingUp className="h-6 w-6 text-purple-500" />
-              </div>
-              <div className="flex flex-col">
-                <Typography variant="h3" className="text-white text-xl">Volume Bonus Engine</Typography>
-                <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Programmable Compensation</Typography>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {formData.isVolumeBonusEngineActive && (
-                <Button 
-                  type="button" 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={addVolumeBonus} 
-                  className="border-brand-primary/20 text-brand-primary hover:bg-brand-primary/10 h-10 px-6 rounded-xl animate-in fade-in zoom-in duration-300"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Payout Row
-                </Button>
-              )}
-              <ActiveChip 
-                active={formData.isVolumeBonusEngineActive} 
-                onClick={() => handleChange('isVolumeBonusEngineActive', !formData.isVolumeBonusEngineActive)} 
-              />
-            </div>
-          </div>
-
-          {formData.isVolumeBonusEngineActive && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
-              {(formData.volumeBonuses || []).length > 0 ? (
-                <div className="space-y-4">
-                  {(formData.volumeBonuses || [])
-                    .sort((a, b) => a.threshold - b.threshold)
-                    .map((bonus) => (
-                      <VolumeBonusRow 
-                        key={bonus.id}
-                        bonus={bonus}
-                        onUpdate={(updates) => updateVolumeBonus(bonus.id, updates)}
-                        onRemove={() => removeVolumeBonus(bonus.id)}
-                      />
-                    ))
-                  }
+        <MatrixSection
+          id="volume_bonus"
+          title="Volume Bonus Engine"
+          subtitle="Programmable Compensation"
+          icon={<TrendingUp className="h-6 w-6" />}
+          iconColor="purple-500"
+          isActive={formData.isVolumeBonusEngineActive}
+          onActiveChange={(active) => handleChange('isVolumeBonusEngineActive', active)}
+          isExpanded={expandedSections.volume_bonus}
+          onToggle={() => toggleSection('volume_bonus')}
+          summary={
+            formData.isVolumeBonusEngineActive && (
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                  <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Active:</Typography>
+                  <Typography variant="mono" className="text-[10px] text-white font-black">{(formData.volumeBonuses || []).filter(b => b.active).length}</Typography>
                 </div>
-              ) : (
-                <Card 
-                  className="bg-[#0A0C12]/50 border-white/5 p-12 rounded-[2rem] border-dashed border-2 flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.02] transition-colors group"
-                  onClick={addVolumeBonus}
-                >
-                  <Settings2 className="h-12 w-12 text-slate-700 mb-4 group-hover:text-brand-primary transition-colors" />
-                  <Typography className="text-slate-500 font-bold mb-2">No volume bonus records initialized.</Typography>
-                  <Typography variant="small" className="text-slate-600 text-center max-w-sm">
-                    Configure flat bonuses, cumulative stackers, or retroactive per-unit payouts to incentivize high-volume months.
-                  </Typography>
-                  <Button type="button" variant="link" className="text-brand-primary mt-6 font-black uppercase tracking-widest text-[10px]">
-                    Initialize Engine Now
+                {previewData.totalTierBonuses > 0 && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+                    <Typography variant="mono" className="text-[10px] text-emerald-500 font-black uppercase">Earned:</Typography>
+                    <Typography variant="mono" className="text-[10px] text-emerald-400 font-black">${previewData.totalTierBonuses.toLocaleString()}</Typography>
+                  </div>
+                )}
+              </div>
+            )
+          }
+        >
+          <div className="space-y-6 animate-in fade-in duration-500">
+            {formData.isVolumeBonusEngineActive && (
+              <div className="space-y-4">
+                {(formData.volumeBonuses || []).length > 0 ? (
+                  <div className="space-y-4">
+                    {(formData.volumeBonuses || [])
+                      .sort((a, b) => a.threshold - b.threshold)
+                      .map((bonus) => (
+                        <VolumeBonusRow 
+                          key={bonus.id}
+                          bonus={bonus}
+                          onUpdate={(updates) => updateVolumeBonus(bonus.id, updates)}
+                          onRemove={() => removeVolumeBonus(bonus.id)}
+                        />
+                      ))
+                    }
+                  </div>
+                ) : (
+                  <Card 
+                    className="bg-[#0A0C12]/50 border-white/5 p-12 rounded-[2rem] border-dashed border-2 flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.02] transition-colors group"
+                    onClick={addVolumeBonus}
+                  >
+                    <Settings2 className="h-12 w-12 text-slate-700 mb-4 group-hover:text-brand-primary transition-colors" />
+                    <Typography className="text-slate-500 font-bold mb-2">No volume bonus records initialized.</Typography>
+                    <Typography variant="small" className="text-slate-600 text-center max-w-sm">
+                      Configure flat bonuses, cumulative stackers, or retroactive per-unit payouts to incentivize high-volume months.
+                    </Typography>
+                    <Button type="button" variant="link" className="text-brand-primary mt-6 font-black uppercase tracking-widest text-[10px]">
+                      Initialize Engine Now
+                    </Button>
+                  </Card>
+                )}
+
+                <div className="flex justify-center mt-6">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={addVolumeBonus} 
+                    className="text-brand-primary h-10 px-6 hover:bg-brand-primary/5 rounded-xl border border-dashed border-brand-primary/20"
+                  >
+                    <Plus size={16} className="mr-2" /> Add Payout Row
                   </Button>
-                </Card>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Global Thresholds Section */}
-        <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
-          <div className="flex items-center gap-4 mb-4">
-             <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[8px] font-black">Miscellaneous Defaults</Typography>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <CurrencyInput 
-              label="Flat Per Unit" 
-              value={formData.flatPerUnitAmount}
-              onChange={(e) => handleNumeric('flatPerUnitAmount', e.target.value)}
-              description="Fixed amount per car sold"
-              labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
-            />
-            <Select 
-              label="Split Behavior"
-              options={[
-                { value: 'standard', label: 'Standard Proportion' },
-                { value: 'half_mini', label: 'Half the Mini' },
-              ]}
-              value={formData.splitDealBehavior}
-              onChange={(e) => handleChange('splitDealBehavior', e.target.value)}
-              labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
-            />
-          </div>
-        </Card>
-
-        {/* Rules Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                <Zap className="h-6 w-6 text-amber-500" />
-              </div>
-              <div className="flex flex-col">
-                <Typography variant="h3" className="text-white text-xl">Rules & Overrides</Typography>
-                <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Custom Bonus Logic</Typography>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {formData.isRulesEnabled && (
-                <Button type="button" size="sm" variant="outline" onClick={addRule} className="border-amber-500/20 text-amber-500 hover:bg-amber-500/10 h-10 px-6 rounded-xl animate-in fade-in zoom-in duration-300">
-                  <Plus className="mr-2 h-4 w-4" /> Add Rule
-                </Button>
-              )}
-              <ActiveChip 
-                active={formData.isRulesEnabled} 
-                onClick={() => handleChange('isRulesEnabled', !formData.isRulesEnabled)} 
-              />
-            </div>
-          </div>
-          
-          {formData.isRulesEnabled && (
-            <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-              {formData.rules.map((rule) => (
-              <Card key={rule.id} className="bg-white/[0.01] border-white/5 p-6 flex flex-wrap items-center gap-6 rounded-[1.5rem]">
-                <div className="flex-1 min-w-[200px]">
-                  <Input 
-                    placeholder="Rule Name" 
-                    value={rule.name}
-                    onChange={(e) => updateRule(rule.id, { name: e.target.value })}
-                    className="h-12 bg-black/40 border-white/5"
-                  />
                 </div>
-                <div className="w-[180px]">
-                  <Select 
-                    options={[
-                      { value: 'front_end_gross', label: 'Front End Gross' },
-                      { value: 'back_end_gross', label: 'Back End Gross' },
-                      { value: 'total_gross', label: 'Total Gross' },
-                    ]}
-                    value={rule.condition}
-                    onChange={(e) => updateRule(rule.id, { condition: e.target.value as any })}
-                    className="h-12 bg-black/40 border-white/5"
-                  />
-                </div>
-                <div className="w-[80px]">
-                  <Select 
-                    options={[
-                      { value: 'gt', label: '>' },
-                      { value: 'gte', label: '>=' },
-                    ]}
-                    value={rule.operator}
-                    onChange={(e) => updateRule(rule.id, { operator: e.target.value as any })}
-                    className="h-12 bg-black/40 border-white/5"
-                  />
-                </div>
-                <div className="w-[120px]">
-                  <CurrencyInput 
-                    value={rule.threshold}
-                    onChange={(e) => updateRule(rule.id, { threshold: parseFloat(e.target.value) || 0 })}
-                    className="h-12 bg-black/40 border-white/5"
-                  />
-                </div>
-                <div className="w-[150px]">
-                  <Select 
-                    options={[
-                      { value: 'fixed_bonus', label: 'Flat Bonus' },
-                      { value: 'percentage_increase', label: 'Gross % Bump' },
-                    ]}
-                    value={rule.rewardType}
-                    onChange={(e) => updateRule(rule.id, { rewardType: e.target.value as any })}
-                    className="h-12 bg-black/40 border-white/5"
-                  />
-                </div>
-                <div className="w-[120px]">
-                  <Input 
-                    type="number"
-                    step="0.01"
-                    value={rule.rewardValue}
-                    onChange={(e) => updateRule(rule.id, { rewardValue: parseFloat(e.target.value) || 0 })}
-                    onBlur={(e) => {
-                      const val = rule.rewardType === 'fixed_bonus' 
-                        ? normalizeCurrencyNumber(e.target.value)
-                        : normalizeMatrixNumber(e.target.value);
-                      updateRule(rule.id, { rewardValue: val });
-                    }}
-                    className="h-12 bg-black/40 border-white/5"
-                  />
-                </div>
-                <Button type="button" variant="ghost" size="icon" onClick={() => removeRule(rule.id)} className="text-red-500 opacity-40 hover:opacity-100">
-                  <Trash2 className="h-5 w-5" />
-                </Button>
-              </Card>
-            ))}
-            {formData.rules.length === 0 && (
-              <div className="text-center py-10 border-2 border-dashed border-white/5 rounded-[2rem]">
-                <Typography className="text-slate-500">No active commission rules. Add one to reward high gross deals.</Typography>
               </div>
             )}
           </div>
-          )}
-        </div>
+        </MatrixSection>
+
+        {/* Logic Rules & Exceptions Section */}
+        <MatrixSection
+          id="rules"
+          title="Rules & Overrides"
+          subtitle="Custom Bonus Logic"
+          icon={<Zap className="h-6 w-6" />}
+          iconColor="amber-500"
+          isActive={formData.isRulesEnabled}
+          onActiveChange={(active) => handleChange('isRulesEnabled', active)}
+          isExpanded={expandedSections.rules}
+          onToggle={() => toggleSection('rules')}
+          summary={
+            formData.isRulesEnabled && (
+              <div className="px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                <Typography variant="mono" className="text-[10px] text-white font-black">{formData.rules.length} Rules</Typography>
+              </div>
+            )
+          }
+        >
+          <div className="space-y-6 animate-in fade-in duration-500">
+            {formData.isRulesEnabled && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-3">
+                  {formData.rules.map((rule) => (
+                    <div key={rule.id} className="group bg-white/[0.01] border border-white/5 p-5 md:p-6 rounded-2xl transition-all duration-300">
+                      <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
+                        <div className="flex-1 lg:max-w-md w-full">
+                          <Input 
+                            placeholder="Rule Name (e.g. Sales Trainee Bonus)" 
+                            value={rule.name}
+                            onChange={(e) => updateRule(rule.id, { name: e.target.value })}
+                            className="h-10 bg-black/40 border-white/5 font-bold"
+                          />
+                        </div>
+                        
+                        <div className="flex-1 flex flex-wrap items-center gap-6">
+                          <div className="flex items-center gap-3">
+                            <Typography variant="mono" className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">IF</Typography>
+                            <div className="w-[180px]">
+                              <Select 
+                                options={[
+                                  { value: 'front_end_gross', label: 'Front End Gross' },
+                                  { value: 'back_end_gross', label: 'Back End Gross' },
+                                  { value: 'total_gross', label: 'Total Gross' },
+                                ]}
+                                value={rule.condition}
+                                onChange={(e) => updateRule(rule.id, { condition: e.target.value as any })}
+                                className="h-10 bg-black/40 border-white/5"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <Typography variant="mono" className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">EXCEEDS</Typography>
+                            <div className="w-[120px]">
+                              <CurrencyInput 
+                                value={rule.threshold}
+                                onChange={(e) => updateRule(rule.id, { threshold: normalizeCurrencyNumber(e.target.value) })}
+                                hideLabel
+                                className="h-10 bg-black/40 border-white/5"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <Typography variant="mono" className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">PAY</Typography>
+                            <div className="w-[120px]">
+                              <CurrencyInput 
+                                value={rule.rewardValue}
+                                onChange={(e) => updateRule(rule.id, { rewardValue: normalizeCurrencyNumber(e.target.value) })}
+                                hideLabel
+                                className="h-10 bg-black/40 border-white/5"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 shrink-0 self-end lg:self-center">
+                          <ActiveChip active={rule.active} onClick={() => updateRule(rule.id, { active: !rule.active })} />
+                          <button type="button" onClick={() => removeRule(rule.id)} className="text-red-500/30 hover:text-red-400 transition-all p-2">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {formData.rules.length === 0 && (
+                    <div className="py-12 border border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center bg-white/[0.01]">
+                      <Zap className="h-10 w-10 text-slate-800 mb-3" />
+                      <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest">No Active Exceptions</Typography>
+                      <Typography variant="small" className="text-[11px] text-slate-600 mt-2">Rules can override standard ladder logic based on deal attributes.</Typography>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-center mt-6">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={addRule} 
+                    className="text-amber-500 h-10 px-6 hover:bg-amber-500/5 rounded-xl border border-dashed border-amber-500/20"
+                  >
+                    <Plus size={16} className="mr-2" /> Add New Rule
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </MatrixSection>
+
+        {/* Global Defaults Section */}
+        <MatrixSection
+          id="misc_defaults"
+          title="Miscellaneous Defaults"
+          subtitle="General Behavior Settings"
+          icon={<Settings2 className="h-6 w-6" />}
+          iconColor="slate-500"
+          isExpanded={expandedSections.misc_defaults}
+          onToggle={() => toggleSection('misc_defaults')}
+          summary={
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Flat:</Typography>
+                <Typography variant="mono" className="text-[10px] text-white font-black">${formData.flatPerUnitAmount.toLocaleString()}</Typography>
+              </div>
+            </div>
+          }
+        >
+          <div className="animate-in fade-in duration-500">
+            <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <CurrencyInput 
+                  label="Flat Per Unit" 
+                  value={formData.flatPerUnitAmount}
+                  onChange={(e) => handleNumeric('flatPerUnitAmount', e.target.value)}
+                  description="Fixed amount paid per unit sold, regardless of gross profit."
+                  labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
+                />
+                <Select 
+                  label="Split Behavior"
+                  options={[
+                    { value: 'standard', label: 'Standard Proportion (50%)' },
+                    { value: 'half_mini', label: 'Half the Mini' },
+                  ]}
+                  value={formData.splitDealBehavior}
+                  onChange={(e) => handleChange('splitDealBehavior', e.target.value)}
+                  description="How commission is split when multiple salespeople are involved."
+                  labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
+                />
+              </div>
+            </Card>
+          </div>
+        </MatrixSection>
 
         {/* Live Preview Section */}
         <Card className="bg-brand-primary/[0.03] border-brand-primary/10 p-10 rounded-[2.5rem]">

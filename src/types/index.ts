@@ -82,6 +82,7 @@ export interface PayPlanRule {
   threshold: number;
   rewardType: 'fixed_bonus' | 'percentage_increase';
   rewardValue: number;
+  active: boolean;
 }
 
 export interface PayPlanTier {
@@ -142,19 +143,13 @@ export interface HourlyConfig {
   model: HourlyPayoutModel;
 }
 
-export enum MiniAppliesTo {
-  NEW = 'new',
-  USED = 'used',
-  CPO = 'cpo',
-  ALL = 'all'
-}
-
-export interface MiniThreshold {
+export interface MiniLadderTier {
   id: string;
   threshold: number;
-  amount: number;
-  appliesTo: MiniAppliesTo;
-  isRetro: boolean;
+  maxUnits: number | null;
+  newMini: number;
+  usedMini: number;
+  isRetroactive: boolean; // Retroactive behavior for minis
   active: boolean;
 }
 
@@ -166,20 +161,12 @@ export interface CustomMini {
   filter: VolumeBonusFilter;
 }
 
-export interface MiniConfig {
-  active: boolean;
-  isLinked: boolean;
-  baseNewMini: number;
-  baseUsedMini: number;
-  independentThresholds: MiniThreshold[];
-}
-
 export interface PayPlan {
   id: string;
   organizationId: string;
   userId: string;
   name: string;
-  miniAmount: number;
+  miniAmount: number; // Legacy or default
   frontEndPercentage: number;
   backEndPercentage: number;
   flatPerUnitAmount: number;
@@ -190,8 +177,6 @@ export interface PayPlan {
   isRulesEnabled?: boolean;
   isVolumeBonusActive?: boolean;
   isVolumeBonusEngineActive?: boolean; // New engine flag
-  isBackEndThresholdActive?: boolean;
-  backEndThreshold?: number;
   rules: PayPlanRule[];
   tiers: PayPlanTier[];
   volumeBonuses?: VolumeBonus[]; 
@@ -200,7 +185,7 @@ export interface PayPlan {
   isMinisAndHourlyActive?: boolean;
   isMinisActive?: boolean;
   isHourlyActive?: boolean;
-  miniConfig?: MiniConfig;
+  miniTiers?: MiniLadderTier[]; // New Mini Ladder System
   customMinis?: CustomMini[];
   hourlyConfig?: HourlyConfig;
   

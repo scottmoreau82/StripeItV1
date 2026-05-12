@@ -9,7 +9,7 @@ import { DealDetailView } from './DealDetailView';
 import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
-import { History, LayoutGrid, List } from 'lucide-react';
+import { History, LayoutGrid, List, ShieldCheck, Target } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
@@ -17,6 +17,8 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useResponsive } from '@/src/hooks/useResponsive';
 import { DashboardLayout } from '../layout/DashboardLayout';
 import { ContextHint } from '../onboarding/ContextHint';
+import { randomDealService } from '@/src/services/randomDealService';
+import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 
 import { EmptyState } from '../ui/EmptyState';
 
@@ -40,7 +42,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     handleUpdateDealStatus 
   } = useAppData();
   
-  const { profile } = useAuth();
+  const { profile, isAdmin, user } = useAuth();
   const { isMobile } = useResponsive();
 
   const [search, setSearch] = useState('');
@@ -82,6 +84,41 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       </Typography>
     </div>
   );
+
+  // Deal Detail Modal/Flow
+  const handleCreateRandomDeal = () => {
+    const randomDeal = randomDealService.generateRandomDeal();
+    if (window.confirm(`Create random deal for ${randomDeal.customerName}?`)) {
+      window.dispatchEvent(new CustomEvent('stripeit:create-random-deal'));
+    }
+  };
+
+  const testingTools = (isAdmin || user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase()) ? (
+    <div className="mt-12 pt-8 border-t border-white/5">
+      <div className="flex items-center gap-2 mb-4">
+        <ShieldCheck className="h-4 w-4 text-brand-primary" />
+        <Typography variant="mono" className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black">
+          Testing Tools (Admin Only)
+        </Typography>
+      </div>
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex-1">
+          <Typography variant="h4" className="text-white mb-1">Generate Demo Data</Typography>
+          <Typography variant="small" className="text-slate-500">
+            Instantly create a realistic car deal to test calculations, totalizers, and dashboard visualizations.
+          </Typography>
+        </div>
+        <Button 
+          variant="secondary"
+          className="bg-white/5 border-white/10 text-slate-300 font-bold hover:bg-white/10 hover:text-white transition-all gap-2"
+          onClick={handleCreateRandomDeal}
+        >
+          <Target className="h-4 w-4" />
+          Create Random Deal
+        </Button>
+      </div>
+    </div>
+  ) : null;
 
   const mainContent = (
     <div className="space-y-8 pb-32">
@@ -151,6 +188,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           />
         )}
       </div>
+
+      {testingTools}
 
       {/* Deal Detail Modal/Flow */}
       <AnimatePresence>

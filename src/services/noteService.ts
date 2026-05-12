@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { QuickNote } from '../types';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItNoteServiceSystem
@@ -20,7 +21,7 @@ import { QuickNote } from '../types';
  */
 
 const getNotesRef = (orgId: string) => {
-  return collection(db, 'organizations', orgId, 'notes');
+  return collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.NOTES);
 };
 
 export const noteService = {
@@ -55,7 +56,7 @@ export const noteService = {
    * Update a note
    */
   async updateNote(orgId: string, noteId: string, updates: Partial<QuickNote>): Promise<void> {
-    const docRef = doc(db, 'organizations', orgId, 'notes', noteId);
+    const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.NOTES, noteId);
     await updateDoc(docRef, {
       ...updates,
       updatedAt: serverTimestamp(),
@@ -66,7 +67,7 @@ export const noteService = {
    * Delete a note
    */
   async deleteNote(orgId: string, noteId: string): Promise<void> {
-    const docRef = doc(db, 'organizations', orgId, 'notes', noteId);
+    const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.NOTES, noteId);
     await deleteDoc(docRef);
   }
 };

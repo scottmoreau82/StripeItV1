@@ -28,11 +28,12 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserProfile, UserRole, UserPreferences } from '@/src/types';
+import { UserProfile, UserRole, UserPreferences, SubscriptionTier } from '@/src/types';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { preferenceService, DEFAULT_PREFERENCES } from '@/src/services/preferenceService';
 import { demoSeedService } from '@/src/services/demoSeedService';
 import { testingService } from '@/src/services/testingService';
+import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 
 import { DashboardLayout } from '../layout/DashboardLayout';
 
@@ -47,11 +48,10 @@ interface SettingsViewProps {
   isMobile: boolean;
 }
 
-type SettingsSection = 'profile' | 'appearance' | 'notifications' | 'account' | 'organization' | 'testing' | 'feedback' | 'admin';
+type SettingsSection = 'profile' | 'appearance' | 'notifications' | 'account' | 'organization' | 'testing' | 'feedback' | 'admin' | 'developer';
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, isMobile }) => {
   const { isAdmin } = useAuth();
-  const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
   const [isUpdating, setIsUpdating] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -69,21 +69,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
     }
   };
 
-  const sectionItems: { id: SettingsSection; label: string; icon: any; roles?: UserRole[] }[] = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'appearance', label: 'Appearance', icon: Moon },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'account', label: 'Account', icon: Shield },
-    { id: 'feedback', label: 'Feedback', icon: MessageSquarePlus },
-    isAdmin ? { id: 'admin', label: 'Admin', icon: Shield } : null,
-    { id: 'organization', label: 'Organization', icon: Building2, roles: [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN] },
-    { id: 'testing', label: 'Testing & Demo', icon: FlaskConical },
-  ].filter((item): item is any => item !== null);
-
-  const filteredSections = sectionItems.filter(item => 
-    !item.roles || (profile?.role && item.roles.includes(profile.role))
-  );
-
   const handleUpdatePreference = async (updates: any) => {
     if (!profile?.uid) return;
     setIsUpdating(true);
@@ -98,42 +83,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
     }
   };
 
-  const renderSidebar = () => (
-    <div className="space-y-1">
-      {filteredSections.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => setActiveSection(item.id)}
-          className={cn(
-            "w-full flex items-center justify-between p-4 rounded-2xl transition-all group",
-            activeSection === item.id 
-              ? "bg-brand-primary text-bg-deep shadow-glow glow-primary" 
-              : "text-slate-400 hover:bg-white/[0.03] hover:text-white"
-          )}
-        >
-          <div className="flex items-center gap-4">
-            <item.icon className={cn("h-5 w-5", activeSection === item.id ? "stroke-[3px]" : "stroke-[2px]")} />
-            <span className="font-bold tracking-tight">{item.label}</span>
-          </div>
-          <ChevronRight className={cn(
-            "h-4 w-4 opacity-0 group-hover:opacity-100 transition-all",
-            activeSection === item.id && "opacity-100"
-          )} />
-        </button>
-      ))}
-      
-      <div className="pt-8 mt-8 border-t border-white/5">
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center gap-4 p-4 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-all"
-        >
-          <LogOut className="h-5 w-5" />
-          <span className="font-bold tracking-tight">Sign Out</span>
-        </button>
-      </div>
-    </div>
-  );
-
   const header = (
     <div className="flex flex-col gap-2">
       <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter">
@@ -146,38 +95,44 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
   );
 
   const mainContent = (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-      {/* Navigation Sidebar */}
-      <div className="lg:col-span-4">
-        <Card className={cn(
-          "p-3 bg-bg-card/40 border-white/5",
-          isMobile && "mb-4"
-        )}>
-          {renderSidebar()}
-        </Card>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-20 pb-32">
+      <section id="profile" className="scroll-mt-24">
+        <ProfilePanel profile={profile} />
+      </section>
 
-      {/* Content Area */}
-      <div className="lg:col-span-8">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeSection}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            className="space-y-8"
-          >
-            {activeSection === 'profile' && <ProfilePanel profile={profile} />}
-            {activeSection === 'appearance' && <AppearancePanel preferences={preferences} onUpdate={handleUpdatePreference} />}
-            {activeSection === 'notifications' && <NotificationsPanel userId={profile?.uid} notifications={preferences.notifications} />}
-            {activeSection === 'account' && <AccountPanel profile={profile} />}
-            {activeSection === 'feedback' && <FeedbackPanel />}
-            {activeSection === 'admin' && <AdminPanel />}
-            {activeSection === 'organization' && <OrganizationPanel profile={profile} />}
-            {activeSection === 'testing' && <TestingPanel profile={profile} />}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+      <section id="appearance" className="scroll-mt-24">
+        <AppearancePanel preferences={preferences} onUpdate={handleUpdatePreference} />
+      </section>
+
+      <section id="notifications" className="scroll-mt-24">
+        <NotificationsPanel userId={profile?.uid} notifications={preferences.notifications} />
+      </section>
+
+      <section id="account" className="scroll-mt-24">
+        <AccountPanel profile={profile} />
+      </section>
+
+      {profile?.role && [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN].includes(profile.role) && (
+        <section id="organization" className="scroll-mt-24">
+          <OrganizationPanel profile={profile} />
+        </section>
+      )}
+
+      {isAdmin && (
+        <>
+          <section id="admin" className="scroll-mt-24">
+            <AdminPanel />
+          </section>
+
+          <section id="developer" className="scroll-mt-24">
+            <DeveloperPanel />
+          </section>
+        </>
+      )}
+
+      <section id="testing" className="scroll-mt-24">
+        <TestingPanel profile={profile} />
+      </section>
 
       {/* Quick Success Toast */}
       <AnimatePresence>
@@ -239,7 +194,7 @@ const AdminPanel = () => {
       <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Admin Tools</Typography>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-8 bg-brand-primary/5 border border-brand-primary/10 space-y-6 flex flex-col justify-between">
+        <Card className="p-8 bg-brand-primary/5 border border-brand-primary/10 space-y-6 flex flex-col justify-between shadow-glow-sm glow-primary/5">
           <div className="space-y-2">
             <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
               <MessageSquarePlus className="h-5 w-5 text-brand-primary" />
@@ -278,6 +233,104 @@ const AdminPanel = () => {
         <ShieldCheck className="h-5 w-5 text-amber-500" />
         <Typography variant="small" className="text-amber-500/80 font-bold">
           Admin Access Active. You have unrestricted access to system-level tools and feedback databases.
+        </Typography>
+      </Card>
+    </div>
+  );
+};
+
+const DeveloperPanel = () => {
+  const { profile, tierOverride, setTierOverride, isEditMode, setIsEditMode } = useAuth();
+  
+  return (
+    <div className="space-y-8">
+      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Developer Tools</Typography>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Tier Override */}
+        <Card className="p-8 bg-bg-card/40 border-white/5 space-y-6">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+              <Sparkles className="h-5 w-5 text-brand-primary" />
+            </div>
+            <div>
+              <Typography variant="h4" className="text-white">Dev Tier Override</Typography>
+              <Typography variant="small" className="text-slate-500 block">Simulate different subscription levels</Typography>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <select
+              value={tierOverride || profile?.subscriptionTier || ''}
+              onChange={(e) => setTierOverride(e.target.value as SubscriptionTier || null)}
+              className="w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
+            >
+              <option value="">Default ({profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? 'Dealer' : profile?.subscriptionTier})</option>
+              {Object.values(SubscriptionTier).map((tier) => (
+                <option key={tier} value={tier}>
+                  {tier === SubscriptionTier.ORGANIZATION ? 'Dealer' : tier}
+                </option>
+              ))}
+            </select>
+            
+            <div className="p-4 bg-brand-primary/5 border border-brand-primary/10 rounded-2xl">
+              <Typography variant="small" className="text-brand-primary/80 font-bold block leading-relaxed">
+                Active Tier: <span className="text-white">{tierOverride || profile?.subscriptionTier || 'Free'}</span>
+              </Typography>
+              <Typography variant="small" className="text-slate-500 block mt-1 text-[10px]">
+                This effect is session-based and does not affect production billing.
+              </Typography>
+            </div>
+          </div>
+        </Card>
+
+        {/* Edit Mode */}
+        <Card className="p-8 bg-bg-card/40 border-white/5 space-y-6">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+              <Target className="h-5 w-5 text-indigo-400" />
+            </div>
+            <div>
+              <Typography variant="h4" className="text-white">System Edit Mode</Typography>
+              <Typography variant="small" className="text-slate-500 block">Enable UI & testing overrides</Typography>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
+            <div className="space-y-1">
+              <Typography variant="label" className="text-white">Status</Typography>
+              <Typography variant="small" className={cn(
+                "font-black uppercase tracking-widest text-[10px]",
+                isEditMode ? "text-brand-primary" : "text-slate-500"
+              )}>
+                {isEditMode ? 'Enabled' : 'Disabled'}
+              </Typography>
+            </div>
+            
+            <button 
+              onClick={() => setIsEditMode(!isEditMode)}
+              className={cn(
+                "h-7 w-14 rounded-full transition-all relative p-1.5",
+                isEditMode ? "bg-brand-primary shadow-glow glow-primary" : "bg-slate-700"
+              )}
+            >
+              <div className={cn(
+                "h-4 w-4 rounded-full bg-white shadow-sm transition-all",
+                isEditMode ? "translate-x-7" : "translate-x-0"
+              )} />
+            </button>
+          </div>
+
+          <Typography variant="small" className="text-slate-600 italic block text-center">
+            Edit mode allows for rapid UI prototyping and state injection.
+          </Typography>
+        </Card>
+      </div>
+
+      <Card className="p-6 bg-brand-primary/5 border border-brand-primary/10 flex items-center gap-4">
+        <Bug className="h-5 w-5 text-brand-primary" />
+        <Typography variant="small" className="text-brand-primary/80 font-bold">
+          Developer Mode Active. These tools are restricted to {STRIPEIT_DEVELOPER_EMAIL} and system admins.
         </Typography>
       </Card>
     </div>

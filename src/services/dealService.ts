@@ -14,18 +14,17 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Deal, DealStatus } from '../types';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItDealServiceSystem
  * Handles all Firestore interactions for car deals.
  */
 
-const COLLECTION_NAME = 'deals';
-
 // Helper to get organic deals collection ref (for top-level queries if needed, 
 // though my blueprint uses organizations/{orgId}/deals)
 const getDealsRef = (orgId: string) => {
-  return collection(db, 'organizations', orgId, 'deals');
+  return collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.DEALS);
 };
 
 export const dealService = {
@@ -47,7 +46,7 @@ export const dealService = {
    * Get a single deal by ID
    */
   async getDeal(orgId: string, dealId: string): Promise<Deal | null> {
-    const docRef = doc(db, 'organizations', orgId, 'deals', dealId);
+    const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.DEALS, dealId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() } as Deal;
@@ -59,7 +58,7 @@ export const dealService = {
    * Update an existing deal
    */
   async updateDeal(orgId: string, dealId: string, updates: Partial<Deal>): Promise<void> {
-    const docRef = doc(db, 'organizations', orgId, 'deals', dealId);
+    const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.DEALS, dealId);
     await updateDoc(docRef, {
       ...updates,
       updatedAt: serverTimestamp(),
@@ -70,7 +69,7 @@ export const dealService = {
    * Delete a deal
    */
   async deleteDeal(orgId: string, dealId: string): Promise<void> {
-    const docRef = doc(db, 'organizations', orgId, 'deals', dealId);
+    const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.DEALS, dealId);
     await deleteDoc(docRef);
   },
 

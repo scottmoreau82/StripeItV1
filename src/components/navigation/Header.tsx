@@ -10,8 +10,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { auth } from '@/src/lib/firebase';
 import { SubscriptionTier } from '@/src/types';
-import { featureAccessService } from '@/src/services/featureAccessService';
-import { TierBadge } from './Sidebar';
+import { Feature, featureAccessService } from '@/src/services/featureAccessService';
+import { TierBadge } from './TierBadge';
+import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 
 /**
  * StripeItNavigationSystem - Mobile Header & Drawer
@@ -25,8 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
   const location = useLocation();
   const { profile, user, tierOverride, setTierOverride } = useAuth();
 
-  const developerEmail = 'scottmoreau82@gmail.com';
-  const isDeveloper = user?.email?.toLowerCase() === developerEmail.toLowerCase();
+  const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
 
   const handleLogout = async () => {
     try {
@@ -38,21 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
   };
 
   // StripeItFeatureAccessSystem - Filter items based on tier
-  const visibleNavItems = navigationConfig.main.filter(item => {
-    // Basic items always visible
-    if (!item.featureId) return true;
-    
-    // Check access
-    const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
-    const hasAccess = featureAccessService.hasAccess(profile, item.featureId);
-
-    // Hide if restricted for Free tier as per request
-    if (isFree && ['activity', 'analytics', 'goals', 'reports', 'inventory'].includes(item.id)) {
-      return false;
-    }
-
-    return hasAccess;
-  });
+  const visibleNavItems = navigationConfig.getVisibleItems(profile);
 
   return (
     <>
@@ -153,46 +139,22 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
                     })}
                   </nav>
 
-                  <div className="space-y-3 mb-10">
-                    <Button 
-                      className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-xs h-14 shadow-glow glow-primary rounded-xl"
-                      onClick={() => {
-                        setIsOpen(false);
-                        onLogDeal?.();
-                      }}
-                    >
-                      Log New Deal
-                    </Button>
-                  </div>
+                    <div className="space-y-3 mb-10">
+                      <Button 
+                        className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-xs h-14 shadow-glow glow-primary rounded-xl"
+                        onClick={() => {
+                          setIsOpen(false);
+                          onLogDeal?.();
+                        }}
+                      >
+                        + Log Deal
+                      </Button>
+                    </div>
                   <div className="h-4 shrink-0" />
                 </div>
 
                 {/* Footer Section (Pinned) */}
                 <div className="p-6 space-y-4 border-t border-white/5 bg-bg-deep/80 backdrop-blur-md z-10">
-                   {/* StripeItDeveloperTierOverrideSystem */}
-                  {isDeveloper && (
-                    <div className="px-4 py-3 bg-brand-primary/[0.03] border border-brand-primary/10 rounded-2xl space-y-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <ShieldCheck className="h-3 w-3 text-brand-primary" />
-                        <Typography variant="mono" className="text-[9px] text-brand-primary uppercase font-black tracking-[0.2em]">
-                          Dev Tier Override
-                        </Typography>
-                      </div>
-                      <select
-                        value={tierOverride || profile?.subscriptionTier || ''}
-                        onChange={(e) => setTierOverride(e.target.value as SubscriptionTier || null)}
-                        className="w-full bg-bg-deep border border-white/10 rounded-lg px-2 py-1.5 text-[10px] font-bold text-white uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
-                      >
-                        <option value="">Default ({profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? 'Dealer' : profile?.subscriptionTier})</option>
-                        {Object.values(SubscriptionTier).map((tier) => (
-                          <option key={tier} value={tier}>
-                            {tier === SubscriptionTier.ORGANIZATION ? 'Dealer' : tier}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
                   {/* User Profile Info */}
                   <div className="relative bg-bg-card/50 border border-white/5 rounded-2xl p-4 flex items-center gap-3 overflow-hidden">
 

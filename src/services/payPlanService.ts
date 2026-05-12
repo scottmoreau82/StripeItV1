@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { PayPlan } from '../types';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItPayPlanServiceSystem
@@ -23,7 +24,7 @@ export const payPlanService = {
    * Create or Update a Pay Plan
    */
   async savePayPlan(orgId: string, userId: string, plan: Omit<PayPlan, 'id' | 'createdAt' | 'updatedAt' | 'organizationId' | 'userId'>): Promise<void> {
-    const planRef = doc(db, 'organizations', orgId, 'users', userId, 'payPlans', 'primary'); // For now, we only support one 'primary' plan
+    const planRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.USERS, userId, 'payPlans', 'primary'); // For now, we only support one 'primary' plan
     
     await setDoc(planRef, {
       ...plan,
@@ -39,7 +40,7 @@ export const payPlanService = {
    * Get the primary pay plan for a user
    */
   async getPrimaryPayPlan(orgId: string, userId: string): Promise<PayPlan | null> {
-    const planRef = doc(db, 'organizations', orgId, 'users', userId, 'payPlans', 'primary');
+    const planRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.USERS, userId, 'payPlans', 'primary');
     const snap = await getDoc(planRef);
     
     if (snap.exists()) {

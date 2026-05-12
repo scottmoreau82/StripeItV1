@@ -13,6 +13,7 @@ import { notificationService } from '../services/notificationService';
 import { Deal, PayPlan, Goal, DealStatus, QuickNote, Competition, SubscriptionTier, DashboardLayout, ActivityEventType } from '../types';
 import { onSnapshot, query, collection, orderBy, where } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItAppDataSystem
@@ -128,7 +129,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // 1. Subscription to Deals
     let dealsQuery = query(
-      collection(db, 'organizations', profile.orgId, 'deals'),
+      collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, COLLECTIONS.DEALS),
       orderBy('createdAt', 'desc')
     );
     
@@ -160,7 +161,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // 2. Subscription to Notes
     const notesQuery = query(
-      collection(db, 'organizations', profile.orgId, 'notes'),
+      collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, COLLECTIONS.NOTES),
       where('userId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
@@ -185,7 +186,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // 3. Subscription to Competitions
     const compsQuery = query(
-      collection(db, 'organizations', profile.orgId, 'competitions'),
+      collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, COLLECTIONS.COMPETITIONS),
       where('endDate', '>=', Date.now())
     );
 

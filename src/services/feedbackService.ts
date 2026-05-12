@@ -11,6 +11,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { FeedbackReport, FeedbackStatus } from '../types';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItFeedbackSystem - Centralized Service
@@ -22,7 +23,7 @@ export const feedbackService = {
    * Handles optional screenshot upload to Firebase Storage.
    */
   async submitFeedback(feedback: Omit<FeedbackReport, 'id' | 'createdAt' | 'updatedAt' | 'status'>, attachment?: File): Promise<string> {
-    const feedbackRef = collection(db, 'feedbackReports');
+    const feedbackRef = collection(db, COLLECTIONS.FEEDBACK_REPORTS);
     const newDocRef = doc(feedbackRef);
     const feedbackId = newDocRef.id;
     
@@ -53,13 +54,9 @@ export const feedbackService = {
     }
 
     // Clean undefined values to prevent Firestore errors
-    const cleanedFeedback: any = {};
-    Object.keys(feedback).forEach(key => {
-      const val = (feedback as any)[key];
-      if (val !== undefined) {
-        cleanedFeedback[key] = val;
-      }
-    });
+    const cleanedFeedback = Object.fromEntries(
+      Object.entries(feedback).filter(([_, v]) => v !== undefined)
+    );
 
     const newFeedback = {
       ...cleanedFeedback,
@@ -82,7 +79,7 @@ export const feedbackService = {
 
       return feedbackId;
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'feedbackReports');
+      handleFirestoreError(error, OperationType.CREATE, COLLECTIONS.FEEDBACK_REPORTS);
       throw error;
     }
   },
@@ -92,14 +89,14 @@ export const feedbackService = {
    * Only accessible by authorized admins via Security Rules.
    */
   async getReports(): Promise<FeedbackReport[]> {
-    const feedbackRef = collection(db, 'feedbackReports');
+    const feedbackRef = collection(db, COLLECTIONS.FEEDBACK_REPORTS);
     const q = query(feedbackRef, orderBy('createdAt', 'desc'));
     
     try {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FeedbackReport));
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'feedbackReports');
+      handleFirestoreError(error, OperationType.LIST, COLLECTIONS.FEEDBACK_REPORTS);
       throw error;
     }
   },
@@ -108,14 +105,14 @@ export const feedbackService = {
    * Updates the status of an existing feedback report.
    */
   async updateStatus(reportId: string, status: FeedbackStatus): Promise<void> {
-    const reportRef = doc(db, 'feedbackReports', reportId);
+    const reportRef = doc(db, COLLECTIONS.FEEDBACK_REPORTS, reportId);
     try {
       await updateDoc(reportRef, {
         status,
         updatedAt: Date.now()
       });
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `feedbackReports/${reportId}`);
+      handleFirestoreError(error, OperationType.UPDATE, `${COLLECTIONS.FEEDBACK_REPORTS}/${reportId}`);
       throw error;
     }
   },

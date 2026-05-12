@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/src/lib/firebase';
 import { ActivityEvent, ActivityEventType } from '../types';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItActivityEventSystem
@@ -24,7 +25,7 @@ export const activityService = {
    */
   async logEvent(orgId: string, event: Omit<ActivityEvent, 'id' | 'createdAt'>) {
     try {
-      const activityRef = collection(db, 'organizations', orgId, 'activity');
+      const activityRef = collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.ACTIVITY);
       await addDoc(activityRef, {
         ...event,
         createdAt: serverTimestamp()
@@ -38,7 +39,7 @@ export const activityService = {
    * Listen for real-time activity updates.
    */
   subscribeToActivity(orgId: string, callback: (events: ActivityEvent[]) => void, maxResults = 50) {
-    const activityRef = collection(db, 'organizations', orgId, 'activity');
+    const activityRef = collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.ACTIVITY);
     const q = query(activityRef, orderBy('createdAt', 'desc'), limit(maxResults));
 
     return onSnapshot(q, (snapshot) => {
@@ -58,7 +59,7 @@ export const activityService = {
    * Fetch recent activity events.
    */
   async getRecentActivity(orgId: string, maxResults = 20): Promise<ActivityEvent[]> {
-    const activityRef = collection(db, 'organizations', orgId, 'activity');
+    const activityRef = collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.ACTIVITY);
     const q = query(activityRef, orderBy('createdAt', 'desc'), limit(maxResults));
     const snapshot = await getDocs(q);
     

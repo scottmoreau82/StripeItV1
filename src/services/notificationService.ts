@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/src/lib/firebase';
 import { Notification, ActivityEventType } from '../types';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItNotificationSystem & StripeItUnreadStateSystem
@@ -25,7 +26,7 @@ export const notificationService = {
    */
   async notify(userId: string, notification: Omit<Notification, 'id' | 'read' | 'createdAt'>) {
     try {
-      const notificationsRef = collection(db, 'users', userId, 'notifications');
+      const notificationsRef = collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.NOTIFICATIONS);
       await addDoc(notificationsRef, {
         ...notification,
         read: false,
@@ -40,7 +41,7 @@ export const notificationService = {
    * Subscribe to a user's unread notifications.
    */
   subscribeToUnread(userId: string, callback: (notifications: Notification[]) => void) {
-    const notificationsRef = collection(db, 'users', userId, 'notifications');
+    const notificationsRef = collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.NOTIFICATIONS);
     const q = query(
       notificationsRef, 
       where('read', '==', false), 
@@ -65,7 +66,7 @@ export const notificationService = {
    * Mark a single notification as read.
    */
   async markAsRead(userId: string, notificationId: string) {
-    const notificationRef = doc(db, 'users', userId, 'notifications', notificationId);
+    const notificationRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.NOTIFICATIONS, notificationId);
     await updateDoc(notificationRef, { read: true });
   },
 
@@ -73,7 +74,7 @@ export const notificationService = {
    * Mark all notifications as read for a user.
    */
   async markAllAsRead(userId: string) {
-    const notificationsRef = collection(db, 'users', userId, 'notifications');
+    const notificationsRef = collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.NOTIFICATIONS);
     const q = query(notificationsRef, where('read', '==', false));
     const snapshot = await getDocs(q);
     

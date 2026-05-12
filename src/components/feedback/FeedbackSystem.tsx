@@ -7,6 +7,8 @@ import { FeedbackType } from '@/src/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 
+import { useResponsive } from '@/src/hooks/useResponsive';
+
 /**
  * StripeItFeedbackSystem
  * Entry point and responsive container for the feedback flow.
@@ -21,13 +23,7 @@ interface FeedbackSystemProps {
 export const FeedbackSystem: React.FC<FeedbackSystemProps> = ({ isOpen, onClose, initialType }) => {
   const [step, setStep] = useState<'choosing' | 'form'>(initialType ? 'form' : 'choosing');
   const [type, setType] = useState<FeedbackType>(initialType || FeedbackType.BUG);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     if (isOpen) {

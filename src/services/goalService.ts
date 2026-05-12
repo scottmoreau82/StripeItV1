@@ -10,18 +10,17 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Goal } from '../types';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItGoalDataSystem
  * Service for managing user goals in Firestore.
  */
 
-const COLLECTION = 'goals';
-
 export const goalService = {
   async getGoalForMonth(userId: string, orgId: string, month: string): Promise<Goal | null> {
     const goalId = `${userId}-${month}`;
-    const docRef = doc(db, COLLECTION, goalId);
+    const docRef = doc(db, COLLECTIONS.GOALS, goalId);
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
@@ -34,9 +33,8 @@ export const goalService = {
     if (!goalData.userId || !goalData.month) throw new Error("Missing required goal fields");
     
     const goalId = `${goalData.userId}-${goalData.month}`;
-    const docRef = doc(db, COLLECTION, goalId);
+    const docRef = doc(db, COLLECTIONS.GOALS, goalId);
     
-    const timestamp = Date.now();
     const finalGoal = {
       ...goalData,
       id: goalId,

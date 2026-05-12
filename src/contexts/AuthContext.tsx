@@ -3,6 +3,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { UserProfile, SubscriptionTier } from '../types';
+import { STRIPEIT_DEVELOPER_EMAIL, COLLECTIONS } from '../constants';
 import { Typography } from '../components/ui/Typography';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -28,6 +29,8 @@ interface AuthContextType {
   updateProfileData: (data: Partial<UserProfile>) => Promise<void>;
   addToast: (message: string, type: 'success' | 'error' | 'info') => void;
   isAdmin: boolean;
+  isEditMode: boolean;
+  setIsEditMode: (value: boolean) => void;
   tierOverride: SubscriptionTier | null;
   setTierOverride: (tier: SubscriptionTier | null) => void;
 }
@@ -42,6 +45,8 @@ const AuthContext = createContext<AuthContextType>({
   updateProfileData: async () => {},
   addToast: () => {},
   isAdmin: false,
+  isEditMode: false,
+  setIsEditMode: () => {},
   tierOverride: null,
   setTierOverride: () => {},
 });
@@ -98,9 +103,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [initialized, setInitialized] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [isEditMode, setIsEditModeState] = useState(() => {
+    return localStorage.getItem('stripeit_edit_mode') === 'true';
+  });
   const [tierOverride, setTierOverrideState] = useState<SubscriptionTier | null>(() => {
     return sessionStorage.getItem('stripeit_tier_override') as SubscriptionTier | null;
   });
+
+  const setIsEditMode = useCallback((value: boolean) => {
+    localStorage.setItem('stripeit_edit_mode', String(value));
+    setIsEditModeState(value);
+  }, []);
 
   const setTierOverride = useCallback((tier: SubscriptionTier | null) => {
     if (tier) {
@@ -145,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 2. Setup Profile Sync
       setLoading(true);
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userDocRef = doc(db, COLLECTIONS.USERS, firebaseUser.uid);
       
       let retryCount = 0;
       const MAX_RETRIES = 2;
@@ -174,7 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const { UserRole, SubscriptionTier } = await import('../types');
               
               const orgId = `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
-              const orgDocRef = doc(db, 'organizations', orgId);
+              const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId);
               const batch = writeBatch(db);
               
               batch.set(orgDocRef, {
@@ -249,13 +262,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setConnectionError("Permission issues loading your profile.");
               setLoading(false);
               setInitialized(true);
-              handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+              handleFirestoreError(error, OperationType.GET, `${COLLECTIONS.USERS}/${firebaseUser.uid}`);
             }
           } else {
             setConnectionError("Unable to load profile data.");
             setLoading(false);
             setInitialized(true);
-            handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+            handleFirestoreError(error, OperationType.GET, `${COLLECTIONS.USERS}/${firebaseUser.uid}`);
           }
         });
       };
@@ -298,7 +311,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { updateDoc, doc, serverTimestamp } = await import('firebase/firestore');
       const { updateProfile: updateAuthProfile } = await import('firebase/auth');
       
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(db, COLLECTIONS.USERS, user.uid);
       
       // Prepare Firestore updates
       const firestoreUpdates: any = {
@@ -329,8 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * StripeItDeveloperTierOverrideSystem
    * Only allows the specific developer account to simulate different subscription tiers.
    */
-  const developerEmail = 'scottmoreau82@gmail.com';
-  const isDeveloper = user?.email?.toLowerCase() === developerEmail.toLowerCase();
+  const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
   
   const effectiveProfile = profile && (isDeveloper && tierOverride)
     ? { ...profile, subscriptionTier: tierOverride }
@@ -340,7 +352,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * StripeItAdminAccessSystem
    * Centralized admin detection logic.
    */
-  const isAdmin = user?.email?.toLowerCase() === developerEmail.toLowerCase() || profile?.isAdmin === true;
+  const isAdmin = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase() || profile?.isAdmin === true;
 
   const value = {
     user,
@@ -352,6 +364,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateProfileData,
     addToast,
     isAdmin,
+    isEditMode,
+    setIsEditMode,
     tierOverride: isDeveloper ? tierOverride : null,
     setTierOverride: isDeveloper ? setTierOverride : () => {},
   };

@@ -2,6 +2,7 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { DashboardLayout, WidgetConfig } from '../types';
 import { WidgetType, widgetService } from './widgetService';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItSavedLayoutSystem
@@ -13,7 +14,7 @@ export const dashboardService = {
    * Save a user's dashboard layout to Firestore
    */
   async saveUserLayout(userId: string, layout: DashboardLayout): Promise<void> {
-    const userRef = doc(db, 'users', userId);
+    const userRef = doc(db, COLLECTIONS.USERS, userId);
     await updateDoc(userRef, {
       dashboardPreference: {
         layout,

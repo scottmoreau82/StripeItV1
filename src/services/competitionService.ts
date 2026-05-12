@@ -21,6 +21,7 @@ import {
 } from '../types';
 import { estimateCommission, calculatePeriodEarnings } from '../lib/commissionLogic';
 import { safeDate } from '../lib/utils';
+import { COLLECTIONS } from '../constants';
 
 /**
  * StripeItCompetitionSystem
@@ -104,7 +105,7 @@ export const competitionService = {
    */
   async getActiveCompetitions(orgId: string): Promise<Competition[]> {
     const q = query(
-      collection(db, 'organizations', orgId, 'competitions'),
+      collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.COMPETITIONS),
       where('status', 'in', [CompetitionStatus.ACTIVE, CompetitionStatus.COMPLETED]),
       orderBy('endDate', 'desc')
     );
@@ -122,7 +123,7 @@ export const competitionService = {
    * Create a new competition
    */
   async createCompetition(orgId: string, data: Omit<Competition, 'id' | 'createdAt' | 'updatedAt' | 'orgId'>): Promise<string> {
-    const docRef = await addDoc(collection(db, 'organizations', orgId, 'competitions'), {
+    const docRef = await addDoc(collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.COMPETITIONS), {
       ...data,
       orgId,
       createdAt: serverTimestamp(),
@@ -135,7 +136,7 @@ export const competitionService = {
    * Update competition status
    */
   async updateStatus(orgId: string, compId: string, status: CompetitionStatus): Promise<void> {
-     const docRef = doc(db, 'organizations', orgId, 'competitions', compId);
+     const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.COMPETITIONS, compId);
      await updateDoc(docRef, { 
        status,
        updatedAt: serverTimestamp()

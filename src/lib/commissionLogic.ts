@@ -5,6 +5,11 @@ import { Deal, PayPlan, PayPlanRule, PayPlanTier } from '../types';
  * Logic for estimating salesperson commission based on deal data and pay plans.
  */
 
+/**
+ * StripeItCommissionSystem
+ * Advanced arithmetic engine for deal payouts, volume multipliers, and tiered structures.
+ */
+
 export interface CommissionResult {
   dealId: string;
   frontEndCommission: number;
@@ -26,6 +31,60 @@ export interface PeriodEarnings {
 }
 
 /**
+ * Find the active commission tier for a given unit count.
+ * A tier is active if: unitCount >= threshold AND (unitCount <= maxUnits OR maxUnits is null/infinity)
+ */
+export const getActiveCommissionTier = (unitCount: number, tiers: PayPlanTier[]): PayPlanTier | null => {
+  if (!tiers || tiers.length === 0) return null;
+  
+  // Ensure tiers are sorted by threshold ascending for logical matching
+  const sorted = [...tiers].sort((a, b) => Number(a.threshold ?? 0) - Number(b.threshold ?? 0));
+  
+  // Find the LAST tier that the user has qualified for (since thresholds are floors)
+  let activeTier: PayPlanTier | null = null;
+  
+  for (const tier of sorted) {
+    const min = Number(tier.threshold ?? 0);
+    const max = tier.maxUnits != null ? Number(tier.maxUnits) : Infinity;
+    
+    if (unitCount >= min) {
+      activeTier = tier;
+    }
+  }
+  
+  return activeTier;
+};
+
+/**
+ * Calculates the unit position of a specific deal within a month's worth of deals.
+ * Deals are sorted by date (ASC) then ID to ensure stable ordering.
+ */
+export const getDealUnitPosition = (deal: Deal, allDealsForMonth: Deal[]): number => {
+  if (!allDealsForMonth || allDealsForMonth.length === 0) return 0;
+
+  // Sort deals by date ascending, then ID for stable sorting
+  const sorted = [...allDealsForMonth].sort((a, b) => {
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+    if (dateA !== dateB) return dateA - dateB;
+    return (a.id || '').localeCompare(b.id || '');
+  });
+
+  let runningUnits = 0;
+  for (const d of sorted) {
+    const unitValue = d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1;
+    runningUnits += unitValue;
+    if (d.id === deal.id) return runningUnits;
+  }
+
+  // If deal not found in the list (e.g. it's a new unsaved deal being projected)
+  // We assume it's added at the end
+  const currentTotal = allDealsForMonth.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
+  const dealUnitValue = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
+  return currentTotal + dealUnitValue;
+};
+
+/**
  * StripeItFormulaEngineSystem - Evaluate individual deal rules
  */
 const evaluateRules = (deal: Deal, rules: PayPlanRule[]): { bonus: number; applied: string[] } => {
@@ -33,10 +92,11 @@ const evaluateRules = (deal: Deal, rules: PayPlanRule[]): { bonus: number; appli
   const applied: string[] = [];
 
   for (const rule of rules) {
+    const splitRatio = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
     let valueToTest = 0;
-    if (rule.condition === 'front_end_gross') valueToTest = deal.frontEndGross;
-    if (rule.condition === 'back_end_gross') valueToTest = deal.backEndGross;
-    if (rule.condition === 'total_gross') valueToTest = deal.frontEndGross + deal.backEndGross;
+    if (rule.condition === 'front_end_gross') valueToTest = deal.frontEndGross * splitRatio;
+    if (rule.condition === 'back_end_gross') valueToTest = deal.backEndGross * splitRatio;
+    if (rule.condition === 'total_gross') valueToTest = (deal.frontEndGross + deal.backEndGross) * splitRatio;
 
     const isMatch = rule.operator === 'gt' ? valueToTest > rule.threshold : valueToTest >= rule.threshold;
 
@@ -44,9 +104,6 @@ const evaluateRules = (deal: Deal, rules: PayPlanRule[]): { bonus: number; appli
       if (rule.rewardType === 'fixed_bonus') {
         bonus += rule.rewardValue;
       } else if (rule.rewardType === 'percentage_increase') {
-        // This would traditionally be applied to the calculated commission, but 
-        // usually rules are fixed dollar bumps for hitting gross targets.
-        // We'll treat it as a % of the total gross for this rule's simple implementation.
         bonus += (valueToTest * (rule.rewardValue / 100));
       }
       applied.push(rule.name);
@@ -58,15 +115,25 @@ const evaluateRules = (deal: Deal, rules: PayPlanRule[]): { bonus: number; appli
 
 /**
  * StripeItCommissionEstimateSystem - Core individual deal calculator
+ * This performs the raw math based on assigned rates.
  */
-export const estimateCommission = (deal: Deal, plan: PayPlan): CommissionResult => {
-  // 1. Calculate raw percentages
-  const frontComm = deal.frontEndGross * (plan.frontEndPercentage / 100);
-  const backComm = deal.backEndGross * (plan.backEndPercentage / 100);
-  const flatComm = plan.flatPerUnitAmount || 0;
+export const estimateCommission = (deal: Deal, plan: PayPlan, overrides?: { frontRate?: number; backRate?: number }): CommissionResult => {
+  // 1. Calculate raw percentages (using overrides if provided, otherwise plan defaults)
+  const frontRate = overrides?.frontRate ?? plan.frontEndPercentage;
+  const backRate = overrides?.backRate ?? plan.backEndPercentage;
+
+  const frontComm = deal.frontEndGross * (frontRate / 100);
+  let backComm = deal.backEndGross * (backRate / 100);
+  
+  // Handle Back-End Eligibility Threshold
+  if (plan.isBackEndThresholdActive && deal.frontEndGross < (plan.backEndThreshold || 0)) {
+    backComm = 0;
+  }
+  
+  const flatComm = (plan.flatPerUnitAmount || 0);
 
   // 2. Evaluate Advanced Rules
-  const { bonus: ruleBonuses, applied: appliedRules } = plan.isAdvanced && plan.rules 
+  const { bonus: ruleBonuses, applied: appliedRules } = plan.isAdvanced && plan.isRulesEnabled && plan.rules 
     ? evaluateRules(deal, plan.rules) 
     : { bonus: 0, applied: [] };
 
@@ -74,22 +141,23 @@ export const estimateCommission = (deal: Deal, plan: PayPlan): CommissionResult 
   let isMini = false;
 
   // 3. Resolve "Mini" (Minimum commission per deal)
-  if (totalComm < plan.miniAmount) {
-    totalComm = plan.miniAmount;
+  const miniAmount = plan.miniAmount || 0;
+  if (totalComm < miniAmount) {
+    totalComm = miniAmount;
     isMini = true;
   }
 
   const totalBeforeSplit = totalComm;
   let finalPayout = totalComm;
 
-  // 4. Handle Split Deals
+  // 4. Handle Split Deals (Final pass for split application)
   if (deal.isSplitDeal) {
-    const splitPercent = deal.splitPercentage || 50;
+    const splitRatio = (deal.splitPercentage || 50) / 100;
     
     if (plan.splitDealBehavior === 'half_mini' && isMini) {
-      finalPayout = plan.miniAmount / 2;
+      finalPayout = miniAmount / 2;
     } else {
-      finalPayout = totalComm * (splitPercent / 100);
+      finalPayout = totalComm * splitRatio;
     }
   }
 
@@ -107,37 +175,70 @@ export const estimateCommission = (deal: Deal, plan: PayPlan): CommissionResult 
 };
 
 /**
+ * Canonical calculation for a single deal within a monthly context.
+ */
+export const calculateDealCommission = (deal: Deal, plan: PayPlan, allDealsForMonth: Deal[]): CommissionResult => {
+  if (!plan.isAdvanced || !plan.tiers || plan.tiers.length === 0) {
+    return estimateCommission(deal, plan);
+  }
+
+  const totalUnits = allDealsForMonth.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
+  const unitPosition = getDealUnitPosition(deal, allDealsForMonth);
+  
+  const highestTierReached = getActiveCommissionTier(totalUnits, plan.tiers);
+  const tierAtSale = getActiveCommissionTier(unitPosition, plan.tiers);
+
+  // Determine effective rates
+  // A retroactive rate applies if the highest tier reached has the flag enabled.
+  const frontRate = (highestTierReached?.frontRetroactive && highestTierReached.frontRate !== undefined)
+    ? highestTierReached.frontRate
+    : (tierAtSale?.frontRate ?? plan.frontEndPercentage);
+
+  const backRate = (highestTierReached?.backRetroactive && highestTierReached.backRate !== undefined)
+    ? highestTierReached.backRate
+    : (tierAtSale?.backRate ?? plan.backEndPercentage);
+
+  return estimateCommission(deal, plan, { frontRate, backRate });
+};
+
+/**
  * StripeItTierBonusSystem & StripeItRetroactiveBonusSystem
- * Calculate total period earnings including volume-based tier bonuses.
+ * Calculate total period earnings including volume-based tier bonuses and retroactive rate overrides.
  */
 export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan): PeriodEarnings => {
-  const dealResults = deals.map(deal => estimateCommission(deal, plan));
+  if (!plan.isAdvanced || !plan.tiers || plan.tiers.length === 0) {
+    const dealResults = deals.map(d => estimateCommission(d, plan));
+    const totalPayout = dealResults.reduce((sum, r) => sum + r.finalPayout, 0);
+    return {
+      totalPayout,
+      dealResults,
+      tierBonuses: [],
+      totalTierBonuses: 0,
+      grandTotal: totalPayout
+    };
+  }
+
+  // Use the canonical per-deal calculation
+  const dealResults = deals.map(deal => calculateDealCommission(deal, plan, deals));
   const totalDealPayout = dealResults.reduce((sum, r) => sum + r.finalPayout, 0);
+
+  // Calculate Tier Volume Bonuses
+  const totalUnits = deals.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
   
   const tierBonuses: { tierId: string; amount: number }[] = [];
   let totalTierBonuses = 0;
 
-  if (plan.isAdvanced && plan.tiers && plan.tiers.length > 0) {
-    const unitCount = deals.length;
-    // Sort tiers by threshold descending to find the highest achieved
-    const sortedTiers = [...plan.tiers].sort((a, b) => b.threshold - a.threshold);
+  if (plan.isVolumeBonusActive) {
+    const highestTier = getActiveCommissionTier(totalUnits, plan.tiers);
     
-    // Most dealership pay plans are "Highest achieved".
-    // We find the single highest tier the salesperson qualified for.
-    const highestTier = sortedTiers.find(tier => unitCount >= tier.threshold);
-
     if (highestTier) {
-      // 1. Calculate Lump Sum Bonus
-      let tierAmount = highestTier.bonusAmount;
+      let tierAmount = highestTier.bonusAmount || 0;
 
-      // 2. Calculate Per-Unit Bonus (Retroactive or Fixed)
       if (highestTier.perUnitBonus > 0) {
         if (highestTier.isRetroactive) {
-          // Applies to all units sold in the period
-          tierAmount += highestTier.perUnitBonus * unitCount;
+          tierAmount += highestTier.perUnitBonus * totalUnits;
         } else {
-          // Only applies to units above the threshold
-          const unitsAboveThreshold = Math.max(0, unitCount - highestTier.threshold + 1);
+          const unitsAboveThreshold = Math.max(0, totalUnits - (highestTier.threshold ?? 0));
           tierAmount += highestTier.perUnitBonus * unitsAboveThreshold;
         }
       }

@@ -17,8 +17,15 @@ if (missingFields.length > 0) {
   console.error(`CRITICAL: Firebase configuration is missing required fields: ${missingFields.join(', ')}`);
 }
 
+import { initializeFirestore } from 'firebase/firestore';
+
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
+
+// Use initializeFirestore to enable ignoreUndefinedProperties
+export const db = initializeFirestore(app, {
+  ignoreUndefinedProperties: true,
+}, (firebaseConfig as any).firestoreDatabaseId || '(default)');
+
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 

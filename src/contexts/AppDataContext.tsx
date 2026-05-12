@@ -16,7 +16,7 @@ import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { COLLECTIONS } from '../constants';
 
 /**
- * StripeItAppDataSystem
+ * StripeItAppDataSystem & StripeItCommissionSystem (Data Link)
  * Centralized data context for high-performance state management and real-time synchronization.
  */
 
@@ -39,7 +39,8 @@ interface AppDataContextType {
   handleSaveDashboardLayout: (layout: DashboardLayout) => Promise<void>;
   handleCreateRandomDeal: () => Promise<void>;
   refreshDeals: () => Promise<void>;
-  triggerSuccess: () => void;
+  triggerSuccess: (message?: string) => void;
+  triggerError: (message: string) => void;
 }
 
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
@@ -220,64 +221,86 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
   const handleSaveDeal = async (dealData: Partial<Deal>, editingId?: string) => {
     if (!profile || !user) return;
     
-    if (!editingId) {
-      const isLimitReached = planLimitService.isLimitReached(
-        profile.subscriptionTier || SubscriptionTier.FREE, 
-        LimitType.DEAL_STORAGE, 
-        deals.length
-      );
+    try {
+      if (!editingId) {
+        const isLimitReached = planLimitService.isLimitReached(
+          profile.subscriptionTier || SubscriptionTier.FREE, 
+          LimitType.DEAL_STORAGE, 
+          deals.length
+        );
 
-      if (isLimitReached) {
-        throw new Error(`Plan Limit Reached: Your current plan only supports ${planLimitService.getLimit(profile.subscriptionTier || SubscriptionTier.FREE, LimitType.DEAL_STORAGE)} deals.`);
+        if (isLimitReached) {
+          throw new Error(`Plan Limit Reached: Your current plan only supports ${planLimitService.getLimit(profile.subscriptionTier || SubscriptionTier.FREE, LimitType.DEAL_STORAGE)} deals.`);
+        }
       }
-    }
 
-    if (editingId) {
-      await dealService.updateDeal(profile.orgId, editingId, dealData);
-      
-      if (dealData.status === DealStatus.FINALIZED) {
+      if (editingId) {
+        await dealService.updateDeal(profile.orgId, editingId, dealData);
+        
+        if (dealData.status === DealStatus.FINALIZED) {
+          await activityService.logEvent(profile.orgId, {
+            type: ActivityEventType.DEAL_FINALIZED,
+            userId: user.uid,
+            userName: profile.displayName || 'Salesperson',
+            orgId: profile.orgId,
+            message: `Closed a deal for ${dealData.customerName || 'Customer'}!`,
+            payload: { dealId: editingId, vehicle: dealData.purchasedVehicle }
+          });
+        }
+        triggerSuccess('Deal updated.');
+      } else {
+        const dealId = await dealService.createDeal(profile.orgId, {
+          userId: user.uid,
+          createdByUserId: user.uid,
+          assignedSalespersonId: user.uid,
+          salespersonName: profile.displayName,
+          dealershipId: profile.dealershipId,
+          customerName: dealData.customerName!,
+          purchasedVehicle: dealData.purchasedVehicle!,
+          newOrUsed: dealData.newOrUsed as 'new' | 'used' | 'cpo',
+          status: dealData.status!,
+          date: dealData.date!,
+          frontEndGross: dealData.frontEndGross || 0,
+          backEndGross: dealData.backEndGross || 0,
+          isSplitDeal: dealData.isSplitDeal || false,
+          splitSalespersonId: dealData.splitSalespersonId,
+          splitPercentage: dealData.splitPercentage,
+          tradedVehicle: dealData.tradedVehicle,
+          notes: dealData.notes,
+          dealNumber: dealData.dealNumber,
+          stockNumber: dealData.stockNumber,
+        });
+
         await activityService.logEvent(profile.orgId, {
-          type: ActivityEventType.DEAL_FINALIZED,
+          type: ActivityEventType.DEAL_CREATED,
           userId: user.uid,
           userName: profile.displayName || 'Salesperson',
           orgId: profile.orgId,
-          message: `Closed a deal for ${dealData.customerName || 'Customer'}!`,
-          payload: { dealId: editingId, vehicle: dealData.purchasedVehicle }
+          message: `Logged a new ${dealData.newOrUsed || ''} deal for ${dealData.customerName}`,
+          payload: { dealId, vehicle: dealData.purchasedVehicle }
         });
+        triggerSuccess('Deal logged successfully!');
       }
-      triggerSuccess('Deal updated.');
-    } else {
-      const dealId = await dealService.createDeal(profile.orgId, {
-        userId: user.uid,
-        createdByUserId: user.uid,
-        assignedSalespersonId: user.uid,
-        salespersonName: profile.displayName,
-        dealershipId: profile.dealershipId,
-        customerName: dealData.customerName!,
-        purchasedVehicle: dealData.purchasedVehicle!,
-        newOrUsed: dealData.newOrUsed as 'new' | 'used',
-        status: dealData.status!,
-        date: dealData.date!,
-        frontEndGross: dealData.frontEndGross || 0,
-        backEndGross: dealData.backEndGross || 0,
-        isSplitDeal: dealData.isSplitDeal || false,
-        splitSalespersonId: dealData.splitSalespersonId,
-        splitPercentage: dealData.splitPercentage,
-        tradedVehicle: dealData.tradedVehicle,
-        notes: dealData.notes,
-        dealNumber: dealData.dealNumber,
-        stockNumber: dealData.stockNumber,
-      });
-
-      await activityService.logEvent(profile.orgId, {
-        type: ActivityEventType.DEAL_CREATED,
-        userId: user.uid,
-        userName: profile.displayName || 'Salesperson',
-        orgId: profile.orgId,
-        message: `Logged a new ${dealData.newOrUsed || ''} deal for ${dealData.customerName}`,
-        payload: { dealId, vehicle: dealData.purchasedVehicle }
-      });
-      triggerSuccess('Deal logged successfully!');
+    } catch (error: any) {
+      console.error("Deal Save Error:", error);
+      let message = editingId ? 'Failed to update deal.' : 'Failed to save deal.';
+      
+      // Attempt to parse stringified Firestore error
+      try {
+        const parsed = JSON.parse(error.message);
+        if (parsed.error && parsed.error.includes('permission')) {
+          message = "Permission Denied: You don't have authority to modify deals in this organization.";
+        } else if (parsed.error) {
+          message = `Persistence Error: ${parsed.error}`;
+        }
+      } catch (e) {
+        if (error.message && !error.message.includes('{')) {
+          message = error.message;
+        }
+      }
+      
+      triggerError(message);
+      throw error;
     }
   };
 
@@ -330,8 +353,18 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       await payPlanService.savePayPlan(profile.orgId, user.uid, cleanPlan);
       await loadStaticData(profile.orgId, user.uid);
       triggerSuccess('Pay plan updated.');
-    } catch (error) {
-      triggerError('Failed to save pay plan.');
+    } catch (error: any) {
+      console.error("Pay Plan Save Error:", error);
+      // If it's a Firestore error object from our helper, it might be stringified JSON
+      let message = 'Failed to save pay plan.';
+      try {
+        const parsed = JSON.parse(error.message);
+        if (parsed.error) message = `Persistence Error: ${parsed.error}`;
+      } catch (e) {
+        if (error.message) message = error.message;
+      }
+      triggerError(message);
+      throw error;
     }
   };
 
@@ -432,7 +465,8 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       handleSaveDashboardLayout,
       handleCreateRandomDeal,
       refreshDeals,
-      triggerSuccess
+      triggerSuccess,
+      triggerError
     }}>
       {children}
     </AppDataContext.Provider>

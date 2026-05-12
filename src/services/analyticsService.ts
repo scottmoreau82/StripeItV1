@@ -38,10 +38,10 @@ export const calculateDashboardMetrics = (deals: Deal[], payPlan: PayPlan | null
   let totalBack = 0;
 
   mtdDeals.forEach(deal => {
-    const unitValue = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
-    totalUnits += unitValue;
-    totalFront += deal.frontEndGross;
-    totalBack += deal.backEndGross;
+    const splitRatio = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
+    totalUnits += splitRatio;
+    totalFront += deal.frontEndGross * splitRatio;
+    totalBack += deal.backEndGross * splitRatio;
   });
 
   const totalGross = totalFront + totalBack;
@@ -130,22 +130,22 @@ export const getTrendsChartData = (deals: Deal[], payPlan: PayPlan | null): Char
     dataMap.set(dateStr, { date: dateStr, units: 0, gross: 0, commission: 0 });
   }
 
-  mtdDeals.forEach(deal => {
+  const earnings = payPlan ? calculatePeriodEarnings(mtdDeals, payPlan) : null;
+  const dealResults = earnings?.dealResults || [];
+
+  mtdDeals.forEach((deal, index) => {
     const d = safeDate(deal.createdAt || deal.date);
     const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
     
     const existing = dataMap.get(dateStr) || { date: dateStr, units: 0, gross: 0, commission: 0 };
     
-    const unitValue = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
-    let comm = 0;
-    if (payPlan) {
-      comm = estimateCommission(deal, payPlan).finalPayout;
-    }
+    const splitRatio = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
+    const comm = dealResults[index]?.finalPayout || 0;
 
     dataMap.set(dateStr, {
       date: dateStr,
-      units: existing.units + unitValue,
-      gross: existing.gross + (deal.frontEndGross + deal.backEndGross),
+      units: existing.units + splitRatio,
+      gross: existing.gross + ((deal.frontEndGross + deal.backEndGross) * splitRatio),
       commission: existing.commission + comm
     });
   });

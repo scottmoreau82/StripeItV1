@@ -4,13 +4,24 @@ import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { DealSearch } from './DealSearch';
 import { DealFilters } from './DealFilters';
-import { DealSummaryCard } from '../home/DealSummaryCard';
 import { DealDetailView } from './DealDetailView';
 import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
-import { History, LayoutGrid, List, ShieldCheck, Target, Calculator } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
+import { 
+  History, 
+  ShieldCheck, 
+  Target, 
+  Calculator, 
+  Edit, 
+  Trash2, 
+  ChevronRight,
+  TrendingUp,
+  Clock,
+  Car
+} from 'lucide-react';
+import { cn, formatDateSafe } from '@/src/lib/utils';
+import { calculateDealCommission } from '@/src/lib/commissionLogic';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -170,23 +181,232 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
             ))}
           </div>
         ) : filteredDeals.length > 0 ? (
-          <div className="grid grid-cols-1 gap-3">
-            {filteredDeals.map((deal, index) => (
-              <motion.div
-                key={deal.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-              >
-                <DealSummaryCard 
-                  deal={deal} 
-                  payPlan={payPlan}
-                  showGross={!isMobile}
-                  onClick={() => setSelectedDeal(deal)}
-                />
-              </motion.div>
-            ))}
-          </div>
+          <>
+            {/* Desktop Table Layout */}
+            {!isMobile && (
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/5">
+                      <th className="py-4 px-4 text-left w-[100px]">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Date</Typography>
+                      </th>
+                      <th className="py-4 px-4 text-left">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Customer / Deal #</Typography>
+                      </th>
+                      <th className="py-4 px-4 text-left">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Vehicle / Stock #</Typography>
+                      </th>
+                      <th className="py-4 px-4 text-left w-[100px]">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Type</Typography>
+                      </th>
+                      <th className="py-4 px-4 text-right w-[140px]">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Front Gross</Typography>
+                      </th>
+                      <th className="py-4 px-4 text-right w-[140px]">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Back Gross</Typography>
+                      </th>
+                      <th className="py-4 px-4 text-right w-[180px]">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Commission</Typography>
+                      </th>
+                      <th className="py-4 px-4 text-right w-[100px]">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black text-right">Actions</Typography>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.02]">
+                    {filteredDeals.map((deal, index) => {
+                      const dDate = new Date(deal.date);
+                      const m = dDate.getMonth();
+                      const y = dDate.getFullYear();
+                      const monthlyDeals = deals.filter(d => {
+                        const dd = new Date(d.date);
+                        return dd.getMonth() === m && dd.getFullYear() === y;
+                      });
+                      const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDeals) : null;
+                      const frontRate = commission?.frontEndCommission ? ((commission.frontEndCommission / deal.frontEndGross) * 100).toFixed(0) : 0;
+                      const backRate = commission?.backEndCommission ? ((commission.backEndCommission / deal.backEndGross) * 100).toFixed(0) : 0;
+
+                      return (
+                        <motion.tr
+                          key={deal.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.02 }}
+                          onClick={() => setSelectedDeal(deal)}
+                          className="group hover:bg-white/[0.02] cursor-pointer transition-colors"
+                        >
+                          <td className="py-5 px-4 whitespace-nowrap">
+                            <Typography variant="mono" className="text-[11px] text-slate-400 font-black">
+                              {formatDateSafe(deal.date, 'MM/dd/yy')}
+                            </Typography>
+                          </td>
+                          <td className="py-5 px-4">
+                            <div className="flex flex-col min-w-0">
+                              <Typography variant="label" className="text-white text-sm font-black truncate">
+                                {deal.customerName}
+                              </Typography>
+                              <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
+                                #{deal.dealNumber || '---'}
+                              </Typography>
+                            </div>
+                          </td>
+                          <td className="py-5 px-4">
+                            <div className="flex flex-col min-w-0">
+                              <Typography variant="small" className="text-slate-300 truncate text-xs font-bold">
+                                {deal.purchasedVehicle}
+                              </Typography>
+                              <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
+                                {deal.stockNumber || '---'}
+                              </Typography>
+                            </div>
+                          </td>
+                          <td className="py-5 px-4">
+                            <TypeBadge type={deal.newOrUsed as any} />
+                          </td>
+                          <td className="py-5 px-4 text-right">
+                            <Typography variant="mono" className="text-xs text-white group-hover:text-cyan-400 transition-colors font-black">
+                              ${deal.frontEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            </Typography>
+                          </td>
+                          <td className="py-5 px-4 text-right">
+                            <Typography variant="mono" className="text-xs text-white group-hover:text-purple-400 transition-colors font-black">
+                              ${deal.backEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            </Typography>
+                          </td>
+                          <td className="py-5 px-4 text-right">
+                            <div className="flex flex-col items-end">
+                              <Typography variant="label" className="text-emerald-400 font-black text-sm">
+                                ${commission?.finalPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) || '0'}
+                              </Typography>
+                              {commission && (
+                                <Typography variant="mono" className="text-[8px] text-slate-600 font-black uppercase">
+                                  {frontRate}% / {backRate}%
+                                </Typography>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-5 px-4">
+                            <div className="flex items-center justify-end gap-1">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
+                                className="p-2 rounded-lg text-slate-600 hover:text-cyan-400 hover:bg-cyan-400/10 transition-all opacity-0 group-hover:opacity-100"
+                              >
+                                <Edit size={14} />
+                              </button>
+                              <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  if (window.confirm('Delete this deal record?')) handleDeleteDeal?.(deal.id); 
+                                }}
+                                className="p-2 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-400/10 transition-all opacity-0 group-hover:opacity-100"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Mobile Cards Layout */}
+            {isMobile && (
+              <div className="grid grid-cols-1 gap-4">
+                {filteredDeals.map((deal, index) => {
+                  const dDate = new Date(deal.date);
+                  const m = dDate.getMonth();
+                  const y = dDate.getFullYear();
+                  const monthlyDeals = deals.filter(d => {
+                    const dd = new Date(d.date);
+                    return dd.getMonth() === m && dd.getFullYear() === y;
+                  });
+                  const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDeals) : null;
+
+                  return (
+                    <motion.div
+                      key={deal.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => setSelectedDeal(deal)}
+                      className="bg-[#0A0C12] border border-white/5 rounded-[1.5rem] p-5 shadow-xl relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 p-3 flex gap-2">
+                         <TypeBadge type={deal.newOrUsed as any} />
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center shrink-0">
+                            <Car className="h-5 w-5 text-slate-500" />
+                          </div>
+                          <div className="min-w-0">
+                            <Typography variant="label" className="text-white text-base font-black uppercase truncate block">
+                              {deal.customerName}
+                            </Typography>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
+                                #{deal.dealNumber || '---'}
+                              </Typography>
+                              <span className="h-1 w-1 rounded-full bg-slate-800" />
+                              <Typography variant="mono" className="text-[10px] text-slate-500 font-black">
+                                {formatDateSafe(deal.date, 'MM/dd/yy')}
+                              </Typography>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-white/[0.03] grid grid-cols-2 gap-4">
+                          <div>
+                            <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Front Gross</Typography>
+                            <Typography variant="label" className="text-white font-black text-sm">
+                              ${deal.frontEndGross.toLocaleString()}
+                            </Typography>
+                          </div>
+                          <div>
+                            <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Back Gross</Typography>
+                            <Typography variant="label" className="text-white font-black text-sm">
+                              ${deal.backEndGross.toLocaleString()}
+                            </Typography>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-white/[0.03] flex items-center justify-between">
+                          <div>
+                            <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Commission</Typography>
+                            <Typography variant="h3" className="text-emerald-400 font-black">
+                              ${commission?.finalPayout.toLocaleString() || '0'}
+                            </Typography>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
+                              className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                if (window.confirm('Delete this deal record?')) handleDeleteDeal?.(deal.id); 
+                              }}
+                              className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         ) : (
           <EmptyState
             icon={History}
@@ -253,5 +473,24 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       header={header}
       main={mainContent}
     />
+  );
+};
+
+const TypeBadge = ({ type }: { type: 'new' | 'used' | 'cpo' }) => {
+  const styles = {
+    new: "bg-cyan-500/10 text-cyan-400 border-cyan-500/10 shadow-[0_0_10px_rgba(34,211,238,0.1)]",
+    used: "bg-slate-500/10 text-slate-500 border-white/5",
+    cpo: "bg-purple-500/10 text-purple-400 border-purple-500/10",
+  };
+  
+  const colors = styles[type] || styles.used;
+  
+  return (
+    <div className={cn(
+      "px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-[0.2em] border inline-flex transition-all",
+      colors
+    )}>
+      {type}
+    </div>
   );
 };

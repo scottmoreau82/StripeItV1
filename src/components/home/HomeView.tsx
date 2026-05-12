@@ -52,13 +52,11 @@ import {
 interface HomeViewProps {
   onLogDeal: () => void;
   onQuickNote: () => void;
-  onConfigPayPlan?: () => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
   onLogDeal,
   onQuickNote,
-  onConfigPayPlan,
 }) => {
   const { 
     deals, 

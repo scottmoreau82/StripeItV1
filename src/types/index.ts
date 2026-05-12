@@ -86,10 +86,15 @@ export interface PayPlanRule {
 
 export interface PayPlanTier {
   id: string;
-  threshold: number; // Unit count
+  threshold?: number; // Unit count
+  maxUnits?: number; // Visual max units for display
+  frontRate?: number; // Override front end % for this tier
+  backRate?: number; // Override back end % for this tier
   bonusAmount: number; // One-time lump sum for hitting this level
   perUnitBonus: number; // Extra per unit
   isRetroactive: boolean; // If true, perUnitBonus applies to ALL units MTD. If false, only applies to units >= threshold.
+  frontRetroactive?: boolean;
+  backRetroactive?: boolean;
 }
 
 export interface PayPlan {
@@ -105,6 +110,10 @@ export interface PayPlan {
   
   // Advanced Features
   isAdvanced: boolean;
+  isRulesEnabled?: boolean;
+  isVolumeBonusActive?: boolean;
+  isBackEndThresholdActive?: boolean;
+  backEndThreshold?: number;
   rules: PayPlanRule[];
   tiers: PayPlanTier[];
   

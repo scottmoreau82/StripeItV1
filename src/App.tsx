@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoginForm } from './components/auth/LoginForm';
@@ -21,7 +21,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useResponsive } from './hooks/useResponsive';
 import { DealForm } from './components/forms/DealForm';
 import { dealService } from './services/dealService';
-import { PayPlanForm } from './components/forms/PayPlanForm';
+import { StripeItCommissionSetupModal } from './components/commission/StripeItCommissionSetupModal';
 import { payPlanService } from './services/payPlanService';
 import { goalService } from './services/goalService';
 import { calculateTotalEarnings } from './lib/commissionLogic';
@@ -62,6 +62,7 @@ function MainAppFlow() {
 
   const { isMobile } = useResponsive();
   const { profile, user, isAdmin } = useAuth();
+  const location = useLocation();
   
   const { 
     deals,
@@ -73,6 +74,7 @@ function MainAppFlow() {
     handleSaveNote,
     handleCreateCompetition,
     handleCreateRandomDeal,
+    triggerError,
   } = useAppData();
 
   useEffect(() => {
@@ -121,6 +123,7 @@ function MainAppFlow() {
         setEditingDeal(null);
         setIsUpgradeOpen(true);
       }
+      // Error is already handled by triggerError inside handleSaveDeal in AppDataContext
     }
   };
 
@@ -166,7 +169,7 @@ function MainAppFlow() {
     <div className="flex gap-4">
       <Button variant="ghost" className="flex-1" onClick={() => { setIsNewDealOpen(false); setEditingDeal(null); }} disabled={isSubmitting}>Discard</Button>
       <Button form="deal-form" type="submit" className="flex-1 shadow-glow glow-primary" isLoading={isSubmitting}>
-        {editingDeal ? 'Update Deal' : 'Save Deal'}
+        {isSubmitting ? 'Saving...' : (editingDeal ? 'Update Deal' : 'Save Deal')}
       </Button>
     </div>
   );
@@ -181,105 +184,116 @@ function MainAppFlow() {
       <LoadingOverlay isLoading={isLoading} />
       <OnboardingFlow />
       
-      <Routes>
-        <Route 
-          path="/" 
-          element={
-            permissionService.isManager(profile) ? (
-              <ManagerView 
-                onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
-                onQuickNote={() => setIsQuickNoteOpen(true)}
-                onConfigPayPlan={() => setIsPayPlanOpen(true)}
-                onDealClick={(deal) => {
-                   setEditingDeal(deal);
-                   setIsNewDealOpen(true);
-                }}
-                onCreateCompetition={() => setIsCompetitionOpen(true)}
-              />
-            ) : (
-              <HomeView 
-                onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
-                onQuickNote={() => setIsQuickNoteOpen(true)}
-                onConfigPayPlan={() => setIsPayPlanOpen(true)}
-              />
-            )
-          } 
-        />
-        
-        {/* Protected Feature Routes */}
-        <Route 
-          path="/activity" 
-          element={
-            featureAccessService.hasAccess(profile, Feature.ACTIVITY_FEED) 
-              ? <ActivityFeed /> 
-              : <UpgradeAccessScreen feature={Feature.ACTIVITY_FEED} tierRequired={SubscriptionTier.BASIC} onUpgrade={onUpgradeClick} />
-          } 
-        />
-        
-        <Route 
-          path="/analytics" 
-          element={
-            featureAccessService.hasAccess(profile, Feature.ADVANCED_ANALYTICS) 
-              ? <div className="p-8"><Typography variant="h1">Analytics</Typography></div>
-              : <UpgradeAccessScreen feature={Feature.ADVANCED_ANALYTICS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
-          } 
-        />
-
-        <Route 
-          path="/goals" 
-          element={
-            featureAccessService.hasAccess(profile, Feature.GOALS) 
-              ? <div className="p-8"><Typography variant="h1">Goals</Typography></div>
-              : <UpgradeAccessScreen feature={Feature.GOALS} tierRequired={SubscriptionTier.BASIC} onUpgrade={onUpgradeClick} />
-          } 
-        />
-
-        <Route 
-          path="/reports" 
-          element={
-            featureAccessService.hasAccess(profile, Feature.ADVANCED_ANALYTICS) 
-              ? <ReportView /> 
-              : <UpgradeAccessScreen feature={Feature.ADVANCED_ANALYTICS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
-          } 
-        />
-
-        <Route 
-          path="/inventory" 
-          element={
-            featureAccessService.hasAccess(profile, Feature.INVENTORY_MANAGEMENT) 
-              ? <div className="p-8"><Typography variant="h1">Inventory</Typography></div>
-              : <UpgradeAccessScreen feature={Feature.INVENTORY_MANAGEMENT} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
-          } 
-        />
-
-        <Route 
-          path="/sales-log" 
-          element={
-            <SalesLogView 
-              onEdit={(deal) => { setEditingDeal(deal); setIsNewDealOpen(true); }}
-              onConfigPayPlan={() => setIsPayPlanOpen(true)}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -5 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="w-full"
+        >
+          <Routes location={location}>
+            <Route 
+              path="/" 
+              element={
+                permissionService.isManager(profile) ? (
+                  <ManagerView 
+                    onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
+                    onQuickNote={() => setIsQuickNoteOpen(true)}
+                    onConfigPayPlan={() => setIsPayPlanOpen(true)}
+                    onDealClick={(deal) => {
+                       setEditingDeal(deal);
+                       setIsNewDealOpen(true);
+                    }}
+                    onCreateCompetition={() => setIsCompetitionOpen(true)}
+                  />
+                ) : (
+                  <HomeView 
+                    onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
+                    onQuickNote={() => setIsQuickNoteOpen(true)}
+                    onConfigPayPlan={() => setIsPayPlanOpen(true)}
+                  />
+                )
+              } 
             />
-          } 
-        />
-        <Route 
-          path="/settings" 
-          element={
-            <SettingsView 
-              profile={profile}
-              onLogout={useAuth().logout}
-              isMobile={isMobile}
+            
+            {/* Protected Feature Routes */}
+            <Route 
+              path="/activity" 
+              element={
+                featureAccessService.hasAccess(profile, Feature.ACTIVITY_FEED) 
+                  ? <ActivityFeed /> 
+                  : <UpgradeAccessScreen feature={Feature.ACTIVITY_FEED} tierRequired={SubscriptionTier.BASIC} onUpgrade={onUpgradeClick} />
+              } 
             />
-          } 
-        />
-        <Route 
-          path="/admin/feedback" 
-          element={
-            isAdmin 
-              ? <FeedbackReviewPage /> 
-              : <Navigate to="/" />
-          } 
-        />
-      </Routes>
+            
+            <Route 
+              path="/analytics" 
+              element={
+                featureAccessService.hasAccess(profile, Feature.ADVANCED_ANALYTICS) 
+                  ? <div className="p-8"><Typography variant="h1">Analytics</Typography></div>
+                  : <UpgradeAccessScreen feature={Feature.ADVANCED_ANALYTICS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
+              } 
+            />
+    
+            <Route 
+              path="/goals" 
+              element={
+                featureAccessService.hasAccess(profile, Feature.GOALS) 
+                  ? <div className="p-8"><Typography variant="h1">Goals</Typography></div>
+                  : <UpgradeAccessScreen feature={Feature.GOALS} tierRequired={SubscriptionTier.BASIC} onUpgrade={onUpgradeClick} />
+              } 
+            />
+    
+            <Route 
+              path="/reports" 
+              element={
+                featureAccessService.hasAccess(profile, Feature.ADVANCED_ANALYTICS) 
+                  ? <ReportView /> 
+                  : <UpgradeAccessScreen feature={Feature.ADVANCED_ANALYTICS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
+              } 
+            />
+    
+            <Route 
+              path="/inventory" 
+              element={
+                featureAccessService.hasAccess(profile, Feature.INVENTORY_MANAGEMENT) 
+                  ? <div className="p-8"><Typography variant="h1">Inventory</Typography></div>
+                  : <UpgradeAccessScreen feature={Feature.INVENTORY_MANAGEMENT} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
+              } 
+            />
+    
+            <Route 
+              path="/sales-log" 
+              element={
+                <SalesLogView 
+                  onEdit={(deal) => { setEditingDeal(deal); setIsNewDealOpen(true); }}
+                  onConfigPayPlan={() => setIsPayPlanOpen(true)}
+                />
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <SettingsView 
+                  profile={profile}
+                  onLogout={useAuth().logout}
+                  isMobile={isMobile}
+                />
+              } 
+            />
+            <Route 
+              path="/admin/feedback" 
+              element={
+                isAdmin 
+                  ? <FeedbackReviewPage /> 
+                  : <Navigate to="/" />
+              } 
+            />
+          </Routes>
+        </motion.div>
+      </AnimatePresence>
 
       {/* Feedback System */}
       <FeedbackSystem 
@@ -351,32 +365,14 @@ function MainAppFlow() {
         </Modal>
       )}
 
-      {/* Pay Plan Setup Modal/Flow */}
-      {isMobile ? (
-        <FullscreenMobileFlow
-          isOpen={isPayPlanOpen}
-          onClose={() => setIsPayPlanOpen(false)}
-          title="Commission Matrix"
-        >
-          <PayPlanForm 
-            initialData={payPlan || {}} 
-            onSubmit={handleSavePayPlan} 
-            isLoading={isSubmitting} 
-          />
-        </FullscreenMobileFlow>
-      ) : (
-        <Modal
-          isOpen={isPayPlanOpen}
-          onClose={() => setIsPayPlanOpen(false)}
-          title="Commission Matrix"
-        >
-          <PayPlanForm 
-            initialData={payPlan || {}} 
-            onSubmit={onSavePayPlan} 
-            isLoading={isSubmitting} 
-          />
-        </Modal>
-      )}
+      {/* Pay Plan Setup Modal */}
+      <StripeItCommissionSetupModal
+        isOpen={isPayPlanOpen}
+        onClose={() => setIsPayPlanOpen(false)}
+        initialData={payPlan}
+        onSubmit={onSavePayPlan}
+        isLoading={isSubmitting}
+      />
 
       {/* Upgrade Modal */}
       <Modal

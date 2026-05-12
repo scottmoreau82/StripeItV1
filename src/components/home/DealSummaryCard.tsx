@@ -1,11 +1,12 @@
 import React from 'react';
 import { Deal, DealStatus, PayPlan } from '@/src/types';
-import { estimateCommission } from '@/src/lib/commissionLogic';
+import { calculateDealCommission } from '@/src/lib/commissionLogic';
 import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Car, Clock, CreditCard, ChevronRight } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
+import { useAppData } from '@/src/contexts/AppDataContext';
 
 /**
  * StripeItDealSummaryCardSystem
@@ -25,7 +26,20 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
   showGross = false,
   onClick 
 }) => {
-  const commission = payPlan ? estimateCommission(deal, payPlan) : null;
+  const { deals } = useAppData();
+  
+  // Filter deals for the specific month/year of this deal to provide correct context
+  const monthlyDeals = React.useMemo(() => {
+    const dDate = new Date(deal.date);
+    const m = dDate.getMonth();
+    const y = dDate.getFullYear();
+    return deals.filter(d => {
+      const dd = new Date(d.date);
+      return dd.getMonth() === m && dd.getFullYear() === y;
+    });
+  }, [deals, deal.date]);
+
+  const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDeals) : null;
   
   return (
     <Card 
@@ -50,7 +64,7 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <Typography variant="label" className="text-white text-base font-black uppercase tracking-tight truncate">
+              <Typography variant="label" className="text-white text-sm font-black uppercase tracking-tight truncate">
                 {deal.customerName}
               </Typography>
               <Badge status={deal.status}>{deal.status}</Badge>

@@ -1,5 +1,5 @@
 import { Deal, DealStatus, PayPlan } from '../types';
-import { estimateCommission } from '../lib/commissionLogic';
+import { calculateDealCommission } from '../lib/commissionLogic';
 
 /**
  * StripeItExportSystem
@@ -48,7 +48,9 @@ export const exportService = {
    */
   prepareDealExportData(deals: Deal[], payPlan?: PayPlan | null) {
     return deals.map(deal => {
-      const commission = payPlan ? estimateCommission(deal, payPlan) : null;
+      const commission = payPlan ? calculateDealCommission(deal, payPlan, deals) : null;
+      const splitRatio = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
+      
       return {
         date: deal.date,
         customer: deal.customerName,
@@ -56,11 +58,11 @@ export const exportService = {
         stock: deal.stockNumber || '',
         condition: deal.newOrUsed.toUpperCase(),
         status: deal.status,
-        frontGross: deal.frontEndGross,
-        backGross: deal.backEndGross,
-        totalGross: deal.frontEndGross + deal.backEndGross,
+        frontGross: deal.frontEndGross * splitRatio,
+        backGross: deal.backEndGross * splitRatio,
+        totalGross: (deal.frontEndGross + deal.backEndGross) * splitRatio,
         estCommission: commission ? commission.finalPayout : 0,
-        isSplit: deal.isSplitDeal ? 'YES' : 'NO'
+        isSplit: deal.isSplitDeal ? `YES (${deal.splitPercentage || 50}%)` : 'NO'
       };
     });
   }

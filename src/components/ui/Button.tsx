@@ -39,9 +39,10 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <motion.button
-      whileTap={{ scale: 0.97 }}
-      whileHover={{ y: -1 }}
+      whileTap={(!props.disabled && !isLoading) ? { scale: 0.97 } : undefined}
+      whileHover={(!props.disabled && !isLoading) ? { y: -1 } : undefined}
       className={cn(baseStyles, variants[variant], sizes[size], className)}
+      disabled={props.disabled || isLoading}
       {...props as any}
     >
       {isLoading ? (

@@ -15,7 +15,7 @@ import {
   EyeOff,
   ChevronRight
 } from 'lucide-react';
-import { estimateCommission } from '@/src/lib/commissionLogic';
+import { estimateCommission, calculateDealCommission, getActiveCommissionTier, getDealUnitPosition } from '@/src/lib/commissionLogic';
 import { cn, formatDateSafe } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card } from '../ui/Card';
@@ -24,6 +24,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Modal } from '../ui/Modal';
 import { Deal, DealStatus, PayPlan } from '@/src/types';
+import { useAppData } from '@/src/contexts/AppDataContext';
 
 /**
  * StripeItDealDetailSystem
@@ -47,12 +48,40 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
   onDelete,
   onStatusChange
 }) => {
+  const { deals } = useAppData();
   const [showGross, setShowGross] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
   
-  const commission = payPlan ? estimateCommission(deal, payPlan) : null;
+  // Get all deals for the same month to provide context for commission calculation
+  const monthlyDeals = React.useMemo(() => {
+    const dealDate = new Date(deal.date);
+    const month = dealDate.getMonth();
+    const year = dealDate.getFullYear();
+    
+    return deals.filter(d => {
+      const dDate = new Date(d.date);
+      return dDate.getMonth() === month && dDate.getFullYear() === year;
+    });
+  }, [deals, deal.date]);
+
+  const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDeals) : null;
   const isFinalized = deal.status === DealStatus.FINALIZED;
+
+  // Determine effective rates for display
+  const unitPosition = getDealUnitPosition(deal, monthlyDeals);
+  const totalUnits = monthlyDeals.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
+  
+  const highestTier = payPlan?.tiers ? getActiveCommissionTier(totalUnits, payPlan.tiers) : null;
+  const tierAtSale = payPlan?.tiers ? getActiveCommissionTier(unitPosition, payPlan.tiers) : null;
+
+  const effectiveFrontRate = (highestTier?.frontRetroactive && highestTier.frontRate !== undefined)
+    ? highestTier.frontRate
+    : (tierAtSale?.frontRate ?? payPlan?.frontEndPercentage ?? 0);
+
+  const effectiveBackRate = (highestTier?.backRetroactive && highestTier.backRate !== undefined)
+    ? highestTier.backRate
+    : (tierAtSale?.backRate ?? payPlan?.backEndPercentage ?? 0);
 
   const handleConfirmDelete = async () => {
     if (!onDelete) return;
@@ -203,12 +232,12 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
                       <div>
                         <Typography variant="small" className="text-slate-600 mb-0.5 block">Front Gross</Typography>
                         <Typography variant="label" className="text-white">${deal.frontEndGross.toLocaleString()}</Typography>
-                        <Typography variant="mono" className="text-[9px] text-slate-500 block">@ {payPlan?.frontEndPercentage}%</Typography>
+                        <Typography variant="mono" className="text-[9px] text-slate-500 block">@ {effectiveFrontRate}%</Typography>
                       </div>
                       <div>
                         <Typography variant="small" className="text-slate-600 mb-0.5 block">Back Gross</Typography>
                         <Typography variant="label" className="text-white">${deal.backEndGross.toLocaleString()}</Typography>
-                        <Typography variant="mono" className="text-[9px] text-slate-500 block">@ {payPlan?.backEndPercentage}%</Typography>
+                        <Typography variant="mono" className="text-[9px] text-slate-500 block">@ {effectiveBackRate}%</Typography>
                       </div>
                     </div>
 

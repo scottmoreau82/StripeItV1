@@ -15,7 +15,7 @@ import { PayPlan } from '../types';
 import { COLLECTIONS } from '../constants';
 
 /**
- * StripeItPayPlanServiceSystem
+ * StripeItPayPlanServiceSystem & StripeItCommissionSystem
  * Core CRUD logic for managing user pay plans in Firestore.
  */
 

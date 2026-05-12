@@ -87,8 +87,15 @@ export const ReportView: React.FC = () => {
     exportService.downloadCSV(csvContent, `StripeIt_Report_${filters.startDate}_to_${filters.endDate}`);
   };
 
-  const totalGross = reportData.reduce((acc, deal) => acc + (deal.frontEndGross + deal.backEndGross), 0);
-  const totalUnits = reportData.length;
+  const totalUnits = reportData.reduce((acc, deal) => {
+    const splitRatio = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
+    return acc + splitRatio;
+  }, 0);
+  
+  const totalGross = reportData.reduce((acc, deal) => {
+    const splitRatio = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
+    return acc + ((deal.frontEndGross + deal.backEndGross) * splitRatio);
+  }, 0);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -243,7 +250,10 @@ export const ReportView: React.FC = () => {
                             <td className="px-6 py-4 text-xs text-slate-400 font-medium">{deal.date}</td>
                             <td className="px-6 py-4 text-sm text-white font-bold">{deal.customerName}</td>
                             <td className="px-6 py-4 text-xs text-slate-500">{deal.purchasedVehicle}</td>
-                            <td className="px-6 py-4 text-sm text-emerald-400 font-bold">${(deal.frontEndGross + deal.backEndGross).toLocaleString()}</td>
+                            <td className="px-6 py-4 text-sm text-emerald-400 font-bold">
+                              ${((deal.frontEndGross + deal.backEndGross) * (deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1)).toLocaleString()}
+                              {deal.isSplitDeal && <span className="ml-1 text-[10px] text-amber-500/60 font-mono">SPLIT</span>}
+                            </td>
                             <td className="px-6 py-4 text-right">
                               <ChevronRight className="h-4 w-4 text-slate-700 inline-block group-hover:text-brand-primary group-hover:translate-x-1 transition-all" />
                             </td>

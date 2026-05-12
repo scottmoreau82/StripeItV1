@@ -68,13 +68,16 @@ export const competitionService = {
             sum + (deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1), 0);
           break;
         case CompetitionType.FRONT_END_GROSS:
-          value = userDeals.reduce((sum, deal) => sum + deal.frontEndGross, 0);
+          value = userDeals.reduce((sum, deal) => 
+            sum + (deal.frontEndGross * (deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1)), 0);
           break;
         case CompetitionType.BACK_END_GROSS:
-          value = userDeals.reduce((sum, deal) => sum + deal.backEndGross, 0);
+          value = userDeals.reduce((sum, deal) => 
+            sum + (deal.backEndGross * (deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1)), 0);
           break;
         case CompetitionType.TOTAL_GROSS:
-          value = userDeals.reduce((sum, deal) => sum + (deal.frontEndGross + deal.backEndGross), 0);
+          value = userDeals.reduce((sum, deal) => 
+            sum + ((deal.frontEndGross + deal.backEndGross) * (deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1)), 0);
           break;
         case CompetitionType.COMMISSION:
           if (payPlan) {

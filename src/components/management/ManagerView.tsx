@@ -24,7 +24,6 @@ import { useResponsive } from '@/src/hooks/useResponsive';
 interface ManagerViewProps {
   onLogDeal: () => void;
   onQuickNote: () => void;
-  onConfigPayPlan: () => void;
   onDealClick: (deal: Deal) => void;
   onCreateCompetition: () => void;
 }
@@ -32,7 +31,6 @@ interface ManagerViewProps {
 export const ManagerView: React.FC<ManagerViewProps> = ({
   onLogDeal,
   onQuickNote,
-  onConfigPayPlan,
   onDealClick,
   onCreateCompetition
 }) => {
@@ -51,7 +49,6 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
       <HomeView 
         onLogDeal={onLogDeal}
         onQuickNote={onQuickNote}
-        onConfigPayPlan={onConfigPayPlan}
       />
     );
   }
@@ -131,7 +128,6 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
         <HomeView 
           onLogDeal={onLogDeal}
           onQuickNote={onQuickNote}
-          onConfigPayPlan={onConfigPayPlan}
         />
       )}
     </div>

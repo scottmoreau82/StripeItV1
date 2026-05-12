@@ -12,7 +12,7 @@ import {
   Timestamp,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Deal, DealStatus } from '../types';
 import { COLLECTIONS } from '../constants';
 
@@ -33,13 +33,18 @@ export const dealService = {
    */
   async createDeal(orgId: string, dealData: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'orgId'>): Promise<string> {
     const dealsRef = getDealsRef(orgId);
-    const docRef = await addDoc(dealsRef, {
-      ...dealData,
-      orgId,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    return docRef.id;
+    try {
+      const docRef = await addDoc(dealsRef, {
+        ...dealData,
+        orgId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      return docRef.id;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `organizations/${orgId}/deals`);
+      throw error;
+    }
   },
 
   /**
@@ -47,11 +52,16 @@ export const dealService = {
    */
   async getDeal(orgId: string, dealId: string): Promise<Deal | null> {
     const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.DEALS, dealId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as Deal;
+    try {
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as Deal;
+      }
+      return null;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, `organizations/${orgId}/deals/${dealId}`);
+      throw error;
     }
-    return null;
   },
 
   /**
@@ -59,10 +69,15 @@ export const dealService = {
    */
   async updateDeal(orgId: string, dealId: string, updates: Partial<Deal>): Promise<void> {
     const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.DEALS, dealId);
-    await updateDoc(docRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
-    });
+    try {
+      await updateDoc(docRef, {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `organizations/${orgId}/deals/${dealId}`);
+      throw error;
+    }
   },
 
   /**
@@ -70,7 +85,12 @@ export const dealService = {
    */
   async deleteDeal(orgId: string, dealId: string): Promise<void> {
     const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.DEALS, dealId);
-    await deleteDoc(docRef);
+    try {
+      await deleteDoc(docRef);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `organizations/${orgId}/deals/${dealId}`);
+      throw error;
+    }
   },
 
   /**

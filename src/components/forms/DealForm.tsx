@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Deal, DealStatus } from '@/src/types';
 import { validateDeal, ValidationError } from '@/src/lib/validation';
 import { Input } from '@/src/components/ui/Input';
@@ -6,8 +6,11 @@ import { Select } from '@/src/components/ui/Select';
 import { CurrencyInput } from '@/src/components/ui/CurrencyInput';
 import { Button } from '@/src/components/ui/Button';
 import { Typography } from '@/src/components/ui/Typography';
-import { ChevronDown, ChevronUp, UserPlus, Car, Hash } from 'lucide-react';
+import { ChevronDown, ChevronUp, UserPlus, Car, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAppData } from '@/src/contexts/AppDataContext';
+import { getActiveCommissionTier } from '@/src/lib/commissionLogic';
+import { cn } from '@/src/lib/utils';
 
 /**
  * StripeItDealFormSystem
@@ -28,6 +31,7 @@ export const DealForm: React.FC<DealFormProps> = ({
   onSubmit,
   isLoading
 }) => {
+  const { triggerError, deals, payPlan } = useAppData();
   const [formData, setFormData] = useState<DealFormState>({
     customerName: initialData?.customerName || '',
     purchasedVehicle: initialData?.purchasedVehicle || '',
@@ -121,6 +125,13 @@ export const DealForm: React.FC<DealFormProps> = ({
     const validationErrors = validateDeal(finalData);
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
+      triggerError('Please correct the highlighted fields in the deal record.');
+      
+      // Auto-expand advanced if the error is there
+      if (validationErrors.some(e => e.field === 'notes')) {
+        setShowAdvanced(true);
+      }
+      
       return;
     }
 
@@ -134,8 +145,92 @@ export const DealForm: React.FC<DealFormProps> = ({
 
   const getError = (field: string) => errors.find(e => e.field === field)?.message;
 
+  // Projected Commission Logic
+  const currentMtdUnits = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    return deals
+      .filter(d => {
+        const dealDate = new Date(d.date);
+        return dealDate.getMonth() === currentMonth && dealDate.getFullYear() === currentYear;
+      })
+      .reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
+  }, [deals]);
+
+  const pendingUnitCredit = formData.isSplitDeal ? (Number(formData.splitPercentage) || 0) / 100 : 1;
+  const projectedUnits = currentMtdUnits + pendingUnitCredit;
+
+  const projectedTier = useMemo(() => {
+    if (!payPlan || !payPlan.tiers) return null;
+    return getActiveCommissionTier(projectedUnits, payPlan.tiers);
+  }, [payPlan, projectedUnits]);
+
+  const projectedFrontRate = projectedTier?.frontRate ?? payPlan?.frontEndPercentage ?? null;
+  const projectedBackRate = projectedTier?.backRate ?? payPlan?.backEndPercentage ?? null;
+
+  const renderRatePill = (rate: number | null, color: 'cyan' | 'purple') => {
+    if (!payPlan) return null;
+    
+    const colorClasses = color === 'cyan' 
+      ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
+      : "bg-purple-500/10 border-purple-500/20 text-purple-400";
+
+    const glowColor = color === 'cyan' ? 'rgba(6,182,212,0.5)' : 'rgba(168,85,247,0.5)';
+    const baseGlow = color === 'cyan' ? 'rgba(6,182,212,0.15)' : 'rgba(168,85,247,0.15)';
+
+    return (
+      <div className="flex items-center h-5">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${color}-${rate}`}
+            initial={{ opacity: 0, scale: 0.95, y: 2 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              y: 0,
+              boxShadow: [`0 0 10px ${baseGlow}`, `0 0 20px ${glowColor}`, `0 0 10px ${baseGlow}`]
+            }}
+            exit={{ opacity: 0, scale: 0.95, y: -2 }}
+            transition={{ 
+              duration: 0.2,
+              boxShadow: { duration: 0.6, times: [0, 0.3, 1] }
+            }}
+            className={cn("px-2 py-0.5 rounded flex items-center justify-center border text-[10px] font-bold transition-all", colorClasses)}
+            title={`Projected ${color === 'cyan' ? 'front-end' : 'back-end'} commission rate`}
+          >
+            {rate != null ? `${rate}%` : '--'}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   return (
     <form id="deal-form" onSubmit={handleSubmit} className="space-y-6">
+      {/* Validation Summary (Mobile/Inline) */}
+      <AnimatePresence>
+        {errors.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-4 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-start gap-3 mb-2"
+          >
+            <AlertCircle className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+            <div>
+              <Typography variant="label" className="text-orange-100 font-bold block mb-1">
+                Incomplete Deal Information
+              </Typography>
+              <Typography variant="small" className="text-orange-200/70">
+                Found {errors.length} {errors.length === 1 ? 'field' : 'fields'} requiring attention. Please update the highlighted areas below.
+              </Typography>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Basic Section */}
       <div className="grid grid-cols-1 gap-5">
         <div className="grid grid-cols-2 gap-4">
@@ -291,6 +386,7 @@ export const DealForm: React.FC<DealFormProps> = ({
             label="Front End Gross"
             value={formData.frontEndGross}
             onChange={(e) => handleNumericChange('frontEndGross', e.target.value)}
+            extraLabel={renderRatePill(projectedFrontRate, 'cyan')}
             error={getError('frontEndGross')}
             required
           />
@@ -298,6 +394,7 @@ export const DealForm: React.FC<DealFormProps> = ({
             label="Back End Gross"
             value={formData.backEndGross}
             onChange={(e) => handleNumericChange('backEndGross', e.target.value)}
+            extraLabel={renderRatePill(projectedBackRate, 'purple')}
             error={getError('backEndGross')}
             required
           />
@@ -335,6 +432,23 @@ export const DealForm: React.FC<DealFormProps> = ({
                 />
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Persistence/Validation Bottom Summary */}
+      <AnimatePresence>
+        {errors.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10 flex items-center gap-3 mt-4"
+          >
+            <AlertCircle className="h-4 w-4 text-orange-500 shrink-0" />
+            <Typography variant="small" className="text-orange-200/80 font-medium">
+              Complete {errors.length} required {errors.length === 1 ? 'field' : 'fields'} highlighted above to save.
+            </Typography>
           </motion.div>
         )}
       </AnimatePresence>

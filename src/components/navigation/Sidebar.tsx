@@ -26,6 +26,7 @@ import { navigationConfig } from './NavigationItems';
 import { TierBadge } from './TierBadge';
 import { useResponsive } from '@/src/hooks/useResponsive';
 import { SubscriptionTier } from '@/src/types';
+import { AdminAnalyticsCard } from './AdminAnalyticsCard';
 
 /**
  * StripeItSidebarSystem
@@ -194,6 +195,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, isCollapsed, onTogg
 
       {/* Account & Footer Area (Pinned) */}
       <div className="mt-auto border-t border-border-subtle bg-bg-deep/80 backdrop-blur-sm z-10 py-6">
+        {/* StripeItAnalyticsSystem - Admin Tracker */}
+        {(isAdmin || isDeveloper) && <AdminAnalyticsCard isCollapsed={isCollapsed} />}
+        
         {/* User Card */}
         <div className="flex items-center w-full mb-2 group relative">
           {/* Rail side: Avatar */}

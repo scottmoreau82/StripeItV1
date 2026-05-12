@@ -175,9 +175,62 @@
         "updatedAt": { "type": "number" }
       },
       "required": ["id", "type", "title", "description", "userId", "userEmail", "status", "createdAt", "updatedAt"]
+    },
+    "AnalyticsEvent": {
+      "title": "AnalyticsEvent",
+      "description": "A single tracking event.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "visitorId": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "userId": { "type": "string" },
+        "route": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "payload": { "type": "object" }
+      }
+    },
+    "AnalyticsSession": {
+      "title": "AnalyticsSession",
+      "description": "A user session record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "visitorId": { "type": "string" },
+        "userId": { "type": "string" },
+        "startTime": { "type": "number" },
+        "clickCount": { "type": "number" },
+        "deviceInfo": { "type": "object" }
+      }
+    },
+    "DailyAnalyticsAggregate": {
+      "title": "DailyAnalyticsAggregate",
+      "description": "Daily roll-up of core metrics.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "visits": { "type": "number" },
+        "signups": { "type": "number" },
+        "pageViews": { "type": "number" },
+        "clicks": { "type": "number" },
+        "timestamp": { "type": "number" }
+      }
     }
   },
   "firestore": {
+    "/analyticsEvents/{eventId}": {
+      "schema": "AnalyticsEvent",
+      "description": "Raw event log (Admin only)."
+    },
+    "/analyticsSessions/{sessionId}": {
+      "schema": "AnalyticsSession",
+      "description": "Active and past sessions (Admin only)."
+    },
+    "/analyticsDailyAggregates/{dateId}": {
+      "schema": "DailyAnalyticsAggregate",
+      "description": "Daily metric summaries (Admin only)."
+    },
     "/feedbackReports/{reportId}": {
       "schema": "FeedbackReport",
       "description": "Central collection for all user feedback."

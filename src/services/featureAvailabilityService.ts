@@ -36,7 +36,6 @@ const FEATURE_REGISTRY: Record<string, FeatureStatus> = {
   [Feature.ORG_SETTINGS]: FeatureStatus.COMPLETE,
   
   // Extra Planned Features
-  'inventory_scanning': FeatureStatus.PLANNED,
   'ai_deal_optimizer': FeatureStatus.PLANNED,
   'customer_crm_sync': FeatureStatus.PLANNED,
 };

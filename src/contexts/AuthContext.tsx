@@ -8,9 +8,11 @@ import { Typography } from '../components/ui/Typography';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+import { analyticsService } from '../services/analyticsService';
+import { AnalyticsEventType } from '../types';
+
 /**
  * StripeItAuthSystem & StripeItSessionSystem
- * Centralized authentication and session management with integrated notification system.
  */
 
 export interface Toast {
@@ -156,6 +158,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
+      analyticsService.trackEvent(AnalyticsEventType.LOGIN, { email: firebaseUser.email });
+
       // 2. Setup Profile Sync
       setLoading(true);
       const userDocRef = doc(db, COLLECTIONS.USERS, firebaseUser.uid);
@@ -233,6 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
               
               await batch.commit();
+              analyticsService.trackEvent(AnalyticsEventType.SIGNUP_COMPLETED, { email: firebaseUser.email });
               // Note: snapshot will re-fire after commit
             } catch (err) {
               console.error("Failed to auto-provision user profile:", err);
@@ -290,6 +295,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       setLoading(true);
+      analyticsService.trackEvent(AnalyticsEventType.LOGOUT);
       await auth.signOut();
       // Explicitly clear errors on intentional logout
       setConnectionError(null);

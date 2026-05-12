@@ -1,13 +1,8 @@
-import { Deal, PayPlan, PayPlanRule, PayPlanTier } from '../types';
+import { Deal, PayPlan, PayPlanRule, PayPlanTier, VolumeBonus, VolumeBonusType, VolumeBonusScope, VolumeBonusFilter, MiniAppliesTo } from '../types';
 
 /**
  * StripeItBasicCommissionSystem & StripeItCommissionEstimateSystem
  * Logic for estimating salesperson commission based on deal data and pay plans.
- */
-
-/**
- * StripeItCommissionSystem
- * Advanced arithmetic engine for deal payouts, volume multipliers, and tiered structures.
  */
 
 export interface CommissionResult {
@@ -25,10 +20,98 @@ export interface CommissionResult {
 export interface PeriodEarnings {
   totalPayout: number;
   dealResults: CommissionResult[];
-  tierBonuses: { tierId: string; amount: number }[];
+  tierBonuses: { tierId: string; amount: number; label?: string }[];
   totalTierBonuses: number;
+  hourlyCompensation?: {
+    model: string;
+    hourlyTotal: number;
+    commissionTotal: number; // Sum of deals + tier bonuses
+    adjustment: number; // Difference applied for guarantee
+    finalTotal: number;
+  };
   grandTotal: number;
 }
+
+/**
+ * StripeItVolumeBonusSystem
+ * Advanced volume-based bonus calculation engine.
+ */
+export const calculateVolumeBonusEngine = (deals: Deal[], bonuses: VolumeBonus[]): { bonuses: { tierId: string; amount: number; label: string }[]; total: number } => {
+  if (!bonuses || bonuses.length === 0) return { bonuses: [], total: 0 };
+
+  const results: { tierId: string; amount: number; label: string }[] = [];
+  let total = 0;
+
+  // 1. Separate bonuses by type
+  const activeBonuses = bonuses.filter(b => b.active);
+  
+  // Non-cumulative types (Highest qualifying threshold wins within each filter group)
+  const nonCumulativeTypes = [VolumeBonusType.FLAT, VolumeBonusType.NON_CUMULATIVE];
+  const stackingTypes = [VolumeBonusType.CUMULATIVE, VolumeBonusType.RETRO_PER_UNIT];
+
+  const nonCumulativeBonuses = activeBonuses.filter(b => nonCumulativeTypes.includes(b.type));
+  const otherBonuses = activeBonuses.filter(b => stackingTypes.includes(b.type));
+
+  // Helper to count units based on filter
+  const getFilteredUnits = (filter: VolumeBonusFilter) => {
+    let filteredDeals = deals;
+    if (filter === VolumeBonusFilter.NEW) filteredDeals = deals.filter(d => d.newOrUsed === 'new');
+    if (filter === VolumeBonusFilter.USED) filteredDeals = deals.filter(d => d.newOrUsed === 'used');
+    if (filter === VolumeBonusFilter.CPO) filteredDeals = deals.filter(d => d.newOrUsed === 'cpo');
+    
+    return filteredDeals.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
+  };
+
+  // 2. Handle Non-Cumulative Bonuses (Highest qualifying threshold wins per filter group)
+  const sortedNonCum = [...nonCumulativeBonuses].sort((a, b) => b.threshold - a.threshold);
+  const claimedFilters = new Set<string>();
+
+  for (const bonus of sortedNonCum) {
+    if (claimedFilters.has(bonus.filter)) continue;
+
+    const units = getFilteredUnits(bonus.filter);
+    if (units >= bonus.threshold) {
+      const typeLabel = bonus.type === VolumeBonusType.NON_CUMULATIVE ? 'Non-Cumulative' : 'Flat';
+      results.push({
+        tierId: bonus.id,
+        amount: bonus.amount,
+        label: `${bonus.threshold}+ Units ${typeLabel} Bonus (${bonus.filter})`
+      });
+      total += bonus.amount;
+      claimedFilters.add(bonus.filter);
+    }
+  }
+
+  // 3. Handle Cumulative and Retro Per Unit Bonuses
+  for (const bonus of otherBonuses) {
+    const units = getFilteredUnits(bonus.filter);
+    if (units >= bonus.threshold) {
+      let bonusAmount = 0;
+      let label = '';
+
+      if (bonus.type === VolumeBonusType.CUMULATIVE) {
+        bonusAmount = bonus.amount;
+        label = `${bonus.threshold}+ Units Cumulative Bonus (${bonus.filter})`;
+      } else if (bonus.type === VolumeBonusType.RETRO_PER_UNIT) {
+        if (bonus.scope === VolumeBonusScope.ALL_UNITS) {
+          bonusAmount = units * bonus.amount;
+          label = `Retro Per-Unit Bonus: ${units} units × $${bonus.amount} (${bonus.filter})`;
+        } else {
+          const eligibleUnits = Math.max(0, units - bonus.threshold);
+          bonusAmount = eligibleUnits * bonus.amount;
+          label = `Threshold+ Per-Unit Bonus: ${eligibleUnits} units × $${bonus.amount} (${bonus.filter})`;
+        }
+      }
+
+      if (bonusAmount > 0) {
+        results.push({ tierId: bonus.id, amount: bonusAmount, label });
+        total += bonusAmount;
+      }
+    }
+  }
+
+  return { bonuses: results, total };
+};
 
 /**
  * Find the active commission tier for a given unit count.
@@ -79,9 +162,60 @@ export const getDealUnitPosition = (deal: Deal, allDealsForMonth: Deal[]): numbe
 
   // If deal not found in the list (e.g. it's a new unsaved deal being projected)
   // We assume it's added at the end
-  const currentTotal = allDealsForMonth.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
+  const totalCurrentUnits = sorted.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
   const dealUnitValue = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
-  return currentTotal + dealUnitValue;
+  return totalCurrentUnits + dealUnitValue;
+};
+
+/**
+ * Helper to resolve the correct mini amount based on current system configuration.
+ */
+const resolveMiniAmount = (
+  deal: Deal, 
+  plan: PayPlan, 
+  totalUnitsAtMonthEnd: number, 
+  unitPosition: number,
+  overrides?: { newMini?: number; usedMini?: number }
+): number => {
+  if (!plan.isMinisActive || !plan.miniConfig) return plan.miniAmount || 0;
+  
+  const config = plan.miniConfig;
+  let mini = deal.newOrUsed === 'used' || deal.newOrUsed === 'cpo' ? config.baseUsedMini : config.baseNewMini;
+
+  // Handle Linked overrides (Legacy or user-linked mode)
+  if (config.isLinked && overrides) {
+    if ((deal.newOrUsed === 'used' || deal.newOrUsed === 'cpo') && overrides.usedMini !== undefined) {
+      mini = overrides.usedMini;
+    } else if (deal.newOrUsed === 'new' && overrides.newMini !== undefined) {
+      mini = overrides.newMini;
+    }
+    return mini; // Linked mode takes precedence if active
+  } 
+
+  // --- MINI LADDER LOGIC ---
+  if (!config.isLinked && config.independentThresholds) {
+    // 1. Filter active rules that apply to this deal type
+    const applicableRules = config.independentThresholds.filter(t => {
+      if (!t.active) return false;
+      if (t.appliesTo === MiniAppliesTo.ALL) return true;
+      if (t.appliesTo === MiniAppliesTo.NEW && deal.newOrUsed === 'new') return true;
+      if (t.appliesTo === MiniAppliesTo.USED && (deal.newOrUsed === 'used' || deal.newOrUsed === 'cpo')) return true;
+      if (t.appliesTo === MiniAppliesTo.CPO && deal.newOrUsed === 'cpo') return true;
+      return false;
+    });
+
+    // 2. Sort thresholds descending to find the highest qualifying one
+    const sortedRules = [...applicableRules].sort((a, b) => b.threshold - a.threshold);
+
+    for (const rule of sortedRules) {
+      const qualifyingUnits = rule.isRetro ? totalUnitsAtMonthEnd : unitPosition;
+      if (qualifyingUnits >= rule.threshold) {
+        return rule.amount; // Rules replace base mini correctly
+      }
+    }
+  }
+
+  return mini;
 };
 
 /**
@@ -117,15 +251,25 @@ const evaluateRules = (deal: Deal, rules: PayPlanRule[]): { bonus: number; appli
  * StripeItCommissionEstimateSystem - Core individual deal calculator
  * This performs the raw math based on assigned rates.
  */
-export const estimateCommission = (deal: Deal, plan: PayPlan, overrides?: { frontRate?: number; backRate?: number }): CommissionResult => {
-  // 1. Calculate raw percentages (using overrides if provided, otherwise plan defaults)
+export const estimateCommission = (
+  deal: Deal, 
+  plan: PayPlan, 
+  overrides?: { 
+    frontRate?: number; 
+    backRate?: number; 
+    newMini?: number; 
+    usedMini?: number; 
+    totalUnitsAtMonthEnd?: number;
+    unitPosition?: number;
+  }
+): CommissionResult => {
+  // 1. Calculate raw percentages
   const frontRate = overrides?.frontRate ?? plan.frontEndPercentage;
   const backRate = overrides?.backRate ?? plan.backEndPercentage;
 
   const frontComm = deal.frontEndGross * (frontRate / 100);
   let backComm = deal.backEndGross * (backRate / 100);
   
-  // Handle Back-End Eligibility Threshold
   if (plan.isBackEndThresholdActive && deal.frontEndGross < (plan.backEndThreshold || 0)) {
     backComm = 0;
   }
@@ -137,11 +281,29 @@ export const estimateCommission = (deal: Deal, plan: PayPlan, overrides?: { fron
     ? evaluateRules(deal, plan.rules) 
     : { bonus: 0, applied: [] };
 
-  let totalComm = frontComm + backComm + flatComm + ruleBonuses;
+  // 3. Resolve Custom Minis
+  let customMiniBonus = 0;
+  if (plan.customMinis) {
+    for (const cm of plan.customMinis) {
+      if (!cm.active) continue;
+      let matches = true;
+      if (cm.filter === VolumeBonusFilter.NEW && deal.newOrUsed !== 'new') matches = false;
+      if (cm.filter === VolumeBonusFilter.USED && deal.newOrUsed !== 'used') matches = false;
+      if (cm.filter === VolumeBonusFilter.CPO && deal.newOrUsed !== 'cpo') matches = false;
+      
+      if (matches) customMiniBonus += cm.amount;
+    }
+  }
+
+  let totalComm = frontComm + backComm + flatComm + ruleBonuses + customMiniBonus;
   let isMini = false;
 
-  // 3. Resolve "Mini" (Minimum commission per deal)
-  const miniAmount = plan.miniAmount || 0;
+  // 4. Resolve "Mini"
+  const miniAmount = resolveMiniAmount(deal, plan, overrides?.totalUnitsAtMonthEnd || 0, overrides?.unitPosition || 0, {
+    newMini: overrides?.newMini,
+    usedMini: overrides?.usedMini
+  });
+  
   if (totalComm < miniAmount) {
     totalComm = miniAmount;
     isMini = true;
@@ -150,7 +312,7 @@ export const estimateCommission = (deal: Deal, plan: PayPlan, overrides?: { fron
   const totalBeforeSplit = totalComm;
   let finalPayout = totalComm;
 
-  // 4. Handle Split Deals (Final pass for split application)
+  // 5. Handle Split Deals
   if (deal.isSplitDeal) {
     const splitRatio = (deal.splitPercentage || 50) / 100;
     
@@ -185,11 +347,10 @@ export const calculateDealCommission = (deal: Deal, plan: PayPlan, allDealsForMo
   const totalUnits = allDealsForMonth.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
   const unitPosition = getDealUnitPosition(deal, allDealsForMonth);
   
-  const highestTierReached = getActiveCommissionTier(totalUnits, plan.tiers);
   const tierAtSale = getActiveCommissionTier(unitPosition, plan.tiers);
+  const highestTierReached = getActiveCommissionTier(totalUnits, plan.tiers);
 
-  // Determine effective rates
-  // A retroactive rate applies if the highest tier reached has the flag enabled.
+  // Determine effective overrides
   const frontRate = (highestTierReached?.frontRetroactive && highestTierReached.frontRate !== undefined)
     ? highestTierReached.frontRate
     : (tierAtSale?.frontRate ?? plan.frontEndPercentage);
@@ -198,7 +359,18 @@ export const calculateDealCommission = (deal: Deal, plan: PayPlan, allDealsForMo
     ? highestTierReached.backRate
     : (tierAtSale?.backRate ?? plan.backEndPercentage);
 
-  return estimateCommission(deal, plan, { frontRate, backRate });
+  // Determine Mini Overrides (for Linked Mode)
+  const newMini = highestTierReached?.newMiniOverride ?? tierAtSale?.newMiniOverride;
+  const usedMini = highestTierReached?.usedMiniOverride ?? tierAtSale?.usedMiniOverride;
+
+  return estimateCommission(deal, plan, { 
+    frontRate, 
+    backRate, 
+    newMini, 
+    usedMini,
+    totalUnitsAtMonthEnd: totalUnits,
+    unitPosition
+  });
 };
 
 /**
@@ -206,29 +378,31 @@ export const calculateDealCommission = (deal: Deal, plan: PayPlan, allDealsForMo
  * Calculate total period earnings including volume-based tier bonuses and retroactive rate overrides.
  */
 export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan): PeriodEarnings => {
+  let dealResults: any[] = [];
+  let totalDealPayout = 0;
+
   if (!plan.isAdvanced || !plan.tiers || plan.tiers.length === 0) {
-    const dealResults = deals.map(d => estimateCommission(d, plan));
-    const totalPayout = dealResults.reduce((sum, r) => sum + r.finalPayout, 0);
-    return {
-      totalPayout,
-      dealResults,
-      tierBonuses: [],
-      totalTierBonuses: 0,
-      grandTotal: totalPayout
-    };
+    dealResults = deals.map(d => estimateCommission(d, plan));
+    totalDealPayout = dealResults.reduce((sum, r) => sum + r.finalPayout, 0);
+  } else {
+    // Use the canonical per-deal calculation
+    dealResults = deals.map(deal => calculateDealCommission(deal, plan, deals));
+    totalDealPayout = dealResults.reduce((sum, r) => sum + r.finalPayout, 0);
   }
 
-  // Use the canonical per-deal calculation
-  const dealResults = deals.map(deal => calculateDealCommission(deal, plan, deals));
-  const totalDealPayout = dealResults.reduce((sum, r) => sum + r.finalPayout, 0);
-
   // Calculate Tier Volume Bonuses
-  const totalUnits = deals.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
-  
-  const tierBonuses: { tierId: string; amount: number }[] = [];
+  const tierBonuses: { tierId: string; amount: number; label?: string }[] = [];
   let totalTierBonuses = 0;
 
-  if (plan.isVolumeBonusActive) {
+  // New Volume Bonus Engine
+  if (plan.isVolumeBonusEngineActive && plan.volumeBonuses) {
+    const engineResults = calculateVolumeBonusEngine(deals, plan.volumeBonuses);
+    tierBonuses.push(...engineResults.bonuses);
+    totalTierBonuses = engineResults.total;
+  } 
+  // Backward compatibility: Old Tier Volume Bonuses
+  else if (plan.isVolumeBonusActive && plan.tiers && plan.tiers.length > 0) {
+    const totalUnits = deals.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
     const highestTier = getActiveCommissionTier(totalUnits, plan.tiers);
     
     if (highestTier) {
@@ -243,9 +417,47 @@ export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan): PeriodEar
         }
       }
 
-      tierBonuses.push({ tierId: highestTier.id, amount: tierAmount });
+      tierBonuses.push({ 
+        tierId: highestTier.id, 
+        amount: tierAmount,
+        label: `${highestTier.threshold}+ Units Bonus`
+      });
       totalTierBonuses = tierAmount;
     }
+  }
+
+  const commissionTotal = totalDealPayout + totalTierBonuses;
+  let finalGrandTotal = commissionTotal;
+  let hourlyInfo: PeriodEarnings['hourlyCompensation'];
+
+  // Handle Minis and Hourly Section
+  if (plan.isMinisAndHourlyActive && plan.isHourlyActive && plan.hourlyConfig) {
+    const config = plan.hourlyConfig;
+    const hourlyTotal = config.rate * config.hoursWorked;
+    let adjustment = 0;
+
+    if (config.model === 'guarantee') {
+      if (hourlyTotal > commissionTotal) {
+        adjustment = hourlyTotal - commissionTotal;
+        finalGrandTotal = hourlyTotal;
+      }
+    } else if (config.model === 'additive') {
+      adjustment = hourlyTotal;
+      finalGrandTotal = commissionTotal + hourlyTotal;
+    } else if (config.model === 'draw') {
+      if (hourlyTotal > commissionTotal) {
+        adjustment = hourlyTotal - commissionTotal;
+        finalGrandTotal = hourlyTotal;
+      }
+    }
+
+    hourlyInfo = {
+      model: config.model,
+      hourlyTotal,
+      commissionTotal,
+      adjustment,
+      finalTotal: finalGrandTotal
+    };
   }
 
   return {
@@ -253,7 +465,8 @@ export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan): PeriodEar
     dealResults,
     tierBonuses,
     totalTierBonuses,
-    grandTotal: totalDealPayout + totalTierBonuses
+    hourlyCompensation: hourlyInfo,
+    grandTotal: finalGrandTotal
   };
 };
 

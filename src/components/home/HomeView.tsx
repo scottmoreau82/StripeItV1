@@ -73,10 +73,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const { profile } = useAuth();
   const { isMobile } = useResponsive();
 
+  const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
+
   const [showMetrics, setShowMetrics] = useState(!isMobile);
   const [activeTab, setActiveTab] = useState<'overview' | 'trends'>('overview');
   const [selectedCompId, setSelectedCompId] = useState<string | null>(null);
   const [isCustomizing, setIsCustomizing] = useState(false);
+
+  // Force overview tab for free users
+  useMemo(() => {
+    if (isFree && activeTab === 'trends') {
+      setActiveTab('overview');
+    }
+  }, [isFree, activeTab]);
 
   const metrics = useMemo(() => calculateDashboardMetrics(deals, payPlan), [deals, payPlan]);
   const chartData = useMemo(() => getTrendsChartData(deals, payPlan), [deals, payPlan]);
@@ -113,9 +122,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const header = (
     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
       <div className="flex-1">
-        <div className="flex items-center gap-3 mb-2">
-          <Typography variant="h1" className="italic text-[50px]">
-            MTD<br />Performance
+        <div className="flex flex-col sm:flex-row gap-3 mb-2 md:mb-1">
+          <Typography variant="h1" className="italic text-[30px] sm:text-[36px] leading-[0.95] tracking-tighter">
+            Performance Overview
           </Typography>
           {profile?.subscriptionTier === SubscriptionTier.FREE && (
             <div className="px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-full">
@@ -158,15 +167,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
           >
             Overview
           </button>
-          <button 
-            onClick={() => setActiveTab('trends')}
-            className={cn(
-              "px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-              activeTab === 'trends' ? "bg-brand-primary text-bg-deep shadow-glow" : "text-slate-500 hover:text-slate-300"
-            )}
-          >
-            Trends
-          </button>
+          {!isFree && (
+            <button 
+              onClick={() => setActiveTab('trends')}
+              className={cn(
+                "px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                activeTab === 'trends' ? "bg-brand-primary text-bg-deep shadow-glow" : "text-slate-500 hover:text-slate-300"
+              )}
+            >
+              Trends
+            </button>
+          )}
         </div>
         
         {isMobile && (
@@ -186,7 +197,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <ContextHint 
         id="hint-dashboard-metrics" 
         title="Real-time Analytics" 
-        message="Your MTD performance updates automatically as you log deals. Tap any cards to see detailed breakdowns."
+        message="Your performance overview updates automatically as you log deals. Tap any cards to see detailed breakdowns."
         className="mb-0"
       />
       <AnimatePresence mode="wait">
@@ -257,6 +268,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* Dynamic Main Widgets */}
             {dashboardLayout.widgets
               .filter(w => w.visible && [WidgetType.RECENT_DEALS].includes(w.type as WidgetType))
+              .filter(w => !(isFree && w.type === WidgetType.RECENT_DEALS))
               .sort((a, b) => a.order - b.order)
               .map(widget => (
                 <WidgetRegistry 
@@ -273,48 +285,42 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="flex flex-col gap-6">
           {activeTab === 'overview' && (
             dashboardLayout.widgets.find(w => w.type === WidgetType.GOAL_PROGRESS && w.visible) && (
-              hasGoalsAccess ? (
+              hasGoalsAccess && !isFree ? (
                 <WidgetRegistry type={WidgetType.GOAL_PROGRESS} data={widgetData} />
-              ) : (
-                <Card className="p-6 bg-white/[0.02] border-brand-primary/10 relative overflow-hidden group cursor-pointer" onClick={() => {}}>
-                  <div className="flex items-center justify-between mb-2">
-                      <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Monthly Goal</Typography>
-                      <Lock size={12} className="text-brand-primary/40" />
-                  </div>
-                  <Typography variant="p" className="text-[10px] text-slate-600 uppercase font-black tracking-tighter">Upgrade to Basic to set goals</Typography>
-                  <div className="absolute inset-0 bg-brand-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Card>
-              )
+              ) : null
             )
           )}
 
-          {/* Average Performance Static Card (Could be a widget too) */}
-          <Card className="p-6 bg-bg-card/40 border-white/5 space-y-4">
-            <div className="flex items-center gap-4">
-               <div className="h-10 w-10 rounded-full bg-brand-deep/10 flex items-center justify-center border border-brand-deep/20">
-                 <Activity className="h-5 w-5 text-brand-deep" />
-               </div>
-               <div>
-                  <Typography variant="mono" className="text-[9px] text-slate-500">AVG FRONT / UNIT</Typography>
-                  <Typography variant="h3" className="text-white text-lg">${Math.round(metrics.totalFrontEndGrossMTD / metrics.totalUnitsMTD || 0).toLocaleString()}</Typography>
-               </div>
-            </div>
-            <div className="flex items-center gap-4 pt-4 border-t border-white/5">
-               <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                 <Award className="h-5 w-5 text-emerald-500" />
-               </div>
-               <div>
-                  <Typography variant="mono" className="text-[9px] text-slate-500">AVG Payout / UNIT</Typography>
-                  <Typography variant="h3" className="text-white text-lg">${Math.round(metrics.avgCommissionPerUnit).toLocaleString()}</Typography>
-               </div>
-            </div>
-          </Card>
+          {/* Average Performance Static Card */}
+          {!isFree && (
+            <Card className="p-6 bg-bg-card/40 border-white/5 space-y-4">
+              <div className="flex items-center gap-4">
+                 <div className="h-10 w-10 rounded-full bg-brand-deep/10 flex items-center justify-center border border-brand-deep/20">
+                   <Activity className="h-5 w-5 text-brand-deep" />
+                 </div>
+                 <div>
+                    <Typography variant="mono" className="text-[9px] text-slate-500">AVG FRONT / UNIT</Typography>
+                    <Typography variant="h3" className="text-white text-lg">${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}</Typography>
+                 </div>
+              </div>
+              <div className="flex items-center gap-4 pt-4 border-t border-white/5">
+                 <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                   <Award className="h-5 w-5 text-emerald-500" />
+                 </div>
+                 <div>
+                    <Typography variant="mono" className="text-[9px] text-slate-500">AVG Payout / UNIT</Typography>
+                    <Typography variant="h3" className="text-white text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
+                 </div>
+              </div>
+            </Card>
+          )}
 
-          {!isMobile && <QuickActions onQuickNote={onQuickNote} />}
+          {!isMobile && !isFree && <QuickActions onQuickNote={onQuickNote} />}
 
           {/* Dynamic Sidebar Widgets */}
           {dashboardLayout.widgets
             .filter(w => w.visible && [WidgetType.QUICK_NOTES, WidgetType.COMPETITIONS].includes(w.type as WidgetType))
+            .filter(w => !(isFree && w.type === WidgetType.QUICK_NOTES))
             .sort((a, b) => a.order - b.order)
             .map(widget => {
               if (widget.type === WidgetType.QUICK_NOTES && !hasNotesAccess) return null; // Handled separately or with lock
@@ -334,7 +340,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             })}
 
           {/* Notes Locked Placeholder if no access */}
-          {!hasNotesAccess && dashboardLayout.widgets.find(w => w.type === WidgetType.QUICK_NOTES && w.visible) && (
+          {!hasNotesAccess && !isFree && dashboardLayout.widgets.find(w => w.type === WidgetType.QUICK_NOTES && w.visible) && (
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
                   <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Recent Notes</Typography>

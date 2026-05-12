@@ -39,7 +39,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       return (
         <MetricCard 
           label="Units"
-          value={metrics.totalUnitsMTD.toString()}
+          value={metrics.units.toString()}
           trend={{ value: 12, isPositive: true }} // Placeholder for trend logic
           icon={Activity}
           loading={isLoading}
@@ -49,7 +49,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       return (
         <MetricCard 
           label="Commission"
-          value={`$${metrics.totalCommissionMTD.toLocaleString()}`}
+          value={`$${metrics.commission.toLocaleString()}`}
           trend={{ value: 8, isPositive: true }}
           icon={Wallet}
           loading={isLoading}
@@ -59,7 +59,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       return (
         <MetricCard 
           label="Front-End"
-          value={`$${metrics.totalFrontEndGrossMTD.toLocaleString()}`}
+          value={`$${metrics.frontEnd.toLocaleString()}`}
           trend={{ value: 2, isPositive: false }}
           icon={TrendingUp}
           loading={isLoading}
@@ -69,7 +69,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       return (
         <MetricCard 
           label="Back-End"
-          value={`$${metrics.totalBackEndGrossMTD.toLocaleString()}`}
+          value={`$${metrics.backEnd.toLocaleString()}`}
           trend={{ value: 15, isPositive: true }}
           icon={Calculator}
           loading={isLoading}
@@ -79,7 +79,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       return (
         <MetricCard 
           label="Total Gross"
-          value={`$${(metrics.totalFrontEndGrossMTD + metrics.totalBackEndGrossMTD).toLocaleString()}`}
+          value={`$${metrics.gross.toLocaleString()}`}
           trend={{ value: 5, isPositive: true }}
           icon={TrendingUp}
           loading={isLoading}
@@ -90,7 +90,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       return (
         <MetricCard 
           label="Avg Gross/Unit"
-          value={`$${Math.round((metrics.totalFrontEndGrossMTD + metrics.totalBackEndGrossMTD) / metrics.totalUnitsMTD || 0).toLocaleString()}`}
+          value={`$${Math.round(metrics.avgGross || 0).toLocaleString()}`}
           trend={{ value: 3, isPositive: true }}
           icon={BarChart3}
           loading={isLoading}
@@ -102,7 +102,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       return (
         <GoalProgress 
           label="Monthly Goal"
-          current={metrics.totalUnitsMTD}
+          current={metrics.units}
           target={goal?.unitGoal || 15}
           loading={isLoading}
         />

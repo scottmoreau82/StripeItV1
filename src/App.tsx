@@ -47,6 +47,9 @@ import { featureAccessService, Feature } from './services/featureAccessService';
 import { SubscriptionTier } from './types';
 import { UpgradeAccessScreen } from './components/subscription/UpgradeAccessScreen';
 import { FeedbackType } from './types';
+import { analyticsService } from './services/analyticsService';
+import { AnalyticsEventType } from './types';
+import { AdminAnalyticsDashboard } from './components/analytics/AdminAnalyticsDashboard';
 
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 
@@ -63,6 +66,17 @@ function MainAppFlow() {
   const { isMobile } = useResponsive();
   const { profile, user, isAdmin } = useAuth();
   const location = useLocation();
+
+  // StripeItAnalyticsSystem - Global Lifecycle Tracking
+  useEffect(() => {
+    analyticsService.setUser(user?.uid || null, user?.email || null);
+    analyticsService.startSession();
+    analyticsService.trackEvent(AnalyticsEventType.APP_VISIT);
+  }, [user]);
+
+  useEffect(() => {
+    analyticsService.trackEvent(AnalyticsEventType.PAGE_VIEW, { path: location.pathname });
+  }, [location.pathname]);
   
   const { 
     deals,
@@ -212,7 +226,6 @@ function MainAppFlow() {
                   <HomeView 
                     onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
                     onQuickNote={() => setIsQuickNoteOpen(true)}
-                    onConfigPayPlan={() => setIsPayPlanOpen(true)}
                   />
                 )
               } 
@@ -288,6 +301,14 @@ function MainAppFlow() {
               element={
                 isAdmin 
                   ? <FeedbackReviewPage /> 
+                  : <Navigate to="/" />
+              } 
+            />
+            <Route 
+              path="/admin/analytics" 
+              element={
+                isAdmin 
+                  ? <AdminAnalyticsDashboard /> 
                   : <Navigate to="/" />
               } 
             />

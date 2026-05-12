@@ -10,9 +10,10 @@ import { planLimitService, LimitType } from '../services/planLimitService';
 import { dashboardService } from '../services/dashboardService';
 import { activityService } from '../services/activityService';
 import { notificationService } from '../services/notificationService';
-import { Deal, PayPlan, Goal, DealStatus, QuickNote, Competition, SubscriptionTier, DashboardLayout, ActivityEventType } from '../types';
+import { Deal, PayPlan, Goal, DealStatus, QuickNote, Competition, SubscriptionTier, DashboardLayout, ActivityEventType, AnalyticsEventType } from '../types';
 import { onSnapshot, query, collection, orderBy, where } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { analyticsService } from '../services/analyticsService';
 import { COLLECTIONS } from '../constants';
 
 /**
@@ -236,6 +237,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       if (editingId) {
         await dealService.updateDeal(profile.orgId, editingId, dealData);
+        analyticsService.trackEvent(AnalyticsEventType.DEAL_EDITED, { dealId: editingId });
         
         if (dealData.status === DealStatus.FINALIZED) {
           await activityService.logEvent(profile.orgId, {
@@ -279,6 +281,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
           message: `Logged a new ${dealData.newOrUsed || ''} deal for ${dealData.customerName}`,
           payload: { dealId, vehicle: dealData.purchasedVehicle }
         });
+        analyticsService.trackEvent(AnalyticsEventType.DEAL_CREATED, { dealId, type: dealData.newOrUsed });
         triggerSuccess('Deal logged successfully!');
       }
     } catch (error: any) {
@@ -352,6 +355,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       const { id, createdAt, updatedAt, organizationId, userId, ...cleanPlan } = planData as any;
       await payPlanService.savePayPlan(profile.orgId, user.uid, cleanPlan);
       await loadStaticData(profile.orgId, user.uid);
+      analyticsService.trackEvent(AnalyticsEventType.COMMISSION_MATRIX_UPDATED);
       triggerSuccess('Pay plan updated.');
     } catch (error: any) {
       console.error("Pay Plan Save Error:", error);

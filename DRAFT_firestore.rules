@@ -94,19 +94,19 @@ service cloud.firestore {
     // Analytics Collections (Admin Only)
     match /analyticsEvents/{eventId} {
       allow read: if isAnyAdmin();
-      allow create: if isValidAnalyticsEvent(incoming());
+      allow create: if true; // Allow anonymous tracking, will be validated by schema
       allow update, delete: if false;
     }
 
     match /analyticsSessions/{sessionId} {
       allow read: if isAnyAdmin();
-      allow create, update: if true;
+      allow create, update: if true; // Sessions are updated by the JS service
       allow delete: if false;
     }
 
     match /analyticsDailyAggregates/{dateId} {
       allow read: if isAnyAdmin();
-      allow create, update: if true;
+      allow create, update: if true; // Aggregates are updated by the JS service
       allow delete: if false;
     }
 

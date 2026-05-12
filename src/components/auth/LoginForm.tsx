@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, mapAuthError } from '@/src/lib/firebase';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { analyticsService } from '@/src/services/analyticsService';
+import { AnalyticsEventType } from '@/src/types';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { Typography } from '@/src/components/ui/Typography';
@@ -46,7 +48,11 @@ export const LoginForm: React.FC = () => {
   };
 
   const toggleMode = () => {
-    setMode(prev => prev === 'signin' ? 'signup' : 'signin');
+    const newMode = mode === 'signin' ? 'signup' : 'signin';
+    if (newMode === 'signup') {
+      analyticsService.trackEvent(AnalyticsEventType.SIGNUP_STARTED);
+    }
+    setMode(newMode);
     setError('');
   };
 

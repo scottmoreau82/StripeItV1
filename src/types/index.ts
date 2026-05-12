@@ -95,6 +95,83 @@ export interface PayPlanTier {
   isRetroactive: boolean; // If true, perUnitBonus applies to ALL units MTD. If false, only applies to units >= threshold.
   frontRetroactive?: boolean;
   backRetroactive?: boolean;
+  newMiniOverride?: number;
+  usedMiniOverride?: number;
+}
+
+export enum VolumeBonusType {
+  FLAT = 'flat',
+  CUMULATIVE = 'cumulative',
+  NON_CUMULATIVE = 'non_cumulative',
+  RETRO_PER_UNIT = 'retro_per_unit'
+}
+
+export enum VolumeBonusScope {
+  ALL_UNITS = 'all_units',
+  THRESHOLD_PLUS = 'threshold_plus'
+}
+
+export enum VolumeBonusFilter {
+  ANY = 'any',
+  NEW = 'new',
+  USED = 'used',
+  CPO = 'cpo'
+}
+
+export interface VolumeBonus {
+  id: string;
+  threshold: number;
+  amount: number;
+  type: VolumeBonusType;
+  scope: VolumeBonusScope;
+  filter: VolumeBonusFilter;
+  active: boolean;
+  notes?: string;
+}
+
+export enum HourlyPayoutModel {
+  GUARANTEE = 'guarantee',
+  ADDITIVE = 'additive',
+  DRAW = 'draw'
+}
+
+export interface HourlyConfig {
+  active: boolean;
+  rate: number;
+  hoursWorked: number;
+  model: HourlyPayoutModel;
+}
+
+export enum MiniAppliesTo {
+  NEW = 'new',
+  USED = 'used',
+  CPO = 'cpo',
+  ALL = 'all'
+}
+
+export interface MiniThreshold {
+  id: string;
+  threshold: number;
+  amount: number;
+  appliesTo: MiniAppliesTo;
+  isRetro: boolean;
+  active: boolean;
+}
+
+export interface CustomMini {
+  id: string;
+  label: string;
+  amount: number;
+  active: boolean;
+  filter: VolumeBonusFilter;
+}
+
+export interface MiniConfig {
+  active: boolean;
+  isLinked: boolean;
+  baseNewMini: number;
+  baseUsedMini: number;
+  independentThresholds: MiniThreshold[];
 }
 
 export interface PayPlan {
@@ -112,10 +189,20 @@ export interface PayPlan {
   isAdvanced: boolean;
   isRulesEnabled?: boolean;
   isVolumeBonusActive?: boolean;
+  isVolumeBonusEngineActive?: boolean; // New engine flag
   isBackEndThresholdActive?: boolean;
   backEndThreshold?: number;
   rules: PayPlanRule[];
   tiers: PayPlanTier[];
+  volumeBonuses?: VolumeBonus[]; 
+  
+  // Minis and Hourly System
+  isMinisAndHourlyActive?: boolean;
+  isMinisActive?: boolean;
+  isHourlyActive?: boolean;
+  miniConfig?: MiniConfig;
+  customMinis?: CustomMini[];
+  hourlyConfig?: HourlyConfig;
   
   createdAt: number;
   updatedAt: number;
@@ -226,13 +313,14 @@ export interface LeaderboardEntry {
 }
 
 export interface DashboardMetrics {
-  totalUnitsMTD: number;
-  totalCommissionMTD: number;
-  totalFrontEndGrossMTD: number;
-  totalBackEndGrossMTD: number;
-  totalGrossMTD: number;
-  avgGrossPerUnit: number;
-  avgCommissionPerUnit: number;
+  units: number;
+  frontEnd: number;
+  backEnd: number;
+  gross: number;
+  commission: number;
+  avgGross: number;
+  avgCommission: number;
+  dealPace: number;
 }
 
 export enum ActivityEventType {
@@ -344,4 +432,60 @@ export interface OnboardingState {
   currentStep: string;
   completedSteps: string[];
   seenHints: string[];
+}
+
+export enum AnalyticsEventType {
+  APP_VISIT = 'app_visit',
+  SESSION_START = 'session_start',
+  SESSION_END = 'session_end',
+  PAGE_VIEW = 'page_view',
+  BUTTON_CLICK = 'button_click',
+  SIGNUP_STARTED = 'signup_started',
+  SIGNUP_COMPLETED = 'signup_completed',
+  LOGIN = 'login',
+  LOGOUT = 'logout',
+  DEAL_CREATED = 'deal_created',
+  DEAL_EDITED = 'deal_edited',
+  COMMISSION_MATRIX_UPDATED = 'commission_matrix_updated',
+  SETTINGS_UPDATED = 'settings_updated',
+  SUBSCRIPTION_STARTED = 'subscription_started',
+  SUBSCRIPTION_UPGRADED = 'subscription_upgraded'
+}
+
+export interface AnalyticsEvent {
+  id: string;
+  type: AnalyticsEventType;
+  visitorId: string;
+  sessionId: string;
+  userId?: string;
+  userEmail?: string;
+  route: string;
+  payload?: Record<string, any>;
+  timestamp: number;
+}
+
+export interface AnalyticsSession {
+  id: string;
+  visitorId: string;
+  userId?: string;
+  startTime: number;
+  endTime?: number;
+  pagesViewed: string[];
+  clickCount: number;
+  deviceInfo: {
+    browser: string;
+    os: string;
+    isMobile: boolean;
+  };
+}
+
+export interface DailyAnalyticsAggregate {
+  id: string; // date string YYYY-MM-DD
+  date: string;
+  visits: number;
+  signups: number;
+  pageViews: number;
+  clicks: number;
+  activeSessions: number;
+  timestamp: number;
 }

@@ -51,7 +51,7 @@ export const FullscreenMobileFlow: React.FC<FullscreenFlowProps> = ({
           className="fixed inset-0 z-50 flex flex-col bg-bg-deep"
         >
           {/* Header */}
-          <div className="flex h-16 items-center justify-between border-b border-white/5 px-6 shrink-0">
+          <div className="flex h-16 items-center justify-between border-b border-border-subtle px-6 shrink-0">
             <Typography variant="h3" className="text-white">{title}</Typography>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
               <X className="h-6 w-6" />
@@ -67,7 +67,7 @@ export const FullscreenMobileFlow: React.FC<FullscreenFlowProps> = ({
 
           {/* Footer */}
           {footer && (
-            <div className="border-t border-white/5 p-6 bg-bg-main/50 backdrop-blur-md shrink-0">
+            <div className="border-t border-border-subtle p-6 bg-bg-main/50 backdrop-blur-md shrink-0">
               <div className="mx-auto max-w-lg">
                 {footer}
               </div>

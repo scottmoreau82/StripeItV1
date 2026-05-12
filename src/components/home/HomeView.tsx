@@ -133,17 +133,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </div>
       
       <div className="flex items-center gap-3">
-        {!isMobile && (
-          <Button 
-            variant="ghost" 
-            className="text-slate-600 hover:text-slate-400 font-bold uppercase tracking-widest text-[10px]"
-            onClick={onConfigPayPlan}
-          >
-            <Calculator className="mr-2 h-4 w-4" />
-            Config Payouts
-          </Button>
-        )}
-        
         {hasCustomizationAccess && (
           <div className="relative group">
             <button 

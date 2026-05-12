@@ -11,6 +11,7 @@ const USERS_COLLECTION = 'users';
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'dark',
+  visualTheme: 'matrix',
   notifications: {
     dealReminders: true,
     goalAlerts: true,

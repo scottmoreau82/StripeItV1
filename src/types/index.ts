@@ -25,6 +25,7 @@ export enum DealStatus {
 
 export interface UserPreferences {
   theme: 'dark' | 'light' | 'system';
+  visualTheme?: 'matrix' | 'og';
   onboarding?: OnboardingState;
   notifications: {
     dealReminders: boolean;

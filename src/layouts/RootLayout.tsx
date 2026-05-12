@@ -51,6 +51,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal }) =
       {/* Background Ornaments */}
       <div className="fixed top-0 right-0 -z-10 h-[600px] w-[600px] rounded-full bg-brand-primary/[0.03] blur-[150px] pointer-events-none" />
       <div className="fixed bottom-0 left-[20%] -z-10 h-[500px] w-[500px] rounded-full bg-brand-deep/[0.03] blur-[120px] pointer-events-none" />
+      <div className="fixed top-[20%] right-[-10%] -z-10 h-[700px] w-[700px] rounded-full bg-brand-secondary/[0.02] blur-[180px] pointer-events-none" />
     </div>
   );
 };

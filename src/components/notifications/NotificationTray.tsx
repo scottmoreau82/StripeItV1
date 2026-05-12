@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Inbox, Sparkles, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { notificationService } from '@/src/services/notificationService';
 import { Notification } from '@/src/types';
@@ -16,8 +17,42 @@ import { cn } from '@/src/lib/utils';
 
 export const NotificationTray: React.FC = () => {
   const { profile } = useAuth();
+  const location = useLocation();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  // StripeItNotificationSystem - Close on route change
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
+
+  // StripeItNotificationSystem - Outside click and Escape key handling
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!profile?.uid) return;
@@ -39,7 +74,7 @@ export const NotificationTray: React.FC = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <Button
         variant="ghost"
         size="icon"
@@ -59,20 +94,12 @@ export const NotificationTray: React.FC = () => {
 
       <AnimatePresence>
         {isOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-              className="fixed inset-0 z-40 bg-transparent"
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute right-0 mt-4 z-50 w-80 md:w-96 rounded-[2rem] bg-bg-card border border-white/10 shadow-2xl overflow-hidden"
-            >
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute right-0 mt-4 z-50 w-80 md:w-96 rounded-[2rem] bg-bg-card border border-white/10 shadow-2xl overflow-hidden"
+          >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02]">
                 <div className="flex items-center gap-2">
@@ -131,8 +158,7 @@ export const NotificationTray: React.FC = () => {
                   View All Activity
                 </Button>
               </div>
-            </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

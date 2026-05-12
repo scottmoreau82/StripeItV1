@@ -13,11 +13,11 @@ export const TopBar = () => {
   const { profile } = useAuth();
 
   return (
-    <header className="hidden h-16 items-center justify-end border-b border-white/5 bg-bg-main/40 backdrop-blur-sm px-10 lg:flex sticky top-0 z-30">
+    <header className="hidden h-16 items-center justify-end border-b border-border-subtle bg-bg-main/40 backdrop-blur-sm px-10 lg:flex sticky top-0 z-30">
       <div className="flex items-center gap-6">
         <NotificationTray />
         
-        <div className="h-8 w-px bg-white/5" />
+        <div className="h-8 w-px bg-border-subtle" />
         
         <div className="flex items-center gap-3 cursor-pointer group">
           <div className="text-right">

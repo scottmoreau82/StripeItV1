@@ -257,6 +257,7 @@ function MainAppFlow() {
           element={
             <SalesLogView 
               onEdit={(deal) => { setEditingDeal(deal); setIsNewDealOpen(true); }}
+              onConfigPayPlan={() => setIsPayPlanOpen(true)}
             />
           } 
         />
@@ -355,7 +356,7 @@ function MainAppFlow() {
         <FullscreenMobileFlow
           isOpen={isPayPlanOpen}
           onClose={() => setIsPayPlanOpen(false)}
-          title="Pay Plan Setup"
+          title="Commission Matrix"
         >
           <PayPlanForm 
             initialData={payPlan || {}} 
@@ -367,7 +368,7 @@ function MainAppFlow() {
         <Modal
           isOpen={isPayPlanOpen}
           onClose={() => setIsPayPlanOpen(false)}
-          title="Commission Payout Setup"
+          title="Commission Matrix"
         >
           <PayPlanForm 
             initialData={payPlan || {}} 

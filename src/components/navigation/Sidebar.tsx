@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, isCollapsed, onTogg
 
   return (
     <aside className={cn(
-      "hidden h-screen flex-col border-r border-white/5 bg-bg-deep lg:flex sticky top-0 shrink-0 transition-all duration-300 ease-in-out z-30 overflow-hidden",
+      "hidden h-screen flex-col border-r border-border-subtle bg-bg-deep lg:flex sticky top-0 shrink-0 transition-all duration-300 ease-in-out z-30 overflow-hidden",
       isCollapsed ? "w-20" : "w-72"
     )}>
       {/* Brand Identity / Top Area (Pinned) */}
@@ -95,7 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, isCollapsed, onTogg
                 <div className="w-20 shrink-0 flex items-center justify-center relative">
                   {/* Active Indicator Bar - Fixed to Left edge of sidebar */}
                   {isActive && !isCollapsed && (
-                    <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-[0_0_10px_#00F2FF]" />
+                    <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
                   )}
                   <item.icon className={cn("h-6 w-6 shrink-0 transition-all", isActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]" : "text-slate-600 group-hover:text-slate-400")} />
                 </div>
@@ -193,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, isCollapsed, onTogg
       </div>
 
       {/* Account & Footer Area (Pinned) */}
-      <div className="mt-auto border-t border-white/5 bg-bg-deep/80 backdrop-blur-sm z-10 py-6">
+      <div className="mt-auto border-t border-border-subtle bg-bg-deep/80 backdrop-blur-sm z-10 py-6">
         {/* User Card */}
         <div className="flex items-center w-full mb-2 group relative">
           {/* Rail side: Avatar */}
@@ -219,7 +219,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, isCollapsed, onTogg
             "flex-1 min-w-0 pr-6 transition-all duration-300 overflow-hidden",
             isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
           )}>
-            <div className="bg-bg-card/50 border border-white/5 rounded-2xl p-4 transition-all whitespace-nowrap">
+            <div className="bg-bg-card/50 border border-border-subtle rounded-2xl p-4 transition-all whitespace-nowrap">
               <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 whitespace-nowrap">
                 {profile?.displayName || 'User'}
               </Typography>

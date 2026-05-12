@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-white/5 bg-bg-main/80 backdrop-blur-md px-6 lg:hidden">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border-subtle bg-bg-main/80 backdrop-blur-md px-6 lg:hidden">
         <Link to="/" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-deep flex items-center justify-center shadow-glow glow-primary">
             <TrendingUp className="text-white h-5 w-5" />
@@ -79,10 +79,10 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-bg-deep flex flex-col shadow-2xl border-r border-white/5 lg:hidden overflow-hidden"
+              className="fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-bg-deep flex flex-col shadow-2xl border-r border-border-subtle lg:hidden overflow-hidden"
             >
               <div className="flex flex-col h-full overflow-hidden">
-                <div className="p-6 border-b border-white/5 bg-bg-deep/50 backdrop-blur-md z-10">
+                <div className="p-6 border-b border-border-subtle bg-bg-deep/50 backdrop-blur-md z-10">
                   <div className="flex items-center gap-2">
                     <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary to-brand-deep flex items-center justify-center shadow-glow">
                       <TrendingUp className="text-white h-6 w-6" />
@@ -130,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
                           )}
                         >
                           {isActive && (
-                            <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-[0_0_10px_#00F2FF]" />
+                            <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
                           )}
                           <item.icon size={20} className={cn(isActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
                           {item.label}
@@ -154,9 +154,9 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal }) => {
                 </div>
 
                 {/* Footer Section (Pinned) */}
-                <div className="p-6 space-y-4 border-t border-white/5 bg-bg-deep/80 backdrop-blur-md z-10">
+                <div className="p-6 space-y-4 border-t border-border-subtle bg-bg-deep/80 backdrop-blur-md z-10">
                   {/* User Profile Info */}
-                  <div className="relative bg-bg-card/50 border border-white/5 rounded-2xl p-4 flex items-center gap-3 overflow-hidden">
+                  <div className="relative bg-bg-card/50 border border-border-subtle rounded-2xl p-4 flex items-center gap-3 overflow-hidden">
 
                     <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 text-white font-bold uppercase overflow-hidden shrink-0">
                       {profile?.photoURL ? (

@@ -9,7 +9,7 @@ import { DealDetailView } from './DealDetailView';
 import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
-import { History, LayoutGrid, List, ShieldCheck, Target } from 'lucide-react';
+import { History, LayoutGrid, List, ShieldCheck, Target, Calculator } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
@@ -29,10 +29,12 @@ import { EmptyState } from '../ui/EmptyState';
 
 interface SalesLogViewProps {
   onEdit?: (deal: Deal) => void;
+  onConfigPayPlan?: () => void;
 }
 
 export const SalesLogView: React.FC<SalesLogViewProps> = ({
   onEdit,
+  onConfigPayPlan,
 }) => {
   const { 
     deals, 
@@ -79,9 +81,19 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const header = (
     <div className="flex flex-col gap-2">
       <Typography variant="h1" className="text-white">Sales Log</Typography>
-      <Typography variant="p" className="text-slate-500">
-        {profile?.displayName}'s personal history: {deals.length} deals total
-      </Typography>
+      <div className="flex items-center gap-3">
+        <Typography variant="p" className="text-slate-500">
+          {profile?.displayName}'s personal history: {deals.length} deals total
+        </Typography>
+        <button 
+          onClick={onConfigPayPlan}
+          className="p-1.5 rounded-lg bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5"
+          title="Commission Matrix"
+          aria-label="Commission Matrix"
+        >
+          <Calculator size={14} />
+        </button>
+      </div>
     </div>
   );
 

@@ -210,6 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 updatedAt: serverTimestamp(),
                 preferences: {
                   theme: 'dark',
+                  visualTheme: 'matrix',
                   onboarding: {
                     isCompleted: false,
                     currentStep: 'welcome',
@@ -353,6 +354,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * Centralized admin detection logic.
    */
   const isAdmin = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase() || profile?.isAdmin === true;
+
+  // StripeItThemeSystem - Apply visual theme to document
+  useEffect(() => {
+    const visualTheme = profile?.preferences?.visualTheme || 'matrix';
+    document.documentElement.setAttribute('data-visual-theme', visualTheme);
+  }, [profile?.preferences?.visualTheme]);
 
   const value = {
     user,

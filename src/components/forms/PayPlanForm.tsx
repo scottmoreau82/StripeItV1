@@ -138,12 +138,12 @@ export const PayPlanForm: React.FC<PayPlanFormProps> = ({
         {/* Header/Info */}
         <div className="flex items-start gap-4 rounded-2xl bg-brand-primary/5 p-4 border border-brand-primary/10">
           <div className="mt-1">
-            <Info className="h-5 w-5 text-brand-primary" />
+            <Calculator className="h-5 w-5 text-brand-primary" />
           </div>
           <div>
-            <Typography variant="label" className="text-brand-primary block mb-1">Pay Plan Configuration</Typography>
+            <Typography variant="label" className="text-brand-primary block mb-1">Commission Matrix</Typography>
             <Typography variant="small" className="text-slate-400">
-              Configure how you earn. Basic plans are straightforward, while Advanced mode allows for complex rules and volume bonuses.
+              Tiered payout and bonus rules for your deal commissions. Rules are calculated in order of operations.
             </Typography>
           </div>
         </div>
@@ -172,61 +172,83 @@ export const PayPlanForm: React.FC<PayPlanFormProps> = ({
           </div>
         </div>
 
-        {/* Percentages Section */}
-        <Card className="bg-white/[0.02] border-white/5 p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Calculator className="h-4 w-4 text-slate-500" />
-            <Typography variant="label" className="text-slate-300 uppercase tracking-widest text-[10px]">Percentage Earnings</Typography>
+        {/* Percentages Section - Commission Matrix */}
+        <Card className="bg-bg-deep/40 border-white/5 p-6 backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-8 w-8 rounded-lg bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20">
+              <Calculator className="h-4 w-4 text-brand-primary" />
+            </div>
+            <div className="flex flex-col">
+              <Typography variant="label" className="text-white font-bold text-sm">Commission Matrix</Typography>
+              <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Base Rate Rules</Typography>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="relative">
+            <div className="relative group">
               <Input 
-                label="Front End %" 
+                label="Front End Rate" 
                 type="number"
                 value={formData.frontEndPercentage}
                 onChange={(e) => handleNumeric('frontEndPercentage', e.target.value)}
-                className="pr-10"
+                className="pr-10 border-brand-primary/20 focus:border-brand-primary group-hover:border-brand-primary/40 transition-colors"
+                labelClassName="text-[10px] uppercase tracking-wider text-slate-500 font-black"
               />
-              <span className="absolute right-4 top-[42px] text-slate-500 text-sm">%</span>
+              <span className="absolute right-4 top-[42px] text-brand-primary font-bold text-sm">%</span>
             </div>
-            <div className="relative">
+            <div className="relative group">
               <Input 
-                label="Back End %"
+                label="Back End Rate"
                 type="number"
                 value={formData.backEndPercentage}
                 onChange={(e) => handleNumeric('backEndPercentage', e.target.value)}
-                className="pr-10"
+                className="pr-10 border-purple-500/20 focus:border-purple-500 group-hover:border-purple-500/40 transition-colors"
+                labelClassName="text-[10px] uppercase tracking-wider text-slate-500 font-black"
               />
-              <span className="absolute right-4 top-[42px] text-slate-500 text-sm">%</span>
+              <span className="absolute right-4 top-[42px] text-purple-400 font-bold text-sm">%</span>
             </div>
           </div>
         </Card>
 
-        {/* Guarantees & Split Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <CurrencyInput 
-            label="Mini Amount" 
-            value={formData.miniAmount}
-            onChange={(e) => handleNumeric('miniAmount', e.target.value)}
-            description="Minimum payout per deal"
-          />
-          <CurrencyInput 
-            label="Flat Per Unit" 
-            value={formData.flatPerUnitAmount}
-            onChange={(e) => handleNumeric('flatPerUnitAmount', e.target.value)}
-            description="Fixed amount per car sold"
-          />
-          <Select 
-            label="Split Deal Behavior"
-            options={[
-              { value: 'standard', label: 'Standard Proportion' },
-              { value: 'half_mini', label: 'Half the Mini' },
-            ]}
-            value={formData.splitDealBehavior}
-            onChange={(e) => handleChange('splitDealBehavior', e.target.value)}
-          />
-        </div>
+        {/* Guarantees Section - Back-End Eligibility & Mini */}
+        <Card className="bg-bg-deep/40 border-white/5 p-6 backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="flex flex-col">
+              <Typography variant="label" className="text-white font-bold text-sm">Back-End Eligibility & Mini</Typography>
+              <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Thresholds & Guarantees</Typography>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CurrencyInput 
+              label="Minimum Payout" 
+              value={formData.miniAmount}
+              onChange={(e) => handleNumeric('miniAmount', e.target.value)}
+              description="Minimum payout per deal"
+              labelClassName="text-[10px] uppercase tracking-wider text-slate-500 font-black"
+            />
+            <CurrencyInput 
+              label="Flat Per Unit" 
+              value={formData.flatPerUnitAmount}
+              onChange={(e) => handleNumeric('flatPerUnitAmount', e.target.value)}
+              description="Fixed amount per car sold"
+              labelClassName="text-[10px] uppercase tracking-wider text-slate-500 font-black"
+            />
+            <Select 
+              label="Split Behavior"
+              options={[
+                { value: 'standard', label: 'Standard Proportion' },
+                { value: 'half_mini', label: 'Half the Mini' },
+              ]}
+              value={formData.splitDealBehavior}
+              onChange={(e) => handleChange('splitDealBehavior', e.target.value)}
+              labelClassName="text-[10px] uppercase tracking-wider text-slate-500 font-black"
+            />
+          </div>
+        </Card>
 
         {/* Advanced Section */}
         <AnimatePresence>
@@ -239,10 +261,15 @@ export const PayPlanForm: React.FC<PayPlanFormProps> = ({
             >
               {/* Rules Section */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Settings2 className="h-4 w-4 text-amber-500" />
-                    <Typography variant="h4">Commission Rules</Typography>
+                <div className="flex items-center justify-between pb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                      <Zap className="h-4 w-4 text-amber-500" />
+                    </div>
+                    <div className="flex flex-col">
+                      <Typography variant="label" className="text-white font-bold text-sm">Rules & Overrides</Typography>
+                      <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Custom Bonus Logic</Typography>
+                    </div>
                   </div>
                   <Button type="button" size="sm" variant="outline" onClick={addRule}>
                     <Plus className="mr-2 h-4 w-4" /> Add Rule
@@ -316,14 +343,19 @@ export const PayPlanForm: React.FC<PayPlanFormProps> = ({
                 </div>
               </div>
 
-              {/* Volume Tiers Section */}
+              {/* Volume Bonuses Section */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-brand-primary" />
-                    <Typography variant="h4">Volume Tiers</Typography>
+                <div className="flex items-center justify-between pb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                      <TrendingUp className="h-4 w-4 text-purple-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <Typography variant="label" className="text-white font-bold text-sm">Volume Bonuses</Typography>
+                      <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Unit-Based Growth Tiers</Typography>
+                    </div>
                   </div>
-                  <Button type="button" size="sm" variant="outline" onClick={addTier}>
+                  <Button type="button" size="sm" variant="outline" onClick={addTier} className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10">
                     <Plus className="mr-2 h-4 w-4" /> Add Tier
                   </Button>
                 </div>
@@ -415,12 +447,12 @@ export const PayPlanForm: React.FC<PayPlanFormProps> = ({
       <div className="pt-6">
         <Button 
           type="submit" 
-          className="w-full h-14 text-lg" 
+          className="w-full h-14 text-lg bg-brand-primary text-bg-deep font-black uppercase tracking-widest shadow-glow glow-primary rounded-xl" 
           isLoading={isLoading} 
           disabled={isLoading}
         >
           <ShieldCheck className="mr-2 h-6 w-6" />
-          Finalize & Save Pay Plan
+          Apply Matrix Rules
         </Button>
       </div>
     </form>

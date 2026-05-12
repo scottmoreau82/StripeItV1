@@ -14,6 +14,7 @@ import {
   Building2, 
   ChevronRight,
   Monitor,
+  LayoutGrid,
   Check,
   LogOut,
   CreditCard,
@@ -428,7 +429,7 @@ const AppearancePanel = ({ preferences, onUpdate }: { preferences: UserPreferenc
         >
           <div className={cn(
             "h-12 w-12 rounded-full flex items-center justify-center transition-all",
-            preferences.theme === mode ? "bg-brand-primary text-bg-deep" : "bg-white/5 text-slate-500 group-hover:text-white"
+            preferences.theme === mode ? "bg-brand-primary text-bg-deep shadow-glow glow-primary" : "bg-white/5 text-slate-500 group-hover:text-white"
           )}>
             {mode === 'dark' && <Moon />}
             {mode === 'light' && <Sun />}
@@ -442,6 +443,50 @@ const AppearancePanel = ({ preferences, onUpdate }: { preferences: UserPreferenc
           </Typography>
         </Card>
       ))}
+    </div>
+
+    <div className="space-y-4">
+      <Typography variant="label" className="text-slate-500 ml-1">Visual Architecture</Typography>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[
+          { id: 'matrix', name: 'Matrix Theme', icon: Sparkles, desc: 'Premium futurist cyan & purple accents' },
+          { id: 'og', name: 'OG Theme', icon: LayoutGrid, desc: 'Original Stripe It glass-morphism' }
+        ].map((vTheme) => (
+          <Card 
+            key={vTheme.id}
+            onClick={() => onUpdate({ visualTheme: vTheme.id })}
+            className={cn(
+              "p-6 cursor-pointer transition-all border flex items-center gap-4 group",
+              (preferences.visualTheme || 'matrix') === vTheme.id 
+                ? "border-brand-primary bg-brand-primary/10 shadow-glow-sm glow-primary/10" 
+                : "border-white/5 bg-white/[0.02] hover:border-white/10"
+            )}
+          >
+            <div className={cn(
+              "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
+              (preferences.visualTheme || 'matrix') === vTheme.id ? "bg-brand-primary text-bg-deep shadow-glow glow-primary" : "bg-white/5 text-slate-500"
+            )}>
+              <vTheme.icon size={18} />
+            </div>
+            <div className="flex-1">
+              <Typography variant="label" className={cn(
+                "font-black uppercase tracking-widest text-[10px] block mb-0.5",
+                (preferences.visualTheme || 'matrix') === vTheme.id ? "text-brand-primary" : "text-slate-300"
+              )}>
+                {vTheme.name}
+              </Typography>
+              <Typography variant="small" className="text-slate-500 text-[9px] lowercase opacity-60">
+                {vTheme.desc}
+              </Typography>
+            </div>
+            {(preferences.visualTheme || 'matrix') === vTheme.id && (
+              <div className="h-6 w-6 rounded-full bg-brand-primary/20 flex items-center justify-center border border-brand-primary/30">
+                <Check className="h-3 w-3 text-brand-primary" />
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
     </div>
 
     <Card className="p-8 bg-white/[0.02] border-white/5 space-y-6">

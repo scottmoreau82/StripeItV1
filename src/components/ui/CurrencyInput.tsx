@@ -10,6 +10,7 @@ import { truncateToDecimal } from '@/src/lib/numberUtils';
 interface CurrencyInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   label?: string;
   labelClassName?: string;
+  hideLabel?: boolean;
   extraLabel?: React.ReactNode;
   description?: string;
   error?: string;
@@ -18,7 +19,7 @@ interface CurrencyInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
 }
 
 export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
-  ({ className, label, labelClassName, extraLabel, description, error, value, onChange, ...props }, ref) => {
+  ({ className, label, labelClassName, hideLabel, extraLabel, description, error, value, onChange, ...props }, ref) => {
     
     // Internal helper to format for display
     const formatForDisplay = (num: number) => {
@@ -87,7 +88,7 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
 
     return (
       <div className="relative">
-        {label && (
+        {!hideLabel && label && (
           <div className="flex items-center justify-between mb-1.5">
             <Typography variant="label" className={cn("text-slate-400 block", labelClassName)}>
               {label}

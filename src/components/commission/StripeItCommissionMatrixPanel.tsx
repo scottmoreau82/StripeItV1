@@ -437,6 +437,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   isLoading
 }) => {
   const { deals, triggerError } = useAppData();
+  const isSimulationEngineEnabled = false;
 
   // Ensure we have at least one default row if none exist
   const getInitialTiers = () => {
@@ -494,6 +495,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     backEndPercentage: initialData?.backEndPercentage || 5,
     flatPerUnitAmount: initialData?.flatPerUnitAmount || 0,
     splitDealBehavior: initialData?.splitDealBehavior || ('standard' as const),
+    frontDeficitRecoveryEnabled: initialData?.frontDeficitRecoveryEnabled ?? false,
     isAdvanced: initialData?.isAdvanced !== undefined ? initialData.isAdvanced : true,
     isRulesEnabled: initialData?.rules && initialData.rules.length > 0 ? true : false,
     isVolumeBonusEngineActive: initialData?.isVolumeBonusEngineActive || false,
@@ -515,6 +517,92 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     } as HourlyConfig
   });
 
+  // Simulation State System
+  const [simulationData, setSimulationData] = useState({
+    name: 'Standard Scenario',
+    totalUnits: 12,
+    newUnits: 6,
+    usedUnits: 6,
+    cpoUnits: 0,
+    splitDeals: 0,
+    frontGrossTotal: 30000,
+    backGrossTotal: 12000,
+    hoursWorked: 160
+  });
+
+  const [savedScenarios, setSavedScenarios] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('stripeit_simulation_scenarios');
+      return saved ? JSON.parse(saved) : [
+        { id: '1', name: 'Average Month', totalUnits: 12, newUnits: 6, usedUnits: 6, cpoUnits: 0, splitDeals: 0, frontGrossTotal: 30000, backGrossTotal: 12000, hoursWorked: 160 },
+        { id: '2', name: 'High Volume', totalUnits: 25, newUnits: 15, usedUnits: 10, cpoUnits: 0, splitDeals: 2, frontGrossTotal: 65000, backGrossTotal: 30000, hoursWorked: 172 }
+      ];
+    } catch {
+      return [];
+    }
+  });
+
+  const saveScenario = () => {
+    const newScenario = { ...simulationData, id: crypto.randomUUID(), timestamp: Date.now() };
+    const updated = [newScenario, ...savedScenarios].slice(0, 5); // Keep last 5
+    setSavedScenarios(updated);
+    localStorage.setItem('stripeit_simulation_scenarios', JSON.stringify(updated));
+  };
+
+  const loadScenario = (scenario: any) => {
+    setSimulationData(scenario);
+  };
+
+  const simulatedDeals = useMemo(() => {
+    if (!isSimulationEngineEnabled) return [];
+    const deals: Deal[] = [];
+    const count = simulationData.totalUnits;
+    if (count <= 0) return [];
+
+    const avgFront = simulationData.frontGrossTotal / count;
+    const avgBack = simulationData.backGrossTotal / count;
+
+    for (let i = 0; i < count; i++) {
+      let type: 'new' | 'used' | 'cpo' = 'used';
+      if (i < simulationData.newUnits) type = 'new';
+      else if (i < simulationData.newUnits + simulationData.usedUnits) type = 'used';
+      else type = 'cpo';
+
+      const isSplit = i < simulationData.splitDeals;
+
+      deals.push({
+        id: `sim-${i}`,
+        frontEndGross: avgFront,
+        backEndGross: avgBack,
+        isSplitDeal: isSplit,
+        splitPercentage: 50,
+        newOrUsed: type,
+        status: DealStatus.FINALIZED,
+        date: new Date().toISOString(),
+        customerName: `Simulated Deal ${i + 1}`,
+        purchasedVehicle: 'Simulation',
+        orgId: '', dealershipId: '', userId: '', createdByUserId: '', assignedSalespersonId: '',
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      } as Deal);
+    }
+    return deals;
+  }, [simulationData]);
+
+  const simEarnings = useMemo(() => {
+    if (!isSimulationEngineEnabled) {
+      return {
+        totalPayout: 0,
+        totalTierBonuses: 0,
+        grandTotal: 0,
+        dealResults: [],
+        tierBonuses: [],
+        hourlyCompensation: null
+      };
+    }
+    return calculatePeriodEarnings(simulatedDeals, formData as PayPlan);
+  }, [simulatedDeals, formData, isSimulationEngineEnabled]);
+
   const currentUnits = useMemo(() => {
     const currentMonthPrefix = new Date().toISOString().slice(0, 7);
     return deals
@@ -532,10 +620,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     minis_hourly: false,
-    commission_ladder: true,
+    commission_ladder: false,
     volume_bonus: false,
     rules: false,
-    misc_defaults: false
+    misc_defaults: false,
+    sim_settings: false,
+    sim_ladder: false,
+    sim_minis: false,
+    sim_bonus: false
   });
 
   const toggleSection = (sectionId: string) => {
@@ -806,27 +898,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
    * Live calculation preview based on current form state.
    */
   const previewData = useMemo(() => {
-    const mockDeals: Deal[] = Array(12).fill(null).map((_, i) => ({
-      id: `mock-${i}`,
-      frontEndGross: 2500,
-      backEndGross: 1000,
-      isSplitDeal: false,
-      status: DealStatus.FINALIZED,
-      date: new Date().toISOString(),
-      customerName: 'Sample',
-      purchasedVehicle: 'Vehicle',
-      orgId: '',
-      dealershipId: '',
-      userId: '',
-      createdByUserId: '',
-      assignedSalespersonId: '',
-      newOrUsed: 'used',
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    }));
-
-    return calculatePeriodEarnings(mockDeals, formData as PayPlan);
-  }, [formData]);
+    return simEarnings;
+  }, [simEarnings]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -834,7 +907,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     // 1. Pre-submission Validation
     const tiers = formData.tiers;
     if (tiers.length === 0) {
-      triggerError('Commission matrix must have at least one row.');
+      triggerError('Commission architect must have at least one row.');
       return;
     }
 
@@ -936,6 +1009,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
       isHourlyActive: formData.isHourlyActive,
       customMinis: formData.customMinis,
       hourlyConfig: formData.hourlyConfig,
+      frontDeficitRecoveryEnabled: formData.frontDeficitRecoveryEnabled,
       miniAmount: cleanMiniTiers[0].newMini // Sync for backward compatibility
     };
 
@@ -1207,7 +1281,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           </div>
         </MatrixSection>
 
-        {/* Commission Matrix Section */}
+        {/* Commission Architect Section */}
         <MatrixSection
           id="commission_ladder"
           title="Commission Ladder"
@@ -1389,7 +1463,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Active:</Typography>
                   <Typography variant="mono" className="text-[10px] text-white font-black">{(formData.volumeBonuses || []).filter(b => b.active).length}</Typography>
                 </div>
-                {previewData.totalTierBonuses > 0 && (
+                {isSimulationEngineEnabled && previewData.totalTierBonuses > 0 && (
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
                     <Typography variant="mono" className="text-[10px] text-emerald-500 font-black uppercase">Earned:</Typography>
                     <Typography variant="mono" className="text-[10px] text-emerald-400 font-black">${previewData.totalTierBonuses.toLocaleString()}</Typography>
@@ -1470,6 +1544,29 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           <div className="space-y-6 animate-in fade-in duration-500">
             {formData.isRulesEnabled && (
               <div className="space-y-6">
+                {/* StripeItFrontDeficitRecoverySystem - Recovery Toggle */}
+                <div className="bg-white/[0.01] border border-white/5 p-5 md:p-6 rounded-2xl transition-all duration-300">
+                  <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500">
+                        <ShieldCheck className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Front Deficit Recovery</Typography>
+                        <Typography variant="mono" className="text-slate-600 text-[9px] uppercase tracking-widest mt-1">
+                          When enabled, negative front commission deficits must be recovered before backend commission becomes payable.
+                        </Typography>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      <ActiveChip 
+                        active={formData.frontDeficitRecoveryEnabled} 
+                        onClick={() => handleChange('frontDeficitRecoveryEnabled', !formData.frontDeficitRecoveryEnabled)} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 gap-3">
                   {formData.rules.map((rule) => (
                     <div key={rule.id} className="group bg-white/[0.01] border border-white/5 p-5 md:p-6 rounded-2xl transition-all duration-300">
@@ -1604,29 +1701,545 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           </div>
         </MatrixSection>
 
-        {/* Live Preview Section */}
-        <Card className="bg-brand-primary/[0.03] border-brand-primary/10 p-10 rounded-[2.5rem]">
-          <Typography variant="label" className="text-brand-primary uppercase font-black tracking-[0.25em] text-[10px] mb-8 block">Simulation Preview (12 Unit Standard Month)</Typography>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-            <div>
-              <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px] mb-2 block">Deal Earnings</Typography>
-              <Typography variant="h2" className="text-3xl font-black">${Math.round(previewData.totalPayout).toLocaleString()}</Typography>
-            </div>
-            <div>
-              <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px] mb-2 block">Tier Overrides</Typography>
-              <Typography variant="h2" className="text-3xl font-black text-brand-primary">+${Math.round(previewData.totalTierBonuses).toLocaleString()}</Typography>
-            </div>
-            <div className="col-span-2 border-l border-white/5 pl-12 flex flex-col justify-center">
-              <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px] mb-2 block">Total Projected Payout</Typography>
-              <div className="flex items-baseline gap-4">
-                <Typography variant="h1" className="text-5xl font-black text-white">${Math.round(previewData.grandTotal).toLocaleString()}</Typography>
-                <div className="flex flex-col">
-                  <Typography variant="small" className="text-emerald-500 font-bold tracking-tight">${Math.round(previewData.grandTotal / 12).toLocaleString()} / Avg</Typography>
-                </div>
+        {/* Adaptive Simulation Engine */}
+        {isSimulationEngineEnabled && (
+          <div className="space-y-4 pt-12">
+          <div className="flex items-center justify-between px-2 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-500">
+                <Calculator className="h-6 w-6" />
+              </div>
+              <div className="flex flex-col">
+                <Typography variant="h3" className="text-white text-xl">Simulation Engine</Typography>
+                <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Model Monthly Payout Scenarios</Typography>
               </div>
             </div>
+            
+            <div className="flex items-center gap-3">
+               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5">
+                 <Typography variant="mono" className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Presets:</Typography>
+                 <div className="flex items-center gap-1.5">
+                   {savedScenarios.map((s, idx) => (
+                     <button
+                       key={s.id || idx}
+                       type="button"
+                       onClick={() => loadScenario(s)}
+                       className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[9px] font-black text-slate-400 hover:text-white transition-colors"
+                     >
+                       {s.name}
+                     </button>
+                   ))}
+                   <button
+                     type="button"
+                     onClick={saveScenario}
+                     className="px-2 py-1 rounded-lg bg-brand-primary/10 border border-brand-primary/20 text-[9px] font-black text-brand-primary hover:bg-brand-primary/20 transition-colors"
+                   >
+                     SAVE CURRENT
+                   </button>
+                 </div>
+               </div>
+            </div>
           </div>
-        </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-[#0A0C12]/80 border-cyan-500/20 p-6 rounded-[2rem] border-2 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <TrendingUp size={48} className="text-cyan-500" />
+              </div>
+              <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Final Estimated Total</Typography>
+              <div className="flex items-baseline gap-2">
+                <Typography variant="h1" className="text-4xl font-black text-white">${Math.round(simEarnings.grandTotal).toLocaleString()}</Typography>
+                <Typography variant="mono" className="text-emerald-500 text-[10px] font-bold">EST</Typography>
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                <div className="flex flex-col">
+                  <Typography variant="mono" className="text-[8px] text-slate-600 uppercase">Per Unit Avg</Typography>
+                  <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.grandTotal / (simulationData.totalUnits || 1)).toLocaleString()}</Typography>
+                </div>
+                {simulationData.frontGrossTotal + simulationData.backGrossTotal > 0 && (
+                  <div className="flex flex-col items-end">
+                    <Typography variant="mono" className="text-[8px] text-slate-600 uppercase">Gross %</Typography>
+                    <Typography variant="mono" className="text-xs text-brand-primary font-black">
+                      {((simEarnings.grandTotal / (simulationData.frontGrossTotal + simulationData.backGrossTotal)) * 100).toFixed(1)}%
+                    </Typography>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <Card className="bg-[#0A0C12]/80 border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all">
+              <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Deal Payouts</Typography>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Typography variant="mono" className="text-[10px] text-slate-600">Commission:</Typography>
+                  <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.totalPayout).toLocaleString()}</Typography>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Typography variant="mono" className="text-[10px] text-slate-600">Avg / Deal:</Typography>
+                  <Typography variant="mono" className="text-xs text-slate-400 font-black">${Math.round(simEarnings.totalPayout / (simulationData.totalUnits || 1)).toLocaleString()}</Typography>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-white/[0.03]">
+                  <Typography variant="mono" className="text-[10px] text-slate-600">Minis Hit:</Typography>
+                  <Typography variant="mono" className="text-xs text-brand-primary font-black">{simEarnings.dealResults.filter(r => r.isMini).length}</Typography>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="bg-[#0A0C12]/80 border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all">
+              <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Bonus Rewards</Typography>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Typography variant="mono" className="text-[10px] text-slate-600">Volume Engine:</Typography>
+                  <Typography variant="mono" className="text-xs text-emerald-400 font-black">+${Math.round(simEarnings.totalTierBonuses).toLocaleString()}</Typography>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Typography variant="mono" className="text-[10px] text-slate-600">Custom Rules:</Typography>
+                  <Typography variant="mono" className="text-xs text-emerald-400 font-black">+${Math.round(simEarnings.dealResults.reduce((sum, r) => sum + r.ruleBonuses, 0)).toLocaleString()}</Typography>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-white/[0.03]">
+                  <Typography variant="mono" className="text-[10px] text-slate-600">Total Bonuses:</Typography>
+                  <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.totalTierBonuses + simEarnings.dealResults.reduce((sum, r) => sum + r.ruleBonuses, 0)).toLocaleString()}</Typography>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="bg-[#0A0C12]/80 border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all">
+              <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Hourly & Draws</Typography>
+              {simEarnings.hourlyCompensation ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Typography variant="mono" className="text-[10px] text-slate-600">Monthly Total:</Typography>
+                    <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.hourlyCompensation.hourlyTotal).toLocaleString()}</Typography>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Typography variant="mono" className="text-[10px] text-slate-600">Adjustment:</Typography>
+                    <Typography variant="mono" className="text-xs text-amber-500 font-black">
+                      {simEarnings.hourlyCompensation.adjustment > 0 ? `+$${Math.round(simEarnings.hourlyCompensation.adjustment).toLocaleString()}` : '$0'}
+                    </Typography>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-white/[0.03]">
+                    <Typography variant="mono" className="text-[10px] text-slate-600">Model:</Typography>
+                    <Typography variant="mono" className="text-[9px] text-slate-400 font-black uppercase">{simEarnings.hourlyCompensation.model}</Typography>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center border border-dashed border-white/5 rounded-2xl opacity-40">
+                  <Typography variant="mono" className="text-[8px] text-slate-700 uppercase font-black">Inactive</Typography>
+                </div>
+              )}
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8 space-y-6">
+              {/* General Month Simulation Section */}
+              <MatrixSection
+                id="sim_settings"
+                title="Simulation Configuration"
+                subtitle="General Month Inputs"
+                icon={<Settings2 size={24} />}
+                isExpanded={expandedSections.sim_settings}
+                onToggle={() => toggleSection('sim_settings')}
+                className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                summary={
+                  <div className="flex items-center gap-3">
+                    <div className="px-3 py-1 rounded-lg bg-white/5 border border-white/10">
+                      <Typography variant="mono" className="text-[10px] text-white font-black">{simulationData.totalUnits} Units</Typography>
+                    </div>
+                    <div className="px-3 py-1 rounded-lg bg-white/5 border border-white/10">
+                      <Typography variant="mono" className="text-[10px] text-white font-black">${simulationData.frontGrossTotal.toLocaleString()} FG</Typography>
+                    </div>
+                  </div>
+                }
+              >
+                <div className="space-y-8 animate-in fade-in duration-500">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Month Identity</Typography>
+                      <Input 
+                        value={simulationData.name}
+                        onChange={(e) => setSimulationData(p => ({ ...p, name: e.target.value }))}
+                        className="h-12 bg-black/40 border-white/5 font-black text-lg"
+                        placeholder="Scenario Name (e.g. Dream Month)"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Total Units</Typography>
+                        <Input 
+                          type="number"
+                          value={simulationData.totalUnits}
+                          onChange={(e) => setSimulationData(p => {
+                            const newTotal = parseInt(e.target.value) || 0;
+                            return { ...p, totalUnits: newTotal };
+                          })}
+                          className="h-12 bg-black/40 border-white/5 font-black text-center text-lg"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Split Ratio</Typography>
+                        <Input 
+                          type="number"
+                          value={simulationData.splitDeals}
+                          onChange={(e) => setSimulationData(p => ({ ...p, splitDeals: parseInt(e.target.value) || 0 }))}
+                          className="h-12 bg-black/40 border-white/5 font-black text-center text-lg"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <CurrencyInput 
+                      label="Monthly Front Gross" 
+                      value={simulationData.frontGrossTotal}
+                      onChange={(e) => setSimulationData(p => ({ ...p, frontGrossTotal: normalizeCurrencyNumber(e.target.value) }))}
+                      labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
+                      className="h-12"
+                    />
+                    <CurrencyInput 
+                      label="Monthly Back Gross" 
+                      value={simulationData.backGrossTotal}
+                      onChange={(e) => setSimulationData(p => ({ ...p, backGrossTotal: normalizeCurrencyNumber(e.target.value) }))}
+                      labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
+                      className="h-12"
+                    />
+                  </div>
+
+                  {/* Adaptive Unit Mix */}
+                  <div className="p-8 rounded-[2rem] bg-white/[0.01] border border-white/5">
+                    <div className="flex items-center justify-between mb-8">
+                      <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Deal Mix Allocation</Typography>
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          "w-2 h-2 rounded-full",
+                          simulationData.newUnits + simulationData.usedUnits + simulationData.cpoUnits === simulationData.totalUnits ? "bg-emerald-500" : "bg-amber-500"
+                        )} />
+                        <Typography variant="mono" className="text-[10px] text-white font-black">
+                          {simulationData.newUnits + simulationData.usedUnits + simulationData.cpoUnits} / {simulationData.totalUnits}
+                        </Typography>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      <div className="space-y-4">
+                        <Typography variant="mono" className="text-[9px] text-cyan-500 font-black uppercase">New Deals</Typography>
+                        <Input 
+                          type="number"
+                          value={simulationData.newUnits}
+                          onChange={(e) => setSimulationData(p => ({ ...p, newUnits: parseInt(e.target.value) || 0 }))}
+                          className="h-12 bg-cyan-500/[0.02] border-cyan-500/20 text-cyan-400 font-black text-center text-xl"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <Typography variant="mono" className="text-[9px] text-purple-500 font-black uppercase">Used Deals</Typography>
+                        <Input 
+                          type="number"
+                          value={simulationData.usedUnits}
+                          onChange={(e) => setSimulationData(p => ({ ...p, usedUnits: parseInt(e.target.value) || 0 }))}
+                          className="h-12 bg-purple-500/[0.02] border-purple-500/20 text-purple-400 font-black text-center text-xl"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <Typography variant="mono" className="text-[9px] text-emerald-500 font-black uppercase">CPO Deals</Typography>
+                        <Input 
+                          type="number"
+                          value={simulationData.cpoUnits}
+                          onChange={(e) => setSimulationData(p => ({ ...p, cpoUnits: parseInt(e.target.value) || 0 }))}
+                          className="h-12 bg-emerald-500/[0.02] border-emerald-500/20 text-emerald-400 font-black text-center text-xl"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </MatrixSection>
+
+              {/* Commission Ladder Simulation */}
+              {formData.isAdvanced && (
+                <MatrixSection
+                  id="sim_ladder"
+                  title="Commission Ladder Simulation"
+                  subtitle="Unit Tier & Rate Progression"
+                  icon={<TrendingUp size={24} />}
+                  isExpanded={expandedSections.sim_ladder}
+                  onToggle={() => toggleSection('sim_ladder')}
+                  className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                  summary={
+                    <div className="flex items-center gap-2">
+                       <Typography variant="mono" className="text-[10px] text-cyan-400 font-black">Tier {formData.tiers.findIndex(t => t.id === getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.id) + 1}</Typography>
+                       <div className="h-1 w-8 rounded-full bg-white/5 overflow-hidden">
+                         <div className="h-full bg-cyan-500" style={{ width: `${Math.min(100, (simulationData.totalUnits / (getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.maxUnits || 1)) * 100)}%` }} />
+                       </div>
+                    </div>
+                  }
+                >
+                  <div className="animate-in fade-in duration-500">
+                    <Card className="bg-black/20 border-white/5 p-8 rounded-2xl">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div className="space-y-6">
+                           <div>
+                             <Typography variant="mono" className="text-[10px] text-cyan-500 font-black uppercase tracking-widest mb-1 block">Active Strategy</Typography>
+                             <Typography variant="h2" className="text-white font-black uppercase">
+                               TIER {formData.tiers.findIndex(t => t.id === getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.id) + 1} ARCHITECTURE
+                             </Typography>
+                           </div>
+                           <div className="space-y-4">
+                             <div className="flex justify-between items-center">
+                               <span className="text-slate-500 text-sm">Front End Rate:</span>
+                               <span className="text-white font-bold">{getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.frontRate}%</span>
+                             </div>
+                             <div className="flex justify-between items-center">
+                               <span className="text-slate-500 text-sm">Back End Rate:</span>
+                               <span className="text-white font-bold">{getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.backRate}%</span>
+                             </div>
+                             <div className="flex justify-between items-center">
+                               <span className="text-slate-500 text-sm">Retroactive Application:</span>
+                               <span className={cn("font-bold text-[10px]", getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.frontRetroactive ? "text-emerald-400" : "text-slate-600")}>
+                                 {getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.frontRetroactive ? "ENABLED" : "INACTIVE"}
+                               </span>
+                             </div>
+                           </div>
+                        </div>
+                        <div className="flex flex-col justify-center items-center md:items-end border-l border-white/5 pl-12">
+                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black mb-2">Simulated Payout</Typography>
+                          <Typography variant="h1" className="text-5xl font-black text-white">${Math.round(simEarnings.totalPayout).toLocaleString()}</Typography>
+                          <Typography variant="small" className="text-slate-600 mt-2 text-right">Excluding bonuses & minis</Typography>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                </MatrixSection>
+              )}
+
+              {/* Mini Ladder Simulation */}
+              {formData.isMinisActive && (
+                <MatrixSection
+                  id="sim_minis"
+                  title="Minis & Protection Simulation"
+                  subtitle="Unit Range Payout Details"
+                  icon={<ShieldCheck size={24} />}
+                  isExpanded={expandedSections.sim_minis}
+                  onToggle={() => toggleSection('sim_minis')}
+                  className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                  summary={
+                    <div className="flex items-center gap-2">
+                       <Typography variant="mono" className="text-[10px] text-emerald-400 font-black">
+                         ${getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.newMini} / ${getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.usedMini}
+                       </Typography>
+                    </div>
+                  }
+                >
+                  <div className="animate-in fade-in duration-500">
+                    <Card className="bg-black/20 border-white/5 p-8 rounded-2xl">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div className="space-y-6">
+                           <div>
+                             <Typography variant="mono" className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-1 block">Mini Profile</Typography>
+                             <Typography variant="h2" className="text-white font-black uppercase">
+                               RANGE {formData.miniTiers.findIndex(t => t.id === getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.id) + 1} METRICS
+                             </Typography>
+                           </div>
+                           <div className="space-y-4">
+                             <div className="flex justify-between items-center">
+                               <span className="text-slate-500 text-sm">New Deal Mini:</span>
+                               <span className="text-white font-bold">${getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.newMini}</span>
+                             </div>
+                             <div className="flex justify-between items-center">
+                               <span className="text-slate-500 text-sm">Used Deal Mini:</span>
+                               <span className="text-white font-bold">${getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.usedMini}</span>
+                             </div>
+                             <div className="flex justify-between items-center">
+                               <span className="text-slate-500 text-sm">Unit Threshold:</span>
+                               <span className="text-white font-bold">{getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.threshold}+ Units</span>
+                             </div>
+                           </div>
+                        </div>
+                        <div className="flex flex-col justify-center items-center md:items-end border-l border-white/5 pl-12">
+                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black mb-2">Simulated Mini Capture</Typography>
+                          <Typography variant="h1" className="text-5xl font-black text-white">{simEarnings.dealResults.filter(r => r.isMini).length}</Typography>
+                          <Typography variant="small" className="text-slate-600 mt-2 text-right">Deals hitting mini floor</Typography>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                </MatrixSection>
+              )}
+
+              {/* Bonus Simulation Details */}
+              {(formData.isVolumeBonusEngineActive || formData.isRulesEnabled) && (
+                <MatrixSection
+                  id="sim_bonus"
+                  title="Bonus & Rule Engine"
+                  subtitle="Simulated Reward Triggers"
+                  icon={<Zap size={24} />}
+                  isExpanded={expandedSections.sim_bonus}
+                  onToggle={() => toggleSection('sim_bonus')}
+                  className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                  summary={
+                    <div className="flex items-center gap-2">
+                      <Typography variant="mono" className="text-[10px] text-emerald-400 font-black">
+                        ${Math.round(simEarnings.totalTierBonuses + simEarnings.dealResults.reduce((sum, r) => sum + r.ruleBonuses, 0)).toLocaleString()} Total
+                      </Typography>
+                    </div>
+                  }
+                >
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                    {simEarnings.tierBonuses.map((b, i) => (
+                      <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-black/20 border border-white/5">
+                        <div className="flex items-center gap-4">
+                          <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-500">
+                            <Plus size={16} />
+                          </div>
+                          <div>
+                            <Typography variant="mono" className="text-xs text-white font-black">{b.label}</Typography>
+                            <Typography variant="mono" className="text-[8px] text-slate-500 uppercase">Volume Engine Tier Reward</Typography>
+                          </div>
+                        </div>
+                        <Typography variant="h3" className="text-emerald-400 font-black text-xl">+${b.amount.toLocaleString()}</Typography>
+                      </div>
+                    ))}
+                    
+                    {simEarnings.dealResults.some(r => r.ruleBonuses > 0) && (
+                      <div className="p-5 rounded-2xl bg-black/20 border border-white/5">
+                        <Typography variant="mono" className="text-[10px] text-amber-500 font-black uppercase mb-4 block">Rule-Based Overrides</Typography>
+                        <div className="space-y-3">
+                          {simEarnings.dealResults.filter(r => r.ruleBonuses > 0).slice(0, 5).map((r, i) => (
+                            <div key={i} className="flex items-center justify-between text-sm py-2 border-b border-white/[0.03] last:border-0">
+                              <span className="text-slate-400">Rule Trigger Applied: {r.appliedRules?.[0] || 'Override'}</span>
+                              <span className="text-emerald-400 font-bold">+${r.ruleBonuses}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </MatrixSection>
+              )}
+
+              {/* Hourly Simulation Details */}
+              {formData.isHourlyActive && (
+                <MatrixSection
+                  id="sim_hourly"
+                  title="Hourly & Protection Simulation"
+                  subtitle="Estimating Floor Logic"
+                  icon={<ShieldCheck size={24} />}
+                  isExpanded={expandedSections.sim_hourly}
+                  onToggle={() => toggleSection('sim_hourly')}
+                  className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                >
+                   <div className="p-8 rounded-[2rem] bg-black/20 border border-brand-primary/10 relative overflow-hidden">
+                     <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12">
+                       <div className="space-y-6">
+                         <div>
+                           <Typography variant="mono" className="text-[10px] text-brand-primary font-black uppercase tracking-widest mb-1 block">Active Strategy</Typography>
+                           <Typography variant="h2" className="text-white font-black uppercase">{formData.hourlyConfig.model === 'guarantee' ? 'MINIMUM FLOOR' : formData.hourlyConfig.model === 'additive' ? 'ADDITIVE' : 'RECOVERABLE DRAW'}</Typography>
+                         </div>
+                         <div className="space-y-4">
+                           <div className="flex justify-between items-center">
+                             <span className="text-slate-500 text-sm">Hourly Yield ({simulationData.hoursWorked} hrs):</span>
+                             <span className="text-white font-bold">${Math.round(simulationData.hoursWorked * formData.hourlyConfig.rate).toLocaleString()}</span>
+                           </div>
+                           <div className="flex justify-between items-center">
+                             <span className="text-slate-500 text-sm">Commission Target:</span>
+                             <span className="text-white font-bold">${Math.round(simEarnings.totalPayout + simEarnings.totalTierBonuses).toLocaleString()}</span>
+                           </div>
+                         </div>
+                       </div>
+                       
+                       <div className="flex flex-col justify-center items-center md:items-end border-l border-white/5 pl-12">
+                         <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black mb-2">Required Adjustment</Typography>
+                         <Typography variant="h1" className={cn(
+                           "text-5xl font-black",
+                           (simEarnings.hourlyCompensation?.adjustment || 0) > 0 ? "text-amber-500" : "text-slate-700"
+                         )}>
+                           +${Math.round(simEarnings.hourlyCompensation?.adjustment || 0).toLocaleString()}
+                         </Typography>
+                         <Typography variant="small" className="text-slate-600 mt-2 text-right italic">
+                           { (simEarnings.hourlyCompensation?.adjustment || 0) > 0 
+                             ? "Hourly floor exceeds commission. Payout adjusted."
+                             : "Commission exceeds hourly floor. No adjustment needed."
+                           }
+                         </Typography>
+                       </div>
+                     </div>
+                   </div>
+                </MatrixSection>
+              )}
+            </div>
+
+            <div className="lg:col-span-4 space-y-6">
+               <Card className="bg-emerald-500/[0.02] border-emerald-500/10 p-8 rounded-[2.5rem] h-full flex flex-col">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-500">
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                    <Typography variant="mono" className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Simulation Analytics</Typography>
+                  </div>
+                  
+                  <div className="space-y-8 flex-1">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-end">
+                        <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Monthly Rentality</Typography>
+                        <Typography variant="mono" className="text-[10px] text-white font-bold">
+                          {((simEarnings.grandTotal / (simulationData.frontGrossTotal || 1)) * 100).toFixed(1)}% Yield
+                        </Typography>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (simEarnings.grandTotal / (simulationData.frontGrossTotal || 1)) * 100 * 4)}%` }}
+                          className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-end">
+                        <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Bonus Leverage</Typography>
+                        <Typography variant="mono" className="text-[10px] text-white font-bold">
+                          {((simEarnings.totalTierBonuses / (simEarnings.grandTotal || 1)) * 100).toFixed(1)}% Multiplier
+                        </Typography>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (simEarnings.totalTierBonuses / (simEarnings.grandTotal || 1)) * 100 * 3)}%` }}
+                          className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                         <Typography variant="mono" className="text-[9px] text-slate-600 uppercase mb-2 block">Minis Driven</Typography>
+                         <Typography variant="h3" className="text-2xl text-white font-black">{simEarnings.dealResults.filter(r => r.isMini).length}</Typography>
+                       </div>
+                       <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                         <Typography variant="mono" className="text-[9px] text-slate-600 uppercase mb-2 block">Full Comm</Typography>
+                         <Typography variant="h3" className="text-2xl text-white font-black">{simEarnings.dealResults.filter(r => !r.isMini).length}</Typography>
+                       </div>
+                    </div>
+
+                    <div className="p-6 rounded-[2rem] bg-brand-primary/5 border border-brand-primary/10 flex flex-col items-center justify-center text-center">
+                       <Calculator className="h-8 w-8 text-brand-primary/40 mb-3" />
+                       <Typography variant="mono" className="text-[10px] text-brand-primary font-black uppercase mb-1">Estimated Net Payout</Typography>
+                       <Typography variant="h1" className="text-4xl text-white font-black">${Math.round(simEarnings.grandTotal).toLocaleString()}</Typography>
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                     <Button 
+                       type="button"
+                       variant="outline"
+                       className="w-full h-14 border-brand-primary/20 text-brand-primary hover:bg-brand-primary/10 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+                       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                     >
+                       <Settings2 size={16} className="mr-2" /> Adjust Commission Plan
+                     </Button>
+                  </div>
+               </Card>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
 
       <div className="pt-10">

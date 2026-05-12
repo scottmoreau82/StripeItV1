@@ -7,7 +7,7 @@ import { useResponsive } from '@/src/hooks/useResponsive';
 
 /**
  * StripeItCommissionSetupModal
- * Canonical modal wrapper for the commission matrix setup.
+ * Canonical modal wrapper for the commission architect setup.
  * Handles both desktop modal and mobile fullscreen flow.
  */
 
@@ -33,7 +33,7 @@ export const StripeItCommissionSetupModal: React.FC<StripeItCommissionSetupModal
       <FullscreenMobileFlow
         isOpen={isOpen}
         onClose={onClose}
-        title="Commission Matrix"
+        title="Commission Architect"
       >
         <StripeItCommissionMatrixPanel 
           initialData={initialData || {}} 
@@ -48,7 +48,7 @@ export const StripeItCommissionSetupModal: React.FC<StripeItCommissionSetupModal
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Commission Matrix"
+      title="Commission Architect"
       className="max-w-5xl"
     >
       <StripeItCommissionMatrixPanel 

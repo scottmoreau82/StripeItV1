@@ -27,7 +27,6 @@ import { useAppData } from '@/src/contexts/AppDataContext';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useResponsive } from '@/src/hooks/useResponsive';
 import { DashboardLayout } from '../layout/DashboardLayout';
-import { ContextHint } from '../onboarding/ContextHint';
 import { randomDealService } from '@/src/services/randomDealService';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 
@@ -99,8 +98,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         <button 
           onClick={onConfigPayPlan}
           className="p-1.5 rounded-lg bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5"
-          title="Commission Matrix"
-          aria-label="Commission Matrix"
+          title="Commission Architect"
+          aria-label="Commission Architect"
         >
           <Calculator size={14} />
         </button>
@@ -145,12 +144,6 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   const mainContent = (
     <div className="space-y-8 pb-32">
-      <ContextHint 
-        id="hint-sales-log" 
-        title="Institutional Memory" 
-        message="Search by customer name or stock number to recall deal details months later. The history grows with you."
-        className="mb-0"
-      />
       {/* Search & Filters Group */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">

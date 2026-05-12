@@ -9,14 +9,15 @@ import { Typography } from './Typography';
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   labelClassName?: string;
+  hideLabel?: boolean;
   error?: string;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, labelClassName, error, ...props }, ref) => {
+  ({ className, type, label, labelClassName, hideLabel, error, ...props }, ref) => {
     return (
       <div className="flex w-full flex-col gap-1.5">
-        {label && (
+        {!hideLabel && label && (
           <Typography variant="label" className={cn("text-slate-400", labelClassName)}>
             {label}
             {props.required && <span className="ml-1 text-red-500 font-bold">*</span>}

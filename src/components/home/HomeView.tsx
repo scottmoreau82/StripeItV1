@@ -23,7 +23,6 @@ import { UpgradePrompt } from '../ui/UpgradePrompt';
 import { MetricCard } from '../analytics/MetricCardSystem';
 import { PerformanceChart } from '../analytics/ChartSystem';
 import { GoalProgress } from '../analytics/GoalProgressSystem';
-import { ContextHint } from '../onboarding/ContextHint';
 import { ComingSoonIndicator } from '../ui/ComingSoonIndicator';
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -194,12 +193,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   const mainContent = (
     <div className="space-y-10">
-      <ContextHint 
-        id="hint-dashboard-metrics" 
-        title="Real-time Analytics" 
-        message="Your performance overview updates automatically as you log deals. Tap any cards to see detailed breakdowns."
-        className="mb-0"
-      />
       <AnimatePresence mode="wait">
         {activeTab === 'overview' ? (
           <motion.div 
@@ -249,16 +242,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
               title="Payout Accumulation" 
               color="#10b981"
             />
-            
-            <Card className="p-8 bg-brand-primary/5 border-brand-primary/10 flex flex-col justify-center items-center text-center">
-              <div className="h-16 w-16 rounded-3xl bg-brand-primary/20 flex items-center justify-center mb-6 shadow-glow">
-                <TrendingUp className="h-8 w-8 text-brand-primary" />
-              </div>
-              <Typography variant="h3" className="text-white mb-2 text-base">Mid-month Insight</Typography>
-              <Typography variant="p" className="text-slate-500 text-xs max-w-xs">
-                Your momentum is trending above target. Ensure backend units are protected on all deals.
-              </Typography>
-            </Card>
           </motion.div>
         )}
       </AnimatePresence>

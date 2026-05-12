@@ -9,7 +9,6 @@ import { Goal } from '@/src/types';
 import { permissionService } from '@/src/services/permissionService';
 import { featureAccessService, Feature } from '@/src/services/featureAccessService';
 import { UpgradePrompt } from '../ui/UpgradePrompt';
-import { ContextHint } from '../onboarding/ContextHint';
 import { ComingSoonIndicator } from '../ui/ComingSoonIndicator';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
@@ -68,12 +67,6 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <ContextHint 
-        id="hint-manager-view" 
-        title="Team Visibility" 
-        message="You are now viewing the organization feed. Real-time transparency across all salespeople and groups."
-        className="mx-2"
-      />
       {/* Role Switcher Toolbar */}
       <div className="flex items-center justify-between px-2 mb-4">
         <div className="flex items-center gap-3">

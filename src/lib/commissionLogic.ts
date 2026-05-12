@@ -282,18 +282,33 @@ export const estimateCommission = (
     }
   }
 
-  let totalComm = frontComm + backComm + flatComm + ruleBonuses + customMiniBonus;
-  let isMini = false;
-
   // 4. Resolve "Mini"
   const miniAmount = resolveMiniAmount(deal, plan, overrides?.totalUnitsAtMonthEnd || 0, {
     newMini: overrides?.newMini,
     usedMini: overrides?.usedMini
   });
   
-  if (totalComm < miniAmount) {
-    totalComm = miniAmount;
-    isMini = true;
+  let totalComm = 0;
+  let isMini = false;
+
+  if (plan.frontDeficitRecoveryEnabled) {
+    // Recovery Model: Combine all payouts first, then apply mini floor
+    const totalPayable = frontComm + backComm + flatComm + ruleBonuses + customMiniBonus;
+    if (totalPayable < miniAmount) {
+      totalComm = miniAmount;
+      isMini = true;
+    } else {
+      totalComm = totalPayable;
+    }
+  } else {
+    // Independent Model (Default): Mini applies to front portion only
+    const frontPayable = frontComm + flatComm + ruleBonuses + customMiniBonus;
+    if (frontPayable < miniAmount) {
+      totalComm = miniAmount + backComm;
+      isMini = true;
+    } else {
+      totalComm = frontPayable + backComm;
+    }
   }
 
   const totalBeforeSplit = totalComm;

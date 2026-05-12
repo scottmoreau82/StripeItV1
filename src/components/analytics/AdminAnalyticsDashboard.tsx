@@ -273,7 +273,7 @@ export const AdminAnalyticsDashboard: React.FC = () => {
         <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
            <div className="flex items-center gap-3">
               <History className="h-5 w-5 text-slate-500" />
-              <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Recent Historical Insight</Typography>
+              <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Recent Historical Performance</Typography>
            </div>
            <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest rounded-xl">
              <Download size={14} className="mr-2" /> Export CSV

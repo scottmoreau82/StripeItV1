@@ -197,12 +197,6 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onStatusChange }) => {
           <Typography variant="p" className="text-slate-400 block whitespace-pre-wrap leading-relaxed text-sm font-medium">
             {report.description}
           </Typography>
-          {report.notes && (
-            <div className="pt-4 border-t border-white/[0.05]">
-              <Typography variant="mono" className="text-[9px] text-slate-600 uppercase font-bold tracking-[0.2em] mb-2 block">Developer Log / Notes</Typography>
-              <Typography variant="small" className="text-slate-500 italic block leading-relaxed">{report.notes}</Typography>
-            </div>
-          )}
         </div>
 
         {report.screenshotUrl && (

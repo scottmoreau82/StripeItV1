@@ -10,15 +10,16 @@ import { ChevronDown } from 'lucide-react';
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   labelClassName?: string;
+  hideLabel?: boolean;
   error?: string;
   options: { value: string; label: string }[];
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, labelClassName, error, options, ...props }, ref) => {
+  ({ className, label, labelClassName, hideLabel, error, options, ...props }, ref) => {
     return (
       <div className="flex w-full flex-col gap-1.5">
-        {label && (
+        {!hideLabel && label && (
           <Typography variant="label" className={cn("text-slate-400", labelClassName)}>
             {label}
             {props.required && <span className="ml-1 text-red-500 font-bold">*</span>}

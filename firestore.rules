@@ -77,9 +77,16 @@ service cloud.firestore {
     function isValidFeedback(data) {
       return data.userId == request.auth.uid &&
              data.title is string && data.title.size() <= 200 &&
-             data.description is string && data.description.size() <= 5000 &&
+             data.description is string && data.description.size() <= 7000 &&
              data.type in ['bug', 'feature'] &&
-             data.status == 'New';
+             data.status in ['New', 'Reviewed', 'In Progress', 'Fixed', 'Closed', 'Rejected', 'Planned'] &&
+             (data.get('screenshotUrl', '') is string) &&
+             (data.get('attachmentPath', '') is string) &&
+             (data.get('attachmentFileName', '') is string) &&
+             (data.get('attachmentContentType', '') is string) &&
+             (data.get('attachmentSize', 0) is number) &&
+             data.createdAt is number &&
+             data.updatedAt is number;
     }
 
     function isValidAnalyticsEvent(data) {

@@ -1,0 +1,56 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function getFirestoreUser(uid) {
+      // Access the specific firestore database used by the applet
+      return firestore.get(/databases/ai-studio-3b04b2cf-73a0-487b-8a72-3bbb905999a6/documents/users/$(uid)).data;
+    }
+    
+    function isBootstrapAdmin() {
+      return isSignedIn() && 
+             request.auth.token.email.lower() == 'scottmoreau82@gmail.com' && 
+             request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin() || (
+        isSignedIn() && (
+          getFirestoreUser(request.auth.uid).get('isAdmin', false) == true ||
+          getFirestoreUser(request.auth.uid).role.lower() in ['gm', 'admin']
+        )
+      );
+    }
+
+    // Feedback Attachments
+    match /feedbackAttachments/{userId}/{feedbackId}/{fileName} {
+      // Authenticated users can upload to their own path
+      allow create: if isOwner(userId) && 
+                     request.resource.size < 10 * 1024 * 1024 &&
+                     request.resource.contentType.matches('image/.*');
+      
+      // Updates are not permitted for attachments once uploaded (immutability)
+      allow update: if false;
+      
+      // Allow delete for owner or admin
+      allow delete: if isOwner(userId) || isAdmin();
+      
+      // Read access: Owner or Admin
+      allow read: if isOwner(userId) || isAdmin();
+    }
+    
+    // Default Deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

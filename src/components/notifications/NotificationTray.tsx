@@ -4,11 +4,15 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { notificationService } from '@/src/services/notificationService';
-import { Notification } from '@/src/types';
+import { feedbackService } from '@/src/services/feedbackService';
+import { Notification, FeedbackReport, FeedbackType } from '@/src/types';
+import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { NotificationItem } from './NotificationItem';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
+import { Badge } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 /**
  * StripeItNotificationSystem - NotificationTray
@@ -20,7 +24,10 @@ export const NotificationTray: React.FC = () => {
   const location = useLocation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [feedbackReports, setFeedbackReports] = useState<FeedbackReport[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  const isAdmin = profile?.isAdmin || profile?.email === STRIPEIT_DEVELOPER_EMAIL;
 
   // StripeItNotificationSystem - Close on route change
   useEffect(() => {
@@ -56,21 +63,40 @@ export const NotificationTray: React.FC = () => {
 
   useEffect(() => {
     if (!profile?.uid) return;
-    return notificationService.subscribeToUnread(profile.uid, (data) => {
+    const unsubNotifications = notificationService.subscribeToUnread(profile.uid, (data) => {
       setNotifications(data);
     });
-  }, [profile?.uid]);
 
-  const unreadCount = notifications.length;
+    let unsubFeedback: (() => void) | undefined;
+    if (isAdmin) {
+      unsubFeedback = feedbackService.subscribeToUnread((reports) => {
+        setFeedbackReports(reports);
+      });
+    }
+
+    return () => {
+      unsubNotifications();
+      if (unsubFeedback) unsubFeedback();
+    };
+  }, [profile?.uid, isAdmin]);
+
+  const unreadCount = notifications.length + (isAdmin ? feedbackReports.length : 0);
 
   const handleMarkAllRead = async () => {
     if (!profile?.uid) return;
     await notificationService.markAllAsRead(profile.uid);
+    if (isAdmin) {
+      await feedbackService.markAllAsRead();
+    }
   };
 
   const handleReadOne = async (id: string) => {
     if (!profile?.uid) return;
     await notificationService.markAsRead(profile.uid, id);
+  };
+
+  const handleReadFeedback = async (id: string) => {
+    await feedbackService.markAsRead(id);
   };
 
   return (
@@ -123,28 +149,91 @@ export const NotificationTray: React.FC = () => {
               </div>
 
               {/* List */}
-              <div className="max-h-[70vh] overflow-y-auto px-4 py-4 space-y-2">
-                {notifications.length === 0 ? (
-                  <div className="py-12 flex flex-col items-center justify-center text-center px-6">
-                    <div className="h-16 w-16 rounded-full bg-slate-900 flex items-center justify-center mb-4">
-                      <Inbox className="h-8 w-8 text-slate-700" />
+              <div className="max-h-[70vh] overflow-y-auto px-4 py-4 space-y-4">
+                {/* Feedback Requests Section (Admin Only) */}
+                {isAdmin && feedbackReports.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 px-2 pb-1">
+                      <Typography variant="mono" className="text-[10px] text-brand-primary font-black uppercase tracking-widest">
+                        Feedback Requests
+                      </Typography>
+                      <div className="h-px flex-1 bg-brand-primary/10" />
                     </div>
-                    <Typography variant="label" className="text-slate-400 block mb-1">
-                      Nothing to see here
-                    </Typography>
-                    <Typography variant="small" className="text-slate-600">
-                      You're all caught up with your latest dealership activity!
-                    </Typography>
+                    {feedbackReports.map((report) => (
+                      <div 
+                        key={report.id}
+                        onClick={() => handleReadFeedback(report.id)}
+                        className="group relative p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-brand-primary/20 transition-all cursor-pointer"
+                      >
+                        <div className="flex gap-4">
+                          <div className={cn(
+                            "h-10 w-10 shrink-0 rounded-xl flex items-center justify-center border",
+                            report.type === FeedbackType.BUG 
+                              ? "bg-orange-500/10 border-orange-500/20 text-orange-500" 
+                              : "bg-cyan-500/10 border-cyan-500/20 text-cyan-500"
+                          )}>
+                            <Badge className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={cn(
+                                "text-[9px] font-black uppercase px-2 py-0.5 rounded-full",
+                                report.type === FeedbackType.BUG 
+                                  ? "bg-orange-500/10 text-orange-500" 
+                                  : "bg-cyan-500/10 text-cyan-500"
+                              )}>
+                                {report.type === FeedbackType.BUG ? 'Bug' : 'Feature'}
+                              </span>
+                              <Typography variant="mono" className="text-[9px] text-slate-500 font-bold ml-auto">
+                                {formatDistanceToNow(report.createdAt)} ago
+                              </Typography>
+                            </div>
+                            <Typography variant="h4" className="text-white text-xs font-bold leading-tight mb-1 truncate">
+                              {report.title}
+                            </Typography>
+                            <Typography variant="p" className="text-[10px] text-slate-500 line-clamp-1">
+                              {report.description}
+                            </Typography>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ) : (
-                  notifications.map((n) => (
-                    <NotificationItem 
-                      key={n.id} 
-                      notification={n} 
-                      onRead={handleReadOne}
-                    />
-                  ))
                 )}
+
+                {/* Notifications Section */}
+                <div className="space-y-2">
+                  {isAdmin && notifications.length > 0 && feedbackReports.length > 0 && (
+                    <div className="flex items-center gap-2 px-2 pb-1 pt-2">
+                       <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest">
+                         Activity
+                       </Typography>
+                       <div className="h-px flex-1 bg-white/5" />
+                    </div>
+                  )}
+
+                  {notifications.length === 0 && (!isAdmin || feedbackReports.length === 0) ? (
+                    <div className="py-12 flex flex-col items-center justify-center text-center px-6">
+                      <div className="h-16 w-16 rounded-full bg-slate-900 flex items-center justify-center mb-4">
+                        <Inbox className="h-8 w-8 text-slate-700" />
+                      </div>
+                      <Typography variant="label" className="text-slate-400 block mb-1">
+                        Nothing to see here
+                      </Typography>
+                      <Typography variant="small" className="text-slate-600">
+                        You're all caught up with your latest dealership activity!
+                      </Typography>
+                    </div>
+                  ) : (
+                    notifications.map((n) => (
+                      <NotificationItem 
+                        key={n.id} 
+                        notification={n} 
+                        onRead={handleReadOne}
+                      />
+                    ))
+                  )}
+                </div>
               </div>
 
               {/* Footer */}

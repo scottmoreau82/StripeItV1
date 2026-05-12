@@ -171,6 +171,7 @@ export interface PayPlan {
   backEndPercentage: number;
   flatPerUnitAmount: number;
   splitDealBehavior: 'standard' | 'half_mini';
+  frontDeficitRecoveryEnabled?: boolean;
   
   // Advanced Features
   isAdvanced: boolean;
@@ -377,6 +378,7 @@ export interface FeedbackReport {
     isMobile: boolean;
   };
   status: FeedbackStatus;
+  read?: boolean;
   createdAt: number;
   updatedAt: number;
 }

@@ -36,7 +36,6 @@ import { ManagerView } from './components/management/ManagerView';
 import { NoteEntryForm } from './components/notes/NoteEntryForm';
 import { CreateCompetitionForm } from './components/competitions/CreateCompetitionForm';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
-import { ContextHint } from './components/onboarding/ContextHint';
 import { UpgradePrompt } from './components/ui/UpgradePrompt';
 import { FeedbackSystem } from './components/feedback/FeedbackSystem';
 import { FeedbackReviewPage } from './components/feedback/FeedbackReviewPage';

@@ -82,7 +82,6 @@ import * as Tabler from '@tabler/icons-react';
 import * as HeroIcons from '@heroicons/react/24/outline';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { IconTheme, SubscriptionTier } from '@/src/types';
-import { HelpCircle } from 'lucide-react';
 
 /**
  * Semantic Icon Names for Stripe It

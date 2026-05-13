@@ -192,10 +192,13 @@ export const getActiveMiniTier = (unitCount: number, tiers: MiniLadderTier[]): M
  * Helper to resolve the correct mini amount based on current system configuration.
  */
 const resolveMiniAmount = (deal: Deal, plan: PayPlan, totalUnits: number, overrides?: { newMini?: number; usedMini?: number }): number => {
-  // If no mini system active, use base mini
+  // If the entire minis/hourly section is inactive, return 0
+  if (plan.isMinisAndHourlyActive === false) return 0;
+
+  // If the advanced ladder is inactive, use the base miniAmount as the floor
   if (!plan.isMinisActive) return plan.miniAmount || 0;
   
-  let mini = 0;
+  let mini: number | null = null;
 
   // 1. Check for Ladder Overrides (highest priority if provided via calculateDealCommission)
   if (overrides) {
@@ -207,15 +210,15 @@ const resolveMiniAmount = (deal: Deal, plan: PayPlan, totalUnits: number, overri
   }
 
   // 2. Fallback to Mini Ladder Logic if no overrides provided (e.g. estimateCommission called directly)
-  if (mini === 0 && plan.miniTiers && plan.miniTiers.length > 0) {
+  if (mini === null && plan.miniTiers && plan.miniTiers.length > 0) {
     const tier = getActiveMiniTier(totalUnits, plan.miniTiers);
     if (tier) {
       mini = (deal.newOrUsed === 'used' || deal.newOrUsed === 'cpo') ? tier.usedMini : tier.newMini;
     }
   }
 
-  // 3. Final fallback to legacy miniAmount
-  if (mini === 0) {
+  // 3. Final fallback to legacy miniAmount if still not resolved
+  if (mini === null) {
     mini = plan.miniAmount || 0;
   }
 
@@ -274,8 +277,8 @@ export const estimateCommission = (
     ? evaluateRules(deal, plan.rules, plan) 
     : { bonus: 0, applied: [] };
 
-  // 3. Resolve Custom Minis
-  let customMiniBonus = 0;
+  // 3. Resolve Custom Minis as a Floor (Mini) instead of a Bonus
+  let customMiniFloor = 0;
   if (plan.customMinis) {
     for (const cm of plan.customMinis) {
       if (!cm.active) continue;
@@ -284,22 +287,28 @@ export const estimateCommission = (
       if (cm.filter === VolumeBonusFilter.USED && deal.newOrUsed !== 'used') matches = false;
       if (cm.filter === VolumeBonusFilter.CPO && deal.newOrUsed !== 'cpo') matches = false;
       
-      if (matches) customMiniBonus += cm.amount;
+      if (matches) {
+        customMiniFloor = Math.max(customMiniFloor, cm.amount);
+      }
     }
   }
 
-  // 4. Resolve "Mini"
-  const miniAmount = resolveMiniAmount(deal, plan, overrides?.totalUnitsAtMonthEnd || 0, {
+  // 4. Resolve the standard "Mini" Amount
+  const baseMiniAmount = resolveMiniAmount(deal, plan, overrides?.totalUnitsAtMonthEnd || 0, {
     newMini: overrides?.newMini,
     usedMini: overrides?.usedMini
   });
+
+  // The actual mini floor is the higher of the base mini or any custom mini matches
+  const miniAmount = Math.max(baseMiniAmount, customMiniFloor);
   
   let totalComm = 0;
   let isMini = false;
 
   if (plan.frontDeficitRecoveryEnabled) {
     // Recovery Model: Combine all payouts first, then apply mini floor
-    const totalPayable = frontComm + backComm + flatComm + ruleBonuses + customMiniBonus;
+    // Rule bonuses and flats are technically additive-intent but traditionally swollowed by mini floors in gross recovery plans
+    const totalPayable = frontComm + backComm + flatComm + ruleBonuses;
     if (totalPayable < miniAmount) {
       totalComm = miniAmount;
       isMini = true;
@@ -308,7 +317,7 @@ export const estimateCommission = (
     }
   } else {
     // Independent Model (Default): Mini applies to front portion only
-    const frontPayable = frontComm + flatComm + ruleBonuses + customMiniBonus;
+    const frontPayable = frontComm + flatComm + ruleBonuses;
     if (frontPayable < miniAmount) {
       totalComm = miniAmount + backComm;
       isMini = true;

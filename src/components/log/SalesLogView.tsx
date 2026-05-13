@@ -9,7 +9,7 @@ import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppIcon } from '../ui/AppIcon';
-import { cn, formatDateSafe } from '@/src/lib/utils';
+import { cn, formatDateSafe, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { calculateDealCommission } from '@/src/lib/commissionLogic';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
@@ -198,12 +198,10 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                   </thead>
                   <tbody className="divide-y divide-white/[0.02]">
                     {filteredDeals.map((deal, index) => {
-                      const dDate = new Date(deal.date);
-                      const m = dDate.getMonth();
-                      const y = dDate.getFullYear();
+                      const m = getCalendarMonth(deal.date);
+                      const y = getCalendarYear(deal.date);
                       const monthlyDeals = deals.filter(d => {
-                        const dd = new Date(d.date);
-                        return dd.getMonth() === m && dd.getFullYear() === y;
+                        return getCalendarMonth(d.date) === m && getCalendarYear(d.date) === y;
                       });
                       const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDeals) : null;
                       const frontRate = commission?.frontEndCommission ? ((commission.frontEndCommission / deal.frontEndGross) * 100).toFixed(0) : 0;
@@ -299,12 +297,10 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
             {isMobile && (
               <div className="grid grid-cols-1 gap-4">
                 {filteredDeals.map((deal, index) => {
-                  const dDate = new Date(deal.date);
-                  const m = dDate.getMonth();
-                  const y = dDate.getFullYear();
+                  const m = getCalendarMonth(deal.date);
+                  const y = getCalendarYear(deal.date);
                   const monthlyDeals = deals.filter(d => {
-                    const dd = new Date(d.date);
-                    return dd.getMonth() === m && dd.getFullYear() === y;
+                    return getCalendarMonth(d.date) === m && getCalendarYear(d.date) === y;
                   });
                   const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDeals) : null;
 

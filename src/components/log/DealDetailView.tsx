@@ -16,7 +16,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { estimateCommission, calculateDealCommission, getActiveCommissionTier, getDealUnitPosition } from '@/src/lib/commissionLogic';
-import { cn, formatDateSafe } from '@/src/lib/utils';
+import { cn, formatDateSafe, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card } from '../ui/Card';
 import { Typography } from '../ui/Typography';
@@ -55,13 +55,11 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
   
   // Get all deals for the same month to provide context for commission calculation
   const monthlyDeals = React.useMemo(() => {
-    const dealDate = new Date(deal.date);
-    const month = dealDate.getMonth();
-    const year = dealDate.getFullYear();
+    const month = getCalendarMonth(deal.date);
+    const year = getCalendarYear(deal.date);
     
     return deals.filter(d => {
-      const dDate = new Date(d.date);
-      return dDate.getMonth() === month && dDate.getFullYear() === year;
+      return getCalendarMonth(d.date) === month && getCalendarYear(d.date) === year;
     });
   }, [deals, deal.date]);
 

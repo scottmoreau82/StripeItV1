@@ -182,6 +182,7 @@ export interface PayPlan {
   isSplitBehaviorActive?: boolean;
   isFlatPerUnitActive?: boolean;
   frontDeficitRecoveryEnabled?: boolean;
+  schemaVersion?: string;
   
   // Advanced Features
   isAdvanced: boolean;

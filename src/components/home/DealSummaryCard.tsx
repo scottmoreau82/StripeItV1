@@ -5,7 +5,7 @@ import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Car, Clock, CreditCard, ChevronRight } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
+import { cn, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { useAppData } from '@/src/contexts/AppDataContext';
 
 /**
@@ -30,12 +30,10 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
   
   // Filter deals for the specific month/year of this deal to provide correct context
   const monthlyDeals = React.useMemo(() => {
-    const dDate = new Date(deal.date);
-    const m = dDate.getMonth();
-    const y = dDate.getFullYear();
+    const m = getCalendarMonth(deal.date);
+    const y = getCalendarYear(deal.date);
     return deals.filter(d => {
-      const dd = new Date(d.date);
-      return dd.getMonth() === m && dd.getFullYear() === y;
+      return getCalendarMonth(d.date) === m && getCalendarYear(d.date) === y;
     });
   }, [deals, deal.date]);
 

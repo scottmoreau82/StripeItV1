@@ -20,6 +20,7 @@ import {
   calculateTotalEarnings,
   calculatePeriodEarnings
 } from '../lib/commissionLogic';
+import { getCalendarMonth, getCalendarYear } from '../lib/utils';
 import { 
   AnalyticsEvent, 
   AnalyticsEventType, 
@@ -236,9 +237,8 @@ export const analyticsService = new AnalyticsService();
 
 const isThisMonth = (dateStr: string) => {
   if (!dateStr) return false;
-  const date = new Date(dateStr);
   const now = new Date();
-  return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  return getCalendarMonth(dateStr) === now.getMonth() && getCalendarYear(dateStr) === now.getFullYear();
 };
 
 export const calculateDashboardMetrics = (deals: Deal[], payPlan: PayPlan | null) => {

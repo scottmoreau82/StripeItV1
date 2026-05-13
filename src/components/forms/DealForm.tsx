@@ -10,7 +10,7 @@ import { ChevronDown, ChevronUp, UserPlus, Car, AlertCircle } from 'lucide-react
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { getActiveCommissionTier } from '@/src/lib/commissionLogic';
-import { cn } from '@/src/lib/utils';
+import { cn, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 
 /**
  * StripeItDealFormSystem
@@ -153,8 +153,7 @@ export const DealForm: React.FC<DealFormProps> = ({
     
     return deals
       .filter(d => {
-        const dealDate = new Date(d.date);
-        return dealDate.getMonth() === currentMonth && dealDate.getFullYear() === currentYear;
+        return getCalendarMonth(d.date) === currentMonth && getCalendarYear(d.date) === currentYear;
       })
       .reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
   }, [deals]);

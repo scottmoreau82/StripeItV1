@@ -1,4 +1,5 @@
 import { Deal, PayPlan, PayPlanRule, PayPlanTier, VolumeBonus, VolumeBonusType, VolumeBonusScope, VolumeBonusFilter, MiniLadderTier } from '../types';
+import { parseCalendarDate } from './utils';
 
 /**
  * StripeItBasicCommissionSystem & StripeItCommissionEstimateSystem
@@ -150,8 +151,10 @@ export const getDealUnitPosition = (deal: Deal, allDealsForMonth: Deal[], plan?:
 
   // Sort deals by date ascending, then ID for stable sorting
   const sorted = [...allDealsForMonth].sort((a, b) => {
-    const dateA = new Date(a.date).getTime();
-    const dateB = new Date(b.date).getTime();
+    const d1 = parseCalendarDate(a.date);
+    const d2 = parseCalendarDate(b.date);
+    const dateA = d1 ? d1.getTime() : 0;
+    const dateB = d2 ? d2.getTime() : 0;
     if (dateA !== dateB) return dateA - dateB;
     return (a.id || '').localeCompare(b.id || '');
   });

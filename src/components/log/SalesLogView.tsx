@@ -21,6 +21,9 @@ import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 
 import { EmptyState } from '../ui/EmptyState';
 
+import { PayoutExplanationModal } from './PayoutExplanationModal';
+import { CommissionResult } from '@/src/lib/commissionLogic';
+
 /**
  * StripeItSalesLogSystem
  * The primary view for browsing, searching, and managing all car deals.
@@ -50,6 +53,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+
+  // Explanation Modal State
+  const [explanationData, setExplanationData] = useState<{ commission: CommissionResult, customerName: string } | null>(null);
 
   // Sync selected deal if deals list updates (e.g. status change)
   const currentSelectedDeal = useMemo(() => {
@@ -256,9 +262,23 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           </td>
                           <td className="py-5 px-4 text-right">
                             <div className="flex flex-col items-end">
-                              <Typography variant="label" className="text-emerald-400 font-black text-sm">
-                                ${commission?.finalPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) || '0'}
-                              </Typography>
+                              <div className="flex items-center gap-2">
+                                <Typography variant="label" className="text-emerald-400 font-black text-sm">
+                                  ${commission?.finalPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) || '0'}
+                                </Typography>
+                                {commission?.explanation && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setExplanationData({ commission, customerName: deal.customerName });
+                                    }}
+                                    className="p-1 rounded bg-emerald-400/10 text-emerald-400 hover:bg-emerald-400/20 transition-all active:scale-90"
+                                    title="View Calculation Breakdown"
+                                  >
+                                    <AppIcon name="eye" size={10} />
+                                  </button>
+                                )}
+                              </div>
                               {commission && (
                                 <Typography variant="mono" className="text-[8px] text-slate-600 font-black uppercase">
                                   {frontRate}% / {backRate}%
@@ -356,9 +376,22 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         <div className="pt-4 border-t border-white/[0.03] flex items-center justify-between">
                           <div>
                             <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Est. Payout</Typography>
-                            <Typography variant="h3" className="text-emerald-400 font-black">
-                              ${commission?.finalPayout.toLocaleString() || '0'}
-                            </Typography>
+                            <div className="flex items-center gap-2">
+                              <Typography variant="h3" className="text-emerald-400 font-black">
+                                ${commission?.finalPayout.toLocaleString() || '0'}
+                              </Typography>
+                              {commission?.explanation && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExplanationData({ commission, customerName: deal.customerName });
+                                  }}
+                                  className="p-1.5 rounded-lg bg-emerald-400/10 text-emerald-400 border border-emerald-400/20"
+                                >
+                                  <AppIcon name="eye" size={12} />
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center gap-1">
                             <button 
@@ -443,6 +476,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           )
         )}
       </AnimatePresence>
+
+      <PayoutExplanationModal
+        isOpen={!!explanationData}
+        onClose={() => setExplanationData(null)}
+        commission={explanationData?.commission || null}
+        customerName={explanationData?.customerName || ''}
+      />
     </div>
   );
 

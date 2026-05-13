@@ -26,6 +26,9 @@ import { Modal } from '../ui/Modal';
 import { Deal, DealStatus, PayPlan } from '@/src/types';
 import { useAppData } from '@/src/contexts/AppDataContext';
 
+import { PayoutExplanationModal } from './PayoutExplanationModal';
+import { CommissionResult } from '@/src/lib/commissionLogic';
+
 /**
  * StripeItDealDetailSystem
  * Comprehensive view of a single deal's data and calculations.
@@ -52,6 +55,7 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
   const [showGross, setShowGross] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
+  const [showExplanation, setShowExplanation] = React.useState(false);
   
   // Get all deals for the same month to provide context for commission calculation
   const monthlyDeals = React.useMemo(() => {
@@ -212,7 +216,18 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
           {commission ? (
             <div className="space-y-4">
               <div className="flex items-baseline justify-between">
-                <Typography variant="small" className="text-slate-500">Net Est. Payout</Typography>
+                <div className="space-y-1">
+                  <Typography variant="small" className="text-slate-500">Net Est. Payout</Typography>
+                  {commission.explanation && (
+                    <button 
+                      onClick={() => setShowExplanation(true)}
+                      className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-400/10 text-emerald-400 text-[9px] font-black uppercase tracking-widest hover:bg-emerald-400/20 transition-all border border-emerald-400/20 shadow-glow glow-emerald-400/10"
+                    >
+                      <Eye size={10} />
+                      Explain Calc
+                    </button>
+                  )}
+                </div>
                 <Typography variant="h2" className="text-emerald-400">
                   ${commission.finalPayout.toLocaleString()}
                 </Typography>
@@ -344,6 +359,15 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
             This record is finalized and locked
           </Typography>
         </div>
+      )}
+
+      {commission && (
+        <PayoutExplanationModal
+          isOpen={showExplanation}
+          onClose={() => setShowExplanation(false)}
+          commission={commission}
+          customerName={deal.customerName}
+        />
       )}
     </div>
   );

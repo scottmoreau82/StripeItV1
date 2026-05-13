@@ -16,6 +16,28 @@ export interface CommissionResult {
   finalPayout: number;
   isMini: boolean;
   appliedRules: string[];
+  explanation?: {
+    frontRate: number;
+    backRate: number;
+    miniAmount: number;
+    baseMiniAmount: number;
+    customMiniAmount: number;
+    isDeficitRecovery: boolean;
+    frontPayable: number;
+    totalPayable: number;
+    isSplit: boolean;
+    splitRatio: number;
+    splitBehavior: 'standard' | 'half_mini';
+    wasMiniApplied: boolean;
+    frontEndGross: number;
+    backEndGross: number;
+    flatPerUnit: number;
+    isFlatActive: boolean;
+    totalRuleBonuses: number;
+    isAdvanced: boolean;
+    newOrUsed: 'new' | 'used' | 'cpo';
+    isMinisActive: boolean;
+  };
 }
 
 export interface PeriodEarnings {
@@ -330,11 +352,13 @@ export const estimateCommission = (
   let finalPayout = totalComm;
 
   // 5. Handle Split Deals
+  let wasHalfMiniSplit = false;
   if (deal.isSplitDeal && plan.isSplitBehaviorActive !== false) {
     const splitRatio = (deal.splitPercentage || 50) / 100;
     
     if (plan.splitDealBehavior === 'half_mini' && isMini) {
       finalPayout = miniAmount / 2;
+      wasHalfMiniSplit = true;
     } else {
       finalPayout = totalComm * splitRatio;
     }
@@ -349,7 +373,29 @@ export const estimateCommission = (
     totalBeforeSplit,
     finalPayout,
     isMini,
-    appliedRules
+    appliedRules,
+    explanation: {
+      frontRate,
+      backRate,
+      miniAmount,
+      baseMiniAmount,
+      customMiniAmount: customMiniFloor,
+      isDeficitRecovery: !!plan.frontDeficitRecoveryEnabled,
+      frontPayable: frontComm + flatComm + ruleBonuses,
+      totalPayable: frontComm + backComm + flatComm + ruleBonuses,
+      isSplit: deal.isSplitDeal && plan.isSplitBehaviorActive !== false,
+      splitRatio: deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1,
+      splitBehavior: plan.splitDealBehavior || 'standard',
+      wasMiniApplied: isMini,
+      frontEndGross: deal.frontEndGross,
+      backEndGross: deal.backEndGross,
+      flatPerUnit: plan.flatPerUnitAmount || 0,
+      isFlatActive: plan.isFlatPerUnitActive !== false,
+      totalRuleBonuses: ruleBonuses,
+      isAdvanced: !!plan.isAdvanced,
+      newOrUsed: deal.newOrUsed,
+      isMinisActive: !!plan.isMinisAndHourlyActive
+    }
   };
 };
 

@@ -42,6 +42,7 @@ interface AppDataContextType {
   refreshDeals: () => Promise<void>;
   triggerSuccess: (message?: string) => void;
   triggerError: (message: string) => void;
+  isCommissionConfigured: boolean;
 }
 
 const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
@@ -446,8 +447,15 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const refreshDeals = async () => {
-    await loadStaticData();
+    await loadStaticData(profile?.orgId || '', user?.uid || '');
   };
+
+  const isCommissionConfigured = React.useMemo(() => {
+    if (!payPlan) return false;
+    const hasStandardTiers = payPlan.tiers && payPlan.tiers.length > 0;
+    const hasMiniTiers = payPlan.isMinisActive && payPlan.miniTiers && payPlan.miniTiers.some(t => t.active);
+    return hasStandardTiers || hasMiniTiers;
+  }, [payPlan]);
 
   return (
     <AppDataContext.Provider value={{
@@ -470,7 +478,8 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       handleCreateRandomDeal,
       refreshDeals,
       triggerSuccess,
-      triggerError
+      triggerError,
+      isCommissionConfigured
     }}>
       {children}
     </AppDataContext.Provider>

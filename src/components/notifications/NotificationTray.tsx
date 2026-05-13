@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Inbox, Sparkles, X } from 'lucide-react';
+import { AppIcon } from '../ui/AppIcon';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { notificationService } from '@/src/services/notificationService';
 import { feedbackService } from '@/src/services/feedbackService';
-import { Notification, FeedbackReport, FeedbackType } from '@/src/types';
+import { Notification, FeedbackReport, FeedbackType, SubscriptionTier } from '@/src/types';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { NotificationItem } from './NotificationItem';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
-import { Badge } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -20,12 +19,15 @@ import { formatDistanceToNow } from 'date-fns';
  */
 
 export const NotificationTray: React.FC = () => {
-  const { profile } = useAuth();
+  const { profile, tierOverride } = useAuth();
   const location = useLocation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [feedbackReports, setFeedbackReports] = useState<FeedbackReport[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  const currentTier = tierOverride || profile?.subscriptionTier;
+  const isFreeTier = currentTier === SubscriptionTier.FREE;
 
   const isAdmin = profile?.isAdmin || profile?.email === STRIPEIT_DEVELOPER_EMAIL;
 
@@ -62,7 +64,7 @@ export const NotificationTray: React.FC = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    if (!profile?.uid) return;
+    if (!profile?.uid || isFreeTier) return;
     const unsubNotifications = notificationService.subscribeToUnread(profile.uid, (data) => {
       setNotifications(data);
     });
@@ -78,7 +80,9 @@ export const NotificationTray: React.FC = () => {
       unsubNotifications();
       if (unsubFeedback) unsubFeedback();
     };
-  }, [profile?.uid, isAdmin]);
+  }, [profile?.uid, isAdmin, isFreeTier]);
+
+  if (isFreeTier) return null;
 
   const unreadCount = notifications.length + (isAdmin ? feedbackReports.length : 0);
 
@@ -110,7 +114,7 @@ export const NotificationTray: React.FC = () => {
           isOpen ? "bg-white/10 text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
         )}
       >
-        <Bell className={cn("h-5 w-5", unreadCount > 0 && "animate-tada")} />
+        <AppIcon name="bell" className={cn("h-5 w-5", unreadCount > 0 && "animate-tada")} />
         {unreadCount > 0 && (
           <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-primary text-[9px] font-black text-bg-deep shadow-glow glow-primary">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -130,7 +134,7 @@ export const NotificationTray: React.FC = () => {
               <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02]">
                 <div className="flex items-center gap-2">
                   <div className="p-2 rounded-xl bg-brand-primary/10">
-                    <Sparkles className="h-4 w-4 text-brand-primary" />
+                    <AppIcon name="premium" className="h-4 w-4 text-brand-primary" />
                   </div>
                   <Typography variant="h4" className="text-white italic font-black uppercase tracking-tight">
                     Inbox
@@ -172,7 +176,7 @@ export const NotificationTray: React.FC = () => {
                               ? "bg-orange-500/10 border-orange-500/20 text-orange-500" 
                               : "bg-cyan-500/10 border-cyan-500/20 text-cyan-500"
                           )}>
-                            <Badge className="h-5 w-5" />
+                            <AppIcon name="badge" className="h-5 w-5" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
@@ -215,7 +219,7 @@ export const NotificationTray: React.FC = () => {
                   {notifications.length === 0 && (!isAdmin || feedbackReports.length === 0) ? (
                     <div className="py-12 flex flex-col items-center justify-center text-center px-6">
                       <div className="h-16 w-16 rounded-full bg-slate-900 flex items-center justify-center mb-4">
-                        <Inbox className="h-8 w-8 text-slate-700" />
+                        <AppIcon name="inbox" className="h-8 w-8 text-slate-700" />
                       </div>
                       <Typography variant="label" className="text-slate-400 block mb-1">
                         Nothing to see here

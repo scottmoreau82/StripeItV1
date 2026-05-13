@@ -175,16 +175,20 @@ const MatrixItemChip: React.FC<MatrixItemChipProps> = ({ label, active, onClick,
 };
 
 interface MatrixInputGroupProps {
-  label: string;
-  value: string | number;
+  label?: string;
+  value: string | number | undefined;
   onChange: (val: string) => void;
-  color?: 'neutral' | 'cyan' | 'purple';
+  color?: 'neutral' | 'cyan' | 'purple' | 'amber';
   suffix?: string;
   placeholder?: string;
+  ghostValue?: string;
   isRetroactive?: boolean;
   onToggleRetroactive?: () => void;
   isInfinite?: boolean;
   disabled?: boolean;
+  isError?: boolean;
+  className?: string;
+  size?: 'sm' | 'md';
 }
 
 const ActiveChip: React.FC<{ active: boolean; onClick: () => void }> = ({ active, onClick }) => (
@@ -209,28 +213,44 @@ interface VolumeBonusRowProps {
   bonus: VolumeBonus;
   onUpdate: (updates: Partial<VolumeBonus>) => void;
   onRemove: () => void;
+  previousThreshold?: number;
 }
 
-const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemove }) => {
+const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemove, previousThreshold }) => {
   const isRetro = bonus.type === VolumeBonusType.RETRO_PER_UNIT;
+  const { triggerError } = useAppData();
+  
+  const isInvalidOrdering = previousThreshold !== undefined && bonus.threshold <= previousThreshold;
+
+  const handleBlur = () => {
+    if (isInvalidOrdering) {
+      triggerError("Unit threshold must be greater than the row above.");
+    }
+  };
 
   return (
     <div className={cn(
       "group bg-[#0A0C12] border border-white/5 p-4 md:p-5 rounded-2xl transition-all duration-300 relative",
-      !bonus.active ? "opacity-40 grayscale-[0.5]" : "hover:border-white/10"
+      !bonus.active ? "opacity-40 grayscale-[0.5]" : "hover:border-white/10",
+      isInvalidOrdering && "ring-1 ring-red-500/30 border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.05)]"
     )}>
       <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
         {/* Threshold */}
-        <div className="flex items-center gap-3 min-w-[120px]">
-          <div className="w-[60px]">
-            <Input 
-              type="number"
+        <div className="flex items-center gap-3 min-w-[150px]">
+          <div className="w-[85px]">
+            <MatrixInputGroup 
               value={bonus.threshold} 
-              onChange={(e) => onUpdate({ threshold: parseInt(e.target.value) || 0 })} 
-              className="h-10 bg-black/40 border-white/5 font-bold text-center px-2 focus:ring-brand-primary"
+              onChange={(val) => onUpdate({ threshold: parseInt(val) || 0 })} 
+              onBlur={handleBlur}
+              isError={isInvalidOrdering}
+              size="sm"
+              placeholder="0"
             />
           </div>
-          <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Units</Typography>
+          <Typography variant="mono" className={cn(
+            "text-[10px] font-black uppercase tracking-widest",
+            isInvalidOrdering ? "text-red-400" : "text-slate-500"
+          )}>Units</Typography>
         </div>
 
         {/* Payout/Amount */}
@@ -256,7 +276,7 @@ const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemo
               options={[
                 { value: VolumeBonusType.FLAT, label: 'FLAT' },
                 { value: VolumeBonusType.CUMULATIVE, label: 'CUMULATIVE' },
-                { value: VolumeBonusType.NON_CUMULATIVE, label: 'NON-CUM' },
+                { value: VolumeBonusType.NON_CUMULATIVE, label: 'NON-CUMULATIVE' },
                 { value: VolumeBonusType.RETRO_PER_UNIT, label: 'RETRO UNIT' },
               ]}
               value={bonus.type}
@@ -312,6 +332,14 @@ const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemo
         </div>
       </div>
       
+      {isInvalidOrdering && (
+        <div className="mt-3 pt-3 border-t border-red-500/10 flex items-center gap-2 text-red-400 animate-in fade-in slide-in-from-top-1 duration-300">
+          <Typography variant="mono" className="text-[9px] uppercase tracking-widest font-bold">
+            Unit threshold must be greater than the row above ({previousThreshold} units)
+          </Typography>
+        </div>
+      )}
+
       {/* Optional Note Row if present */}
       {bonus.notes && (
         <div className="mt-3 pt-3 border-t border-white/[0.03]">
@@ -329,12 +357,17 @@ const MatrixInputGroup: React.FC<MatrixInputGroupProps> = ({
   color = "neutral", 
   suffix,
   placeholder,
+  ghostValue,
   isRetroactive,
   onToggleRetroactive,
   isInfinite,
-  disabled
+  disabled,
+  isError,
+  className,
+  size = 'md'
 }) => {
   const [localValue, setLocalValue] = React.useState(value?.toString() || '');
+  const [isFocused, setIsFocused] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Sync local value when external value changes (but not while typing)
@@ -348,73 +381,79 @@ const MatrixInputGroup: React.FC<MatrixInputGroupProps> = ({
     neutral: "text-slate-500/80",
     cyan: "text-cyan-400 brightness-110",
     purple: "text-purple-400 brightness-110",
+    amber: "text-amber-400 brightness-110",
   };
 
   const fieldStyles = {
     neutral: "bg-[#050608] border-white/5 text-white focus:border-white/20",
     cyan: "bg-cyan-500/[0.03] border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.05)] focus:border-cyan-400/60",
     purple: "bg-purple-500/[0.03] border-purple-500/30 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.05)] focus:border-purple-400/60",
+    amber: "bg-amber-500/[0.03] border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.05)] focus:border-amber-400/60",
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let newVal = e.target.value;
+    
+    // Fix leading zero (010 -> 10)
+    if (newVal.length > 1 && newVal.startsWith('0') && newVal[1] !== '.') {
+      newVal = newVal.substring(1);
+    }
+    
+    setLocalValue(newVal);
+    // Real-time update to parent for feedback
+    const normalized = normalizeMatrixNumber(newVal);
+    onChange(normalized !== undefined ? normalized.toString() : '');
   };
 
   const handleBlur = () => {
+    setIsFocused(false);
     if (localValue === '') {
       onChange('');
       return;
     }
     const normalized = normalizeMatrixNumber(localValue);
-    const formatted = formatMatrixValue(normalized);
+    const formatted = formatMatrixValue(normalized as number);
     setLocalValue(formatted);
     onChange(formatted);
   };
 
+  const showGhost = !isFocused && (value === undefined || value === '' || value === null) && ghostValue !== undefined && ghostValue !== '';
+
   return (
-    <div className="flex flex-col gap-2.5 flex-1 min-w-[140px] group/input">
-      <div className="flex items-center justify-between">
-        <Typography variant="mono" className={cn("text-[10px] font-black tracking-[0.25em] uppercase", labelColors[color])}>
-          {label}
-        </Typography>
-      </div>
+    <div className={cn("flex flex-col gap-2.5 flex-1 min-w-[100px] group/input", className)}>
+      {label && (
+        <div className="flex items-center justify-between">
+          <Typography variant="mono" className={cn("text-[10px] font-black tracking-[0.25em] uppercase", labelColors[color])}>
+            {label}
+          </Typography>
+        </div>
+      )}
       <div className="relative">
         <input
           ref={inputRef}
           type="text"
           inputMode="decimal"
-          value={isInfinite ? '∞' : localValue}
-          onChange={(e) => setLocalValue(e.target.value)}
+          value={isInfinite ? '∞' : (showGhost ? ghostValue : localValue)}
+          onChange={handleChange}
+          onFocus={() => setIsFocused(true)}
           onBlur={handleBlur}
           placeholder={placeholder}
           disabled={disabled || isInfinite}
           className={cn(
-            "w-full h-12 rounded-2xl px-5 font-bold text-base outline-none transition-all duration-300 border",
+            "w-full rounded-2xl font-bold text-base outline-none transition-all duration-300 border text-center",
+            size === 'sm' ? 'h-10 px-2' : 'h-12 px-5',
             fieldStyles[color],
+            isError && "text-red-500 !border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]",
             isInfinite && "text-slate-500 bg-white/[0.02] border-white/[0.03] cursor-default",
-            disabled && "opacity-50 cursor-not-allowed"
+            disabled && "opacity-50 cursor-not-allowed",
+            showGhost && "opacity-30 !text-slate-500 italic"
           )}
         />
         {suffix === '%' ? (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2.5 select-none">
-            {onToggleRetroactive && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleRetroactive?.();
-                }}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 shadow-sm border",
-                  isRetroactive 
-                    ? (color === 'cyan' 
-                        ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)] ring-1 ring-cyan-500/20" 
-                        : "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)] ring-1 ring-purple-500/20")
-                    : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-500"
-                )}
-              >
-                RETRO
-              </button>
-            )}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center select-none">
             <span className={cn(
               "font-bold text-sm",
-              color === 'cyan' ? 'text-cyan-400/60' : color === 'purple' ? 'text-purple-400/60' : 'text-slate-500'
+              color === 'cyan' ? 'text-cyan-400/60' : color === 'purple' ? 'text-purple-400/60' : color === 'amber' ? 'text-amber-400/60' : 'text-slate-500'
             )}>
               %
             </span>
@@ -499,6 +538,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     isAdvanced: initialData?.isAdvanced !== undefined ? initialData.isAdvanced : true,
     isRulesEnabled: initialData?.rules && initialData.rules.length > 0 ? true : false,
     isVolumeBonusEngineActive: initialData?.isVolumeBonusEngineActive || false,
+    isSplitBehaviorActive: initialData?.isSplitBehaviorActive ?? true,
+    isFlatPerUnitActive: initialData?.isFlatPerUnitActive ?? true,
     rules: initialData?.rules || [] as PayPlanRule[],
     tiers: getInitialTiers(),
     volumeBonuses: initialData?.volumeBonuses || [] as VolumeBonus[],
@@ -620,7 +661,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     minis_hourly: false,
-    commission_ladder: false,
+    commission_matrix: false,
     volume_bonus: false,
     rules: false,
     misc_defaults: false,
@@ -631,7 +672,10 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   });
 
   const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+    setExpandedSections(prev => {
+      const actualId = sectionId === 'commission_ladder' ? 'commission_matrix' : sectionId;
+      return { ...prev, [actualId]: !prev[actualId] };
+    });
   };
 
   const handleChange = (field: string, value: any) => {
@@ -799,19 +843,28 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     handleChange('tiers', syncTiers(remaining));
   };
 
-  // Volume Bonus Engine Helpers
+  // Volume Bonus Helpers
   const addVolumeBonus = () => {
-    const newBonus: VolumeBonus = {
-      id: crypto.randomUUID(),
-      threshold: 10,
-      amount: 500,
-      type: VolumeBonusType.FLAT,
-      scope: VolumeBonusScope.ALL_UNITS,
-      filter: VolumeBonusFilter.ANY,
-      active: true,
-    };
-    handleChange('volumeBonuses', [...(formData.volumeBonuses || []), newBonus]);
-    handleChange('isVolumeBonusEngineActive', true);
+    setFormData(prev => {
+      const bonuses = prev.volumeBonuses || [];
+      const maxThreshold = bonuses.length > 0 ? Math.max(...bonuses.map(b => b.threshold)) : 5;
+      
+      const newBonus: VolumeBonus = {
+        id: crypto.randomUUID(),
+        threshold: bonuses.length > 0 ? maxThreshold + 5 : 10,
+        amount: 500,
+        type: VolumeBonusType.FLAT,
+        scope: VolumeBonusScope.ALL_UNITS,
+        filter: VolumeBonusFilter.ANY,
+        active: true,
+      };
+
+      return {
+        ...prev,
+        isVolumeBonusEngineActive: true,
+        volumeBonuses: [...bonuses, newBonus]
+      };
+    });
   };
 
   const updateVolumeBonus = (id: string, updates: Partial<VolumeBonus>) => {
@@ -975,43 +1028,77 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     }
 
     // 3. Normalization for Persistence
-    const cleanTiers = tiers.map((t, i) => ({
+    const cleanTiers = (formData.tiers || []).map((t, i) => ({
       ...t,
-      threshold: i === 0 ? 0 : (t.threshold ?? 0),
-      maxUnits: t.maxUnits ?? null,
-      frontRate: t.frontRate ?? 0,
-      backRate: t.backRate ?? 0,
+      threshold: i === 0 ? 0 : (Number(t.threshold) || 0),
+      maxUnits: t.maxUnits === undefined ? null : t.maxUnits,
+      frontRate: Number(t.frontRate) || 0,
+      backRate: Number(t.backRate) || 0,
       frontRetroactive: i === 0 ? false : (t.frontRetroactive ?? false),
       backRetroactive: i === 0 ? false : (t.backRetroactive ?? false),
-      bonusAmount: t.bonusAmount || 0,
-      perUnitBonus: t.perUnitBonus || 0,
+      bonusAmount: Number(t.bonusAmount) || 0,
+      perUnitBonus: Number(t.perUnitBonus) || 0,
       isRetroactive: t.isRetroactive || false
     }));
 
-    const cleanMiniTiers = miniTiers.map((t, i) => ({
+    const cleanMiniTiers = (formData.miniTiers || []).map((t, i) => ({
       ...t,
-      threshold: i === 0 ? 0 : (t.threshold ?? 0),
-      maxUnits: t.maxUnits ?? null,
-      newMini: t.newMini ?? 0,
-      usedMini: t.usedMini ?? 0,
+      threshold: i === 0 ? 0 : (Number(t.threshold) || 0),
+      maxUnits: t.maxUnits === undefined ? null : t.maxUnits,
+      newMini: Number(t.newMini) || 0,
+      usedMini: Number(t.usedMini) || 0,
       isRetroactive: i === 0 ? false : (t.isRetroactive ?? false),
       active: t.active ?? true
     }));
 
+    const cleanVolumeBonuses = (formData.volumeBonuses || []).map(b => ({
+      ...b,
+      threshold: Number(b.threshold) || 0,
+      amount: Number(b.amount) || 0,
+      active: b.active ?? true,
+      notes: b.notes || ""
+    }));
+
+    const cleanRules = (formData.rules || []).map(r => ({
+      ...r,
+      bonusAmount: Number(r.bonusAmount) || 0
+    }));
+
     const cleanData = {
       ...formData,
+      frontEndPercentage: Number(formData.frontEndPercentage) || 0,
+      backEndPercentage: Number(formData.backEndPercentage) || 0,
+      miniAmount: cleanMiniTiers[0]?.newMini || 200,
+      flatPerUnitAmount: Number(formData.flatPerUnitAmount) || 0,
       tiers: cleanTiers,
       miniTiers: cleanMiniTiers,
-      volumeBonuses: formData.volumeBonuses || [],
+      volumeBonuses: cleanVolumeBonuses,
+      rules: cleanRules,
       isVolumeBonusEngineActive: formData.isVolumeBonusEngineActive || false,
+      isSplitBehaviorActive: formData.isSplitBehaviorActive ?? true,
+      isFlatPerUnitActive: formData.isFlatPerUnitActive ?? true,
       isMinisAndHourlyActive: formData.isMinisAndHourlyActive,
       isMinisActive: formData.isMinisActive,
       isHourlyActive: formData.isHourlyActive,
-      customMinis: formData.customMinis,
-      hourlyConfig: formData.hourlyConfig,
-      frontDeficitRecoveryEnabled: formData.frontDeficitRecoveryEnabled,
-      miniAmount: cleanMiniTiers[0].newMini // Sync for backward compatibility
+      customMinis: (formData.customMinis || []).map(m => ({ ...m, amount: Number(m.amount) || 0 })),
+      hourlyConfig: {
+        ...formData.hourlyConfig,
+        rate: Number(formData.hourlyConfig?.rate) || 0,
+        hoursWorked: Number(formData.hourlyConfig?.hoursWorked) || 0,
+        active: formData.hourlyConfig?.active ?? false
+      },
+      frontDeficitRecoveryEnabled: formData.frontDeficitRecoveryEnabled
     };
+
+    // Validation Check: Prevent save if any active volume bonus has invalid ordering
+    const hasOrderingErrors = cleanVolumeBonuses.some((b, i, arr) => 
+      i > 0 && b.active && arr[i-1].active && b.threshold <= arr[i-1].threshold
+    );
+
+    if (hasOrderingErrors) {
+      triggerError("Cannot save: Volume Bonus thresholds must be in ascending order.");
+      return;
+    }
 
     onSubmit(cleanData);
   };
@@ -1100,29 +1187,27 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                         >
                           <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
                             {/* Units Range */}
-                            <div className="flex items-center gap-3 min-w-[140px]">
-                              <div className="w-[55px]">
-                                <Input 
-                                  type="number"
-                                  value={isFirstRow ? 0 : (tier.threshold ?? '')} 
-                                  onChange={(e) => updateMiniTier(tier.id, { threshold: e.target.value === '' ? undefined : normalizeMatrixNumber(e.target.value) })} 
+                            <div className="flex items-center gap-3 min-w-[190px]">
+                              <div className="w-[85px]">
+                                <MatrixInputGroup 
+                                  value={isFirstRow ? 0 : tier.threshold} 
+                                  onChange={(val) => updateMiniTier(tier.id, { threshold: val === '' ? undefined : parseFloat(val) })} 
                                   disabled={isFirstRow}
                                   placeholder="0"
-                                  className="h-10 bg-black/40 border-white/5 font-bold text-center px-2"
+                                  size="sm"
+                                  className="min-w-0"
                                 />
                               </div>
                               <Typography variant="mono" className="text-slate-600 font-black">→</Typography>
-                              <div className="w-[55px]">
-                                <Input 
-                                  type="text"
-                                  value={tier.maxUnits ?? ''} 
-                                  onChange={(e) => updateMiniTier(tier.id, { maxUnits: e.target.value === '' ? undefined : normalizeMatrixNumber(e.target.value) })} 
+                              <div className="w-[85px]">
+                                <MatrixInputGroup 
+                                  value={tier.maxUnits} 
+                                  onChange={(val) => updateMiniTier(tier.id, { maxUnits: val === '' ? undefined : parseFloat(val) })} 
                                   placeholder="∞"
                                   disabled={isLastRow && tier.maxUnits == null}
-                                  className={cn(
-                                    "h-10 bg-black/40 border-white/5 font-bold text-center px-2",
-                                    isLastRow && tier.maxUnits == null && "text-slate-500 bg-white/[0.02]"
-                                  )}
+                                  isInfinite={isLastRow && tier.maxUnits == null}
+                                  size="sm"
+                                  className="min-w-0"
                                 />
                               </div>
                             </div>
@@ -1132,22 +1217,20 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                               <div className="flex items-center gap-3">
                                 <Typography variant="mono" className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">New</Typography>
                                 <div className="w-[110px]">
-                                  <CurrencyInput 
+                                  <MatrixInputGroup 
                                     value={tier.newMini}
-                                    onChange={(e) => updateMiniTier(tier.id, { newMini: normalizeCurrencyNumber(e.target.value) })}
-                                    hideLabel
-                                    className="h-10 bg-black/40 border-white/5 font-black text-white"
+                                    onChange={(val) => updateMiniTier(tier.id, { newMini: val === '' ? undefined : parseFloat(val) })}
+                                    size="sm"
                                   />
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
                                 <Typography variant="mono" className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Used</Typography>
                                 <div className="w-[110px]">
-                                  <CurrencyInput 
+                                  <MatrixInputGroup 
                                     value={tier.usedMini}
-                                    onChange={(e) => updateMiniTier(tier.id, { usedMini: normalizeCurrencyNumber(e.target.value) })}
-                                    hideLabel
-                                    className="h-10 bg-black/40 border-white/5 font-black text-white"
+                                    onChange={(val) => updateMiniTier(tier.id, { usedMini: val === '' ? undefined : parseFloat(val) })}
+                                    size="sm"
                                   />
                                 </div>
                               </div>
@@ -1221,11 +1304,10 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     />
                     <div className="space-y-2.5">
                       <Typography variant="mono" className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Hours Worked</Typography>
-                      <Input 
-                        type="number" 
+                      <MatrixInputGroup 
                         value={formData.hourlyConfig.hoursWorked} 
-                        onChange={(e) => handleChange('hourlyConfig', { ...formData.hourlyConfig, hoursWorked: parseInt(e.target.value) || 0 })}
-                        className="h-12 bg-black/40 border-white/5 font-bold"
+                        onChange={(val) => handleChange('hourlyConfig', { ...formData.hourlyConfig, hoursWorked: parseInt(val) || 0 })}
+                        size="sm"
                       />
                     </div>
                     <div className="space-y-2.5">
@@ -1283,15 +1365,15 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 
         {/* Commission Architect Section */}
         <MatrixSection
-          id="commission_ladder"
-          title="Commission Ladder"
+          id="commission_matrix"
+          title="Commission Matrix"
           subtitle="Unit-Based Payout Progression"
           icon={<TrendingUp className="h-6 w-6" />}
           iconColor="cyan-500"
           isActive={formData.isAdvanced}
           onActiveChange={(active) => handleChange('isAdvanced', active)}
-          isExpanded={expandedSections.commission_ladder}
-          onToggle={() => toggleSection('commission_ladder')}
+          isExpanded={expandedSections.commission_matrix}
+          onToggle={() => toggleSection('commission_matrix')}
           summary={
             <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
@@ -1324,90 +1406,91 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       hasError ? "ring-1 ring-red-500/30 border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.05)]" : "hover:border-white/10"
                     )}
                   >
-                    <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
-                      {/* Units Range */}
-                      <div className="flex items-center gap-3 min-w-[140px]">
-                        <div className="w-[55px]">
-                          <Input 
-                            type="number"
-                            value={isFirstRow ? 0 : (tier.threshold ?? '')} 
-                            onChange={(e) => updateTier(tier.id, { threshold: e.target.value === '' ? undefined : normalizeMatrixNumber(e.target.value) })} 
+                    <div className="flex flex-col lg:grid lg:grid-cols-[210px_1fr_1fr_48px] gap-8 items-center w-full">
+                      {/* Units Range - Column 1 (Fixed 210px) */}
+                      <div className="flex items-center gap-3 w-full justify-center lg:justify-start">
+                        <div className="w-[85px] shrink-0">
+                          <MatrixInputGroup 
+                            value={isFirstRow ? 0 : tier.threshold} 
+                            onChange={(val) => updateTier(tier.id, { threshold: val === '' ? undefined : parseFloat(val) })} 
                             disabled={isFirstRow}
                             placeholder="0"
-                            className="h-10 bg-black/40 border-white/5 font-bold text-center px-2 focus:ring-brand-primary"
+                            size="sm"
+                            className="min-w-0"
                           />
                         </div>
-                        <Typography variant="mono" className="text-slate-600 font-black">→</Typography>
-                        <div className="w-[55px]">
-                          <Input 
-                            type="text"
-                            value={tier.maxUnits ?? ''} 
-                            onChange={(e) => updateTier(tier.id, { maxUnits: e.target.value === '' ? undefined : normalizeMatrixNumber(e.target.value) })} 
+                        <Typography variant="mono" className="text-slate-600 font-black shrink-0">→</Typography>
+                        <div className="w-[85px] shrink-0">
+                          <MatrixInputGroup 
+                            value={tier.maxUnits} 
+                            onChange={(val) => updateTier(tier.id, { maxUnits: val === '' ? undefined : parseFloat(val) })} 
                             placeholder="∞"
                             disabled={isLastRow && tier.maxUnits == null}
-                            className={cn(
-                              "h-10 bg-black/40 border-white/5 font-bold text-center px-2",
-                              isLastRow && tier.maxUnits == null && "text-slate-500 bg-white/[0.02]"
-                            )}
+                            isInfinite={isLastRow && tier.maxUnits == null}
+                            size="sm"
+                            className="min-w-0"
                           />
                         </div>
                       </div>
 
-                      {/* Rates */}
-                      <div className="flex-1 flex flex-wrap items-center gap-8">
-                        <div className="flex items-center gap-4">
+                      {/* Front End Rate - Column 2 (Balanced) */}
+                      <div className="flex items-center gap-4 w-full">
+                        <div className="w-[60px] shrink-0 text-right">
                           <Typography variant="mono" className="text-[9px] text-cyan-500 font-black uppercase tracking-widest">Front End</Typography>
-                          <div className="w-[100px] relative">
-                            <Input 
-                              type="number"
-                              value={tier.frontRate ?? ''}
-                              onChange={(e) => updateTier(tier.id, { frontRate: normalizeMatrixNumber(e.target.value) })}
-                              className="h-10 bg-cyan-500/[0.03] border-cyan-500/20 text-cyan-400 font-black pr-6 text-center"
-                            />
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-cyan-500/50 font-bold">%</span>
-                          </div>
-                          {!isFirstRow && (
-                            <button
-                              type="button"
-                              onClick={() => updateTier(tier.id, { frontRetroactive: !tier.frontRetroactive })}
-                              className={cn(
-                                "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
-                                tier.frontRetroactive ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]" : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-500"
-                              )}
-                            >
-                              RETRO
-                            </button>
-                          )}
                         </div>
-
-                        <div className="flex items-center gap-4">
-                          <Typography variant="mono" className="text-[9px] text-purple-500 font-black uppercase tracking-widest">Back End</Typography>
-                          <div className="w-[100px] relative">
-                            <Input 
-                              type="number"
-                              value={tier.backRate ?? ''}
-                              onChange={(e) => updateTier(tier.id, { backRate: normalizeMatrixNumber(e.target.value) })}
-                              className="h-10 bg-purple-500/[0.03] border-purple-500/20 text-purple-400 font-black pr-6 text-center"
-                            />
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-purple-500/50 font-bold">%</span>
-                          </div>
+                        <div className="flex-1 min-w-[80px]">
+                          <MatrixInputGroup 
+                            value={tier.frontRate}
+                            ghostValue={formData.tiers.slice(0, index).reverse().find(t => t.frontRate !== undefined)?.frontRate?.toString()}
+                            onChange={(val) => updateTier(tier.id, { frontRate: val === '' ? undefined : parseFloat(val) })}
+                            color="cyan"
+                            suffix="%"
+                            size="sm"
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="w-[50px] shrink-0 flex justify-end">
                           {!isFirstRow && (
-                            <button
-                              type="button"
-                              onClick={() => updateTier(tier.id, { backRetroactive: !tier.backRetroactive })}
-                              className={cn(
-                                "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
-                                tier.backRetroactive ? "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]" : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-500"
-                              )}
-                            >
-                              RETRO
-                            </button>
+                            <MatrixItemChip 
+                              label="RETRO"
+                              active={tier.frontRetroactive}
+                              onClick={() => updateTier(tier.id, { frontRetroactive: !tier.frontRetroactive })}
+                              color="cyan"
+                            />
                           )}
                         </div>
                       </div>
 
-                      {/* Controls */}
-                      <div className="flex items-center gap-4 shrink-0">
+                      {/* Back End Rate - Column 3 (Balanced) */}
+                      <div className="flex items-center gap-4 w-full">
+                        <div className="w-[60px] shrink-0 text-right">
+                          <Typography variant="mono" className="text-[9px] text-purple-500 font-black uppercase tracking-widest">Back End</Typography>
+                        </div>
+                        <div className="flex-1 min-w-[80px]">
+                          <MatrixInputGroup 
+                            value={tier.backRate}
+                            ghostValue={formData.tiers.slice(0, index).reverse().find(t => t.backRate !== undefined)?.backRate?.toString()}
+                            onChange={(val) => updateTier(tier.id, { backRate: val === '' ? undefined : parseFloat(val) })}
+                            color="purple"
+                            suffix="%"
+                            size="sm"
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="w-[50px] shrink-0 flex justify-end">
+                          {!isFirstRow && (
+                            <MatrixItemChip 
+                              label="RETRO"
+                              active={tier.backRetroactive}
+                              onClick={() => updateTier(tier.id, { backRetroactive: !tier.backRetroactive })}
+                              color="purple"
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Controls - Column 4 (Fixed 48px) */}
+                      <div className="flex items-center justify-end w-full">
                         <button 
                           type="button" 
                           onClick={() => removeTier(tier.id)} 
@@ -1448,12 +1531,17 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
         {/* StripeItVolumeBonusSystem - Volume Bonuses Section */}
         <MatrixSection
           id="volume_bonus"
-          title="Volume Bonus Engine"
+          title="Volume Bonus"
           subtitle="Programmable Compensation"
           icon={<TrendingUp className="h-6 w-6" />}
           iconColor="purple-500"
           isActive={formData.isVolumeBonusEngineActive}
-          onActiveChange={(active) => handleChange('isVolumeBonusEngineActive', active)}
+          onActiveChange={(active) => {
+            handleChange('isVolumeBonusEngineActive', active);
+            if (active && (!formData.volumeBonuses || formData.volumeBonuses.length === 0)) {
+              addVolumeBonus();
+            }
+          }}
           isExpanded={expandedSections.volume_bonus}
           onToggle={() => toggleSection('volume_bonus')}
           summary={
@@ -1478,17 +1566,15 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
               <div className="space-y-4">
                 {(formData.volumeBonuses || []).length > 0 ? (
                   <div className="space-y-4">
-                    {(formData.volumeBonuses || [])
-                      .sort((a, b) => a.threshold - b.threshold)
-                      .map((bonus) => (
-                        <VolumeBonusRow 
-                          key={bonus.id}
-                          bonus={bonus}
-                          onUpdate={(updates) => updateVolumeBonus(bonus.id, updates)}
-                          onRemove={() => removeVolumeBonus(bonus.id)}
-                        />
-                      ))
-                    }
+                    {(formData.volumeBonuses || []).map((bonus, index, array) => (
+                      <VolumeBonusRow 
+                        key={bonus.id}
+                        bonus={bonus}
+                        onUpdate={(updates) => updateVolumeBonus(bonus.id, updates)}
+                        onRemove={() => removeVolumeBonus(bonus.id)}
+                        previousThreshold={index > 0 ? array[index - 1].threshold : undefined}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <Card 
@@ -1501,7 +1587,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       Configure flat bonuses, cumulative stackers, or retroactive per-unit payouts to incentivize high-volume months.
                     </Typography>
                     <Button type="button" variant="link" className="text-brand-primary mt-6 font-black uppercase tracking-widest text-[10px]">
-                      Initialize Engine Now
+                      Initialize Now
                     </Button>
                   </Card>
                 )}
@@ -1668,33 +1754,82 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           onToggle={() => toggleSection('misc_defaults')}
           summary={
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
-                <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Flat:</Typography>
-                <Typography variant="mono" className="text-[10px] text-white font-black">${formData.flatPerUnitAmount.toLocaleString()}</Typography>
-              </div>
+              {formData.isFlatPerUnitActive && (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                  <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Flat:</Typography>
+                  <Typography variant="mono" className="text-[10px] text-white font-black">${formData.flatPerUnitAmount.toLocaleString()}</Typography>
+                </div>
+              )}
             </div>
           }
         >
-          <div className="animate-in fade-in duration-500">
-            <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="animate-in fade-in duration-500 space-y-6">
+            {/* Flat Per Unit Refinement */}
+            <Card className={cn(
+              "bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem] transition-all duration-300",
+              !formData.isFlatPerUnitActive && "opacity-40 grayscale-[0.5]"
+            )}>
+              <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-slate-500/10 flex items-center justify-center border border-slate-500/20 text-slate-500">
+                    <Zap className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Flat Per Unit</Typography>
+                    <Typography variant="mono" className="text-slate-600 text-[9px] uppercase tracking-widest mt-1">
+                      Fixed amount paid per unit sold, regardless of gross profit.
+                    </Typography>
+                  </div>
+                </div>
+                <ActiveChip 
+                  active={formData.isFlatPerUnitActive} 
+                  onClick={() => handleChange('isFlatPerUnitActive', !formData.isFlatPerUnitActive)} 
+                />
+              </div>
+
+              <div className="max-w-md">
                 <CurrencyInput 
-                  label="Flat Per Unit" 
+                  label="Flat Amount" 
                   value={formData.flatPerUnitAmount}
                   onChange={(e) => handleNumeric('flatPerUnitAmount', e.target.value)}
-                  description="Fixed amount paid per unit sold, regardless of gross profit."
-                  labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
+                  hideLabel
+                  className="h-12 w-full max-w-[180px]"
                 />
+              </div>
+            </Card>
+
+            {/* Split Behavior Refinement */}
+            <Card className={cn(
+              "bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem] transition-all duration-300",
+              !formData.isSplitBehaviorActive && "opacity-40 grayscale-[0.5]"
+            )}>
+              <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                   <div className="h-10 w-10 rounded-xl bg-slate-500/10 flex items-center justify-center border border-slate-500/20 text-slate-500">
+                    <Filter className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Split Behavior</Typography>
+                    <Typography variant="mono" className="text-slate-600 text-[9px] uppercase tracking-widest mt-1">
+                      How commission is split when multiple salespeople are involved.
+                    </Typography>
+                  </div>
+                </div>
+                <ActiveChip 
+                  active={formData.isSplitBehaviorActive} 
+                  onClick={() => handleChange('isSplitBehaviorActive', !formData.isSplitBehaviorActive)} 
+                />
+              </div>
+
+              <div className="max-w-md">
                 <Select 
-                  label="Split Behavior"
                   options={[
                     { value: 'standard', label: 'Standard Proportion (50%)' },
                     { value: 'half_mini', label: 'Half the Mini' },
                   ]}
                   value={formData.splitDealBehavior}
                   onChange={(e) => handleChange('splitDealBehavior', e.target.value)}
-                  description="How commission is split when multiple salespeople are involved."
-                  labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
+                  className="h-12 w-full max-w-[320px]"
                 />
               </div>
             </Card>
@@ -1789,7 +1924,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
               <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Bonus Rewards</Typography>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Typography variant="mono" className="text-[10px] text-slate-600">Volume Engine:</Typography>
+                  <Typography variant="mono" className="text-[10px] text-slate-600">Volume Bonus:</Typography>
                   <Typography variant="mono" className="text-xs text-emerald-400 font-black">+${Math.round(simEarnings.totalTierBonuses).toLocaleString()}</Typography>
                 </div>
                 <div className="flex items-center justify-between">
@@ -1866,23 +2001,16 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Total Units</Typography>
-                        <Input 
-                          type="number"
+                        <MatrixInputGroup 
                           value={simulationData.totalUnits}
-                          onChange={(e) => setSimulationData(p => {
-                            const newTotal = parseInt(e.target.value) || 0;
-                            return { ...p, totalUnits: newTotal };
-                          })}
-                          className="h-12 bg-black/40 border-white/5 font-black text-center text-lg"
+                          onChange={(val) => setSimulationData(p => ({ ...p, totalUnits: parseInt(val) || 0 }))}
                         />
                       </div>
                       <div className="space-y-2">
                         <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Split Ratio</Typography>
-                        <Input 
-                          type="number"
+                        <MatrixInputGroup 
                           value={simulationData.splitDeals}
-                          onChange={(e) => setSimulationData(p => ({ ...p, splitDeals: parseInt(e.target.value) || 0 }))}
-                          className="h-12 bg-black/40 border-white/5 font-black text-center text-lg"
+                          onChange={(val) => setSimulationData(p => ({ ...p, splitDeals: parseInt(val) || 0 }))}
                         />
                       </div>
                     </div>
@@ -1922,29 +2050,26 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       <div className="space-y-4">
                         <Typography variant="mono" className="text-[9px] text-cyan-500 font-black uppercase">New Deals</Typography>
-                        <Input 
-                          type="number"
+                        <MatrixInputGroup 
                           value={simulationData.newUnits}
-                          onChange={(e) => setSimulationData(p => ({ ...p, newUnits: parseInt(e.target.value) || 0 }))}
-                          className="h-12 bg-cyan-500/[0.02] border-cyan-500/20 text-cyan-400 font-black text-center text-xl"
+                          onChange={(val) => setSimulationData(p => ({ ...p, newUnits: parseInt(val) || 0 }))}
+                          color="cyan"
                         />
                       </div>
                       <div className="space-y-4">
                         <Typography variant="mono" className="text-[9px] text-purple-500 font-black uppercase">Used Deals</Typography>
-                        <Input 
-                          type="number"
+                        <MatrixInputGroup 
                           value={simulationData.usedUnits}
-                          onChange={(e) => setSimulationData(p => ({ ...p, usedUnits: parseInt(e.target.value) || 0 }))}
-                          className="h-12 bg-purple-500/[0.02] border-purple-500/20 text-purple-400 font-black text-center text-xl"
+                          onChange={(val) => setSimulationData(p => ({ ...p, usedUnits: parseInt(val) || 0 }))}
+                          color="purple"
                         />
                       </div>
                       <div className="space-y-4">
                         <Typography variant="mono" className="text-[9px] text-emerald-500 font-black uppercase">CPO Deals</Typography>
-                        <Input 
-                          type="number"
+                        <MatrixInputGroup 
                           value={simulationData.cpoUnits}
-                          onChange={(e) => setSimulationData(p => ({ ...p, cpoUnits: parseInt(e.target.value) || 0 }))}
-                          className="h-12 bg-emerald-500/[0.02] border-emerald-500/20 text-emerald-400 font-black text-center text-xl"
+                          onChange={(val) => setSimulationData(p => ({ ...p, cpoUnits: parseInt(val) || 0 }))}
+                          color="neutral"
                         />
                       </div>
                     </div>
@@ -1952,11 +2077,11 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                 </div>
               </MatrixSection>
 
-              {/* Commission Ladder Simulation */}
+              {/* Commission Matrix Simulation */}
               {formData.isAdvanced && (
                 <MatrixSection
                   id="sim_ladder"
-                  title="Commission Ladder Simulation"
+                  title="Commission Matrix Simulation"
                   subtitle="Unit Tier & Rate Progression"
                   icon={<TrendingUp size={24} />}
                   isExpanded={expandedSections.sim_ladder}
@@ -2090,7 +2215,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                           </div>
                           <div>
                             <Typography variant="mono" className="text-xs text-white font-black">{b.label}</Typography>
-                            <Typography variant="mono" className="text-[8px] text-slate-500 uppercase">Volume Engine Tier Reward</Typography>
+                            <Typography variant="mono" className="text-[8px] text-slate-500 uppercase">Volume Bonus Tier Reward</Typography>
                           </div>
                         </div>
                         <Typography variant="h3" className="text-emerald-400 font-black text-xl">+${b.amount.toLocaleString()}</Typography>
@@ -2250,7 +2375,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           disabled={isLoading}
         >
           <ShieldCheck className="mr-3 h-8 w-8 group-hover:scale-110 transition-transform" />
-          Deploy Matrix Configuration
+          Lock Payplan
         </Button>
       </div>
     </form>

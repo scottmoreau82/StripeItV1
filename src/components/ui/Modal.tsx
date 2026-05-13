@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
+import { AppIcon } from './AppIcon';
 import { Typography } from './Typography';
 import { cn } from '@/src/lib/utils';
 
@@ -70,7 +70,7 @@ export const Modal: React.FC<ModalProps> = ({
                 onClick={onClose}
                 className="rounded-xl p-2 text-slate-600 hover:bg-white/5 hover:text-white transition-all active:scale-95 border border-transparent hover:border-white/5"
               >
-                <X className="h-6 w-6" />
+                <AppIcon name="close" className="h-6 w-6" />
               </button>
             </div>
             

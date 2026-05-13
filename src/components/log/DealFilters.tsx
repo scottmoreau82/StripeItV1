@@ -31,11 +31,7 @@ export const DealFilters: React.FC<DealFiltersProps> = ({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-slate-400">
-          <Filter size={14} />
-          <Typography variant="mono" className="text-[10px] uppercase tracking-widest">Filters</Typography>
-        </div>
+      <div className="flex items-center justify-end h-4">
         {hasFilters && (
           <button 
             onClick={onClear}

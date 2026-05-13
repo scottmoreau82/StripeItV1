@@ -1,13 +1,5 @@
 import React from 'react';
-import { 
-  Bell, 
-  CheckCircle2, 
-  TrendingUp, 
-  Trophy, 
-  Info, 
-  MoreHorizontal,
-  Circle
-} from 'lucide-react';
+import { AppIcon } from '../ui/AppIcon';
 import { motion, AnimatePresence } from 'motion/react';
 import { Notification, ActivityEventType } from '@/src/types';
 import { Typography } from '../ui/Typography';
@@ -30,16 +22,16 @@ const getIcon = (type: ActivityEventType) => {
   switch (type) {
     case ActivityEventType.DEAL_FINALIZED:
     case ActivityEventType.DEAL_CREATED:
-      return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+      return <AppIcon name="success" size={16} className="text-emerald-500" />;
     case ActivityEventType.GOAL_REACHED:
-      return <TrendingUp className="h-4 w-4 text-brand-primary" />;
+      return <AppIcon name="trending" size={16} className="text-brand-primary" />;
     case ActivityEventType.COMPETITION_STARTED:
     case ActivityEventType.COMPETITION_ENDED:
-      return <Trophy className="h-4 w-4 text-amber-500" />;
+      return <AppIcon name="trophy" size={16} className="text-amber-500" />;
     case ActivityEventType.REMINDER:
-      return <Bell className="h-4 w-4 text-indigo-500" />;
+      return <AppIcon name="bell" size={16} className="text-indigo-500" />;
     default:
-      return <Info className="h-4 w-4 text-slate-400" />;
+      return <AppIcon name="info" size={16} className="text-slate-400" />;
   }
 };
 
@@ -79,7 +71,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
             {notification.title}
           </Typography>
           {!notification.read && (
-            <Circle className="h-2 w-2 fill-brand-primary text-brand-primary animate-pulse" />
+            <AppIcon name="circle" size={8} className="fill-brand-primary text-brand-primary animate-pulse" />
           )}
         </div>
         <Typography variant="small" className="text-slate-500 line-clamp-2 leading-snug">
@@ -92,7 +84,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
 
       <div className="flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-white">
-          <MoreHorizontal className="h-4 w-4" />
+          <AppIcon name="moreHorizontal" size={16} />
         </Button>
       </div>
     </motion.div>

@@ -114,6 +114,14 @@
     @apply shadow-[0_0_15px_rgba(0,242,255,0.3)];
   }
 
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }

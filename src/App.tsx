@@ -182,7 +182,7 @@ function MainAppFlow() {
     <div className="flex gap-4">
       <Button variant="ghost" className="flex-1" onClick={() => { setIsNewDealOpen(false); setEditingDeal(null); }} disabled={isSubmitting}>Discard</Button>
       <Button form="deal-form" type="submit" className="flex-1 shadow-glow glow-primary" isLoading={isSubmitting}>
-        {isSubmitting ? 'Saving...' : (editingDeal ? 'Update Deal' : 'Save Deal')}
+        {isSubmitting ? 'Saving...' : (editingDeal ? 'Update Deal' : 'Stripe It')}
       </Button>
     </div>
   );
@@ -193,7 +193,10 @@ function MainAppFlow() {
   };
 
   return (
-    <RootLayout onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}>
+    <RootLayout 
+      onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
+      onConfigPayPlan={() => setIsPayPlanOpen(true)}
+    >
       <LoadingOverlay isLoading={isLoading} />
       <OnboardingFlow />
       

@@ -11,6 +11,8 @@ import { Typography } from '../ui/Typography';
 import { Deal, QuickNote, Competition, LeaderboardEntry, DashboardMetrics } from '@/src/types';
 import { EmptyState } from '../ui/EmptyState';
 import { TrendingUp, Activity, Wallet, Calculator, Lock, BarChart3, StickyNote, Trophy } from 'lucide-react';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { SubscriptionTier } from '@/src/types';
 
 /**
  * StripeItWidgetSystem - WidgetRegistry
@@ -29,10 +31,13 @@ interface WidgetRegistryProps {
     isLoading: boolean;
   };
   onAction?: (action: string, payload?: any) => void;
+  onUpgrade?: () => void;
 }
 
-export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAction }) => {
+export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAction, onUpgrade }) => {
   const { deals, notes, competitions, metrics, goal, leaders, isLoading } = data;
+  const { profile } = useAuth();
+  const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
 
   switch (type) {
     case WidgetType.UNITS:
@@ -40,7 +45,6 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
         <MetricCard 
           label="Units"
           value={metrics.units.toString()}
-          trend={{ value: 12, isPositive: true }} // Placeholder for trend logic
           icon={Activity}
           loading={isLoading}
         />
@@ -48,11 +52,11 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
     case WidgetType.COMMISSION:
       return (
         <MetricCard 
-          label="Commission"
+          label="Est. Payout"
           value={`$${metrics.commission.toLocaleString()}`}
-          trend={{ value: 8, isPositive: true }}
           icon={Wallet}
           loading={isLoading}
+          color="emerald"
         />
       );
     case WidgetType.FRONT_END_GROSS:
@@ -60,9 +64,12 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
         <MetricCard 
           label="Front-End"
           value={`$${metrics.frontEnd.toLocaleString()}`}
-          trend={{ value: 2, isPositive: false }}
           icon={TrendingUp}
           loading={isLoading}
+          isLocked={isFree}
+          onUnlock={onUpgrade}
+          lockMessage="Upgrade to unlock advanced payout telemetry."
+          color="purple"
         />
       );
     case WidgetType.BACK_END_GROSS:
@@ -70,9 +77,12 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
         <MetricCard 
           label="Back-End"
           value={`$${metrics.backEnd.toLocaleString()}`}
-          trend={{ value: 15, isPositive: true }}
           icon={Calculator}
           loading={isLoading}
+          isLocked={isFree}
+          onUnlock={onUpgrade}
+          lockMessage="Unlock advanced performance tracking."
+          color="orange"
         />
       );
     case WidgetType.TOTAL_GROSS:
@@ -80,7 +90,6 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
         <MetricCard 
           label="Total Gross"
           value={`$${metrics.gross.toLocaleString()}`}
-          trend={{ value: 5, isPositive: true }}
           icon={TrendingUp}
           loading={isLoading}
           color="emerald"
@@ -91,7 +100,6 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
         <MetricCard 
           label="Avg Gross/Unit"
           value={`$${Math.round(metrics.avgGross || 0).toLocaleString()}`}
-          trend={{ value: 3, isPositive: true }}
           icon={BarChart3}
           loading={isLoading}
           color="amber"

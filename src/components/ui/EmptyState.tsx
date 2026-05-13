@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LucideIcon } from 'lucide-react';
+import { AppIcon, IconName } from './AppIcon';
 import { Typography } from './Typography';
 import { cn } from '@/src/lib/utils';
 
 interface EmptyStateProps {
-  icon: LucideIcon;
+  icon: IconName;
   title: string;
   description: string;
   action?: React.ReactNode;
@@ -13,7 +13,7 @@ interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon: Icon,
+  icon,
   title,
   description,
   action,
@@ -29,7 +29,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       )}
     >
       <div className="h-16 w-16 rounded-2xl bg-white/5 flex items-center justify-center mb-6 shadow-inner border border-white/5 text-slate-600">
-        <Icon size={32} />
+        <AppIcon name={icon} size={32} />
       </div>
       <Typography variant="h3" className="text-white mb-2 leading-tight">
         {title}

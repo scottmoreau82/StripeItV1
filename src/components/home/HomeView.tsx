@@ -125,13 +125,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <Typography variant="h1" className="italic text-[30px] sm:text-[36px] leading-[0.95] tracking-tighter">
             Performance Overview
           </Typography>
-          {profile?.subscriptionTier === SubscriptionTier.FREE && (
-            <div className="px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-full">
-              <Typography variant="mono" className="text-[10px] text-brand-primary font-black uppercase tracking-widest">
-                {8 - deals.length} of 8 Free Deals Remaining
-              </Typography>
-            </div>
-          )}
         </div>
         <Typography variant="p" className="text-slate-500 max-w-xs font-semibold leading-tight text-lg">
           {profile?.dealershipId ? "Tracking dealership gross analytics" : "Real-time car sales & gross tracking"}
@@ -155,29 +148,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
             />
           </div>
         )}
-
-        <div className="flex bg-white/[0.03] border border-white/5 rounded-full p-1">
-          <button 
-            onClick={() => setActiveTab('overview')}
-            className={cn(
-              "px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-              activeTab === 'overview' ? "bg-brand-primary text-bg-deep shadow-glow" : "text-slate-500 hover:text-slate-300"
-            )}
-          >
-            Overview
-          </button>
-          {!isFree && (
-            <button 
-              onClick={() => setActiveTab('trends')}
-              className={cn(
-                "px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
-                activeTab === 'trends' ? "bg-brand-primary text-bg-deep shadow-glow" : "text-slate-500 hover:text-slate-300"
-              )}
-            >
-              Trends
-            </button>
-          )}
-        </div>
         
         {isMobile && (
           <button 
@@ -203,17 +173,40 @@ export const HomeView: React.FC<HomeViewProps> = ({
             className="space-y-8"
           >
             {/* Dynamic Metric Widgets */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {dashboardLayout.widgets
-                .filter(w => w.visible && [WidgetType.UNITS, WidgetType.COMMISSION, WidgetType.FRONT_END_GROSS, WidgetType.BACK_END_GROSS].includes(w.type as WidgetType))
-                .sort((a, b) => a.order - b.order)
-                .map(widget => (
-                  <WidgetRegistry 
-                    key={widget.id} 
-                    type={widget.type as WidgetType} 
-                    data={widgetData}
-                  />
-                ))}
+            <div className="relative group/metrics">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-h-[70vh] lg:max-h-none overflow-y-auto lg:overflow-visible snap-y lg:snap-none snap-mandatory scrollbar-hide pr-2 pb-12 lg:pb-0">
+                {[
+                  WidgetType.UNITS,
+                  WidgetType.COMMISSION,
+                  WidgetType.FRONT_END_GROSS,
+                  WidgetType.BACK_END_GROSS
+                ].map(type => {
+                  const widget = dashboardLayout.widgets.find(w => w.type === type);
+                  if (!widget || !widget.visible) return null;
+                  
+                  return (
+                    <div key={type} className="snap-center snap-always h-auto min-h-[160px] lg:min-h-0">
+                      <WidgetRegistry 
+                        type={type as WidgetType} 
+                        data={widgetData}
+                        onUpgrade={() => {
+                          // navigate to settings/subscription tab
+                          window.location.hash = '#settings';
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Atmospheric Continuation Hint - Visual Fade for Mobile */}
+              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-bg-deep via-bg-deep/40 to-transparent pointer-events-none z-20 block lg:hidden" />
+              
+              {/* Mobile Scroll Indicator Hint */}
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-40 animate-pulse lg:hidden pointer-events-none">
+                 <div className="w-[1px] h-8 bg-gradient-to-b from-brand-primary/0 via-brand-primary/50 to-brand-primary/0" />
+                 <Typography variant="mono" className="text-[8px] text-brand-primary font-bold tracking-[0.3em] uppercase">Telemetry</Typography>
+              </div>
             </div>
           </motion.div>
         ) : (
@@ -239,7 +232,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <PerformanceChart 
               data={chartData} 
               metric="commission" 
-              title="Payout Accumulation" 
+              title="Est. Payout Performance" 
               color="#10b981"
             />
           </motion.div>
@@ -291,7 +284,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                    <Award className="h-5 w-5 text-emerald-500" />
                  </div>
                  <div>
-                    <Typography variant="mono" className="text-[9px] text-slate-500">AVG Payout / UNIT</Typography>
+                    <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest">Avg Est. Payout / Unit</Typography>
                     <Typography variant="h3" className="text-white text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
                  </div>
               </div>

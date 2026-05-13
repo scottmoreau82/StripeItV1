@@ -2,7 +2,7 @@ import React from 'react';
 import { Deal, PayPlan } from '@/src/types';
 import { DealSummaryCard } from './DealSummaryCard';
 import { Typography } from '../ui/Typography';
-import { History, Search } from 'lucide-react';
+import { AppIcon } from '../ui/AppIcon';
 import { motion } from 'motion/react';
 import { EmptyState } from '../ui/EmptyState';
 
@@ -37,7 +37,7 @@ export const RecentDealsList: React.FC<RecentDealsListProps> = ({
   if (deals.length === 0) {
     return (
       <EmptyState
-        icon={History}
+        icon="history"
         title="No deals found"
         description="Start logging deals to see your performance and activity history here."
       />
@@ -51,7 +51,7 @@ export const RecentDealsList: React.FC<RecentDealsListProps> = ({
           Last {deals.length} Actions
         </Typography>
         <button className="p-2 -mr-2 text-slate-500 hover:text-white transition-colors">
-          <Search className="h-4 w-4" />
+          <AppIcon name="search" className="h-4 w-4" />
         </button>
       </div>
 

@@ -5,16 +5,7 @@ import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { cn } from '@/src/lib/utils';
-import { 
-  BarChart3, 
-  ChevronDown, 
-  ChevronUp, 
-  Users, 
-  MousePointer2, 
-  FileText, 
-  UserPlus,
-  Zap
-} from 'lucide-react';
+import { AppIcon, IconName } from '../ui/AppIcon';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 
@@ -53,7 +44,7 @@ export const AdminAnalyticsCard: React.FC<AdminAnalyticsCardProps> = ({ isCollap
         >
           <div className="flex items-center gap-3">
              <div className="h-8 w-8 rounded-xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shadow-glow glow-primary">
-                <BarChart3 className="h-4 w-4 text-brand-primary" />
+                <AppIcon name="barChart" className="h-4 w-4 text-brand-primary" />
              </div>
              <div className="text-left">
                 <div className="flex items-center gap-2">
@@ -61,17 +52,17 @@ export const AdminAnalyticsCard: React.FC<AdminAnalyticsCardProps> = ({ isCollap
                    <Typography variant="mono" className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Live Feed</Typography>
                 </div>
                 <Typography variant="label" className="text-white text-xs font-black">
-                  {metrics?.visits || 0} <span className="text-slate-500 font-medium">VISITS</span>
+                  {metrics?.visits || 0} <span className="text-slate-500 font-bold tracking-widest text-[9px] ml-1">VISITS</span>
                 </Typography>
              </div>
           </div>
           <div className="flex items-center gap-2">
              <div className="bg-white/5 px-2 py-1 rounded-lg border border-white/5">
                 <Typography variant="mono" className="text-[10px] text-brand-primary font-black">
-                  {metrics?.signups || 0} <span className="text-[8px] text-slate-500">SIGNUPS</span>
+                  {metrics?.signups || 0} <span className="text-[8px] text-slate-500 tracking-widest font-bold ml-0.5">SIGNUPS</span>
                 </Typography>
              </div>
-             {isExpanded ? <ChevronUp size={14} className="text-slate-600" /> : <ChevronDown size={14} className="text-slate-600" />}
+             {isExpanded ? <AppIcon name="chevronUp" size={14} className="text-slate-600" /> : <AppIcon name="chevronDown" size={14} className="text-slate-600" />}
           </div>
         </button>
 
@@ -85,25 +76,25 @@ export const AdminAnalyticsCard: React.FC<AdminAnalyticsCardProps> = ({ isCollap
             >
               <div className="pt-4 border-t border-white/5 grid grid-cols-2 gap-3">
                  <StatItem 
-                    icon={FileText} 
+                    icon="reports" 
                     label="PAGES" 
                     value={metrics?.pageViews || 0} 
                     color="cyan" 
                  />
                  <StatItem 
-                    icon={MousePointer2} 
+                    icon="pointer" 
                     label="CLICKS" 
                     value={metrics?.clicks || 0} 
                     color="purple" 
                  />
                  <StatItem 
-                    icon={Users} 
+                    icon="users" 
                     label="SESSIONS" 
                     value={metrics?.activeSessions || 0} 
                     color="emerald" 
                  />
                  <StatItem 
-                    icon={UserPlus} 
+                    icon="userPlus" 
                     label="REGISTRATIONS" 
                     value={metrics?.signups || 0} 
                     color="brand" 
@@ -116,8 +107,8 @@ export const AdminAnalyticsCard: React.FC<AdminAnalyticsCardProps> = ({ isCollap
                   size="sm" 
                   className="w-full text-[10px] uppercase tracking-widest font-black py-2 rounded-xl group/btn"
                 >
-                  <Zap size={10} className="mr-2 text-brand-primary group-hover/btn:animate-pulse" />
-                  Full Dashboard
+                  <AppIcon name="quick" size={10} className="mr-2 text-brand-primary group-hover/btn:animate-pulse" />
+                  FULL DASHBOARD
                 </Button>
               </Link>
             </motion.div>
@@ -129,13 +120,13 @@ export const AdminAnalyticsCard: React.FC<AdminAnalyticsCardProps> = ({ isCollap
 };
 
 interface StatItemProps {
-  icon: any;
+  icon: IconName;
   label: string;
   value: number;
   color: 'cyan' | 'purple' | 'emerald' | 'brand';
 }
 
-const StatItem: React.FC<StatItemProps> = ({ icon: Icon, label, value, color }) => {
+const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color }) => {
   const colors = {
     cyan: "text-cyan-400 bg-cyan-400/5 border-cyan-400/10",
     purple: "text-purple-400 bg-purple-400/5 border-purple-400/10",
@@ -145,7 +136,7 @@ const StatItem: React.FC<StatItemProps> = ({ icon: Icon, label, value, color }) 
 
   return (
     <div className={cn("p-2 rounded-xl border flex flex-col items-center justify-center text-center", colors[color])}>
-      <Icon size={12} className="mb-1 opacity-60" />
+      <AppIcon name={icon} size={12} className="mb-1 opacity-60" />
       <span className="text-[8px] font-black uppercase tracking-tighter opacity-70 mb-0.5">{label}</span>
       <span className="text-sm font-black text-white leading-none">{value.toLocaleString()}</span>
     </div>

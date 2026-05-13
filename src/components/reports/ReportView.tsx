@@ -79,7 +79,7 @@ export const ReportView: React.FC = () => {
       { key: 'frontGross', label: 'Front Gross' },
       { key: 'backGross', label: 'Back Gross' },
       { key: 'totalGross', label: 'Total Gross' },
-      { key: 'estCommission', label: 'Est. Commission' },
+      { key: 'estCommission', label: 'Est. Payout' },
       { key: 'isSplit', label: 'Split Deal' }
     ];
 

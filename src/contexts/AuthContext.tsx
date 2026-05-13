@@ -188,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Auto-provision initial Free Tier profile
             try {
               const { writeBatch, serverTimestamp } = await import('firebase/firestore');
-              const { UserRole, SubscriptionTier } = await import('../types');
+              const { UserRole, SubscriptionTier, IconTheme } = await import('../types');
               
               const orgId = `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
               const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId);
@@ -215,6 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 preferences: {
                   theme: 'dark',
                   visualTheme: 'matrix',
+                  iconTheme: IconTheme.LUCIDE,
                   onboarding: {
                     isCompleted: false,
                     currentStep: 'welcome',

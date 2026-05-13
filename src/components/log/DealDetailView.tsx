@@ -214,7 +214,7 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
           {commission ? (
             <div className="space-y-4">
               <div className="flex items-baseline justify-between">
-                <Typography variant="small" className="text-slate-500">Net Commission</Typography>
+                <Typography variant="small" className="text-slate-500">Net Est. Payout</Typography>
                 <Typography variant="h2" className="text-emerald-400">
                   ${commission.finalPayout.toLocaleString()}
                 </Typography>

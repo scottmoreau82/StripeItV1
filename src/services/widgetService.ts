@@ -39,7 +39,7 @@ export const WIDGET_DEFINITIONS: Record<WidgetType, WidgetDefinition> = {
   },
   [WidgetType.COMMISSION]: {
     type: WidgetType.COMMISSION,
-    label: 'Estimated Commission',
+    label: 'Est. Payout',
     description: 'MTD projected earnings across all deals.',
     minTier: SubscriptionTier.FREE,
     defaultVisible: true

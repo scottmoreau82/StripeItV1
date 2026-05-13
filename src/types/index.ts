@@ -16,6 +16,13 @@ export enum SubscriptionTier {
   ORGANIZATION = 'organization'
 }
 
+export enum IconTheme {
+  LUCIDE = 'lucide',
+  PHOSPHOR = 'phosphor',
+  TABLER = 'tabler',
+  HEROICONS = 'heroicons'
+}
+
 export enum DealStatus {
   DRAFT = 'Draft',
   SUBMITTED = 'Submitted',
@@ -26,6 +33,7 @@ export enum DealStatus {
 export interface UserPreferences {
   theme: 'dark' | 'light' | 'system';
   visualTheme?: 'matrix' | 'og';
+  iconTheme?: IconTheme;
   onboarding?: OnboardingState;
   notifications: {
     dealReminders: boolean;
@@ -171,6 +179,8 @@ export interface PayPlan {
   backEndPercentage: number;
   flatPerUnitAmount: number;
   splitDealBehavior: 'standard' | 'half_mini';
+  isSplitBehaviorActive?: boolean;
+  isFlatPerUnitActive?: boolean;
   frontDeficitRecoveryEnabled?: boolean;
   
   // Advanced Features

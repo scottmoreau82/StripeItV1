@@ -11,9 +11,10 @@ import { ContentContainer } from '../components/layout/ResponsiveGrid';
 interface RootLayoutProps {
   children: React.ReactNode;
   onLogDeal?: () => void;
+  onConfigPayPlan?: () => void;
 }
 
-export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal }) => {
+export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onConfigPayPlan }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('stripeit_sidebar_collapsed') === 'true';
@@ -30,13 +31,14 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal }) =
       {/* Desktop Sidebar System */}
       <Sidebar 
         onLogDeal={onLogDeal} 
+        onConfigPayPlan={onConfigPayPlan}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
       
       <div className="flex flex-1 flex-col min-w-0">
         {/* Mobile Header System */}
-        <Header onLogDeal={onLogDeal} />
+        <Header onLogDeal={onLogDeal} onConfigPayPlan={onConfigPayPlan} />
         
         {/* Desktop TopBar System */}
         <TopBar />

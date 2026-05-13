@@ -12,9 +12,10 @@ export const truncateToDecimal = (num: number, places: number): number => {
  * Normalizes a numeric string into a valid number based on matrix rules.
  * Rule: 1 decimal place max, truncate, ignore trailing zeros.
  */
-export const normalizeMatrixNumber = (input: string): number => {
+export const normalizeMatrixNumber = (input: string): number | undefined => {
+  if (input === '') return undefined;
   const sanitized = input.replace(/[^0-9.-]/g, '');
-  if (sanitized === '' || sanitized === '-') return 0;
+  if (sanitized === '' || sanitized === '-') return undefined;
   const num = parseFloat(sanitized);
   return truncateToDecimal(num, 1);
 };
@@ -22,9 +23,10 @@ export const normalizeMatrixNumber = (input: string): number => {
 /**
  * Normalizes a currency input string into a number with 2 decimal place truncation.
  */
-export const normalizeCurrencyNumber = (input: string): number => {
+export const normalizeCurrencyNumber = (input: string): number | undefined => {
+  if (input === '') return undefined;
   const sanitized = input.replace(/[^0-9.-]/g, '');
-  if (sanitized === '' || sanitized === '-') return 0;
+  if (sanitized === '' || sanitized === '-') return undefined;
   const num = parseFloat(sanitized);
   return truncateToDecimal(num, 2);
 };

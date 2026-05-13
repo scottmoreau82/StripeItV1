@@ -1,41 +1,26 @@
-import { 
-  Home, 
-  ClipboardList, 
-  Activity, 
-  TrendingUp, 
-  Target, 
-  Settings, 
-  Archive, 
-  Plus,
-  FileText,
-  MessageSquarePlus
-} from 'lucide-react';
 import { Feature, featureAccessService } from '@/src/services/featureAccessService';
 import { UserProfile, SubscriptionTier } from '@/src/types';
 
 export const navigationConfig = {
   main: [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
-    { id: 'sales-log', label: 'Sales Log', icon: ClipboardList, path: '/sales-log' },
-    { id: 'activity', label: 'Activity', icon: Activity, path: '/activity', featureId: Feature.ACTIVITY_FEED },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp, path: '/analytics', featureId: Feature.ADVANCED_ANALYTICS },
-    { id: 'goals', label: 'Goals', icon: Target, path: '/goals', featureId: Feature.GOALS },
-    { id: 'reports', label: 'Reports', icon: FileText, path: '/reports', featureId: Feature.ADVANCED_ANALYTICS },
-    { id: 'inventory', label: 'Inventory', icon: Archive, path: '/inventory', featureId: Feature.INVENTORY_MANAGEMENT },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
-    { id: 'feedback', label: 'Feedback', icon: MessageSquarePlus, path: '#feedback' },
+    { id: 'dashboard', label: 'DASHBOARD', icon: 'dashboard', path: '/' },
+    { id: 'sales-log', label: 'SALES LOG', icon: 'salesLog', path: '/sales-log' },
+    { id: 'activity', label: 'ACTIVITY', icon: 'activity', path: '/activity', featureId: Feature.ACTIVITY_FEED },
+    { id: 'analytics', label: 'ANALYTICS', icon: 'analytics', path: '/analytics', featureId: Feature.ADVANCED_ANALYTICS },
+    { id: 'goals', label: 'GOALS', icon: 'goals', path: '/goals', featureId: Feature.GOALS },
+    { id: 'reports', label: 'REPORTS', icon: 'reports', path: '/reports', featureId: Feature.ADVANCED_ANALYTICS },
+    { id: 'inventory', label: 'INVENTORY', icon: 'inventory', path: '/inventory', featureId: Feature.INVENTORY_MANAGEMENT },
+    { id: 'settings', label: 'SETTINGS', icon: 'settings', path: '/settings' },
+    { id: 'feedback', label: 'FEEDBACK', icon: 'feedback', path: '#feedback' },
   ],
   settingsSubmenu: [
-    { id: 'profile', label: 'Profile', path: '#profile' },
-    { id: 'appearance', label: 'Appearance', path: '#appearance' },
-    { id: 'notifications', label: 'Notifications', path: '#notifications' },
-    { id: 'account', label: 'Account', path: '#account' },
-    { id: 'admin', label: 'Admin', path: '#admin', adminOnly: true },
-    { id: 'testing', label: 'Testing & Demo', path: '#testing', adminOnly: true },
-    { id: 'developer', label: 'Developer Tools', path: '#developer', adminOnly: true },
+    { id: 'profile', label: 'PROFILE', path: '#profile' },
+    { id: 'account', label: 'ACCOUNT', path: '#account' },
+    { id: 'admin', label: 'ADMIN', path: '#admin', adminOnly: true },
+    { id: 'developer', label: 'DEVELOPER TOOLS', path: '#developer', adminOnly: true },
   ],
   quickActions: [
-    { id: 'log-deal', label: 'Log Deal', icon: Plus, variant: 'primary' as const },
+    { id: 'log-deal', label: 'LOG DEAL', icon: 'plus', variant: 'primary' as const },
   ],
   
   /**

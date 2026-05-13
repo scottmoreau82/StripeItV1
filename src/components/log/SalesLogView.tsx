@@ -8,18 +8,7 @@ import { DealDetailView } from './DealDetailView';
 import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  History, 
-  ShieldCheck, 
-  Target, 
-  Calculator, 
-  Edit, 
-  Trash2, 
-  ChevronRight,
-  TrendingUp,
-  Clock,
-  Car
-} from 'lucide-react';
+import { AppIcon } from '../ui/AppIcon';
 import { cn, formatDateSafe } from '@/src/lib/utils';
 import { calculateDealCommission } from '@/src/lib/commissionLogic';
 
@@ -98,10 +87,10 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         <button 
           onClick={onConfigPayPlan}
           className="p-1.5 rounded-lg bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5"
-          title="Commission Architect"
-          aria-label="Commission Architect"
+          title="Est. Payout Engine"
+          aria-label="Est. Payout Engine"
         >
-          <Calculator size={14} />
+          <AppIcon name="calculator" size={14} />
         </button>
       </div>
     </div>
@@ -118,7 +107,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const testingTools = (isAdmin || user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase()) ? (
     <div className="mt-12 pt-8 border-t border-white/5">
       <div className="flex items-center gap-2 mb-4">
-        <ShieldCheck className="h-4 w-4 text-brand-primary" />
+        <AppIcon name="lock" className="h-4 w-4 text-brand-primary" />
         <Typography variant="mono" className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black">
           Testing Tools (Admin Only)
         </Typography>
@@ -135,7 +124,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           className="bg-white/5 border-white/10 text-slate-300 font-bold hover:bg-white/10 hover:text-white transition-all gap-2"
           onClick={handleCreateRandomDeal}
         >
-          <Target className="h-4 w-4" />
+          <AppIcon name="target" className="h-4 w-4" />
           Create Random Deal
         </Button>
       </div>
@@ -200,7 +189,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Back Gross</Typography>
                       </th>
                       <th className="py-4 px-4 text-right w-[180px]">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Commission</Typography>
+                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Est. Payout</Typography>
                       </th>
                       <th className="py-4 px-4 text-right w-[100px]">
                         <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black text-right">Actions</Typography>
@@ -285,7 +274,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                 onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
                                 className="p-2 rounded-lg text-slate-600 hover:text-cyan-400 hover:bg-cyan-400/10 transition-all opacity-0 group-hover:opacity-100"
                               >
-                                <Edit size={14} />
+                                <AppIcon name="edit" size={14} />
                               </button>
                               <button 
                                 onClick={(e) => { 
@@ -294,7 +283,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                 }}
                                 className="p-2 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-400/10 transition-all opacity-0 group-hover:opacity-100"
                               >
-                                <Trash2 size={14} />
+                                <AppIcon name="delete" size={14} />
                               </button>
                             </div>
                           </td>
@@ -335,7 +324,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       <div className="space-y-4">
                         <div className="flex items-start gap-4">
                           <div className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center shrink-0">
-                            <Car className="h-5 w-5 text-slate-500" />
+                            <AppIcon name="car" className="h-5 w-5 text-slate-500" />
                           </div>
                           <div className="min-w-0">
                             <Typography variant="label" className="text-white text-base font-black uppercase truncate block">
@@ -370,7 +359,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
                         <div className="pt-4 border-t border-white/[0.03] flex items-center justify-between">
                           <div>
-                            <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Commission</Typography>
+                            <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Est. Payout</Typography>
                             <Typography variant="h3" className="text-emerald-400 font-black">
                               ${commission?.finalPayout.toLocaleString() || '0'}
                             </Typography>
@@ -380,7 +369,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
                               className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
                             >
-                              <Edit size={16} />
+                              <AppIcon name="edit" size={16} />
                             </button>
                             <button 
                               onClick={(e) => { 
@@ -389,7 +378,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               }}
                               className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
                             >
-                              <Trash2 size={16} />
+                              <AppIcon name="delete" size={16} />
                             </button>
                           </div>
                         </div>
@@ -402,12 +391,12 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           </>
         ) : (
           <EmptyState
-            icon={History}
+            icon="history"
             title="No results found"
-            description="Try adjusting your search or filters to find what you're looking for."
+            description="Try adjusting your search or options to find what you're looking for."
             action={
               <Button variant="outline" onClick={clearFilters} className="w-full">
-                Clear Filters
+                Clear All
               </Button>
             }
           />

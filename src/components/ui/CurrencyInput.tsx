@@ -53,8 +53,11 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let val = e.target.value;
       
-      // Basic sanitization while typing: allow numbers, one decimal point, and leading minus
-      // But we don't want to over-sanitize here to allow intermediate states
+      // Fix leading zero (010 -> 10)
+      if (val.length > 1 && val.startsWith('0') && val[1] !== '.') {
+        val = val.substring(1);
+      }
+      
       setInputValue(val);
     };
 

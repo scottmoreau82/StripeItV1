@@ -80,15 +80,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [activeTab, setActiveTab] = useState<'overview' | 'trends'>('overview');
   const [selectedCompId, setSelectedCompId] = useState<string | null>(null);
   const [isCustomizing, setIsCustomizing] = useState(false);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  React.useEffect(() => {
-    const handleDrawer = (e: any) => {
-      setIsDrawerOpen(e.detail?.isOpen ?? false);
-    };
-    window.addEventListener('stripeit:drawer-toggle', handleDrawer);
-    return () => window.removeEventListener('stripeit:drawer-toggle', handleDrawer);
-  }, []);
 
   // Force overview tab for free users
   useMemo(() => {
@@ -391,34 +382,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
         onSave={handleSaveDashboardLayout}
         isMobile={isMobile}
       />
-
-      {/* Mobile Log Deal FAB */}
-      {isMobile && (
-        <div className={cn(
-          "fixed bottom-10 z-50 transition-all duration-500 ease-in-out",
-          isDrawerOpen ? "right-8 translate-x-0" : "left-1/2 -translate-x-1/2"
-        )}>
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="relative"
-          >
-            {/* Visual Echo/Glow */}
-            <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-lg animate-pulse" />
-            
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={onLogDeal}
-              className="relative h-12 w-12 rounded-full bg-brand-primary text-bg-deep shadow-glow glow-primary flex items-center justify-center border-2 border-bg-deep/40 transition-transform shadow-2xl"
-            >
-              <Plus size={22} strokeWidth={3} />
-            </motion.button>
-          </motion.div>
-        </div>
-      )}
-
-      {/* FAB Clearance Zone for Mobile Scroll */}
-      {isMobile && <div className="h-20 pointer-events-none" />}
 
       <AnimatePresence>
         {selectedCompId && selectedComp && (

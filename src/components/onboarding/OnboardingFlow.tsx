@@ -12,7 +12,6 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { onboardingService } from '@/src/services/onboardingService';
-import { demoSeedService } from '@/src/services/demoSeedService';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -51,13 +50,6 @@ const STEPS = [
     description: 'Everything starts with the log. Fast, simple, and mobile-optimized deal entry.',
     icon: <Zap className="h-8 w-8 text-emerald-400" />,
     color: 'from-emerald-400/20 to-transparent'
-  },
-  {
-    id: 'demo',
-    title: 'Instant Demo',
-    description: 'Want to see StripeIt Deal Tracker in action right away? We can seed your account with 6 realistic demo deals to explore.',
-    icon: <Rocket className="h-8 w-8 text-orange-400" />,
-    color: 'from-orange-400/20 to-transparent'
   }
 ];
 
@@ -65,14 +57,12 @@ export const OnboardingFlow: React.FC = () => {
   const { profile } = useAuth();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const [isSeeding, setIsSeeding] = useState(false);
 
   if (!profile || profile.preferences?.onboarding?.isCompleted) return null;
   if (!isVisible) return null;
 
   const currentStep = STEPS[currentStepIndex];
   const isLastStep = currentStepIndex === STEPS.length - 1;
-  const isDemoStep = currentStep.id === 'demo';
 
   const handleNext = async () => {
     if (isLastStep) {
@@ -82,20 +72,6 @@ export const OnboardingFlow: React.FC = () => {
       const nextIndex = currentStepIndex + 1;
       setCurrentStepIndex(nextIndex);
       await onboardingService.updateStep(profile.uid, STEPS[nextIndex].id);
-    }
-  };
-
-  const handleSeedDemo = async () => {
-    if (!profile) return;
-    setIsSeeding(true);
-    try {
-      await demoSeedService.seedSalespersonDemo(profile);
-      await onboardingService.finishOnboarding(profile.uid);
-      setIsVisible(false);
-    } catch (error) {
-      console.error("Failed to seed demo data:", error);
-    } finally {
-      setIsSeeding(false);
     }
   };
 
@@ -156,34 +132,13 @@ export const OnboardingFlow: React.FC = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-              {isDemoStep ? (
-                <>
-                  <Button 
-                    onClick={handleSeedDemo}
-                    isLoading={isSeeding}
-                    className="w-full sm:w-auto h-12 sm:h-14 px-8 rounded-2xl text-base sm:text-lg font-black italic uppercase tracking-tighter shadow-glow glow-primary group bg-orange-500 hover:bg-orange-600"
-                  >
-                    Seed Demo Data
-                    <Rocket className="ml-2 h-5 w-5 group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                  <Button 
-                    onClick={handleNext}
-                    variant="outline"
-                    className="w-full sm:w-auto h-12 sm:h-14 px-8 rounded-2xl text-base sm:text-lg font-black italic uppercase tracking-tighter"
-                  >
-                    Start Fresh
-                    <ChevronRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </>
-              ) : (
-                <Button 
-                  onClick={handleNext}
-                  className="w-full sm:w-auto h-12 sm:h-14 px-8 rounded-2xl text-base sm:text-lg font-black italic uppercase tracking-tighter shadow-glow glow-primary group"
-                >
-                  {isLastStep ? 'Let\'s Go' : 'Continue'}
-                  <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              )}
+              <Button 
+                onClick={handleNext}
+                className="w-full sm:w-auto h-12 sm:h-14 px-8 rounded-2xl text-base sm:text-lg font-black italic uppercase tracking-tighter shadow-glow glow-primary group"
+              >
+                {isLastStep ? 'Let\'s Go' : 'Continue'}
+                <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
               <Button 
                 variant="ghost" 
                 onClick={handleSkip}

@@ -19,6 +19,7 @@ import { FullscreenMobileFlow } from './components/layout/MobileFullscreenFlow';
 import { Plus, TrendingUp, Users, DollarSign, Car, ArrowUpRight, CheckCircle2, Calculator } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useResponsive } from './hooks/useResponsive';
+import { cn } from './lib/utils';
 import { DealForm } from './components/forms/DealForm';
 import { dealService } from './services/dealService';
 import { StripeItCommissionSetupModal } from './components/commission/StripeItCommissionSetupModal';
@@ -64,6 +65,7 @@ function MainAppFlow() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [editingSpiff, setEditingSpiff] = useState<MonthlySpiff | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const { isMobile } = useResponsive();
   const { profile, user, isAdmin } = useAuth();
@@ -122,10 +124,16 @@ function MainAppFlow() {
     };
     window.addEventListener('stripeit:open-feedback', handleFeedbackEvent);
 
+    const handleDrawer = (e: any) => {
+      setIsDrawerOpen(e.detail?.isOpen ?? false);
+    };
+    window.addEventListener('stripeit:drawer-toggle', handleDrawer);
+
     return () => {
       window.removeEventListener('stripeit:create-random-deal', handleRandomDealEvent);
       window.removeEventListener('stripeit:edit-spiff', handleEditSpiffEvent);
       window.removeEventListener('stripeit:open-feedback', handleFeedbackEvent);
+      window.removeEventListener('stripeit:drawer-toggle', handleDrawer);
     };
   }, [handleCreateRandomDeal]);
 
@@ -472,6 +480,34 @@ function MainAppFlow() {
           }}
         />
       </Modal>
+
+      {/* Global Mobile Log Deal FAB */}
+      {isMobile && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
+        <div className={cn(
+          "fixed bottom-10 z-50 transition-all duration-500 ease-in-out",
+          isDrawerOpen ? "right-8 translate-x-0" : "left-1/2 -translate-x-1/2"
+        )}>
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="relative"
+          >
+            {/* Visual Echo/Glow */}
+            <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-lg animate-pulse" />
+            
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
+              className="relative h-12 w-12 rounded-full bg-brand-primary text-bg-deep shadow-glow glow-primary flex items-center justify-center border-2 border-bg-deep/40 transition-transform shadow-2xl"
+            >
+              <Plus size={22} strokeWidth={3} />
+            </motion.button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* FAB Clearance Zone for Mobile Scroll */}
+      {isMobile && <div className="h-20 pointer-events-none" />}
     </RootLayout>
   );
 }

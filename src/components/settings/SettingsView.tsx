@@ -37,7 +37,7 @@ interface SettingsViewProps {
   isMobile: boolean;
 }
 
-const ThemePanel = ({ profile }: { profile: UserProfile | null }) => {
+const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobile?: boolean }) => {
   const { updateProfileData, addToast } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -77,19 +77,19 @@ const ThemePanel = ({ profile }: { profile: UserProfile | null }) => {
   };
 
   return (
-    <div className="space-y-8">
-      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Global Theme</Typography>
+    <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
+      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Global Theme</Typography>
       
-      <Card className="p-8 bg-bg-card/20 border-white/5 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-4">
+      <Card className={cn("bg-bg-card/20 border-white/5", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
+        <div className={cn("grid grid-cols-1 gap-8", !isMobile && "md:grid-cols-2")}>
+          <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
                 <AppIcon name="sparkles" className="text-brand-primary" />
               </div>
               <div>
-                <Typography variant="label" className="text-white block">Icon Pack</Typography>
-                <Typography variant="small" className="text-slate-500">Choose your interface symbol set</Typography>
+                <Typography variant="label" className="text-white block text-sm">Icon Pack</Typography>
+                <Typography variant="small" className="text-slate-500 text-[10px]">Choose your interface symbols</Typography>
               </div>
             </div>
 
@@ -112,7 +112,7 @@ const ThemePanel = ({ profile }: { profile: UserProfile | null }) => {
               {isFreeTier && (
                 <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
                   <AppIcon name="lock" size={12} className="text-brand-primary" />
-                  <Typography variant="small" className="text-[10px] text-brand-primary font-black uppercase tracking-widest">
+                  <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
                     BASIC+ EXCLUSIVE
                   </Typography>
                 </div>
@@ -120,26 +120,26 @@ const ThemePanel = ({ profile }: { profile: UserProfile | null }) => {
             </div>
           </div>
 
-          <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col justify-center gap-4">
-             <Typography variant="small" className="text-slate-500 uppercase tracking-widest font-black text-[9px] mb-2">Preview</Typography>
+          <div className={cn("bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col justify-center gap-4", isMobile ? "p-4" : "p-6")}>
+             <Typography variant="small" className="text-slate-500 uppercase tracking-widest font-black text-[9px] mb-1">Visual Preview</Typography>
              <div className="flex items-center justify-around">
-                <div className="flex flex-col items-center gap-2">
-                   <div className="h-10 w-10 rounded-lg bg-white/5 flex items-center justify-center">
-                      <AppIcon name="dashboard" size={24} />
+                <div className="flex flex-col items-center gap-1.5">
+                   <div className={cn("rounded-lg bg-white/5 flex items-center justify-center", isMobile ? "h-8 w-8" : "h-10 w-10")}>
+                      <AppIcon name="dashboard" size={isMobile ? 20 : 24} />
                    </div>
-                   <Typography variant="mono" className="text-[8px] text-slate-500 uppercase">Home</Typography>
+                   <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Home</Typography>
                 </div>
-                <div className="flex flex-col items-center gap-2">
-                   <div className="h-10 w-10 rounded-lg bg-white/5 flex items-center justify-center">
-                      <AppIcon name="salesLog" size={24} />
+                <div className="flex flex-col items-center gap-1.5">
+                   <div className={cn("rounded-lg bg-white/5 flex items-center justify-center", isMobile ? "h-8 w-8" : "h-10 w-10")}>
+                      <AppIcon name="salesLog" size={isMobile ? 20 : 24} />
                    </div>
-                   <Typography variant="mono" className="text-[8px] text-slate-500 uppercase">Log</Typography>
+                   <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Log</Typography>
                 </div>
-                <div className="flex flex-col items-center gap-2">
-                   <div className="h-10 w-10 rounded-lg bg-white/5 flex items-center justify-center">
-                      <AppIcon name="settings" size={24} />
+                <div className="flex flex-col items-center gap-1.5">
+                   <div className={cn("rounded-lg bg-white/5 flex items-center justify-center", isMobile ? "h-8 w-8" : "h-10 w-10")}>
+                      <AppIcon name="settings" size={isMobile ? 20 : 24} />
                    </div>
-                   <Typography variant="mono" className="text-[8px] text-slate-500 uppercase">Config</Typography>
+                   <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Config</Typography>
                 </div>
              </div>
           </div>
@@ -156,47 +156,59 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
   const [successMsg, setSuccessMsg] = useState('');
 
   const header = (
-    <div className="flex flex-col gap-2">
-      <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter">
+    <div className={cn("flex flex-col", isMobile ? "gap-0.5" : "gap-2")}>
+      <Typography 
+        variant="h1" 
+        className={cn(
+          "text-white italic font-black uppercase tracking-tighter",
+          isMobile ? "text-xl" : "text-3xl"
+        )}
+      >
         Settings
       </Typography>
-      <Typography variant="p" className="text-slate-500 font-bold">
+      <Typography 
+        variant="p" 
+        className={cn(
+          "text-slate-500 font-bold",
+          isMobile ? "text-[10px] uppercase tracking-widest opacity-60" : "text-sm"
+        )}
+      >
         Manage your account and preferences
       </Typography>
     </div>
   );
 
   const mainContent = (
-    <div className="max-w-4xl mx-auto space-y-20 pb-32">
+    <div className={cn("max-w-4xl mx-auto pb-44", isMobile ? "space-y-12" : "space-y-20")}>
       <section id="profile" className="scroll-mt-24">
-        <ProfilePanel profile={profile} />
-      </section>
-
-      <section id="account" className="scroll-mt-24">
-        <AccountPanel profile={profile} />
+        <ProfilePanel profile={profile} isMobile={isMobile} />
       </section>
       
       <section id="theme" className="scroll-mt-24">
-        <ThemePanel profile={profile} />
+        <ThemePanel profile={profile} isMobile={isMobile} />
       </section>
 
       {profile?.role && [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN].includes(profile.role) && (
         <section id="organization" className="scroll-mt-24">
-          <OrganizationPanel profile={profile} />
+          <OrganizationPanel profile={profile} isMobile={isMobile} />
         </section>
       )}
 
       {isAdmin && (
         <>
           <section id="admin" className="scroll-mt-24">
-            <AdminPanel />
+            <AdminPanel isMobile={isMobile} />
           </section>
 
           <section id="developer" className="scroll-mt-24">
-            <DeveloperPanel />
+            <DeveloperPanel isMobile={isMobile} />
           </section>
         </>
       )}
+
+      <section id="account" className="scroll-mt-24">
+        <AccountPanel profile={profile} isMobile={isMobile} />
+      </section>
 
       {/* Quick Success Toast */}
       <AnimatePresence>
@@ -251,53 +263,53 @@ const FeedbackPanel = () => {
   );
 };
 
-const AdminPanel = () => {
+const AdminPanel = ({ isMobile }: { isMobile?: boolean }) => {
   const navigate = useNavigate();
   return (
-    <div className="space-y-8">
-      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Admin Tools</Typography>
+    <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
+      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Admin Tools</Typography>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-8 bg-brand-primary/5 border border-brand-primary/10 space-y-6 flex flex-col justify-between shadow-glow-sm glow-primary/5">
+      <div className={cn("grid grid-cols-1 gap-6", !isMobile && "md:grid-cols-2")}>
+        <Card className={cn("bg-brand-primary/5 border border-brand-primary/10 flex flex-col justify-between shadow-glow-sm glow-primary/5", isMobile ? "p-4 space-y-4" : "p-8 space-y-6")}>
           <div className="space-y-2">
-            <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
-              <MessageSquarePlus className="h-5 w-5 text-brand-primary" />
+            <div className={cn("rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0", isMobile ? "h-8 w-8" : "h-10 w-10")}>
+              <MessageSquarePlus className={cn("text-brand-primary", isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </div>
-            <Typography variant="h4" className="text-white">Feedback Review</Typography>
-            <Typography variant="small" className="text-slate-400 block pb-4">
+            <Typography variant="h4" className={cn("text-white", isMobile ? "text-base" : "")}>Feedback Review</Typography>
+            <Typography variant="small" className={cn("text-slate-400 block pb-4", isMobile ? "text-[10px] leading-relaxed" : "")}>
               Monitor, categorize, and respond to incoming bug reports and feature requests from all users.
             </Typography>
           </div>
           <Button 
             onClick={() => navigate('/admin/feedback')}
-            className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] h-12"
+            className={cn("w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px]", isMobile ? "h-10" : "h-12")}
           >
             Review Feedback
           </Button>
         </Card>
 
-        <Card className="p-8 bg-brand-primary/5 border border-brand-primary/10 space-y-6 flex flex-col justify-between shadow-glow-sm glow-primary/5">
+        <Card className={cn("bg-brand-primary/5 border border-brand-primary/10 flex flex-col justify-between shadow-glow-sm glow-primary/5", isMobile ? "p-4 space-y-4" : "p-8 space-y-6")}>
           <div className="space-y-2">
-            <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
-              <User className="h-5 w-5 text-brand-primary" />
+            <div className={cn("rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0", isMobile ? "h-8 w-8" : "h-10 w-10")}>
+              <User className={cn("text-brand-primary", isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </div>
-            <Typography variant="h4" className="text-white">User Management</Typography>
-            <Typography variant="small" className="text-slate-400 block pb-4">
+            <Typography variant="h4" className={cn("text-white", isMobile ? "text-base" : "")}>User Management</Typography>
+            <Typography variant="small" className={cn("text-slate-400 block pb-4", isMobile ? "text-[10px] leading-relaxed" : "")}>
               Manage accounts, adjust subscription tiers, and control permissions across your entire organization.
             </Typography>
           </div>
           <Button 
             onClick={() => navigate('/admin/users')}
-            className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] h-12"
+            className={cn("w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px]", isMobile ? "h-10" : "h-12")}
           >
             Manage Users
           </Button>
         </Card>
       </div>
 
-      <Card className="p-6 bg-amber-500/5 border border-amber-500/10 flex items-center gap-4">
-        <ShieldCheck className="h-5 w-5 text-amber-500" />
-        <Typography variant="small" className="text-amber-500/80 font-bold">
+      <Card className={cn("bg-amber-500/5 border border-amber-500/10 flex items-center gap-4", isMobile ? "p-4" : "p-6")}>
+        <ShieldCheck className={cn("text-amber-500 shrink-0", isMobile ? "h-4 w-4" : "h-5 w-5")} />
+        <Typography variant="small" className={cn("text-amber-500/80 font-bold", isMobile ? "text-[9px]" : "")}>
           Admin Access Active. You have unrestricted access to system-level tools and feedback databases.
         </Typography>
       </Card>
@@ -305,27 +317,27 @@ const AdminPanel = () => {
   );
 };
 
-const DeveloperPanel = () => {
+const DeveloperPanel = ({ isMobile }: { isMobile?: boolean }) => {
   const { profile, tierOverride, setTierOverride, isEditMode, setIsEditMode } = useAuth();
   
   return (
-    <div className="space-y-8">
-      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Developer Tools</Typography>
+    <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
+      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Developer Tools</Typography>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={cn("grid grid-cols-1 gap-6", !isMobile && "md:grid-cols-2")}>
         {/* Tier Override */}
-        <Card className="p-8 bg-bg-card/40 border-white/5 space-y-6">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-brand-primary" />
+        <Card className={cn("bg-bg-card/40 border-white/5 flex flex-col", isMobile ? "p-4 space-y-4" : "p-8 space-y-6")}>
+          <div className={cn("flex items-center gap-4 mb-2", isMobile ? "gap-3 mb-0" : "")}>
+            <div className={cn("rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0", isMobile ? "h-8 w-8" : "h-10 w-10")}>
+              <Sparkles className={cn("text-brand-primary", isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </div>
             <div>
-              <Typography variant="h4" className="text-white">Dev Tier Override</Typography>
-              <Typography variant="small" className="text-slate-500 block">Simulate different subscription levels</Typography>
+              <Typography variant="h4" className={cn("text-white", isMobile ? "text-base leading-tight" : "")}>Dev Tier Override</Typography>
+              <Typography variant="small" className={cn("text-slate-500 block", isMobile ? "text-[10px]" : "")}>Simulate subscription tiers</Typography>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
             <select
               value={tierOverride || profile?.subscriptionTier || ''}
               onChange={(e) => setTierOverride(e.target.value as SubscriptionTier || null)}
@@ -339,32 +351,32 @@ const DeveloperPanel = () => {
               ))}
             </select>
             
-            <div className="p-4 bg-brand-primary/5 border border-brand-primary/10 rounded-2xl">
-              <Typography variant="small" className="text-brand-primary/80 font-bold block leading-relaxed">
+            <div className={cn("bg-brand-primary/5 border border-brand-primary/10 rounded-2xl", isMobile ? "p-3" : "p-4")}>
+              <Typography variant="small" className={cn("text-brand-primary/80 font-bold block leading-relaxed", isMobile ? "text-[11px]" : "")}>
                 Active Tier: <span className="text-white">{tierOverride || profile?.subscriptionTier || 'Free'}</span>
               </Typography>
               <Typography variant="small" className="text-slate-500 block mt-1 text-[10px]">
-                This effect is session-based and does not affect production billing.
+                {isMobile ? "Session-based effect only." : "This effect is session-based and does not affect production billing."}
               </Typography>
             </div>
           </div>
         </Card>
 
         {/* Edit Mode */}
-        <Card className="p-8 bg-bg-card/40 border-white/5 space-y-6">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-              <Target className="h-5 w-5 text-indigo-400" />
+        <Card className={cn("bg-bg-card/40 border-white/5 flex flex-col", isMobile ? "p-4 space-y-4" : "p-8 space-y-6")}>
+          <div className={cn("flex items-center gap-4 mb-2", isMobile ? "gap-3 mb-0" : "")}>
+            <div className={cn("rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0", isMobile ? "h-8 w-8" : "h-10 w-10")}>
+              <Target className={cn("text-indigo-400", isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </div>
             <div>
-              <Typography variant="h4" className="text-white">System Edit Mode</Typography>
-              <Typography variant="small" className="text-slate-500 block">Enable UI & testing overrides</Typography>
+              <Typography variant="h4" className={cn("text-white", isMobile ? "text-base leading-tight" : "")}>System Edit Mode</Typography>
+              <Typography variant="small" className={cn("text-slate-500 block", isMobile ? "text-[10px]" : "")}>UI & testing overrides</Typography>
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
+          <div className={cn("flex items-center justify-between bg-white/[0.02] border border-white/5 rounded-2xl", isMobile ? "p-4" : "p-6")}>
             <div className="space-y-1">
-              <Typography variant="label" className="text-white">Status</Typography>
+              <Typography variant="label" className="text-white text-sm">Status</Typography>
               <Typography variant="small" className={cn(
                 "font-black uppercase tracking-widest text-[10px]",
                 isEditMode ? "text-brand-primary" : "text-slate-500"
@@ -387,16 +399,18 @@ const DeveloperPanel = () => {
             </button>
           </div>
 
-          <Typography variant="small" className="text-slate-600 italic block text-center">
-            Edit mode allows for rapid UI prototyping and state injection.
-          </Typography>
+          {!isMobile && (
+            <Typography variant="small" className="text-slate-600 italic block text-center">
+              Edit mode allows for rapid UI prototyping and state injection.
+            </Typography>
+          )}
         </Card>
       </div>
 
-      <Card className="p-6 bg-brand-primary/5 border border-brand-primary/10 flex items-center gap-4">
-        <Bug className="h-5 w-5 text-brand-primary" />
-        <Typography variant="small" className="text-brand-primary/80 font-bold">
-          Developer Mode Active. These tools are restricted to {STRIPEIT_DEVELOPER_EMAIL} and system admins.
+      <Card className={cn("bg-brand-primary/5 border border-brand-primary/10 flex items-center gap-4", isMobile ? "p-4" : "p-6")}>
+        <Bug className={cn("text-brand-primary shrink-0", isMobile ? "h-4 w-4" : "h-5 w-5")} />
+        <Typography variant="small" className={cn("text-brand-primary/80 font-bold", isMobile ? "text-[9px]" : "")}>
+          Developer Mode Active. Restricted to system owners.
         </Typography>
       </Card>
     </div>
@@ -405,7 +419,7 @@ const DeveloperPanel = () => {
 
 /* --- Sub-Panels --- */
 
-const ProfilePanel = ({ profile }: { profile: UserProfile | null }) => {
+const ProfilePanel = ({ profile, isMobile }: { profile: UserProfile | null, isMobile?: boolean }) => {
   const { updateProfileData } = useAuth();
   const [displayName, setDisplayName] = useState(profile?.displayName || '');
   const [isSaving, setIsSaving] = useState(false);
@@ -423,138 +437,149 @@ const ProfilePanel = ({ profile }: { profile: UserProfile | null }) => {
   };
 
   return (
-    <div className="space-y-8">
-      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Profile Details</Typography>
-      
-      <Card className="p-8 bg-bg-card/20 border-white/5 space-y-8">
-        <div className="flex items-center gap-8">
-          <div className="h-24 w-24 rounded-[2rem] bg-brand-primary/10 border-2 border-brand-primary/20 flex items-center justify-center relative group overflow-hidden">
+    <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
+      <Card className={cn("bg-bg-card/20 border-white/5", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
+        <div className={cn("flex items-center", isMobile ? "gap-4" : "gap-8")}>
+          <div className={cn(
+            "rounded-[1.5rem] bg-brand-primary/10 border-2 border-brand-primary/20 flex items-center justify-center relative group overflow-hidden shrink-0",
+            isMobile ? "h-16 w-16" : "h-24 w-24 rounded-[2rem]"
+          )}>
             {profile?.photoURL ? (
               <img src={profile.photoURL} alt="" className="h-full w-full object-cover" />
             ) : (
-              <User className="h-10 w-10 text-brand-primary" />
+              <User className={cn("text-brand-primary", isMobile ? "h-7 w-7" : "h-10 w-10")} />
             )}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
               <Typography variant="mono" className="text-[10px] text-white uppercase font-black">Edit</Typography>
             </div>
           </div>
-          <div className="space-y-1">
-            <Typography variant="h2" className="text-white leading-none">{profile?.displayName}</Typography>
-            <Typography variant="p" className="text-slate-500 font-bold">{profile?.email}</Typography>
-            <div className="inline-flex mt-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-widest text-brand-primary">
+          <div className="space-y-0.5 min-w-0">
+            <Typography variant="h2" className={cn("text-white leading-none truncate", isMobile ? "text-lg" : "")}>{profile?.displayName}</Typography>
+            <Typography variant="p" className={cn("text-slate-500 font-bold truncate", isMobile ? "text-[11px]" : "")}>{profile?.email}</Typography>
+            <div className="inline-flex mt-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/5 text-[8px] font-black uppercase tracking-widest text-brand-primary">
               {profile?.role}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-white/5">
-          <div className="space-y-2">
-            <Typography variant="label" className="text-slate-500 ml-1">Display Name</Typography>
+        <div className={cn("grid grid-cols-1 md:grid-cols-2 pt-6 border-t border-white/5", isMobile ? "gap-4" : "gap-6")}>
+          <div className="space-y-1.5">
+            <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Display Name</Typography>
             <Input 
               value={displayName} 
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Enter display name..."
-              className="bg-white/[0.02]" 
+              className="bg-white/[0.02] h-11" 
             />
           </div>
-          <div className="space-y-2">
-            <Typography variant="label" className="text-slate-500 ml-1">Email Address</Typography>
-            <Input defaultValue={profile?.email} disabled className="bg-white/[0.02] opacity-50" />
+          <div className="space-y-1.5">
+            <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Email Address</Typography>
+            <Input defaultValue={profile?.email} disabled className="bg-white/[0.02] opacity-50 h-11 truncate" />
           </div>
         </div>
         
-        <Button 
-          onClick={handleSave}
-          isLoading={isSaving}
-          disabled={isSaving || !displayName.trim()}
-          className="bg-brand-primary text-bg-deep font-black uppercase tracking-[0.2em] px-10"
-        >
-          Save Profile
-        </Button>
+        <div className={isMobile ? "pt-2" : ""}>
+          <Button 
+            onClick={handleSave}
+            isLoading={isSaving}
+            disabled={isSaving || !displayName.trim()}
+            className={cn(
+              "bg-brand-primary text-bg-deep font-black uppercase tracking-[0.2em]",
+              isMobile ? "w-full h-12 text-[10px]" : "px-10"
+            )}
+          >
+            Save Profile
+          </Button>
+        </div>
       </Card>
     </div>
   );
 };
 
-const AccountPanel = ({ profile }: { profile: UserProfile | null }) => {
+const AccountPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMobile?: boolean }) => {
   return (
-    <div className="space-y-8">
-      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Account Security</Typography>
+    <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
+      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Account Security</Typography>
       
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="p-8 bg-bg-card/20 border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <Shield className="h-6 w-6 text-amber-500" />
+      <div className={cn("grid grid-cols-1", isMobile ? "gap-4" : "gap-6")}>
+        <Card className={cn("bg-bg-card/20 border-white/5 flex items-center justify-between", isMobile ? "p-4" : "p-8")}>
+          <div className={cn("flex items-center", isMobile ? "gap-4" : "gap-6")}>
+            <div className={cn("rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0", isMobile ? "h-10 w-10" : "h-12 w-12")}>
+              <Shield className={cn("text-amber-500", isMobile ? "h-5 w-5" : "h-6 w-6")} />
             </div>
             <div>
-              <Typography variant="label" className="text-white block">Password</Typography>
-              <Typography variant="small" className="text-slate-500">Last changed 4 months ago</Typography>
+              <Typography variant="label" className="text-white block text-sm">Password</Typography>
+              <Typography variant="small" className="text-slate-500 text-[10px]">Last changed 4 months ago</Typography>
             </div>
           </div>
-          <Button variant="secondary" className="bg-white/5 border-white/10 text-xs px-6">Change</Button>
+          <Button variant="secondary" className={cn("bg-white/5 border-white/10", isMobile ? "text-[10px] px-3 h-8" : "text-xs px-6")}>Change</Button>
         </Card>
 
-        <Card className="p-8 bg-bg-card/20 border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center">
-              <CreditCard className="h-6 w-6 text-brand-primary" />
+        <Card className={cn("bg-bg-card/20 border-white/5 flex items-center justify-between", isMobile ? "p-4" : "p-8")}>
+          <div className={cn("flex items-center", isMobile ? "gap-4" : "gap-6")}>
+            <div className={cn("rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center shrink-0", isMobile ? "h-10 w-10" : "h-12 w-12")}>
+              <CreditCard className={cn("text-brand-primary", isMobile ? "h-5 w-5" : "h-6 w-6")} />
             </div>
             <div>
-              <Typography variant="label" className="text-white block">Subscription</Typography>
-              <Typography variant="small" className="text-slate-500 text-brand-primary font-bold">Tier: {profile?.subscriptionTier.toUpperCase()}</Typography>
+              <Typography variant="label" className="text-white block text-sm">Subscription</Typography>
+              <Typography variant="small" className="text-brand-primary font-bold text-[10px]">Tier: {profile?.subscriptionTier.toUpperCase()}</Typography>
             </div>
           </div>
-          <Button variant="outline" className="text-[10px] font-black uppercase tracking-widest px-6 h-10">Manage</Button>
+          <Button variant="outline" className={cn("font-black uppercase tracking-widest", isMobile ? "text-[8px] px-3 h-8" : "text-[10px] px-6 h-10")}>Manage</Button>
         </Card>
       </div>
     </div>
   );
 };
 
-const OrganizationPanel = ({ profile }: { profile: UserProfile | null }) => {
+const OrganizationPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMobile?: boolean }) => {
   const navigate = useNavigate();
   return (
-    <div className="space-y-8">
-      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Dealership / Org</Typography>
+    <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
+      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Dealership / Org</Typography>
       
-      <Card className="p-8 bg-bg-card/20 border-white/5 space-y-8">
-        <div className="flex items-center gap-8">
-          <div className="h-20 w-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
-            <Building2 className="h-10 w-10 text-slate-400" />
+      <Card className={cn("bg-bg-card/20 border-white/5", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
+        <div className={cn("flex items-center", isMobile ? "gap-4" : "gap-8")}>
+          <div className={cn("rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0", isMobile ? "h-12 w-12" : "h-20 w-20 rounded-3xl")}>
+            <Building2 className={cn("text-slate-400", isMobile ? "h-6 w-6" : "h-10 w-10")} />
           </div>
-          <div className="space-y-1">
-            <Typography variant="h2" className="text-white leading-none">Highline Motors</Typography>
-            <Typography variant="p" className="text-slate-500 font-bold">Organization Member Since May 2024</Typography>
-            <div className="inline-flex mt-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400">
+          <div className="space-y-0.5 min-w-0">
+            <Typography variant="h2" className={cn("text-white leading-none truncate", isMobile ? "text-lg" : "")}>Highline Motors</Typography>
+            <Typography variant="p" className={cn("text-slate-500 font-bold truncate", isMobile ? "text-[11px]" : "")}>Organization Member Since May 2024</Typography>
+            <div className="inline-flex mt-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest text-emerald-400">
               Verified Partner
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-white/5">
-          <div className="space-y-2">
-            <Typography variant="label" className="text-slate-500 ml-1">Organization ID</Typography>
-            <Input defaultValue={profile?.orgId} disabled className="bg-white/[0.02] font-mono text-xs opacity-50" />
+        <div className={cn("grid grid-cols-1 md:grid-cols-2 pt-6 border-t border-white/5", isMobile ? "gap-4" : "gap-6")}>
+          <div className="space-y-1.5">
+            <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Organization ID</Typography>
+            <Input defaultValue={profile?.orgId} disabled className="bg-white/[0.02] font-mono text-[10px] opacity-50 h-10 truncate" />
           </div>
-          <div className="space-y-2">
-            <Typography variant="label" className="text-slate-500 ml-1">Dealership ID</Typography>
-            <Input defaultValue={profile?.dealershipId} disabled className="bg-white/[0.02] font-mono text-xs opacity-50" />
+          <div className="space-y-1.5">
+            <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Dealership ID</Typography>
+            <Input defaultValue={profile?.dealershipId} disabled className="bg-white/[0.02] font-mono text-[10px] opacity-50 h-10 truncate" />
           </div>
         </div>
 
         {(profile?.role === UserRole.ADMIN || profile?.role === UserRole.GENERAL_MANAGER) && (
-          <div className="pt-8 space-y-4">
-            <Typography variant="label" className="text-brand-primary block uppercase tracking-widest text-[10px]">Management Controls</Typography>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={cn("pt-6 space-y-4", isMobile ? "pt-4" : "")}>
+            <Typography variant="label" className="text-brand-primary block uppercase tracking-widest text-[9px] font-black">Management Controls</Typography>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button 
                 variant="secondary" 
-                className="w-full bg-white/5 border-white/10 text-xs"
+                className={cn("w-full bg-white/5 border-white/10", isMobile ? "text-[10px] h-10" : "text-xs")}
                 onClick={() => navigate('/admin/users')}
               >
                 Manage Users
               </Button>
-              <Button variant="secondary" className="w-full bg-white/5 border-white/10 text-xs">Org Settings</Button>
+              <Button 
+                variant="secondary" 
+                className={cn("w-full bg-white/5 border-white/10", isMobile ? "text-[10px] h-10" : "text-xs")}
+              >
+                Org Settings
+              </Button>
             </div>
           </div>
         )}

@@ -272,20 +272,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {/* Average Performance Static Card */}
           {!isFree && (
             <Card className="p-6 bg-bg-card/40 border-white/5 space-y-4">
-              <div className="flex items-center gap-4">
-                 <div className="h-10 w-10 rounded-full bg-brand-deep/10 flex items-center justify-center border border-brand-deep/20">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
+                 <div className="h-10 w-10 rounded-full bg-brand-deep/10 flex items-center justify-center border border-brand-deep/20 shrink-0">
                    <Activity className="h-5 w-5 text-brand-deep" />
                  </div>
-                 <div>
+                 <div className="flex flex-col items-center sm:items-start">
                     <Typography variant="mono" className="text-[9px] text-slate-500">AVG FRONT / UNIT</Typography>
                     <Typography variant="h3" className="text-white text-lg">${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}</Typography>
                  </div>
               </div>
-              <div className="flex items-center gap-4 pt-4 border-t border-white/5">
-                 <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 pt-4 border-t border-white/5">
+                 <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
                    <Award className="h-5 w-5 text-emerald-500" />
                  </div>
-                 <div>
+                 <div className="flex flex-col items-center sm:items-start">
                     <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest">Avg Est. Payout / Unit</Typography>
                     <Typography variant="h3" className="text-white text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
                  </div>

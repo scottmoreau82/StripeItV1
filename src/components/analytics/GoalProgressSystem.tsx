@@ -30,8 +30,8 @@ export const GoalProgress: React.FC<GoalProgressProps> = ({
 
   return (
     <Card className="p-6 bg-bg-card/40 border-white/5 overflow-hidden group">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-8 gap-4 sm:gap-0">
+        <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
           <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20">
             <Target className="h-5 w-5 text-brand-primary" />
           </div>
@@ -40,7 +40,7 @@ export const GoalProgress: React.FC<GoalProgressProps> = ({
             <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Monthly Target</Typography>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-center sm:text-right">
           <Typography variant="h3" className="text-white leading-none mb-1">
             {percentage}%
           </Typography>
@@ -73,12 +73,12 @@ export const GoalProgress: React.FC<GoalProgressProps> = ({
           </motion.div>
         </div>
 
-        <div className="flex justify-between items-end">
-          <div className="space-y-1">
+        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end gap-4 sm:gap-0">
+          <div className="space-y-1 text-center sm:text-left">
             <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-bold block">Current</Typography>
             <Typography variant="h4" className="text-white">{current} {unit}</Typography>
           </div>
-          <div className="text-right space-y-1">
+          <div className="text-center sm:text-right space-y-1">
             <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-bold block">Pacing</Typography>
             {remaining > 0 ? (
               <Typography variant="p" className="text-slate-400 text-xs font-bold font-mono">

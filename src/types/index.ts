@@ -390,6 +390,7 @@ export interface FeedbackReport {
   };
   status: FeedbackStatus;
   read?: boolean;
+  archived?: boolean;
   createdAt: number;
   updatedAt: number;
 }

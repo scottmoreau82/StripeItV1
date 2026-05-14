@@ -81,8 +81,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Navigation & Action Area (Scrollable) */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
+      {/* Navigation & Action Area (Scrollable Navigation) */}
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar overflow-x-hidden">
         <nav className="flex flex-col gap-1 py-4">
           {visibleNavItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -218,8 +218,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Account & Footer Area (Pinned) */}
-      <div className="mt-auto border-t border-border-subtle bg-bg-deep/80 backdrop-blur-sm z-10 py-6">
+      {/* Account & Footer Area (Pinned Footer) */}
+      <div className="shrink-0 border-t border-border-subtle bg-bg-deep/80 backdrop-blur-sm z-10 py-6">
         {/* Commission Architect Setup Warning */}
         {!isCommissionConfigured && !isAdmin && onConfigPayPlan && (
           <CommissionWarningCard onConfigure={onConfigPayPlan} isCollapsed={!!isCollapsed} />

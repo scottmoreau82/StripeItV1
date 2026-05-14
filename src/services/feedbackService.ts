@@ -8,7 +8,8 @@ import {
   getDocs, 
   orderBy,
   onSnapshot,
-  writeBatch
+  writeBatch,
+  deleteDoc
 } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { FeedbackReport, FeedbackStatus } from '../types';
@@ -37,6 +38,7 @@ export const feedbackService = {
       id: feedbackId,
       status: FeedbackStatus.NEW,
       read: false,
+      archived: false,
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
@@ -58,13 +60,23 @@ export const feedbackService = {
    * Fetches all feedback reports for administrative review.
    * Only accessible by authorized admins via Security Rules.
    */
-  async getReports(): Promise<FeedbackReport[]> {
+  async getReports(includeArchived: boolean = false): Promise<FeedbackReport[]> {
     const feedbackRef = collection(db, COLLECTIONS.FEEDBACK_REPORTS);
-    const q = query(feedbackRef, orderBy('createdAt', 'desc'));
+    
+    let q;
+    if (includeArchived) {
+      q = query(feedbackRef, orderBy('createdAt', 'desc'));
+    } else {
+      q = query(
+        feedbackRef, 
+        where('archived', '==', false),
+        orderBy('createdAt', 'desc')
+      );
+    }
     
     try {
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FeedbackReport));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as FeedbackReport));
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, COLLECTIONS.FEEDBACK_REPORTS);
       throw error;
@@ -80,11 +92,12 @@ export const feedbackService = {
     const q = query(
       feedbackRef, 
       where('read', '==', false),
+      where('archived', '==', false),
       orderBy('createdAt', 'desc')
     );
 
     return onSnapshot(q, (snapshot) => {
-      const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FeedbackReport));
+      const reports = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as FeedbackReport));
       callback(reports);
     });
   },
@@ -123,16 +136,49 @@ export const feedbackService = {
 
   /**
    * Updates the status of an existing feedback report.
+   * Automatically archives if status is set to CLOSED.
    */
   async updateStatus(reportId: string, status: FeedbackStatus): Promise<void> {
     const reportRef = doc(db, COLLECTIONS.FEEDBACK_REPORTS, reportId);
+    const isClosed = status === FeedbackStatus.CLOSED;
+    
     try {
       await updateDoc(reportRef, {
         status,
+        archived: isClosed,
         updatedAt: Date.now()
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `${COLLECTIONS.FEEDBACK_REPORTS}/${reportId}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Explicitly archives or unarchives a report.
+   */
+  async setArchived(reportId: string, archived: boolean): Promise<void> {
+    const reportRef = doc(db, COLLECTIONS.FEEDBACK_REPORTS, reportId);
+    try {
+      await updateDoc(reportRef, {
+        archived,
+        updatedAt: Date.now()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `${COLLECTIONS.FEEDBACK_REPORTS}/${reportId}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Permanently deletes a feedback report from Firestore.
+   */
+  async deleteReport(reportId: string): Promise<void> {
+    const reportRef = doc(db, COLLECTIONS.FEEDBACK_REPORTS, reportId);
+    try {
+      await deleteDoc(reportRef);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `${COLLECTIONS.FEEDBACK_REPORTS}/${reportId}`);
       throw error;
     }
   },

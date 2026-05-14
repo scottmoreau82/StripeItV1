@@ -121,11 +121,11 @@ export const AdminAnalyticsDashboard: React.FC = () => {
       {/* Main Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <div className="bg-bg-card/40 border border-white/5 rounded-[2rem] p-6 relative overflow-hidden group">
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col items-center sm:items-start text-center sm:text-left">
             <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 block">Total Visits</Typography>
-            <div className="flex items-end justify-between">
+            <div className="flex flex-col sm:flex-row items-center sm:items-end sm:justify-between w-full gap-3 sm:gap-0">
               <Typography variant="h2" className="text-white font-black text-3xl">{totals.visits.toLocaleString()}</Typography>
-              <div className="h-8 w-8 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+              <div className="h-8 w-8 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shrink-0">
                 <Users size={16} className="text-cyan-400" />
               </div>
             </div>
@@ -134,11 +134,11 @@ export const AdminAnalyticsDashboard: React.FC = () => {
         </div>
 
         <div className="bg-bg-card/40 border border-white/5 rounded-[2rem] p-6 relative overflow-hidden group">
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col items-center sm:items-start text-center sm:text-left">
             <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 block">Total Signups</Typography>
-            <div className="flex items-end justify-between">
+            <div className="flex flex-col sm:flex-row items-center sm:items-end sm:justify-between w-full gap-3 sm:gap-0">
               <Typography variant="h2" className="text-white font-black text-3xl">{totals.signups.toLocaleString()}</Typography>
-              <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+              <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
                 <UserPlus size={16} className="text-emerald-400" />
               </div>
             </div>
@@ -147,11 +147,11 @@ export const AdminAnalyticsDashboard: React.FC = () => {
         </div>
 
         <div className="bg-bg-card/40 border border-white/5 rounded-[2rem] p-6 relative overflow-hidden group">
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col items-center sm:items-start text-center sm:text-left">
             <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 block">Conversion</Typography>
-            <div className="flex items-end justify-between">
+            <div className="flex flex-col sm:flex-row items-center sm:items-end sm:justify-between w-full gap-3 sm:gap-0">
               <Typography variant="h2" className="text-white font-black text-3xl">{conversionRate}%</Typography>
-              <div className="h-8 w-8 rounded-lg bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20">
+              <div className="h-8 w-8 rounded-lg bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shrink-0">
                 <TrendingUp size={16} className="text-brand-primary" />
               </div>
             </div>
@@ -160,11 +160,11 @@ export const AdminAnalyticsDashboard: React.FC = () => {
         </div>
 
         <div className="bg-bg-card/40 border border-white/5 rounded-[2rem] p-6 relative overflow-hidden group">
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col items-center sm:items-start text-center sm:text-left">
             <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2 block">Engagement Score</Typography>
-            <div className="flex items-end justify-between">
+            <div className="flex flex-col sm:flex-row items-center sm:items-end sm:justify-between w-full gap-3 sm:gap-0">
               <Typography variant="h2" className="text-white font-black text-3xl">{(totals.clicks / (totals.visits || 1)).toFixed(1)}</Typography>
-              <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+              <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20 shrink-0">
                 <MousePointer2 size={16} className="text-purple-400" />
               </div>
             </div>

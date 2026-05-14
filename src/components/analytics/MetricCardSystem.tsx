@@ -49,17 +49,17 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 blur-[40px] pointer-events-none group-hover:bg-purple-600/10 transition-colors" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-orange-600/5 blur-[30px] pointer-events-none group-hover:bg-orange-600/10 transition-colors" />
 
-        <div className="relative z-10 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-6">
+        <div className="relative z-10 flex flex-col items-center sm:items-start text-center sm:text-left h-full">
+          <div className="flex items-center justify-center sm:justify-between w-full mb-6 relative">
             <div className="h-10 w-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-600 group-hover:text-purple-400 transition-colors">
               <Lock className="h-5 w-5" />
             </div>
-            <Typography variant="mono" className="text-[10px] text-slate-700 font-black uppercase tracking-[0.2em] group-hover:text-amber-500/50 transition-colors">
+            <Typography variant="mono" className="text-[10px] text-slate-700 font-black uppercase tracking-[0.2em] group-hover:text-amber-500/50 transition-colors absolute sm:static right-0 sm:right-auto opacity-0 sm:opacity-100">
               Classified Access
             </Typography>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center sm:items-start">
             <div>
               <Typography variant="label" className="text-slate-600 font-black tracking-widest block uppercase text-[10px] mb-1">
                 {label}
@@ -93,16 +93,16 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   }
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-white/[0.04] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden">
-      <div className="flex flex-col h-full">
+    <Card className="p-6 bg-gradient-to-br from-white/[0.04] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden h-full">
+      <div className="flex flex-col items-center sm:items-start text-center sm:text-left h-full">
         <div className={cn(
-          "h-12 w-12 rounded-xl flex items-center justify-center mb-6 border transition-transform group-hover:scale-110",
+          "h-12 w-12 rounded-xl flex items-center justify-center mb-6 border transition-transform group-hover:scale-110 shrink-0",
           colorMap[color as keyof typeof colorMap]
         )}>
           <Icon className="h-6 w-6" />
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-2 flex flex-col items-center sm:items-start w-full">
           <Typography variant="label" className="text-slate-500 font-black tracking-widest block uppercase text-[10px]">
             {label}
           </Typography>

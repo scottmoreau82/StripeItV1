@@ -33,12 +33,19 @@ import {
   Filter,
   Layers,
   History,
-  Info
+  Info,
+  FileDown,
+  FileUp,
+  AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { calculatePeriodEarnings, getActiveCommissionTier, getActiveMiniTier } from '@/src/lib/commissionLogic';
 import { cn } from '@/src/lib/utils';
 import { useAppData } from '@/src/contexts/AppDataContext';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { commissionCsvService } from '@/src/lib/commissionCsvService';
+import { Modal } from '../ui/Modal';
+import { SubscriptionTier } from '@/src/types';
 import { 
   formatMatrixValue, 
   normalizeMatrixNumber,
@@ -476,7 +483,13 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   isLoading
 }) => {
   const { deals, triggerError } = useAppData();
+  const { profile, addToast } = useAuth();
   const isSimulationEngineEnabled = false;
+
+  // Import/Export States
+  const [importPreview, setImportPreview] = useState<Partial<PayPlan> | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
 
   // Ensure we have at least one default row if none exist
   const getInitialTiers = () => {
@@ -946,6 +959,71 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     handleChange('customMinis', formData.customMinis.filter(m => m.id !== id));
   };
 
+  // CSV Export/Import Handlers
+  const handleExport = () => {
+    try {
+      const csv = commissionCsvService.exportToCsv(formData as any);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('hidden', '');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `${formData.name.replace(/\s+/g, '_')}_PayPlan.csv`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      addToast('Pay plan exported successfully.', 'success');
+    } catch (err) {
+      triggerError('Failed to export CSV.');
+    }
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = commissionCsvService.parseCsv(text);
+        const errors = commissionCsvService.validatePlan(parsed);
+        
+        setImportPreview(parsed);
+        setImportErrors(errors);
+        setIsImportModalOpen(true);
+      } catch (err: any) {
+        triggerError(err.message || 'Failed to parse CSV.');
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    e.target.value = '';
+  };
+
+  const confirmImport = () => {
+    if (!importPreview) return;
+    
+    // Normalizing parsed data to match formData expectation (especially ensuring default IDs aren't blank)
+    const normalized = {
+      ...importPreview,
+      rules: importPreview.rules?.map(r => ({ ...r, id: r.id || crypto.randomUUID() })),
+      tiers: importPreview.tiers?.map(t => ({ ...t, id: t.id || crypto.randomUUID() })),
+      volumeBonuses: importPreview.volumeBonuses?.map(b => ({ ...b, id: b.id || crypto.randomUUID() })),
+      miniTiers: importPreview.miniTiers?.map(t => ({ ...t, id: t.id || crypto.randomUUID() })),
+      customMinis: importPreview.customMinis?.map(m => ({ ...m, id: m.id || crypto.randomUUID() })),
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      ...normalized
+    }) as any);
+    
+    setIsImportModalOpen(false);
+    setImportPreview(null);
+    addToast('Plan configuration imported. Review and Lock to save.', 'success');
+  };
+
   /**
    * StripeItPayPlanPreviewSystem
    * Live calculation preview based on current form state.
@@ -1107,17 +1185,48 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     <form onSubmit={handleSubmit} className="space-y-12">
       <div className="space-y-10">
         {/* Header/Info */}
-        <div className="flex items-start gap-5 rounded-3xl bg-brand-primary/[0.03] p-6 border border-brand-primary/10">
-          <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-5 rounded-3xl bg-brand-primary/[0.03] p-6 border border-brand-primary/10">
+          <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
             <Calculator className="h-6 w-6 text-brand-primary" />
           </div>
-          <div>
+          <div className="flex-1">
             <Typography variant="label" className="text-brand-primary font-black uppercase tracking-widest text-xs mb-1 block">Precision Matrix</Typography>
             <Typography variant="small" className="text-slate-400 max-w-2xl leading-relaxed">
               Tiered commission infrastructure. Define unit-based performance ranges with custom front and back-end payouts. 
               Calculations are applied retroactively to your monthly deal volume.
             </Typography>
           </div>
+
+          {/* Tier Gated CSV Actions */}
+          {profile?.subscriptionTier !== SubscriptionTier.FREE && (
+            <div className="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-auto">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleExport}
+                className="flex-1 md:flex-none h-11 px-6 rounded-xl border border-white/5 bg-white/[0.02] text-slate-300 hover:text-white"
+              >
+                <FileDown size={16} className="mr-2" /> Export CSV
+              </Button>
+              <div className="relative flex-1 md:flex-none">
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleImportFile}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-11 px-6 rounded-xl border border-white/5 bg-white/[0.02] text-slate-300 hover:text-white pointer-events-none"
+                >
+                  <FileUp size={16} className="mr-2" /> Import CSV
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* StripeItMinisAndHourlySystem - Minis & Hourly Section */}
@@ -2378,6 +2487,72 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           Lock Payplan
         </Button>
       </div>
+
+      {/* Import Confirmation Modal */}
+      <Modal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        title="Confirm Plan Import"
+        className="max-w-2xl"
+      >
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
+            <AlertTriangle className="h-6 w-6 shrink-0" />
+            <Typography variant="small" className="font-bold">
+              Warning: Importing this CSV will overwrite all current unsaved changes in the Commission Architect.
+            </Typography>
+          </div>
+
+          {importErrors.length > 0 && (
+            <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10">
+              <Typography variant="mono" className="text-[10px] text-red-500 font-bold uppercase mb-2">Structure Warnings:</Typography>
+              <ul className="list-disc list-inside space-y-1">
+                {importErrors.map((err, i) => (
+                  <li key={i} className="text-red-400/80 text-xs">{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Plan Name</Typography>
+                <Typography variant="h4" className="text-white text-base">{importPreview?.name || 'Untitled'}</Typography>
+             </div>
+             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Tiers Detected</Typography>
+                <Typography variant="h4" className="text-white text-base">{importPreview?.tiers?.length || 0} Levels</Typography>
+             </div>
+             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Bonuses</Typography>
+                <Typography variant="h4" className="text-white text-base">{importPreview?.volumeBonuses?.length || 0} Records</Typography>
+             </div>
+             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Version</Typography>
+                <Typography variant="h4" className="text-white text-base">{importPreview?.schemaVersion || '1.0'}</Typography>
+             </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 rounded-2xl h-11 border-white/10 hover:bg-white/5 text-slate-400"
+              onClick={() => setIsImportModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="flex-1 rounded-2xl h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+              onClick={confirmImport}
+              disabled={importErrors.length > 0}
+            >
+              Apply Imported Plan
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </form>
   );
 };

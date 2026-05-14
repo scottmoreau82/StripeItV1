@@ -35,10 +35,8 @@ export const LoginForm: React.FC = () => {
     try {
       if (mode === 'signin') {
         await signInWithEmailAndPassword(auth, email, password);
-        addToast('Welcome back!', 'success');
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
-        addToast('Account created successfully.', 'success');
       }
     } catch (err: any) {
       const message = mapAuthError(err);

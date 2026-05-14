@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { UserRole } from '@/src/types';
+import { VerificationRequired } from './VerificationRequired';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { AlertCircle } from 'lucide-react';
@@ -55,6 +56,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   if (!user) {
     // Redirect to login but save the current location
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // StripeItVerificationGuard - Block unverified users except on specific flows
+  if (!user.emailVerified) {
+    return <VerificationRequired />;
   }
 
   if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {

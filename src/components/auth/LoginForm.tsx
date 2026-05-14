@@ -20,12 +20,33 @@ type AuthMode = 'signin' | 'signup';
 
 export const LoginForm: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('signin');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
   const { addToast, connectionError } = useAuth();
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setError('Please enter your email address.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      await sendPasswordResetEmail(auth, email);
+      addToast('Password reset link sent to your email.', 'success');
+      setShowForgotPassword(false);
+    } catch (err: any) {
+      setError(mapAuthError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +57,13 @@ export const LoginForm: React.FC = () => {
       if (mode === 'signin') {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // StripeItVerificationSystem - Send welcome verification
+        if (userCredential.user) {
+          const { sendEmailVerification } = await import('firebase/auth');
+          await sendEmailVerification(userCredential.user);
+          addToast('Verification email sent! Please check your inbox.', 'success');
+        }
       }
     } catch (err: any) {
       const message = mapAuthError(err);
@@ -97,7 +124,7 @@ export const LoginForm: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-6">
             <Input
               label="Email Address"
               type="email"
@@ -108,16 +135,31 @@ export const LoginForm: React.FC = () => {
               className="bg-white/5 border-white/10"
               disabled={loading}
             />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="bg-white/5 border-white/10"
-              disabled={loading}
-            />
+            
+            {!showForgotPassword && (
+              <Input
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="bg-white/5 border-white/10"
+                disabled={loading}
+              />
+            )}
+            
+            {mode === 'signin' && (
+              <div className="flex justify-end mt-[-1rem]">
+                <button 
+                  type="button"
+                  onClick={() => setShowForgotPassword(!showForgotPassword)}
+                  className="text-[10px] text-slate-500 hover:text-brand-primary uppercase font-bold tracking-widest transition-colors"
+                >
+                  {showForgotPassword ? 'Back to Login' : 'Forgot Password?'}
+                </button>
+              </div>
+            )}
             
             <AnimatePresence mode="wait">
               {error && (
@@ -140,7 +182,9 @@ export const LoginForm: React.FC = () => {
               isLoading={loading}
               disabled={loading}
             >
-              {mode === 'signin' ? (
+              {showForgotPassword ? (
+                'Reset Password'
+              ) : mode === 'signin' ? (
                 <>
                   <LogIn className="mr-2 h-4 w-4" /> Sign In
                 </>

@@ -7,6 +7,8 @@ import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { Button } from '../ui/Button';
 import { ComingSoonIndicator } from '../ui/ComingSoonIndicator';
+import { Modal } from '../ui/Modal';
+import { Lock, Zap, CheckCircle2, ArrowUpRight, Star } from 'lucide-react';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { navigationConfig } from './NavigationItems';
 import { TierBadge } from './TierBadge';
@@ -37,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { profile, user, isAdmin, tierOverride, setTierOverride, isEditMode, setIsEditMode } = useAuth();
   const { isCommissionConfigured } = useAppData();
   const location = useLocation();
+  const [isSpiffModalOpen, setIsSpiffModalOpen] = React.useState(false);
 
   const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
 
@@ -182,16 +185,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </Button>
 
           {/* New SPIFF & Utility Row */}
-          {!isCollapsed && profile?.subscriptionTier !== SubscriptionTier.FREE && (
+          {!isCollapsed && (
             <div className="flex gap-2 h-10">
-              <button 
-                onClick={onLogSpiff}
-                className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2 group p-1"
-                title="Log SPIFF Adjustment"
-              >
-                <AppIcon name="billing" size={14} className="group-hover:scale-110 transition-transform" />
-                <span className="text-[9px] font-black uppercase tracking-widest">SPIFF</span>
-              </button>
+              {profile?.subscriptionTier === SubscriptionTier.FREE ? (
+                <button 
+                  onClick={() => setIsSpiffModalOpen(true)}
+                  className="flex-1 rounded-lg bg-white/[0.03] border border-white/10 text-slate-500 hover:bg-white/5 hover:border-brand-primary/30 transition-all flex items-center justify-center gap-2 group p-1"
+                  title="SPIFF - Basic+ Exclusive"
+                >
+                  <AppIcon name="lock" size={14} className="text-slate-600 transition-colors group-hover:text-brand-primary" />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-700 transition-colors group-hover:text-slate-400">SPIFF</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={onLogSpiff}
+                  className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2 group p-1"
+                  title="Log SPIFF Adjustment"
+                >
+                  <AppIcon name="billing" size={14} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">SPIFF</span>
+                </button>
+              )}
               
               <button 
                 className="flex-1 rounded-lg bg-white/5 border border-white/10 text-slate-500 hover:bg-white/10 transition-all flex items-center justify-center gap-2 group p-1 cursor-not-allowed opacity-40"
@@ -204,14 +218,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {isCollapsed && profile?.subscriptionTier !== SubscriptionTier.FREE && (
-            <button 
-              onClick={onLogSpiff}
-              className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto hover:bg-emerald-500/20 transition-all"
-              title="Log SPIFF Adjustment"
-            >
-              <AppIcon name="billing" size={18} />
-            </button>
+          {isCollapsed && (
+            profile?.subscriptionTier === SubscriptionTier.FREE ? (
+              <button 
+                onClick={() => setIsSpiffModalOpen(true)}
+                className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 text-slate-600 flex items-center justify-center mx-auto hover:border-brand-primary/30 hover:text-brand-primary transition-all"
+                title="SPIFF - Basic+ Exclusive"
+              >
+                <AppIcon name="lock" size={18} />
+              </button>
+            ) : (
+              <button 
+                onClick={onLogSpiff}
+                className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto hover:bg-emerald-500/20 transition-all"
+                title="Log SPIFF Adjustment"
+              >
+                <AppIcon name="billing" size={18} />
+              </button>
+            )
           )}
           
           <div className="h-12 shrink-0" />
@@ -279,6 +303,73 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
       </div>
+      
+      {/* SPIFF Upgrade Modal */}
+      <Modal
+        isOpen={isSpiffModalOpen}
+        onClose={() => setIsSpiffModalOpen(false)}
+        title="Premium Incentive Engine"
+        className="max-w-xl"
+      >
+        <div className="space-y-8">
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-glow glow-emerald">
+                 <AppIcon name="billing" size={32} className="text-white" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full bg-bg-deep border-2 border-emerald-500 flex items-center justify-center">
+                <Lock className="h-3.5 w-3.5 text-emerald-500" />
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Typography variant="mono" className="text-emerald-500 uppercase tracking-[0.3em] font-black italic text-[10px] mb-2">
+              Basic+ Exclusive Feature
+            </Typography>
+            <Typography variant="h2" className="text-white font-black italic uppercase tracking-tighter mb-4 text-3xl">
+              Professional SPIFF Tracking
+            </Typography>
+            <Typography variant="small" className="text-slate-400 leading-relaxed max-w-md mx-auto">
+              Track one-time bonuses, incentive fund payouts, and auxiliary adjustments independently from your deal matrix. Complete with performance visualization and historical logs.
+            </Typography>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+             {[
+               { icon: Zap, text: "Independent Payouts" },
+               { icon: CheckCircle2, text: "Bonus Visualization" },
+               { icon: Star, text: "Volume Engine Sync" },
+               { icon: Zap, text: "Adjustment History" }
+             ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-4 py-3">
+                  <item.icon className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <Typography variant="mono" className="text-[10px] text-slate-300 uppercase font-bold tracking-wider">
+                    {item.text}
+                  </Typography>
+                </div>
+             ))}
+          </div>
+
+          <div className="flex flex-col gap-4 pt-4">
+            <Button 
+              className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-bg-deep font-black rounded-xl shadow-glow glow-emerald flex items-center justify-center gap-3 group border-none"
+              onClick={() => {
+                setIsSpiffModalOpen(false);
+                // Redirect to settings or wherever upgrade happens
+                const settingsLink = document.querySelector('a[href="/settings"]');
+                if (settingsLink instanceof HTMLElement) settingsLink.click();
+              }}
+            >
+              Unlock Incentive Engine
+              <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            </Button>
+            <Typography variant="mono" className="text-[9px] text-slate-600 uppercase tracking-widest font-bold text-center">
+              Available on Basic, Pro & Dealer Plans
+            </Typography>
+          </div>
+        </div>
+      </Modal>
     </aside>
   );
 };

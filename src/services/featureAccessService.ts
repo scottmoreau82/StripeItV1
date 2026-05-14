@@ -18,6 +18,7 @@ export enum Feature {
   ORG_SETTINGS = 'org_settings',
   ACTIVITY_FEED = 'activity_feed',
   INVENTORY_MANAGEMENT = 'inventory_management',
+  SPIFF_TRACKING = 'spiff_tracking',
 }
 
 export const featureAccessService = {
@@ -37,6 +38,7 @@ export const featureAccessService = {
 
       case Feature.GOALS:
       case Feature.ACTIVITY_FEED:
+      case Feature.SPIFF_TRACKING:
         // Restricted for Free users
         return [SubscriptionTier.BASIC, SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
 

@@ -30,6 +30,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateProfileData: (data: Partial<UserProfile>) => Promise<void>;
   addToast: (message: string, type: 'success' | 'error' | 'info') => void;
+  sendVerificationEmail: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   isAdmin: boolean;
   isEditMode: boolean;
   setIsEditMode: (value: boolean) => void;
@@ -46,6 +48,8 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
   updateProfileData: async () => {},
   addToast: () => {},
+  sendVerificationEmail: async () => {},
+  refreshUser: async () => {},
   isAdmin: false,
   isEditMode: false,
   setIsEditMode: () => {},
@@ -136,6 +140,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const removeToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  const sendVerificationEmail = useCallback(async () => {
+    if (!auth.currentUser) return;
+    try {
+      const { sendEmailVerification } = await import('firebase/auth');
+      await sendEmailVerification(auth.currentUser);
+      addToast('Verification email sent! Please check your inbox.', 'success');
+    } catch (error: any) {
+      console.error("Verification email error:", error);
+      if (error.code === 'auth/too-many-requests') {
+        addToast('Too many requests. Please wait before trying again.', 'error');
+      } else {
+        addToast('Failed to send verification email.', 'error');
+      }
+    }
+  }, [addToast]);
+
+  const refreshUser = useCallback(async () => {
+    if (!auth.currentUser) return;
+    try {
+      await auth.currentUser.reload();
+      setUser({ ...auth.currentUser }); // Trigger state update
+    } catch (error) {
+      console.error("Refresh user error:", error);
+    }
   }, []);
 
   useEffect(() => {
@@ -377,6 +407,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     updateProfileData,
     addToast,
+    sendVerificationEmail,
+    refreshUser,
     isAdmin,
     isEditMode,
     setIsEditMode,

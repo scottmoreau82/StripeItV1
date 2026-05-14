@@ -1197,8 +1197,31 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
             </Typography>
           </div>
 
-          {/* Tier Gated CSV Actions */}
-          {profile?.subscriptionTier !== SubscriptionTier.FREE && (
+          {/* CSV Actions with Premium Upsell */}
+          {profile?.subscriptionTier === SubscriptionTier.FREE ? (
+            <div className="relative group/upsell overflow-hidden rounded-2xl border border-brand-primary/20 bg-brand-primary/[0.03] p-4 flex items-center gap-4 transition-all hover:bg-brand-primary/[0.05] hover:border-brand-primary/30 w-full md:max-w-[280px]">
+              <div className="flex flex-col gap-1.5 flex-1 relative z-10">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                    <Zap size={12} className="text-amber-500 fill-amber-500" />
+                  </div>
+                  <Typography variant="mono" className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Unlock Architect CSV</Typography>
+                </div>
+                <div className="space-y-1">
+                  <Typography variant="mono" className="text-[11px] text-white font-black leading-tight border-b border-brand-primary/20 pb-1 w-fit uppercase tracking-tighter">Export & Share Plans</Typography>
+                  <Typography variant="small" className="text-[10px] text-slate-400 leading-relaxed font-medium">
+                    Download pay plans to share with your team or quickly transfer configurations. <span className="text-white font-bold underline decoration-brand-primary/40 underline-offset-2">Basic+ exclusive</span>.
+                  </Typography>
+                </div>
+              </div>
+              <div className="shrink-0 flex flex-col gap-2 relative z-10">
+                 <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-slate-600 transition-colors group-hover/upsell:text-brand-primary group-hover/upsell:border-brand-primary/30">
+                    <FileDown size={20} />
+                 </div>
+              </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 blur-[40px] pointer-events-none group-hover/upsell:bg-brand-primary/10 transition-colors" />
+            </div>
+          ) : (
             <div className="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-auto">
               <Button
                 type="button"

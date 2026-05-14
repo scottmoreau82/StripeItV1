@@ -21,12 +21,19 @@ import { useAppData } from '@/src/contexts/AppDataContext';
  */
 interface SidebarProps {
   onLogDeal?: () => void;
+  onLogSpiff?: () => void;
   onConfigPayPlan?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, onConfigPayPlan, isCollapsed, onToggleCollapse }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  onLogDeal, 
+  onLogSpiff, 
+  onConfigPayPlan, 
+  isCollapsed, 
+  onToggleCollapse 
+}) => {
   const { profile, user, isAdmin, tierOverride, setTierOverride, isEditMode, setIsEditMode } = useAuth();
   const { isCommissionConfigured } = useAppData();
   const location = useLocation();
@@ -154,7 +161,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, onConfigPayPlan, is
         </nav>
 
         {/* Action Area within Scrollable */}
-        <div className={cn("py-8 transition-all duration-300", isCollapsed ? "px-0" : "px-5 pr-6")}>
+        <div className={cn("py-8 transition-all duration-300 flex flex-col gap-3", isCollapsed ? "px-0" : "px-5 pr-6")}>
           <Button 
             onClick={onLogDeal}
             title={isCollapsed ? "Log Deal" : undefined}
@@ -173,6 +180,39 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogDeal, onConfigPayPlan, is
               Log Deal
             </span>
           </Button>
+
+          {/* New SPIFF & Utility Row */}
+          {!isCollapsed && profile?.subscriptionTier !== SubscriptionTier.FREE && (
+            <div className="flex gap-2 h-10">
+              <button 
+                onClick={onLogSpiff}
+                className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2 group p-1"
+                title="Log SPIFF Adjustment"
+              >
+                <AppIcon name="billing" size={14} className="group-hover:scale-110 transition-transform" />
+                <span className="text-[9px] font-black uppercase tracking-widest">SPIFF</span>
+              </button>
+              
+              <button 
+                className="flex-1 rounded-lg bg-white/5 border border-white/10 text-slate-500 hover:bg-white/10 transition-all flex items-center justify-center gap-2 group p-1 cursor-not-allowed opacity-40"
+                title="Reserved Slot"
+                disabled
+              >
+                <AppIcon name="target" size={14} className="group-hover:scale-110 transition-transform" />
+                <span className="text-[9px] font-black uppercase tracking-widest">---</span>
+              </button>
+            </div>
+          )}
+
+          {isCollapsed && profile?.subscriptionTier !== SubscriptionTier.FREE && (
+            <button 
+              onClick={onLogSpiff}
+              className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto hover:bg-emerald-500/20 transition-all"
+              title="Log SPIFF Adjustment"
+            >
+              <AppIcon name="billing" size={18} />
+            </button>
+          )}
           
           <div className="h-12 shrink-0" />
         </div>

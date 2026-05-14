@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Deal, DealStatus, PayPlan, UserProfile } from '@/src/types';
+import { Deal, DealStatus, PayPlan, UserProfile, SubscriptionTier, MonthlySpiff } from '@/src/types';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { DealSearch } from './DealSearch';
@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AppIcon } from '../ui/AppIcon';
 import { cn, formatDateSafe, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { calculateDealCommission } from '@/src/lib/commissionLogic';
+import { Badge } from '../ui/Badge';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -40,19 +41,24 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 }) => {
   const { 
     deals, 
+    monthlySpiffs,
     payPlan, 
     isLoading, 
     handleDeleteDeal, 
-    handleUpdateDealStatus 
+    handleUpdateDealStatus,
+    handleDeleteMonthlySpiff
   } = useAppData();
   
   const { profile, isAdmin, user } = useAuth();
   const { isMobile } = useResponsive();
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [selectedSpiff, setSelectedSpiff] = useState<MonthlySpiff | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
+
+  const isBasicPlus = profile?.subscriptionTier !== SubscriptionTier.FREE;
 
   // Explanation Modal State
   const [explanationData, setExplanationData] = useState<{ commission: CommissionResult, customerName: string } | null>(null);
@@ -63,23 +69,100 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     return deals.find(d => d.id === selectedDeal.id) || selectedDeal;
   }, [deals, selectedDeal]);
 
-  // Filtering Logic
-  const filteredDeals = useMemo(() => {
-    return deals.filter(deal => {
-      const searchMatch = !search || 
-        deal.customerName.toLowerCase().includes(search.toLowerCase()) ||
-        deal.dealNumber?.toLowerCase().includes(search.toLowerCase()) ||
-        deal.stockNumber?.toLowerCase().includes(search.toLowerCase());
-      
-      const statusMatch = statusFilter === 'all' || deal.status === statusFilter;
-      const typeMatch = typeFilter === 'all' || deal.newOrUsed === typeFilter;
+  const handleSort = (key: string) => {
+    if (!isBasicPlus) return;
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+    }));
+  };
 
-      return searchMatch && statusMatch && typeMatch;
+  // Filtering & Sorting Logic
+  const sortedItems = useMemo(() => {
+    // 1. Combine deals and SPIFFs into a unified log list
+    const logItems: (Deal | MonthlySpiff)[] = [
+      ...deals.map(d => ({ ...d, logType: 'deal' as const })),
+      ...monthlySpiffs.map(s => ({ ...s, logType: 'spiff' as const, date: s.date || s.month + '-01' })) // Ensure date for sorting
+    ];
+
+    // 2. Pre-group deals by month for commission context
+    const dealsByMonthKey: Record<string, Deal[]> = {};
+    deals.forEach(d => {
+      const key = `${getCalendarYear(d.date)}-${getCalendarMonth(d.date)}`;
+      if (!dealsByMonthKey[key]) dealsByMonthKey[key] = [];
+      dealsByMonthKey[key].push(d);
     });
-  }, [deals, search, statusFilter, typeFilter]);
+
+    const filtered = logItems.filter(item => {
+      const isDeal = 'customerName' in item;
+      const searchStr = search.toLowerCase();
+      
+      const searchMatch = !search || (
+        isDeal ? (
+          item.customerName.toLowerCase().includes(searchStr) ||
+          item.dealNumber?.toLowerCase().includes(searchStr) ||
+          item.stockNumber?.toLowerCase().includes(searchStr)
+        ) : (
+          item.label?.toLowerCase().includes(searchStr) ||
+          item.notes?.toLowerCase().includes(searchStr) ||
+          'SPIFF'.toLowerCase().includes(searchStr)
+        )
+      );
+      
+      const typeMatch = typeFilter === 'all' || (isDeal && item.newOrUsed === typeFilter);
+
+      return searchMatch && typeMatch;
+    });
+
+    // 2. Wrap for sorting to handle calculated payouts efficiently
+    const sortables = filtered.map(item => {
+      let val: any = 0;
+      const isDeal = 'customerName' in item;
+
+      if (sortConfig.key === 'payout' && isBasicPlus) {
+        if (isDeal) {
+          const key = `${getCalendarYear(item.date)}-${getCalendarMonth(item.date)}`;
+          const monthlyDeals = dealsByMonthKey[key] || [];
+          val = payPlan ? calculateDealCommission(item, payPlan, monthlyDeals).finalPayout : 0;
+        } else {
+          val = item.amount;
+        }
+      }
+      return { item, val };
+    });
+
+    return sortables.sort((a, b) => {
+      let valA: any;
+      let valB: any;
+      const isDealA = 'customerName' in a.item;
+      const isDealB = 'customerName' in b.item;
+
+      if (sortConfig.key === 'date') {
+        valA = new Date(a.item.date).getTime();
+        valB = new Date(b.item.date).getTime();
+      } else if (sortConfig.key === 'customer') {
+        valA = isDealA ? (a.item as Deal).customerName.toLowerCase() : (a.item as MonthlySpiff).label?.toLowerCase() || 'spiff';
+        valB = isDealB ? (b.item as Deal).customerName.toLowerCase() : (b.item as MonthlySpiff).label?.toLowerCase() || 'spiff';
+      } else if (sortConfig.key === 'vehicle') {
+        valA = isDealA ? (a.item as Deal).purchasedVehicle.toLowerCase() : '---';
+        valB = isDealB ? (b.item as Deal).purchasedVehicle.toLowerCase() : '---';
+      } else if (sortConfig.key === 'frontEndGross' || sortConfig.key === 'backEndGross') {
+        valA = isDealA ? (a.item as any)[sortConfig.key] : 0;
+        valB = isDealB ? (b.item as any)[sortConfig.key] : 0;
+      } else if (sortConfig.key === 'payout') {
+        valA = a.val;
+        valB = b.val;
+      } else {
+        return 0;
+      }
+
+      const result = valA < valB ? -1 : valA > valB ? 1 : 0;
+      return sortConfig.direction === 'asc' ? result : -result;
+    }).map(s => s.item);
+
+  }, [deals, monthlySpiffs, search, typeFilter, sortConfig, isBasicPlus, payPlan]);
 
   const clearFilters = () => {
-    setStatusFilter('all');
     setTypeFilter('all');
   };
 
@@ -88,7 +171,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       <Typography variant="h1" className="text-white">Sales Log</Typography>
       <div className="flex items-center gap-3">
         <Typography variant="p" className="text-slate-500">
-          {profile?.displayName}'s personal history: {deals.length} deals total
+          {profile?.displayName}'s personal history: {deals.length} deals / {monthlySpiffs.length} SPIFFs
         </Typography>
         <button 
           onClick={onConfigPayPlan}
@@ -145,18 +228,45 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           <DealSearch value={search} onChange={setSearch} />
         </div>
         <DealFilters 
-          status={statusFilter}
-          onStatusChange={setStatusFilter}
           type={typeFilter}
           onTypeChange={setTypeFilter}
           onClear={clearFilters}
         />
       </div>
 
+      {isMobile && isBasicPlus && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black shrink-0">Sort By:</Typography>
+          {[
+            { key: 'date', label: 'Date' },
+            { key: 'customer', label: 'Customer' },
+            { key: 'frontEndGross', label: 'Front' },
+            { key: 'backEndGross', label: 'Back' },
+            { key: 'payout', label: 'Payout' },
+          ].map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => handleSort(opt.key)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all whitespace-nowrap border",
+                sortConfig.key === opt.key 
+                  ? "bg-brand-primary/20 border-brand-primary text-brand-primary" 
+                  : "bg-white/5 border-white/10 text-slate-500"
+              )}
+            >
+              {opt.label}
+              {sortConfig.key === opt.key && (
+                <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Results Meta */}
       <div className="flex items-center justify-between">
         <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-500">
-          Showing {filteredDeals.length} of {deals.length} deals
+          Showing {sortedItems.length} items
         </Typography>
       </div>
 
@@ -168,7 +278,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
               <div key={i} className="h-20 w-full animate-pulse rounded-2xl bg-white/5" />
             ))}
           </div>
-        ) : filteredDeals.length > 0 ? (
+        ) : sortedItems.length > 0 ? (
           <>
             {/* Desktop Table Layout */}
             {!isMobile && (
@@ -176,26 +286,74 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-white/5">
-                      <th className="py-4 px-4 text-left w-[100px]">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Date</Typography>
+                      <th 
+                        className={cn("py-4 px-4 text-left w-[100px]", isBasicPlus && "cursor-pointer hover:bg-white/5 transition-colors")}
+                        onClick={() => handleSort('date')}
+                      >
+                        <div className="flex items-center gap-1">
+                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Date</Typography>
+                          {isBasicPlus && sortConfig.key === 'date' && (
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                          )}
+                        </div>
                       </th>
-                      <th className="py-4 px-4 text-left">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Customer / Deal #</Typography>
+                      <th 
+                        className={cn("py-4 px-4 text-left", isBasicPlus && "cursor-pointer hover:bg-white/5 transition-colors")}
+                        onClick={() => handleSort('customer')}
+                      >
+                        <div className="flex items-center gap-1">
+                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Customer / Deal #</Typography>
+                          {isBasicPlus && sortConfig.key === 'customer' && (
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                          )}
+                        </div>
                       </th>
-                      <th className="py-4 px-4 text-left">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Vehicle / Stock #</Typography>
+                      <th 
+                        className={cn("py-4 px-4 text-left", isBasicPlus && "cursor-pointer hover:bg-white/5 transition-colors")}
+                        onClick={() => handleSort('vehicle')}
+                      >
+                        <div className="flex items-center gap-1">
+                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Vehicle / Stock #</Typography>
+                          {isBasicPlus && sortConfig.key === 'vehicle' && (
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                          )}
+                        </div>
                       </th>
                       <th className="py-4 px-4 text-left w-[100px]">
                         <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Type</Typography>
                       </th>
-                      <th className="py-4 px-4 text-right w-[140px]">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Front Gross</Typography>
+                      <th 
+                        className={cn("py-4 px-4 text-right w-[140px]", isBasicPlus && "cursor-pointer hover:bg-white/5 transition-colors")}
+                        onClick={() => handleSort('frontEndGross')}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Front Gross</Typography>
+                          {isBasicPlus && sortConfig.key === 'frontEndGross' && (
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                          )}
+                        </div>
                       </th>
-                      <th className="py-4 px-4 text-right w-[140px]">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Back Gross</Typography>
+                      <th 
+                        className={cn("py-4 px-4 text-right w-[140px]", isBasicPlus && "cursor-pointer hover:bg-white/5 transition-colors")}
+                        onClick={() => handleSort('backEndGross')}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Back Gross</Typography>
+                          {isBasicPlus && sortConfig.key === 'backEndGross' && (
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                          )}
+                        </div>
                       </th>
-                      <th className="py-4 px-4 text-right w-[180px]">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Est. Payout</Typography>
+                      <th 
+                        className={cn("py-4 px-4 text-right w-[180px]", isBasicPlus && "cursor-pointer hover:bg-white/5 transition-colors")}
+                        onClick={() => handleSort('payout')}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Est. Payout</Typography>
+                          {isBasicPlus && sortConfig.key === 'payout' && (
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                          )}
+                        </div>
                       </th>
                       <th className="py-4 px-4 text-right w-[100px]">
                         <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black text-right">Actions</Typography>
@@ -203,7 +361,92 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.02]">
-                    {filteredDeals.map((deal, index) => {
+                    {sortedItems.map((item, index) => {
+                      const isDeal = 'customerName' in item;
+                      
+                      if (!isDeal) {
+                        const spiff = item as MonthlySpiff;
+                        return (
+                          <motion.tr
+                            key={spiff.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.02 }}
+                            onClick={() => {
+                              window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
+                            }}
+                            className="group hover:bg-emerald-500/[0.02] cursor-pointer transition-colors"
+                          >
+                            <td className="py-5 px-4 whitespace-nowrap">
+                              <Typography variant="mono" className="text-[11px] text-slate-400 font-black">
+                                {formatDateSafe(spiff.date, 'MM/dd/yy')}
+                              </Typography>
+                            </td>
+                            <td className="py-5 px-4" colSpan={2}>
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                  <AppIcon name="billing" className="h-4 w-4 text-emerald-400" />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <Typography variant="label" className="text-white text-sm font-black truncate">
+                                      {spiff.label || 'SPIFF Adjustment'}
+                                    </Typography>
+                                    {!spiff.includedInTotal && (
+                                      <Badge variant="outline" className="text-[8px] px-1 py-0 border-blue-500/30 text-blue-400 bg-blue-500/10 font-black uppercase">
+                                        Separate
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <Typography variant="mono" className="text-[10px] text-slate-600 font-bold truncate max-w-[200px]">
+                                    {spiff.notes || 'Standalone payout adjustment'}
+                                  </Typography>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-5 px-4">
+                              <Badge variant="outline" className="text-[8px] px-1 py-0 border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-black uppercase">
+                                SPIFF
+                              </Badge>
+                            </td>
+                            <td className="py-5 px-4 text-right">
+                              <Typography variant="mono" className="text-xs text-slate-700 font-black">---</Typography>
+                            </td>
+                            <td className="py-5 px-4 text-right">
+                              <Typography variant="mono" className="text-xs text-slate-700 font-black">---</Typography>
+                            </td>
+                            <td className="py-5 px-4 text-right">
+                              <Typography variant="label" className="text-emerald-400 font-black text-sm">
+                                ${spiff.amount.toLocaleString()}
+                              </Typography>
+                            </td>
+                            <td className="py-5 px-4">
+                              <div className="flex items-center justify-end gap-1">
+                                <button 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
+                                  }}
+                                  className="p-2 rounded-lg text-slate-600 hover:text-cyan-400 hover:bg-cyan-400/10 transition-all opacity-0 group-hover:opacity-100"
+                                >
+                                  <AppIcon name="edit" size={14} />
+                                </button>
+                                <button 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    if (window.confirm('Delete this adjustment?')) handleDeleteMonthlySpiff?.(spiff.id); 
+                                  }}
+                                  className="p-2 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-400/10 transition-all opacity-0 group-hover:opacity-100"
+                                >
+                                  <AppIcon name="delete" size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        );
+                      }
+
+                      const deal = item as Deal;
                       const m = getCalendarMonth(deal.date);
                       const y = getCalendarYear(deal.date);
                       const monthlyDeals = deals.filter(d => {
@@ -286,7 +529,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               )}
                             </div>
                           </td>
-                          <td className="py-5 px-4">
+                          <td className="py-5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
@@ -316,7 +559,88 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
             {/* Mobile Cards Layout */}
             {isMobile && (
               <div className="grid grid-cols-1 gap-4">
-                {filteredDeals.map((deal, index) => {
+                {sortedItems.map((item, index) => {
+                  const isDeal = 'customerName' in item;
+
+                  if (!isDeal) {
+                    const spiff = item as MonthlySpiff;
+                    return (
+                      <motion.div
+                        key={spiff.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
+                        }}
+                        className="bg-[#0A1512] border border-emerald-500/10 rounded-[1.5rem] p-5 shadow-xl relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 p-3 flex gap-2">
+                           <Badge variant="outline" className="text-[8px] px-1 py-0 border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-black uppercase">SPIFF</Badge>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex items-start gap-4">
+                            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                              <AppIcon name="billing" className="h-5 w-5 text-emerald-400" />
+                            </div>
+                            <div className="min-w-0">
+                              <Typography variant="label" className="text-white text-base font-black uppercase truncate block">
+                                {spiff.label || 'Adjustment'}
+                              </Typography>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <Typography variant="mono" className="text-[10px] text-slate-500 font-black">
+                                  {formatDateSafe(spiff.date, 'MM/dd/yy')}
+                                </Typography>
+                                {!spiff.includedInTotal && (
+                                  <Badge variant="outline" className="text-[8px] px-1 py-0 border-blue-500/30 text-blue-400 bg-blue-500/10 font-black uppercase">
+                                    Separate
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-4 border-t border-white/[0.03]">
+                            <Typography variant="mono" className="text-[10px] text-slate-400 font-bold">
+                              {spiff.notes || 'Standalone payout adjustment.'}
+                            </Typography>
+                          </div>
+
+                          <div className="pt-4 border-t border-white/[0.03] flex items-center justify-between">
+                            <div>
+                              <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Amount</Typography>
+                              <Typography variant="h3" className="text-emerald-400 font-black">
+                                ${spiff.amount.toLocaleString()}
+                              </Typography>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
+                                }}
+                                className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
+                              >
+                                <AppIcon name="edit" size={16} />
+                              </button>
+                              <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  if (window.confirm('Delete this adjustment?')) handleDeleteMonthlySpiff?.(spiff.id); 
+                                }}
+                                className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
+                              >
+                                <AppIcon name="delete" size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  }
+
+                  const deal = item as Deal;
                   const m = getCalendarMonth(deal.date);
                   const y = getCalendarYear(deal.date);
                   const monthlyDeals = deals.filter(d => {

@@ -276,19 +276,21 @@ const AdminPanel = () => {
           </Button>
         </Card>
 
-        {/* User Management Placeholder */}
-        <Card className="p-8 bg-white/[0.02] border border-white/5 space-y-6 grayscale opacity-60">
+        <Card className="p-8 bg-brand-primary/5 border border-brand-primary/10 space-y-6 flex flex-col justify-between shadow-glow-sm glow-primary/5">
           <div className="space-y-2">
-            <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center">
-              <User className="h-5 w-5 text-slate-400" />
+            <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+              <User className="h-5 w-5 text-brand-primary" />
             </div>
             <Typography variant="h4" className="text-white">User Management</Typography>
-            <Typography variant="small" className="text-slate-400 block">
-              Manage accounts, reset passwords, and adjust user roles across the entire platform.
+            <Typography variant="small" className="text-slate-400 block pb-4">
+              Manage accounts, adjust subscription tiers, and control permissions across your entire organization.
             </Typography>
           </div>
-          <Button disabled variant="outline" className="w-full border-white/10 text-slate-500 text-[10px] uppercase font-black tracking-widest">
-            Coming Soon
+          <Button 
+            onClick={() => navigate('/admin/users')}
+            className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] h-12"
+          >
+            Manage Users
           </Button>
         </Card>
       </div>
@@ -510,44 +512,53 @@ const AccountPanel = ({ profile }: { profile: UserProfile | null }) => {
   );
 };
 
-const OrganizationPanel = ({ profile }: { profile: UserProfile | null }) => (
-  <div className="space-y-8">
-    <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Dealership / Org</Typography>
-    
-    <Card className="p-8 bg-bg-card/20 border-white/5 space-y-8">
-      <div className="flex items-center gap-8">
-        <div className="h-20 w-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
-          <Building2 className="h-10 w-10 text-slate-400" />
-        </div>
-        <div className="space-y-1">
-          <Typography variant="h2" className="text-white leading-none">Highline Motors</Typography>
-          <Typography variant="p" className="text-slate-500 font-bold">Organization Member Since May 2024</Typography>
-          <div className="inline-flex mt-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400">
-            Verified Partner
+const OrganizationPanel = ({ profile }: { profile: UserProfile | null }) => {
+  const navigate = useNavigate();
+  return (
+    <div className="space-y-8">
+      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Dealership / Org</Typography>
+      
+      <Card className="p-8 bg-bg-card/20 border-white/5 space-y-8">
+        <div className="flex items-center gap-8">
+          <div className="h-20 w-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
+            <Building2 className="h-10 w-10 text-slate-400" />
+          </div>
+          <div className="space-y-1">
+            <Typography variant="h2" className="text-white leading-none">Highline Motors</Typography>
+            <Typography variant="p" className="text-slate-500 font-bold">Organization Member Since May 2024</Typography>
+            <div className="inline-flex mt-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-400">
+              Verified Partner
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-white/5">
-        <div className="space-y-2">
-          <Typography variant="label" className="text-slate-500 ml-1">Organization ID</Typography>
-          <Input defaultValue={profile?.orgId} disabled className="bg-white/[0.02] font-mono text-xs opacity-50" />
-        </div>
-        <div className="space-y-2">
-          <Typography variant="label" className="text-slate-500 ml-1">Dealership ID</Typography>
-          <Input defaultValue={profile?.dealershipId} disabled className="bg-white/[0.02] font-mono text-xs opacity-50" />
-        </div>
-      </div>
-
-      {(profile?.role === UserRole.ADMIN || profile?.role === UserRole.GENERAL_MANAGER) && (
-        <div className="pt-8 space-y-4">
-          <Typography variant="label" className="text-brand-primary block uppercase tracking-widest text-[10px]">Management Controls</Typography>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Button variant="secondary" className="w-full bg-white/5 border-white/10 text-xs">Manage Users</Button>
-            <Button variant="secondary" className="w-full bg-white/5 border-white/10 text-xs">Org Settings</Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-white/5">
+          <div className="space-y-2">
+            <Typography variant="label" className="text-slate-500 ml-1">Organization ID</Typography>
+            <Input defaultValue={profile?.orgId} disabled className="bg-white/[0.02] font-mono text-xs opacity-50" />
+          </div>
+          <div className="space-y-2">
+            <Typography variant="label" className="text-slate-500 ml-1">Dealership ID</Typography>
+            <Input defaultValue={profile?.dealershipId} disabled className="bg-white/[0.02] font-mono text-xs opacity-50" />
           </div>
         </div>
-      )}
-    </Card>
-  </div>
-);
+
+        {(profile?.role === UserRole.ADMIN || profile?.role === UserRole.GENERAL_MANAGER) && (
+          <div className="pt-8 space-y-4">
+            <Typography variant="label" className="text-brand-primary block uppercase tracking-widest text-[10px]">Management Controls</Typography>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Button 
+                variant="secondary" 
+                className="w-full bg-white/5 border-white/10 text-xs"
+                onClick={() => navigate('/admin/users')}
+              >
+                Manage Users
+              </Button>
+              <Button variant="secondary" className="w-full bg-white/5 border-white/10 text-xs">Org Settings</Button>
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+};

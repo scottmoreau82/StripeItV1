@@ -487,3 +487,17 @@ export interface DailyAnalyticsAggregate {
   activeSessions: number;
   timestamp: number;
 }
+
+export interface MonthlySpiff {
+  id: string;
+  userId: string;
+  orgId: string;
+  month: string; // e.g. "2024-05" - for grouping
+  amount: number;
+  label?: string;
+  date: string; // ISO date for log sorting
+  includedInTotal?: boolean;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}

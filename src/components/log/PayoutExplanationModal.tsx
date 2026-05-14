@@ -199,6 +199,31 @@ export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
             </section>
           )}
 
+          {/* Deal SPIFF */}
+          {explanation.spiffAmount > 0 && (
+            <section className="space-y-2">
+               <div className="flex items-center gap-2 mb-3">
+                 <div className="h-6 w-0.5 bg-blue-500 rounded-full" />
+                 <Typography variant="mono" className="text-[11px] text-slate-400 uppercase tracking-widest font-black">Deal SPIFF</Typography>
+               </div>
+               <Card className={cn("p-4 border-blue-500/20", explanation.spiffIncludedInTotal ? "bg-blue-500/5" : "bg-white/[0.02] border-white/10")}>
+                 <div className="flex justify-between items-center">
+                    <span className="text-slate-200">
+                      {explanation.spiffIncludedInTotal ? 'Included in Total Pay' : 'Separate Line Item'}
+                    </span>
+                    <span className={cn("font-mono font-black", explanation.spiffIncludedInTotal ? "text-white" : "text-slate-500")}>
+                      +{formatCurrency(explanation.spiffAmount)}
+                    </span>
+                 </div>
+                 {!explanation.spiffIncludedInTotal && (
+                   <Typography variant="small" className="text-slate-500 text-[10px] mt-1 italic">
+                     Not included in Final Estimated Payout total.
+                   </Typography>
+                 )}
+               </Card>
+            </section>
+          )}
+
           {/* Final Summary */}
           <section className="pt-6 border-t border-white/10">
             <div className="bg-brand-primary/10 border border-brand-primary/20 rounded-2xl p-5 shadow-inner">

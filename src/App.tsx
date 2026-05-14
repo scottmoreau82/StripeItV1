@@ -24,8 +24,7 @@ import { dealService } from './services/dealService';
 import { StripeItCommissionSetupModal } from './components/commission/StripeItCommissionSetupModal';
 import { payPlanService } from './services/payPlanService';
 import { goalService } from './services/goalService';
-import { calculateTotalEarnings } from './lib/commissionLogic';
-import { Deal, DealStatus, Goal, PayPlan, UserRole, QuickNote, Competition } from './types';
+import { Deal, DealStatus, Goal, PayPlan, UserRole, QuickNote, Competition, MonthlySpiff } from './types';
 
 import { HomeView } from './components/home/HomeView';
 import { ActivityFeed } from './components/activity/ActivityFeed';
@@ -34,6 +33,7 @@ import { ReportView } from './components/reports/ReportView';
 import { SettingsView } from './components/settings/SettingsView';
 import { ManagerView } from './components/management/ManagerView';
 import { NoteEntryForm } from './components/notes/NoteEntryForm';
+import { SpiffEntryForm } from './components/log/SpiffEntryForm';
 import { CreateCompetitionForm } from './components/competitions/CreateCompetitionForm';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { UpgradePrompt } from './components/ui/UpgradePrompt';
@@ -49,11 +49,13 @@ import { FeedbackType } from './types';
 import { analyticsService } from './services/analyticsService';
 import { AnalyticsEventType } from './types';
 import { AdminAnalyticsDashboard } from './components/analytics/AdminAnalyticsDashboard';
+import { UserManagementPage } from './components/management/UserManagementPage';
 
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 
 function MainAppFlow() {
   const [isNewDealOpen, setIsNewDealOpen] = useState(false);
+  const [isNewSpiffOpen, setIsNewSpiffOpen] = useState(false);
   const [isPayPlanOpen, setIsPayPlanOpen] = useState(false);
   const [isQuickNoteOpen, setIsQuickNoteOpen] = useState(false);
   const [isCompetitionOpen, setIsCompetitionOpen] = useState(false);
@@ -61,6 +63,7 @@ function MainAppFlow() {
   const [feedbackType, setFeedbackType] = useState<FeedbackType | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
+  const [editingSpiff, setEditingSpiff] = useState<MonthlySpiff | null>(null);
 
   const { isMobile } = useResponsive();
   const { profile, user, isAdmin } = useAuth();
@@ -84,6 +87,7 @@ function MainAppFlow() {
     isLoading,
     handleSaveDeal, 
     handleSavePayPlan,
+    handleSaveMonthlySpiff,
     handleSaveNote,
     handleCreateCompetition,
     handleCreateRandomDeal,
@@ -101,6 +105,12 @@ function MainAppFlow() {
     };
     
     window.addEventListener('stripeit:create-random-deal', handleRandomDealEvent);
+
+    const handleEditSpiffEvent = (e: any) => {
+      setEditingSpiff(e.detail);
+      setIsNewSpiffOpen(true);
+    };
+    window.addEventListener('stripeit:edit-spiff', handleEditSpiffEvent);
     
     const handleFeedbackEvent = (e: any) => {
       if (e.detail?.type) {
@@ -114,6 +124,7 @@ function MainAppFlow() {
 
     return () => {
       window.removeEventListener('stripeit:create-random-deal', handleRandomDealEvent);
+      window.removeEventListener('stripeit:edit-spiff', handleEditSpiffEvent);
       window.removeEventListener('stripeit:open-feedback', handleFeedbackEvent);
     };
   }, [handleCreateRandomDeal]);
@@ -195,6 +206,7 @@ function MainAppFlow() {
   return (
     <RootLayout 
       onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
+      onLogSpiff={() => { setEditingSpiff(null); setIsNewSpiffOpen(true); }}
       onConfigPayPlan={() => setIsPayPlanOpen(true)}
     >
       <LoadingOverlay isLoading={isLoading} />
@@ -314,8 +326,54 @@ function MainAppFlow() {
                   : <Navigate to="/" />
               } 
             />
+            <Route 
+              path="/admin/users" 
+              element={
+                isAdmin 
+                  ? <UserManagementPage /> 
+                  : <Navigate to="/" />
+              } 
+            />
           </Routes>
         </motion.div>
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isNewSpiffOpen && (
+          isMobile ? (
+            <FullscreenMobileFlow
+              isOpen={isNewSpiffOpen}
+              onClose={() => { setIsNewSpiffOpen(false); setEditingSpiff(null); }}
+              title={editingSpiff ? "Edit SPIFF" : "Log SPIFF"}
+            >
+              <SpiffEntryForm 
+                initialData={editingSpiff || {}} 
+                onSubmit={async (data) => {
+                  await handleSaveMonthlySpiff(data);
+                  setIsNewSpiffOpen(false);
+                  setEditingSpiff(null);
+                }}
+                onCancel={() => { setIsNewSpiffOpen(false); setEditingSpiff(null); }}
+              />
+            </FullscreenMobileFlow>
+          ) : (
+            <Modal
+              isOpen={isNewSpiffOpen}
+              onClose={() => { setIsNewSpiffOpen(false); setEditingSpiff(null); }}
+              title={editingSpiff ? "Edit SPIFF" : "Log New SPIFF"}
+            >
+              <SpiffEntryForm 
+                initialData={editingSpiff || {}} 
+                onSubmit={async (data) => {
+                  await handleSaveMonthlySpiff(data);
+                  setIsNewSpiffOpen(false);
+                  setEditingSpiff(null);
+                }}
+                onCancel={() => { setIsNewSpiffOpen(false); setEditingSpiff(null); }}
+              />
+            </Modal>
+          )
+        )}
       </AnimatePresence>
 
       {/* Feedback System */}

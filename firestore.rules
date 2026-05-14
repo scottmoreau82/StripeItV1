@@ -74,6 +74,16 @@ service cloud.firestore {
              data.month is string;
     }
 
+    function isValidSpiff(data) {
+      return data.userId == request.auth.uid &&
+             data.orgId is string &&
+             data.amount is number &&
+             data.month is string &&
+             data.date is string &&
+             data.createdAt is number &&
+             data.updatedAt is number;
+    }
+
     function isValidFeedback(data) {
       return data.userId == request.auth.uid &&
              data.title is string && data.title.size() <= 200 &&
@@ -128,7 +138,7 @@ service cloud.firestore {
     // User Collection
     match /users/{userId} {
       // isOwner is primary gate. Managers can see profiles within their org.
-      allow get: if isOwner(userId) || (isSignedIn() && isAnyManager() && isOrgMember(getUserSafe(userId).orgId));
+      allow get: if isOwner(userId) || isBootstrapAdmin() || (isSignedIn() && isAnyManager() && isOrgMember(getUserSafe(userId).orgId));
       allow list: if isSignedIn() && (isAnyManager() || isAnyAdmin()); 
       allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().get('isAdmin', false) == false;
       allow update: if isOwner(userId) && (
@@ -177,6 +187,12 @@ service cloud.firestore {
       match /competitions/{compId} {
         allow get, list: if isOrgMember(orgId);
         allow write: if isOrgMember(orgId) && isAnyManager();
+      }
+
+      match /monthlySpiffs/{spiffId} {
+        allow get, list: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.userId == request.auth.uid));
+        allow create: if isOrgMember(orgId) && isValidSpiff(incoming());
+        allow update, delete: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.userId == request.auth.uid));
       }
 
       match /users/{userId}/payPlans/{planId} {

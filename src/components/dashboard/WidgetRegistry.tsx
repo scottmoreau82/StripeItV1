@@ -6,6 +6,7 @@ import { RecentDealsList } from '../home/RecentDealsList';
 import { RecentNotesList } from '../notes/RecentNotesList';
 import { CompetitionCard } from '../competitions/CompetitionCard';
 import { CompetitionLeaderboard } from '../competitions/CompetitionLeaderboard';
+import { AdjustmentsWidget } from './AdjustmentsWidget';
 import { Card } from '../ui/Card';
 import { Typography } from '../ui/Typography';
 import { Deal, QuickNote, Competition, LeaderboardEntry, DashboardMetrics } from '@/src/types';
@@ -28,6 +29,7 @@ interface WidgetRegistryProps {
     metrics: DashboardMetrics;
     goal: any;
     leaders: { competition: Competition, leader?: LeaderboardEntry }[];
+    monthlySpiffs: any[];
     isLoading: boolean;
   };
   onAction?: (action: string, payload?: any) => void;
@@ -35,7 +37,7 @@ interface WidgetRegistryProps {
 }
 
 export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAction, onUpgrade }) => {
-  const { deals, notes, competitions, metrics, goal, leaders, isLoading } = data;
+  const { deals, notes, competitions, metrics, goal, leaders, monthlySpiffs, isLoading } = data;
   const { profile } = useAuth();
   const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
 
@@ -162,6 +164,13 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
             )}
           </div>
         </div>
+      );
+    case WidgetType.ADJUSTMENTS:
+      return (
+        <AdjustmentsWidget 
+          monthlySpiffs={monthlySpiffs} 
+          isLoading={isLoading} 
+        />
       );
     default:
       return null;

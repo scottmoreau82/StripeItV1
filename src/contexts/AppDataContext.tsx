@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { useAuth } from './AuthContext';
 import { dealService } from '../services/dealService';
 import { payPlanService } from '../services/payPlanService';
+import { spiffService } from '../services/spiffService';
 import { goalService } from '../services/goalService';
 import { noteService } from '../services/noteService';
 import { competitionService } from '../services/competitionService';
@@ -10,7 +11,7 @@ import { planLimitService, LimitType } from '../services/planLimitService';
 import { dashboardService } from '../services/dashboardService';
 import { activityService } from '../services/activityService';
 import { notificationService } from '../services/notificationService';
-import { Deal, PayPlan, Goal, DealStatus, QuickNote, Competition, SubscriptionTier, DashboardLayout, ActivityEventType, AnalyticsEventType } from '../types';
+import { Deal, PayPlan, Goal, DealStatus, QuickNote, Competition, SubscriptionTier, DashboardLayout, ActivityEventType, AnalyticsEventType, MonthlySpiff } from '../types';
 import { onSnapshot, query, collection, orderBy, where } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { analyticsService } from '../services/analyticsService';
@@ -26,6 +27,7 @@ interface AppDataContextType {
   payPlan: PayPlan | null;
   goal: Goal | null;
   notes: QuickNote[];
+  monthlySpiffs: MonthlySpiff[];
   competitions: Competition[];
   isLoading: boolean;
   showSuccess: boolean;
@@ -34,6 +36,8 @@ interface AppDataContextType {
   handleDeleteDeal: (dealId: string) => Promise<void>;
   handleUpdateDealStatus: (dealId: string, newStatus: DealStatus) => Promise<void>;
   handleSavePayPlan: (planData: Partial<PayPlan>) => Promise<void>;
+  handleSaveMonthlySpiff: (data: Partial<MonthlySpiff>) => Promise<void>;
+  handleDeleteMonthlySpiff: (id: string) => Promise<void>;
   handleSaveNote: (noteData: Partial<QuickNote>) => Promise<void>;
   handleDeleteNote: (noteId: string) => Promise<void>;
   handleCreateCompetition: (data: any) => Promise<void>;
@@ -53,6 +57,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [payPlan, setPayPlan] = useState<PayPlan | null>(null);
   const [goal, setGoal] = useState<Goal | null>(null);
   const [notes, setNotes] = useState<QuickNote[]>([]);
+  const [monthlySpiffs, setMonthlySpiffs] = useState<MonthlySpiff[]>([]);
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -93,6 +98,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       const currentMonth = new Date().toISOString().slice(0, 7);
       const currentGoal = await goalService.getGoalForMonth(userId, orgId, currentMonth);
       if (currentGoal) setGoal(currentGoal);
+
+      const spiffData = await spiffService.getMonthlySpiffs(orgId, userId, currentMonth);
+      setMonthlySpiffs(spiffData);
     } catch (error) {
       console.error("Error loading static app data:", error);
     }
@@ -213,10 +221,36 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
     });
 
+    // 4. Subscription to Monthly SPIFFs
+    const spiffsQuery = query(
+      collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, 'monthlySpiffs'),
+      where('userId', '==', user.uid),
+      orderBy('date', 'desc')
+    );
+
+    const unsubSpiffs = onSnapshot(spiffsQuery, (snapshot) => {
+      const spiffData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return { 
+          id: doc.id, 
+          ...data,
+          createdAt: data.createdAt?.toMillis?.() || (typeof data.createdAt === 'number' ? data.createdAt : Date.now()),
+          updatedAt: data.updatedAt?.toMillis?.() || (typeof data.updatedAt === 'number' ? data.updatedAt : Date.now())
+        } as MonthlySpiff;
+      });
+      setMonthlySpiffs(spiffData);
+    }, (error) => {
+      console.error("Spiffs subscription error:", error);
+      if (error.message.includes('permission')) {
+        handleFirestoreError(error, OperationType.LIST, `organizations/${profile.orgId}/monthlySpiffs`);
+      }
+    });
+
     return () => {
       unsubDeals();
       unsubNotes();
       unsubComps();
+      unsubSpiffs();
     };
   }, [profile, user, loadStaticData]);
 
@@ -373,6 +407,33 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  const handleSaveMonthlySpiff = async (data: Partial<MonthlySpiff>) => {
+    if (!profile || !user) return;
+    try {
+      await spiffService.saveMonthlySpiff(profile.orgId, {
+        ...data,
+        userId: user.uid,
+        orgId: profile.orgId,
+        month: data.month || new Date().toISOString().slice(0, 7)
+      });
+      await loadStaticData(profile.orgId, user.uid);
+      triggerSuccess('Monthly adjustment saved.');
+    } catch (error) {
+      triggerError('Failed to save adjustment.');
+    }
+  };
+
+  const handleDeleteMonthlySpiff = async (id: string) => {
+    if (!profile || !user) return;
+    try {
+      await spiffService.deleteMonthlySpiff(profile.orgId, id);
+      await loadStaticData(profile.orgId, user.uid);
+      triggerSuccess('Adjustment deleted.');
+    } catch (error) {
+      triggerError('Failed to delete adjustment.');
+    }
+  };
+
   const handleSaveNote = async (noteData: Partial<QuickNote>) => {
     if (!profile || !user) return;
     
@@ -463,6 +524,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       payPlan,
       goal,
       notes,
+      monthlySpiffs,
       competitions,
       isLoading,
       showSuccess,
@@ -471,6 +533,8 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       handleDeleteDeal,
       handleUpdateDealStatus,
       handleSavePayPlan,
+      handleSaveMonthlySpiff,
+      handleDeleteMonthlySpiff,
       handleSaveNote,
       handleDeleteNote,
       handleCreateCompetition,

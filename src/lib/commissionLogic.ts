@@ -1,4 +1,4 @@
-import { Deal, PayPlan, PayPlanRule, PayPlanTier, VolumeBonus, VolumeBonusType, VolumeBonusScope, VolumeBonusFilter, MiniLadderTier } from '../types';
+import { Deal, PayPlan, PayPlanRule, PayPlanTier, VolumeBonus, VolumeBonusType, VolumeBonusScope, VolumeBonusFilter, MiniLadderTier, MonthlySpiff } from '../types';
 import { parseCalendarDate } from './utils';
 
 /**
@@ -37,6 +37,8 @@ export interface CommissionResult {
     isAdvanced: boolean;
     newOrUsed: 'new' | 'used' | 'cpo';
     isMinisActive: boolean;
+    spiffAmount?: number;
+    spiffIncludedInTotal?: boolean;
   };
 }
 
@@ -45,6 +47,8 @@ export interface PeriodEarnings {
   dealResults: CommissionResult[];
   tierBonuses: { tierId: string; amount: number; label?: string }[];
   totalTierBonuses: number;
+  monthlySpiffs?: { id: string; amount: number; label?: string }[];
+  totalMonthlySpiffs?: number;
   hourlyCompensation?: {
     model: string;
     hourlyTotal: number;
@@ -321,7 +325,6 @@ export const estimateCommission = (
     usedMini: overrides?.usedMini
   });
 
-  // The actual mini floor is the higher of the base mini or any custom mini matches
   const miniAmount = Math.max(baseMiniAmount, customMiniFloor);
   
   let totalComm = 0;
@@ -357,7 +360,7 @@ export const estimateCommission = (
     const splitRatio = (deal.splitPercentage || 50) / 100;
     
     if (plan.splitDealBehavior === 'half_mini' && isMini) {
-      finalPayout = miniAmount / 2;
+      finalPayout = (miniAmount / 2);
       wasHalfMiniSplit = true;
     } else {
       finalPayout = totalComm * splitRatio;
@@ -394,7 +397,7 @@ export const estimateCommission = (
       totalRuleBonuses: ruleBonuses,
       isAdvanced: !!plan.isAdvanced,
       newOrUsed: deal.newOrUsed,
-      isMinisActive: !!plan.isMinisAndHourlyActive
+      isMinisActive: !!plan.isMinisAndHourlyActive,
     }
   };
 };
@@ -486,7 +489,7 @@ export const calculateDealCommission = (deal: Deal, plan: PayPlan, allDealsForMo
  * StripeItTierBonusSystem & StripeItRetroactiveBonusSystem
  * Calculate total period earnings including volume-based tier bonuses and retroactive rate overrides.
  */
-export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan): PeriodEarnings => {
+export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan, monthlySpiffs: MonthlySpiff[] = []): PeriodEarnings => {
   let dealResults: any[] = [];
   let totalDealPayout = 0;
 
@@ -569,11 +572,19 @@ export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan): PeriodEar
     };
   }
 
+  // Add Monthly adjustments (Spiffs)
+  const totalMonthlySpiffs = monthlySpiffs
+    .filter(s => s.includedInTotal !== false)
+    .reduce((sum, s) => sum + (s.amount || 0), 0);
+  finalGrandTotal += totalMonthlySpiffs;
+
   return {
     totalPayout: totalDealPayout,
     dealResults,
     tierBonuses,
     totalTierBonuses,
+    monthlySpiffs: monthlySpiffs.map(s => ({ id: s.id, amount: s.amount, label: s.label || s.notes || 'SPIFF' })),
+    totalMonthlySpiffs,
     hourlyCompensation: hourlyInfo,
     grandTotal: finalGrandTotal
   };

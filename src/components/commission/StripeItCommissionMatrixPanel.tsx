@@ -536,7 +536,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     splitDealBehavior: initialData?.splitDealBehavior || ('standard' as const),
     frontDeficitRecoveryEnabled: initialData?.frontDeficitRecoveryEnabled ?? false,
     isAdvanced: initialData?.isAdvanced !== undefined ? initialData.isAdvanced : true,
-    isRulesEnabled: initialData?.rules && initialData.rules.length > 0 ? true : false,
+    isRulesEnabled: initialData?.isRulesEnabled ?? (initialData?.rules && initialData.rules.length > 0 ? true : false),
     isVolumeBonusEngineActive: initialData?.isVolumeBonusEngineActive || false,
     isSplitBehaviorActive: initialData?.isSplitBehaviorActive ?? true,
     isFlatPerUnitActive: initialData?.isFlatPerUnitActive ?? true,
@@ -1061,7 +1061,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 
     const cleanRules = (formData.rules || []).map(r => ({
       ...r,
-      bonusAmount: Number(r.bonusAmount) || 0
+      rewardValue: Number(r.rewardValue) || 0
     }));
 
     const cleanData = {
@@ -1638,7 +1638,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                         <ShieldCheck className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col">
-                        <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Front Deficit Recovery</Typography>
+                        <Typography variant="h3" className="text-white text-lg font-black tracking-tight">Front Deficit Recovery</Typography>
                         <Typography variant="mono" className="text-slate-600 text-[9px] uppercase tracking-widest mt-1">
                           When enabled, negative front commission deficits must be recovered before backend commission becomes payable.
                         </Typography>

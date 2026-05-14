@@ -65,6 +65,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     goal, 
     isLoading, 
     dashboardLayout, 
+    monthlySpiffs,
     handleSaveDashboardLayout,
     handleDeleteNote 
   } = useAppData();
@@ -86,7 +87,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     }
   }, [isFree, activeTab]);
 
-  const metrics = useMemo(() => calculateDashboardMetrics(deals, payPlan), [deals, payPlan]);
+  const metrics = useMemo(() => calculateDashboardMetrics(deals, payPlan, monthlySpiffs), [deals, payPlan, monthlySpiffs]);
   const chartData = useMemo(() => getTrendsChartData(deals, payPlan), [deals, payPlan]);
 
   const selectedComp = useMemo(() => 
@@ -114,6 +115,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     competitions,
     metrics,
     goal,
+    monthlySpiffs,
     leaders: activeCompetitionsWithLeaders,
     isLoading
   };

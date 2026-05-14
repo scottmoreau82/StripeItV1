@@ -203,6 +203,25 @@
         "deviceInfo": { "type": "object" }
       }
     },
+    "MonthlySpiff": {
+      "title": "MonthlySpiff",
+      "description": "A standalone payout adjustment (SPIFF).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "orgId": { "type": "string" },
+        "month": { "type": "string" },
+        "amount": { "type": "number" },
+        "label": { "type": "string" },
+        "date": { "type": "string" },
+        "includedInTotal": { "type": "boolean" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "orgId", "amount", "month", "date", "createdAt", "updatedAt"]
+    },
     "DailyAnalyticsAggregate": {
       "title": "DailyAnalyticsAggregate",
       "description": "Daily roll-up of core metrics.",
@@ -289,6 +308,10 @@
     "/organizations/{orgId}/competitions/{compId}": {
       "schema": "Competition",
       "description": "Dealership sales competitions and spiffs."
+    },
+    "/organizations/{orgId}/monthlySpiffs/{spiffId}": {
+      "schema": "MonthlySpiff",
+      "description": "Payout adjustments and SPIFFs."
     },
     "/goals/{goalId}": {
       "schema": "Goal",

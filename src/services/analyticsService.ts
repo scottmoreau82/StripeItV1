@@ -27,7 +27,8 @@ import {
   AnalyticsSession, 
   DailyAnalyticsAggregate,
   Deal,
-  PayPlan
+  PayPlan,
+  MonthlySpiff
 } from '../types';
 
 /**
@@ -241,14 +242,14 @@ const isThisMonth = (dateStr: string) => {
   return getCalendarMonth(dateStr) === now.getMonth() && getCalendarYear(dateStr) === now.getFullYear();
 };
 
-export const calculateDashboardMetrics = (deals: Deal[], payPlan: PayPlan | null) => {
+export const calculateDashboardMetrics = (deals: Deal[], payPlan: PayPlan | null, monthlySpiffs: MonthlySpiff[] = []) => {
   const mtdDeals = deals.filter(d => isThisMonth(d.date));
   const unitCount = mtdDeals.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
   const frontEnd = mtdDeals.reduce((sum, d) => sum + (d.frontEndGross || 0), 0);
   const backEnd = mtdDeals.reduce((sum, d) => sum + (d.backEndGross || 0), 0);
   const gross = frontEnd + backEnd;
   
-  const commission = payPlan ? calculateTotalEarnings(mtdDeals, payPlan) : 0;
+  const commission = payPlan ? calculatePeriodEarnings(mtdDeals, payPlan, monthlySpiffs).grandTotal : 0;
 
   const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
   const dayOfMonth = new Date().getDate();

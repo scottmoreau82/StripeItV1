@@ -17,7 +17,8 @@ export enum WidgetType {
   RECENT_DEALS = 'recent_deals',
   QUICK_NOTES = 'quick_notes',
   COMPETITIONS = 'competitions',
-  TEAM_METRICS = 'team_metrics'
+  TEAM_METRICS = 'team_metrics',
+  ADJUSTMENTS = 'adjustments'
 }
 
 export interface WidgetDefinition {
@@ -111,6 +112,13 @@ export const WIDGET_DEFINITIONS: Record<WidgetType, WidgetDefinition> = {
     minTier: SubscriptionTier.ORGANIZATION,
     defaultVisible: true,
     requiredFeature: Feature.TEAM_DASHBOARDS
+  },
+  [WidgetType.ADJUSTMENTS]: {
+    type: WidgetType.ADJUSTMENTS,
+    label: 'Adjustments',
+    description: '1-time monthly SPIFFs and payout adjustments.',
+    minTier: SubscriptionTier.BASIC,
+    defaultVisible: true
   }
 };
 
@@ -131,7 +139,8 @@ export const widgetService = {
       WidgetType.BACK_END_GROSS,
       WidgetType.RECENT_DEALS,
       WidgetType.QUICK_NOTES,
-      WidgetType.COMPETITIONS
+      WidgetType.COMPETITIONS,
+      WidgetType.ADJUSTMENTS
     ];
   }
 };

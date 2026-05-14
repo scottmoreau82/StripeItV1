@@ -11,8 +11,6 @@ import { cn } from '@/src/lib/utils';
  */
 
 interface DealFiltersProps {
-  status: string;
-  onStatusChange: (status: string) => void;
   type: string;
   onTypeChange: (type: string) => void;
   onClear: () => void;
@@ -20,14 +18,12 @@ interface DealFiltersProps {
 }
 
 export const DealFilters: React.FC<DealFiltersProps> = ({
-  status,
-  onStatusChange,
   type,
   onTypeChange,
   onClear,
   className
 }) => {
-  const hasFilters = status !== 'all' || type !== 'all';
+  const hasFilters = type !== 'all';
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -43,18 +39,7 @@ export const DealFilters: React.FC<DealFiltersProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Select 
-          value={status}
-          onChange={(e) => onStatusChange(e.target.value)}
-          options={[
-            { value: 'all', label: 'All Status' },
-            { value: DealStatus.DRAFT, label: 'Draft' },
-            { value: DealStatus.SUBMITTED, label: 'Submitted' },
-            { value: DealStatus.FINALIZED, label: 'Finalized' },
-            { value: DealStatus.CANCELLED, label: 'Cancelled' },
-          ]}
-        />
+      <div className="grid grid-cols-1 gap-3">
         <Select 
           value={type}
           onChange={(e) => onTypeChange(e.target.value)}

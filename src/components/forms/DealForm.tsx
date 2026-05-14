@@ -9,8 +9,12 @@ import { Typography } from '@/src/components/ui/Typography';
 import { ChevronDown, ChevronUp, UserPlus, Car, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppData } from '@/src/contexts/AppDataContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { getActiveCommissionTier } from '@/src/lib/commissionLogic';
 import { cn, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
+import { SubscriptionTier } from '@/src/types';
+import { UpgradePrompt } from '@/src/components/ui/UpgradePrompt';
+import { AppIcon } from '../ui/AppIcon';
 
 /**
  * StripeItDealFormSystem
@@ -32,6 +36,9 @@ export const DealForm: React.FC<DealFormProps> = ({
   isLoading
 }) => {
   const { triggerError, deals, payPlan } = useAppData();
+  const { profile } = useAuth();
+  const isBasicPlus = profile?.subscriptionTier && profile.subscriptionTier !== SubscriptionTier.FREE;
+  
   const [formData, setFormData] = useState<DealFormState>({
     customerName: initialData?.customerName || '',
     purchasedVehicle: initialData?.purchasedVehicle || '',
@@ -427,7 +434,7 @@ export const DealForm: React.FC<DealFormProps> = ({
                   className="flex min-h-24 w-full rounded-xl border border-white/5 bg-slate-900/50 px-4 py-3 text-sm text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary/50 transition-all placeholder:text-slate-600 outline-none"
                   placeholder="Internal details or customer preferences..."
                   value={formData.notes}
-                  onChange={(e) => handleChange('notes', e.target.value)}
+                  onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
                 />
               </div>
             </div>

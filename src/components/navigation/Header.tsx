@@ -26,6 +26,17 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const toggleDrawer = () => {
+    const newState = !isOpen;
+    setIsOpen(newState);
+    window.dispatchEvent(new CustomEvent('stripeit:drawer-toggle', { detail: { isOpen: newState } }));
+  };
+
+  const closeDrawer = () => {
+    setIsOpen(false);
+    window.dispatchEvent(new CustomEvent('stripeit:drawer-toggle', { detail: { isOpen: false } }));
+  };
   const location = useLocation();
   const { profile, user, tierOverride, setTierOverride } = useAuth();
   const { isCommissionConfigured } = useAppData();
@@ -59,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
         <div className="flex items-center gap-4">
           <NotificationTray />
           <button 
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={toggleDrawer}
             className="text-white"
           >
             {isOpen ? <AppIcon name="close" className="h-6 w-6" /> : <AppIcon name="menu" className="h-6 w-6" />}
@@ -75,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
+              onClick={closeDrawer}
               className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm lg:hidden"
             />
             <motion.div
@@ -107,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                           <button
                             key={item.id}
                             onClick={() => {
-                              setIsOpen(false);
+                              closeDrawer();
                               window.dispatchEvent(new CustomEvent('stripeit:open-feedback'));
                             }}
                             className={cn(
@@ -125,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                         <Link
                           key={item.id}
                           to={item.path}
-                          onClick={() => setIsOpen(false)}
+                          onClick={closeDrawer}
                           className={cn(
                             "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
                             isActive 
@@ -142,18 +153,6 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                       );
                     })}
                   </nav>
-
-                    <div className="space-y-3 mb-10">
-                      <Button 
-                        className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-xs h-14 shadow-glow glow-primary rounded-xl"
-                        onClick={() => {
-                          setIsOpen(false);
-                          onLogDeal?.();
-                        }}
-                      >
-                        + Log Deal
-                      </Button>
-                    </div>
                   <div className="h-4 shrink-0" />
                 </div>
 
@@ -173,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                       </Typography>
                       <Button 
                         onClick={() => {
-                          setIsOpen(false);
+                          closeDrawer();
                           onConfigPayPlan();
                         }}
                         size="sm"

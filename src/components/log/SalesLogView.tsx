@@ -9,6 +9,7 @@ import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppIcon } from '../ui/AppIcon';
+import { Eye } from 'lucide-react';
 import { cn, formatDateSafe, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { calculateDealCommission } from '@/src/lib/commissionLogic';
 import { Badge } from '../ui/Badge';
@@ -52,8 +53,22 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const { profile, isAdmin, user } = useAuth();
   const { isMobile } = useResponsive();
 
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+  
+  const currentMonthDeals = useMemo(() => deals.filter(d => {
+    const dDate = new Date(d.date);
+    return dDate.getMonth() + 1 === currentMonth && dDate.getFullYear() === currentYear;
+  }), [deals, currentMonth, currentYear]);
+
+  const currentMonthSpiffs = useMemo(() => monthlySpiffs.filter(s => {
+    const spiffMonthStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+    return s.month === spiffMonthStr;
+  }), [monthlySpiffs, currentMonth, currentYear]);
+
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [selectedSpiff, setSelectedSpiff] = useState<MonthlySpiff | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
@@ -79,7 +94,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   // Filtering & Sorting Logic
   const sortedItems = useMemo(() => {
-    // 1. Combine deals and SPIFFs into a unified log list
+    // 1. Combine deals and spiffs into a unified log list
     const logItems: (Deal | MonthlySpiff)[] = [
       ...deals.map(d => ({ ...d, logType: 'deal' as const })),
       ...monthlySpiffs.map(s => ({ ...s, logType: 'spiff' as const, date: s.date || s.month + '-01' })) // Ensure date for sorting
@@ -101,11 +116,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         isDeal ? (
           item.customerName.toLowerCase().includes(searchStr) ||
           item.dealNumber?.toLowerCase().includes(searchStr) ||
-          item.stockNumber?.toLowerCase().includes(searchStr)
+          item.stockNumber?.toLowerCase().includes(searchStr) ||
+          item.newOrUsed?.toLowerCase().includes(searchStr) ||
+          (item.purchasedVehicle?.toLowerCase().includes(searchStr))
         ) : (
           item.label?.toLowerCase().includes(searchStr) ||
           item.notes?.toLowerCase().includes(searchStr) ||
-          'SPIFF'.toLowerCase().includes(searchStr)
+          'spiff'.toLowerCase().includes(searchStr)
         )
       );
       
@@ -166,21 +183,33 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     setTypeFilter('all');
   };
 
+  const handleDealInteraction = (deal: Deal) => {
+    if (expandedId === deal.id) {
+      // Second tap on expanded deal: open fullscreen
+      setSelectedDeal(deal);
+    } else {
+      // First tap or tap on another deal: expand inline
+      setExpandedId(deal.id);
+    }
+  };
+
   const header = (
-    <div className="flex flex-col gap-2">
-      <Typography variant="h1" className="text-white">Sales Log</Typography>
-      <div className="flex items-center gap-3">
-        <Typography variant="p" className="text-slate-500">
-          {profile?.displayName}'s personal history: {deals.length} deals / {monthlySpiffs.length} SPIFFs
-        </Typography>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <Typography variant="h1" className="text-white text-2xl lg:text-3xl font-black italic tracking-tighter">Sales Log</Typography>
         <button 
           onClick={onConfigPayPlan}
-          className="p-1.5 rounded-lg bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5"
+          className="p-2 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5"
           title="Est. Payout Engine"
           aria-label="Est. Payout Engine"
         >
-          <AppIcon name="calculator" size={14} />
+          <AppIcon name="calculator" size={16} />
         </button>
+      </div>
+      <div className="flex items-center gap-2">
+        <Typography variant="mono" className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">
+          {currentMonthDeals.length} deals / {currentMonthSpiffs.length} spiffs
+        </Typography>
       </div>
     </div>
   );
@@ -223,15 +252,21 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const mainContent = (
     <div className="space-y-8 pb-32">
       {/* Search & Filters Group */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <DealSearch value={search} onChange={setSearch} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
+        <div className={cn("lg:col-span-2", isMobile ? "col-span-1" : "")}>
+          <DealSearch 
+            value={search} 
+            onChange={setSearch} 
+            placeholder={isMobile ? "Search customer, stock, or condition..." : undefined}
+          />
         </div>
-        <DealFilters 
-          type={typeFilter}
-          onTypeChange={setTypeFilter}
-          onClear={clearFilters}
-        />
+        {!isMobile && (
+          <DealFilters 
+            type={typeFilter}
+            onTypeChange={setTypeFilter}
+            onClear={clearFilters}
+          />
+        )}
       </div>
 
       {isMobile && isBasicPlus && (
@@ -390,7 +425,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                 <div className="flex flex-col min-w-0">
                                   <div className="flex items-center gap-2">
                                     <Typography variant="label" className="text-white text-sm font-black truncate">
-                                      {spiff.label || 'SPIFF Adjustment'}
+                                      {spiff.label || 'spiff adjustment'}
                                     </Typography>
                                     {!spiff.includedInTotal && (
                                       <Badge variant="outline" className="text-[8px] px-1 py-0 border-blue-500/30 text-blue-400 bg-blue-500/10 font-black uppercase">
@@ -406,7 +441,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             </td>
                             <td className="py-5 px-4">
                               <Badge variant="outline" className="text-[8px] px-1 py-0 border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-black uppercase">
-                                SPIFF
+                                spiff
                               </Badge>
                             </td>
                             <td className="py-5 px-4 text-right">
@@ -558,184 +593,175 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
             {/* Mobile Cards Layout */}
             {isMobile && (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="flex flex-col gap-2">
                 {sortedItems.map((item, index) => {
                   const isDeal = 'customerName' in item;
-
+                  
                   if (!isDeal) {
                     const spiff = item as MonthlySpiff;
                     return (
                       <motion.div
                         key={spiff.id}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        transition={{ delay: index * 0.02 }}
                         onClick={() => {
                           window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
                         }}
-                        className="bg-[#0A1512] border border-emerald-500/10 rounded-[1.5rem] p-5 shadow-xl relative overflow-hidden"
+                        className="bg-[#0A1512] border border-emerald-500/10 rounded-xl p-3 shadow-md relative overflow-hidden"
                       >
-                        <div className="absolute top-0 right-0 p-3 flex gap-2">
-                           <Badge variant="outline" className="text-[8px] px-1 py-0 border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-black uppercase">SPIFF</Badge>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="flex items-start gap-4">
-                            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                              <AppIcon name="billing" className="h-5 w-5 text-emerald-400" />
-                            </div>
-                            <div className="min-w-0">
-                              <Typography variant="label" className="text-white text-base font-black uppercase truncate block">
-                                {spiff.label || 'Adjustment'}
-                              </Typography>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <Typography variant="mono" className="text-[10px] text-slate-500 font-black">
-                                  {formatDateSafe(spiff.date, 'MM/dd/yy')}
-                                </Typography>
-                                {!spiff.includedInTotal && (
-                                  <Badge variant="outline" className="text-[8px] px-1 py-0 border-blue-500/30 text-blue-400 bg-blue-500/10 font-black uppercase">
-                                    Separate
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="pt-4 border-t border-white/[0.03]">
-                            <Typography variant="mono" className="text-[10px] text-slate-400 font-bold">
-                              {spiff.notes || 'Standalone payout adjustment.'}
-                            </Typography>
-                          </div>
-
-                          <div className="pt-4 border-t border-white/[0.03] flex items-center justify-between">
-                            <div>
-                              <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Amount</Typography>
-                              <Typography variant="h3" className="text-emerald-400 font-black">
-                                ${spiff.amount.toLocaleString()}
-                              </Typography>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button 
-                                onClick={(e) => { 
-                                  e.stopPropagation(); 
-                                  window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
-                                }}
-                                className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
-                              >
-                                <AppIcon name="edit" size={16} />
-                              </button>
-                              <button 
-                                onClick={(e) => { 
-                                  e.stopPropagation(); 
-                                  if (window.confirm('Delete this adjustment?')) handleDeleteMonthlySpiff?.(spiff.id); 
-                                }}
-                                className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
-                              >
-                                <AppIcon name="delete" size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
+                         <div className="flex items-center justify-between gap-3">
+                           <div className="flex items-center gap-3 min-w-0">
+                             <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                               <AppIcon name="billing" className="h-4 w-4 text-emerald-400" />
+                             </div>
+                             <div className="min-w-0">
+                               <Typography variant="label" className="text-white text-xs font-black uppercase truncate block">
+                                 {spiff.label || 'spiff'}
+                               </Typography>
+                               <Typography variant="mono" className="text-[9px] text-slate-500 font-bold">
+                                 {formatDateSafe(spiff.date, 'MM/dd/yy')}
+                               </Typography>
+                             </div>
+                           </div>
+                           <div className="text-right shrink-0">
+                             <Typography variant="label" className="text-emerald-400 font-black text-sm">
+                               ${spiff.amount.toLocaleString()}
+                             </Typography>
+                           </div>
+                         </div>
                       </motion.div>
                     );
                   }
 
                   const deal = item as Deal;
+                  const isExpanded = expandedId === deal.id;
                   const m = getCalendarMonth(deal.date);
                   const y = getCalendarYear(deal.date);
-                  const monthlyDeals = deals.filter(d => {
+                  const monthlyDealsForCalc = deals.filter(d => {
                     return getCalendarMonth(d.date) === m && getCalendarYear(d.date) === y;
                   });
-                  const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDeals) : null;
+                  const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDealsForCalc) : null;
 
                   return (
                     <motion.div
                       key={deal.id}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() => setSelectedDeal(deal)}
-                      className="bg-[#0A0C12] border border-white/5 rounded-[1.5rem] p-5 shadow-xl relative overflow-hidden"
+                      layout
+                      className={cn(
+                        "transition-all duration-300 border rounded-xl overflow-hidden shadow-lg",
+                        isExpanded 
+                          ? "bg-[#0F111A] border-white/10 p-4" 
+                          : "bg-[#0A0C12] border-white/5 p-3"
+                      )}
+                      onClick={() => handleDealInteraction(deal)}
                     >
-                      <div className="absolute top-0 right-0 p-3 flex gap-2">
-                         <TypeBadge type={deal.newOrUsed as any} />
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-4">
-                          <div className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center shrink-0">
-                            <AppIcon name="car" className="h-5 w-5 text-slate-500" />
+                      {/* Collapsed Row State */}
+                      <div className={cn(
+                        "flex items-center justify-between gap-3",
+                        isExpanded ? "mb-4 pb-4 border-b border-white/5" : ""
+                      )}>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={cn(
+                            "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 border transition-colors",
+                            isExpanded ? "bg-white/10 border-white/20" : "bg-white/[0.03] border-white/5"
+                          )}>
+                             <AppIcon name="user" className={cn("h-5 w-5", isExpanded ? "text-white" : "text-slate-600")} />
                           </div>
                           <div className="min-w-0">
-                            <Typography variant="label" className="text-white text-base font-black uppercase truncate block">
+                            <Typography variant="label" className="text-white text-xs font-black uppercase truncate block">
                               {deal.customerName}
                             </Typography>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
+                            <div className="flex items-center gap-1.5 overflow-hidden">
+                              <Typography variant="mono" className="text-[9px] text-slate-500 font-bold whitespace-nowrap">
                                 #{deal.dealNumber || '---'}
                               </Typography>
-                              <span className="h-1 w-1 rounded-full bg-slate-800" />
-                              <Typography variant="mono" className="text-[10px] text-slate-500 font-black">
-                                {formatDateSafe(deal.date, 'MM/dd/yy')}
+                              <span className="h-0.5 w-0.5 rounded-full bg-slate-800 shrink-0" />
+                              <Typography variant="mono" className="text-[9px] text-slate-600 font-bold whitespace-nowrap">
+                                {formatDateSafe(deal.date, 'MM/dd')}
                               </Typography>
                             </div>
                           </div>
                         </div>
-
-                        <div className="pt-4 border-t border-white/[0.03] grid grid-cols-2 gap-4">
-                          <div>
-                            <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Front Gross</Typography>
-                            <Typography variant="label" className="text-white font-black text-sm">
-                              ${deal.frontEndGross.toLocaleString()}
+                        
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <Typography variant="label" className="text-emerald-400 font-black text-sm block leading-tight">
+                              ${commission?.finalPayout.toLocaleString() || '0'}
                             </Typography>
-                          </div>
-                          <div>
-                            <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Back Gross</Typography>
-                            <Typography variant="label" className="text-white font-black text-sm">
-                              ${deal.backEndGross.toLocaleString()}
-                            </Typography>
-                          </div>
-                        </div>
-
-                        <div className="pt-4 border-t border-white/[0.03] flex items-center justify-between">
-                          <div>
-                            <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Est. Payout</Typography>
-                            <div className="flex items-center gap-2">
-                              <Typography variant="h3" className="text-emerald-400 font-black">
-                                ${commission?.finalPayout.toLocaleString() || '0'}
-                              </Typography>
-                              {commission?.explanation && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExplanationData({ commission, customerName: deal.customerName });
-                                  }}
-                                  className="p-1.5 rounded-lg bg-emerald-400/10 text-emerald-400 border border-emerald-400/20"
-                                >
-                                  <AppIcon name="eye" size={12} />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
-                              className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
-                            >
-                              <AppIcon name="edit" size={16} />
-                            </button>
-                            <button 
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                if (window.confirm('Delete this deal record?')) handleDeleteDeal?.(deal.id); 
-                              }}
-                              className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-slate-400 active:scale-95 transition-all"
-                            >
-                              <AppIcon name="delete" size={16} />
-                            </button>
+                            <TypeBadge type={deal.newOrUsed as any} />
                           </div>
                         </div>
                       </div>
+
+                      {/* Expanded Section */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                               <div>
+                                 <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Front Gross</Typography>
+                                 <Typography variant="label" className="text-white font-black text-sm">
+                                   ${deal.frontEndGross.toLocaleString()}
+                                 </Typography>
+                               </div>
+                               <div>
+                                 <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Back Gross</Typography>
+                                 <Typography variant="label" className="text-white font-black text-sm">
+                                   ${deal.backEndGross.toLocaleString()}
+                                 </Typography>
+                               </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                               <div className="flex items-center gap-2">
+                                 {commission?.explanation && (
+                                   <button
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       setExplanationData({ commission, customerName: deal.customerName });
+                                     }}
+                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 text-[10px] font-black uppercase tracking-widest"
+                                   >
+                                     <Eye size={12} />
+                                     Explain
+                                   </button>
+                                 )}
+                               </div>
+                               
+                               <div className="flex items-center gap-2">
+                                 <button 
+                                   onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
+                                   className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-slate-400"
+                                 >
+                                   <AppIcon name="edit" size={16} />
+                                 </button>
+                                 <button 
+                                   onClick={(e) => { 
+                                     e.stopPropagation(); 
+                                     if (window.confirm('Delete this deal record?')) handleDeleteDeal?.(deal.id); 
+                                   }}
+                                   className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500"
+                                 >
+                                   <AppIcon name="delete" size={16} />
+                                 </button>
+                               </div>
+                            </div>
+                            
+                            <div className="mt-4 flex justify-center">
+                               <Typography variant="mono" className="text-[9px] text-slate-600 animate-pulse">
+                                 Tap again for full details
+                               </Typography>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </motion.div>
                   );
                 })}

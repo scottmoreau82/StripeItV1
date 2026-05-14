@@ -21,14 +21,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   aside,
 }) => {
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-3 lg:gap-10">
       {/* Dashboard Header Section */}
-      <section>{header}</section>
+      <section className="mb-0 lg:mb-0">{header}</section>
 
       {/* Dashboard Stats Section */}
       {stats && (
         <section>
-          <ResponsiveGrid cols={4} gap={6}>
+          <ResponsiveGrid cols={4} gap={3} className="lg:gap-6">
             {stats}
           </ResponsiveGrid>
         </section>
@@ -36,18 +36,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Main Content & Sidebar Grid */}
       <section className={cn(
-        "grid grid-cols-1 gap-8",
+        "grid grid-cols-1 gap-4 lg:gap-8",
         aside ? "lg:grid-cols-3" : "grid-cols-1"
       )}>
         <div className={cn(
-          "flex flex-col gap-8",
+          "flex flex-col gap-4 lg:gap-8",
           aside ? "lg:col-span-2" : ""
         )}>
           {main}
         </div>
         
         {aside && (
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-4 lg:gap-8">
             {aside}
           </div>
         )}

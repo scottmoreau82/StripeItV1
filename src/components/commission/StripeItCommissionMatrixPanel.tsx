@@ -860,15 +860,16 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   const addVolumeBonus = () => {
     setFormData(prev => {
       const bonuses = prev.volumeBonuses || [];
+      const lastBonus = bonuses.length > 0 ? bonuses[bonuses.length - 1] : null;
       const maxThreshold = bonuses.length > 0 ? Math.max(...bonuses.map(b => b.threshold)) : 5;
       
       const newBonus: VolumeBonus = {
         id: crypto.randomUUID(),
         threshold: bonuses.length > 0 ? maxThreshold + 5 : 10,
-        amount: 500,
-        type: VolumeBonusType.FLAT,
-        scope: VolumeBonusScope.ALL_UNITS,
-        filter: VolumeBonusFilter.ANY,
+        amount: lastBonus ? lastBonus.amount : 500,
+        type: lastBonus ? lastBonus.type : VolumeBonusType.FLAT,
+        scope: lastBonus ? lastBonus.scope : VolumeBonusScope.ALL_UNITS,
+        filter: lastBonus ? lastBonus.filter : VolumeBonusFilter.ANY,
         active: true,
       };
 

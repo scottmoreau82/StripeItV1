@@ -34,9 +34,10 @@ interface WidgetRegistryProps {
   };
   onAction?: (action: string, payload?: any) => void;
   onUpgrade?: () => void;
+  variant?: 'hero' | 'telemetry' | 'hero-horizontal';
 }
 
-export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAction, onUpgrade }) => {
+export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAction, onUpgrade, variant }) => {
   const { deals, notes, competitions, metrics, goal, leaders, monthlySpiffs, isLoading } = data;
   const { profile } = useAuth();
   const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
@@ -47,8 +48,10 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
         <MetricCard 
           label="Units"
           value={metrics.units.toString()}
+          subValue={metrics.dealPace.toFixed(1)}
           icon={Activity}
           loading={isLoading}
+          variant={variant}
         />
       );
     case WidgetType.COMMISSION:
@@ -59,6 +62,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           icon={Wallet}
           loading={isLoading}
           color="emerald"
+          variant={variant}
         />
       );
     case WidgetType.FRONT_END_GROSS:
@@ -72,6 +76,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           onUnlock={onUpgrade}
           lockMessage="Upgrade to unlock advanced payout telemetry."
           color="purple"
+          variant={variant}
         />
       );
     case WidgetType.BACK_END_GROSS:
@@ -85,6 +90,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           onUnlock={onUpgrade}
           lockMessage="Unlock advanced performance tracking."
           color="orange"
+          variant={variant}
         />
       );
     case WidgetType.TOTAL_GROSS:
@@ -95,6 +101,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           icon={TrendingUp}
           loading={isLoading}
           color="emerald"
+          variant={variant}
         />
       );
     case WidgetType.AVERAGE_GROSS:
@@ -106,6 +113,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           loading={isLoading}
           color="amber"
           subtext="MTD Efficiency"
+          variant={variant}
         />
       );
     case WidgetType.GOAL_PROGRESS:

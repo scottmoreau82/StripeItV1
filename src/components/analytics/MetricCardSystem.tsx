@@ -15,11 +15,13 @@ interface MetricCardProps {
   value: string | number;
   icon: LucideIcon;
   subtext?: string;
+  subValue?: string;
   color?: 'cyan' | 'emerald' | 'amber' | 'rose' | 'purple' | 'orange';
   loading?: boolean;
   isLocked?: boolean;
   onUnlock?: () => void;
   lockMessage?: string;
+  variant?: 'hero' | 'telemetry' | 'hero-horizontal';
 }
 
 const colorMap = {
@@ -36,82 +38,134 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   value,
   icon: Icon,
   subtext,
+  subValue,
   color = 'cyan',
   loading,
   isLocked,
   onUnlock,
-  lockMessage
+  lockMessage,
+  variant = 'hero'
 }) => {
+  const isTelemetry = variant === 'telemetry';
+  const isHorizontal = variant === 'hero-horizontal';
+
   if (isLocked) {
     return (
-      <Card className="p-6 bg-[#050505] border-white/[0.03] hover:border-purple-500/30 transition-all group relative overflow-hidden h-full flex flex-col justify-between">
-        {/* Atmospheric Glow */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 blur-[40px] pointer-events-none group-hover:bg-purple-600/10 transition-colors" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-orange-600/5 blur-[30px] pointer-events-none group-hover:bg-orange-600/10 transition-colors" />
-
-        <div className="relative z-10 flex flex-col items-center sm:items-start text-center sm:text-left h-full">
-          <div className="flex items-center justify-center sm:justify-between w-full mb-6 relative">
-            <div className="h-10 w-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-600 group-hover:text-purple-400 transition-colors">
-              <Lock className="h-5 w-5" />
-            </div>
-            <Typography variant="mono" className="text-[10px] text-slate-700 font-black uppercase tracking-[0.2em] group-hover:text-amber-500/50 transition-colors absolute sm:static right-0 sm:right-auto opacity-0 sm:opacity-100">
-              Classified Access
+      <Card className={cn(
+        "bg-[#050505] border-white/[0.03] hover:border-purple-500/30 transition-all group relative overflow-hidden flex flex-col justify-center",
+        isTelemetry ? "p-3 min-h-[75px]" : isHorizontal ? "p-3.5 min-h-[90px]" : "p-4 min-h-[140px]"
+      )}>
+        {/* Cinematic Locked Decor */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.08)_0%,transparent_70%)] opacity-70 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100%_3px] pointer-events-none opacity-20" />
+        
+        <div className="relative z-10 flex items-center justify-between gap-4 px-2">
+          <div className="flex flex-col">
+            <Typography variant="label" className={cn("text-slate-600 font-black tracking-[0.25em] block uppercase mb-0.5 opacity-80", isTelemetry ? "text-[6px]" : "text-[8px]")}>
+              {label}
+            </Typography>
+            <Typography variant="h2" className={cn("text-white/20 font-black italic uppercase tracking-tighter group-hover:text-white/40 transition-colors", isTelemetry ? "text-lg" : "text-2xl")}>
+              Restricted
             </Typography>
           </div>
-
-          <div className="space-y-4 flex flex-col items-center sm:items-start">
-            <div>
-              <Typography variant="label" className="text-slate-600 font-black tracking-widest block uppercase text-[10px] mb-1">
-                {label}
-              </Typography>
-              <Typography variant="h2" className="text-white/20 text-3xl font-black italic uppercase tracking-tighter group-hover:text-white/30 transition-colors">
-                Restricted
-              </Typography>
-            </div>
-
-            <Typography variant="p" className="text-[11px] text-slate-500/80 font-medium leading-relaxed max-w-[200px]">
-              {lockMessage || "Unlock advanced performance tracking and telemetry intel."}
-            </Typography>
-          </div>
-
-          <div className="mt-auto pt-8">
-            <button 
-              onClick={onUnlock}
-              className="px-4 py-2 rounded-lg bg-white/[0.03] border border-white/5 group-hover:bg-purple-500/10 group-hover:border-purple-500/30 transition-all flex items-center gap-2"
-            >
-              <Typography variant="mono" className="text-[9px] text-slate-400 group-hover:text-white font-black uppercase tracking-widest">
-                [ Unlock Matrix ]
-              </Typography>
-            </button>
+          
+          <div className={cn(
+            "rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-slate-600 group-hover:text-purple-500 transition-colors shadow-inner",
+            isTelemetry ? "h-7 w-7" : "h-9 w-9"
+          )}>
+            <Lock className={isTelemetry ? "h-3.5 w-3.5" : "h-4.5 w-4.5"} />
           </div>
         </div>
 
-        {/* Tactical Edge Light */}
-        <div className="absolute top-0 left-0 w-[1px] h-0 group-hover:h-full bg-gradient-to-b from-transparent via-purple-500/50 to-transparent transition-all duration-700" />
+        {/* Tactial Accent */}
+        <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-700" />
+      </Card>
+    );
+  }
+
+  if (isHorizontal) {
+    return (
+      <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden p-3.5 min-h-[95px]">
+        {/* Atmospheric Scanlines */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-10" />
+        
+        <div className="flex items-center gap-4 h-full relative z-10">
+          <div className={cn(
+            "h-9 w-9 rounded-lg flex items-center justify-center border transition-transform group-hover:scale-105 shrink-0 shadow-sm",
+            colorMap[color as keyof typeof colorMap]
+          )}>
+            <Icon className="h-4.5 w-4.5" />
+          </div>
+          
+          <div className="flex-1 flex flex-col justify-center min-w-0">
+            <Typography variant="label" className="text-slate-600 font-black tracking-widest block uppercase text-[7px] mb-1 opacity-70">
+              {label}
+            </Typography>
+            
+            <div className="flex items-baseline gap-3">
+              <Typography variant="h1" className="text-white text-2xl sm:text-4xl tracking-tighter font-black italic leading-none shrink-0">
+                {loading ? '...' : value}
+              </Typography>
+              
+              {subValue && !loading && (
+                <div className="flex flex-col items-end shrink-0 ml-auto leading-none gap-0.5">
+                  <Typography variant="mono" className="text-[12px] text-brand-primary font-black italic tracking-tighter">
+                    {subValue}<span className="text-[7px] ml-0.5 text-slate-600 font-bold uppercase not-italic">/mo</span>
+                  </Typography>
+                  <Typography variant="mono" className="text-[6px] text-slate-600 uppercase font-bold tracking-[0.1em]">Pacing</Typography>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Visual Accent */}
+        <div className={cn(
+          "absolute inset-y-0 left-0 w-[2px] bg-current opacity-40",
+          color === 'cyan' ? 'text-brand-primary' : 
+          color === 'emerald' ? 'text-emerald-500' :
+          color === 'amber' ? 'text-amber-500' : 
+          color === 'purple' ? 'text-purple-500' :
+          color === 'orange' ? 'text-orange-500' : 'text-rose-500'
+        )} />
       </Card>
     );
   }
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-white/[0.04] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden h-full">
-      <div className="flex flex-col items-center sm:items-start text-center sm:text-left h-full">
+    <Card className={cn(
+      "bg-gradient-to-br from-white/[0.04] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden flex flex-col",
+      isTelemetry ? "p-3 h-auto min-h-[85px]" : "p-4.5 h-full min-h-[140px]"
+    )}>
+      {/* Scanlines visual accent */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_8px] pointer-events-none opacity-20" />
+
+      <div className="flex flex-col h-full relative z-10">
         <div className={cn(
-          "h-12 w-12 rounded-xl flex items-center justify-center mb-6 border transition-transform group-hover:scale-110 shrink-0",
-          colorMap[color as keyof typeof colorMap]
+          "rounded-lg flex items-center justify-center border transition-transform group-hover:scale-105 shrink-0 shadow-sm",
+          colorMap[color as keyof typeof colorMap],
+          isTelemetry ? "h-7 w-7 mb-2" : "h-9 w-9 mb-4"
         )}>
-          <Icon className="h-6 w-6" />
+          <Icon className={isTelemetry ? "h-3.5 w-3.5" : "h-5 w-5"} />
         </div>
         
-        <div className="space-y-2 flex flex-col items-center sm:items-start w-full">
-          <Typography variant="label" className="text-slate-500 font-black tracking-widest block uppercase text-[10px]">
+        <div className={cn("flex flex-col w-full", isTelemetry ? "space-y-0" : "space-y-0.5")}>
+          <Typography variant="label" className={cn("text-slate-600 font-black tracking-widest block uppercase shrink-0 opacity-70", isTelemetry ? "text-[6.5px]" : "text-[7.5px]")}>
             {label}
           </Typography>
           
-          <Typography variant="h1" className="text-white text-4xl tracking-tighter sm:text-5xl">
+          <Typography variant="h1" className={cn("text-white tracking-tighter font-black italic leading-none", isTelemetry ? "text-2xl" : "text-2xl sm:text-3xl lg:text-4xl")}>
             {loading ? '...' : value}
           </Typography>
+
+          {subValue && !loading && !isTelemetry && (
+            <div className="flex items-center gap-1.5 mt-2 animate-in fade-in slide-in-from-left-2 duration-700">
+               <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.1em]">Pace:</Typography>
+               <Typography variant="mono" className="text-[13px] text-brand-primary font-black italic tracking-tighter">{subValue}<span className="text-[8px] ml-0.5 text-slate-600 font-bold uppercase not-italic">/mo</span></Typography>
+            </div>
+          )}
           
-          {subtext && (
+          {subtext && !isTelemetry && (
             <Typography variant="mono" className="text-[9px] text-slate-600 font-bold block mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
               {subtext}
             </Typography>

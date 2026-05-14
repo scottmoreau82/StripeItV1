@@ -40,7 +40,8 @@ import {
   Wallet,
   Calculator,
   Lock,
-  Settings2
+  Settings2,
+  Plus
 } from 'lucide-react';
 
 /**
@@ -79,6 +80,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [activeTab, setActiveTab] = useState<'overview' | 'trends'>('overview');
   const [selectedCompId, setSelectedCompId] = useState<string | null>(null);
   const [isCustomizing, setIsCustomizing] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  React.useEffect(() => {
+    const handleDrawer = (e: any) => {
+      setIsDrawerOpen(e.detail?.isOpen ?? false);
+    };
+    window.addEventListener('stripeit:drawer-toggle', handleDrawer);
+    return () => window.removeEventListener('stripeit:drawer-toggle', handleDrawer);
+  }, []);
 
   // Force overview tab for free users
   useMemo(() => {
@@ -121,16 +131,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
   };
 
   const header = (
-    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-0.5 lg:gap-6">
       <div className="flex-1">
-        <div className="flex flex-col sm:flex-row gap-3 mb-2 md:mb-1">
-          <Typography variant="h1" className="italic text-[30px] sm:text-[36px] leading-[0.95] tracking-tighter">
+        <div className="flex flex-col sm:flex-row gap-0.5 lg:gap-3 mb-0 lg:mb-1">
+          <Typography variant="h1" className="italic text-[20px] sm:text-[36px] font-bold md:font-black leading-none tracking-tighter opacity-90">
             Performance Overview
           </Typography>
         </div>
-        <Typography variant="p" className="text-slate-500 max-w-xs font-semibold leading-tight text-lg">
-          {profile?.dealershipId ? "Tracking dealership gross analytics" : "Real-time car sales & gross tracking"}
-        </Typography>
+        {!isMobile && (
+          <Typography variant="p" className="text-slate-500 max-w-xs font-semibold leading-tight text-sm sm:text-lg">
+            {profile?.dealershipId ? "Tracking dealership gross analytics" : "Real-time tracking system"}
+          </Typography>
+        )}
       </div>
       
       <div className="flex items-center gap-3">
@@ -150,15 +162,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
             />
           </div>
         )}
-        
-        {isMobile && (
-          <button 
-            onClick={() => setShowMetrics(!showMetrics)}
-            className="h-10 w-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90"
-          >
-            {showMetrics ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
-        )}
       </div>
     </div>
   );
@@ -176,39 +179,78 @@ export const HomeView: React.FC<HomeViewProps> = ({
           >
             {/* Dynamic Metric Widgets */}
             <div className="relative group/metrics">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-h-[70vh] lg:max-h-none overflow-y-auto lg:overflow-visible snap-y lg:snap-none snap-mandatory scrollbar-hide pr-2 pb-12 lg:pb-0">
-                {[
-                  WidgetType.UNITS,
-                  WidgetType.COMMISSION,
-                  WidgetType.FRONT_END_GROSS,
-                  WidgetType.BACK_END_GROSS
-                ].map(type => {
-                  const widget = dashboardLayout.widgets.find(w => w.type === type);
-                  if (!widget || !widget.visible) return null;
+              {isMobile ? (
+                <div className="flex flex-col gap-3">
+                  {/* Hero Metrics - Units & Commission */}
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {[WidgetType.UNITS, WidgetType.COMMISSION].map(type => {
+                      const widget = dashboardLayout.widgets.find(w => w.type === type);
+                      if (!widget || !widget.visible) return null;
+                      return (
+                        <WidgetRegistry 
+                          key={type} 
+                          type={type as WidgetType} 
+                          data={widgetData}
+                          variant="hero-horizontal"
+                        />
+                      );
+                    })}
+                  </div>
                   
-                  return (
-                    <div key={type} className="snap-center snap-always h-auto min-h-[160px] lg:min-h-0">
-                      <WidgetRegistry 
-                        type={type as WidgetType} 
-                        data={widgetData}
-                        onUpgrade={() => {
-                          // navigate to settings/subscription tab
-                          window.location.hash = '#settings';
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+                  {/* Telemetry Metrics Grid */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {[
+                      WidgetType.FRONT_END_GROSS, 
+                      WidgetType.BACK_END_GROSS, 
+                      WidgetType.TOTAL_GROSS, 
+                      WidgetType.AVERAGE_GROSS
+                    ].map(type => {
+                      const widget = dashboardLayout.widgets.find(w => w.type === type);
+                      if (!widget || !widget.visible) return null;
+                      
+                      const isWidgetLocked = isFree && widget.type !== WidgetType.UNITS;
+
+                      return (
+                        <div key={type} className={cn(isWidgetLocked ? "col-span-2" : "col-span-1")}>
+                          <WidgetRegistry 
+                            type={type as WidgetType} 
+                            data={widgetData}
+                            variant="telemetry"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:max-h-none overflow-y-auto lg:overflow-visible snap-y lg:snap-none snap-mandatory scrollbar-hide pr-2 pb-12 lg:pb-0">
+                  {[
+                    WidgetType.UNITS,
+                    WidgetType.COMMISSION,
+                    WidgetType.FRONT_END_GROSS,
+                    WidgetType.BACK_END_GROSS
+                  ].map(type => {
+                    const widget = dashboardLayout.widgets.find(w => w.type === type);
+                    if (!widget || !widget.visible) return null;
+                    
+                    return (
+                      <div key={type} className="snap-center snap-always h-auto min-h-[160px] lg:min-h-0">
+                        <WidgetRegistry 
+                          type={type as WidgetType} 
+                          data={widgetData}
+                          onUpgrade={() => {
+                            // navigate to settings/subscription tab
+                            window.location.hash = '#settings';
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               
               {/* Atmospheric Continuation Hint - Visual Fade for Mobile */}
-              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-bg-deep via-bg-deep/40 to-transparent pointer-events-none z-20 block lg:hidden" />
-              
-              {/* Mobile Scroll Indicator Hint */}
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-40 animate-pulse lg:hidden pointer-events-none">
-                 <div className="w-[1px] h-8 bg-gradient-to-b from-brand-primary/0 via-brand-primary/50 to-brand-primary/0" />
-                 <Typography variant="mono" className="text-[8px] text-brand-primary font-bold tracking-[0.3em] uppercase">Telemetry</Typography>
-              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-bg-deep/80 via-transparent to-transparent pointer-events-none z-20 block lg:hidden" />
             </div>
           </motion.div>
         ) : (
@@ -349,6 +391,34 @@ export const HomeView: React.FC<HomeViewProps> = ({
         onSave={handleSaveDashboardLayout}
         isMobile={isMobile}
       />
+
+      {/* Mobile Log Deal FAB */}
+      {isMobile && (
+        <div className={cn(
+          "fixed bottom-10 z-50 transition-all duration-500 ease-in-out",
+          isDrawerOpen ? "right-8 translate-x-0" : "left-1/2 -translate-x-1/2"
+        )}>
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="relative"
+          >
+            {/* Visual Echo/Glow */}
+            <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-lg animate-pulse" />
+            
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={onLogDeal}
+              className="relative h-12 w-12 rounded-full bg-brand-primary text-bg-deep shadow-glow glow-primary flex items-center justify-center border-2 border-bg-deep/40 transition-transform shadow-2xl"
+            >
+              <Plus size={22} strokeWidth={3} />
+            </motion.button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* FAB Clearance Zone for Mobile Scroll */}
+      {isMobile && <div className="h-20 pointer-events-none" />}
 
       <AnimatePresence>
         {selectedCompId && selectedComp && (

@@ -18,8 +18,12 @@ import { motion, AnimatePresence } from 'motion/react';
 
 type AuthMode = 'signin' | 'signup';
 
-export const LoginForm: React.FC = () => {
-  const [mode, setMode] = useState<AuthMode>('signin');
+interface LoginFormProps {
+  initialMode?: AuthMode;
+}
+
+export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) => {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -37,6 +37,7 @@ import { NoteEntryForm } from './components/notes/NoteEntryForm';
 import { SpiffEntryForm } from './components/log/SpiffEntryForm';
 import { CreateCompetitionForm } from './components/competitions/CreateCompetitionForm';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
+import { LandingView } from './components/landing/LandingView';
 import { UpgradePrompt } from './components/ui/UpgradePrompt';
 import { FeedbackSystem } from './components/feedback/FeedbackSystem';
 import { FeedbackReviewPage } from './components/feedback/FeedbackReviewPage';
@@ -516,46 +517,31 @@ function AppContent() {
   const { user, profile, initialized, loading } = useAuth();
   
   if (!initialized) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-bg-deep">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-brand-primary border-t-transparent shadow-glow" />
-          <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[10px]">
-             Initializing StripeIt Client...
-          </Typography>
-        </div>
-      </div>
-    );
+    return <LandingView isInitializing />;
   }
 
   if (loading && !profile) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-bg-deep">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-brand-primary border-t-transparent shadow-glow" />
-          <Typography variant="mono" className="text-brand-primary uppercase tracking-widest text-[10px] animate-pulse">
-             Authenticating Secure Session...
-          </Typography>
-        </div>
-      </div>
-    );
+    return <LandingView isInitializing />;
   }
 
   return (
     <AppDataProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/" />} />
-          <Route 
-            path="/*" 
-            element={
-              <ProtectedRoute>
-                <MainAppFlow />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        {/* Public Landing & Auth */}
+        <Route path="/" element={!user ? <LandingView /> : <ProtectedRoute><MainAppFlow /></ProtectedRoute>} />
+        <Route path="/login" element={!user ? <LoginForm initialMode="signin" /> : <Navigate to="/" />} />
+        <Route path="/signup" element={!user ? <LoginForm initialMode="signup" /> : <Navigate to="/" />} />
+        
+        {/* Protected Main Entry Points */}
+        <Route 
+          path="/*" 
+          element={
+            <ProtectedRoute>
+              <MainAppFlow />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
     </AppDataProvider>
   );
 }
@@ -563,7 +549,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
     </AuthProvider>
   );
 }

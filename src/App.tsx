@@ -52,6 +52,9 @@ import { analyticsService } from './services/analyticsService';
 import { AnalyticsEventType } from './types';
 import { AdminAnalyticsDashboard } from './components/analytics/AdminAnalyticsDashboard';
 import { UserManagementPage } from './components/management/UserManagementPage';
+import { DealerSalesLogView } from './components/dealer/DealerSalesLogView';
+import { DealerSettingsView } from './components/dealer/DealerSettingsView';
+import { DealerDashboardView } from './components/dealer/DealerDashboardView';
 
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 
@@ -234,7 +237,9 @@ function MainAppFlow() {
             <Route 
               path="/" 
               element={
-                permissionService.isManager(profile) ? (
+                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? (
+                  <DealerDashboardView />
+                ) : permissionService.isManager(profile) ? (
                   <ManagerView 
                     onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
                     onQuickNote={() => setIsQuickNoteOpen(true)}
@@ -307,6 +312,22 @@ function MainAppFlow() {
                   onEdit={(deal) => { setEditingDeal(deal); setIsNewDealOpen(true); }}
                   onConfigPayPlan={() => setIsPayPlanOpen(true)}
                 />
+              } 
+            />
+            <Route 
+              path="/dealer/sales-log" 
+              element={
+                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION 
+                  ? <DealerSalesLogView /> 
+                  : <Navigate to="/" />
+              } 
+            />
+            <Route 
+              path="/dealer/settings" 
+              element={
+                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION 
+                  ? <DealerSettingsView /> 
+                  : <Navigate to="/" />
               } 
             />
             <Route 
@@ -516,14 +537,20 @@ function MainAppFlow() {
 function AppContent() {
   const { user, profile, initialized, loading } = useAuth();
   
+  // 1. App is still determining if a session exists
   if (!initialized) {
     return <LandingView isInitializing />;
   }
 
-  if (loading && !profile) {
+  // 2. User is authenticated but profile is still hydrating from Firestore
+  // This prevents briefly showing "new user" or "unconfigured" states for existing users
+  if (user && !profile && loading) {
     return <LandingView isInitializing />;
   }
 
+  // 3. User is authenticated but profile fetch failed definitively
+  // (we allow fallthrough to MainAppFlow where error states or fallback UI can show)
+  
   return (
     <AppDataProvider>
       <Routes>

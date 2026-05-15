@@ -26,6 +26,10 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  const { profile, user, tierOverride, setTierOverride, isAdmin } = useAuth();
+
+  if (!profile) return null;
 
   const toggleDrawer = () => {
     const newState = !isOpen;
@@ -37,8 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
     setIsOpen(false);
     window.dispatchEvent(new CustomEvent('stripeit:drawer-toggle', { detail: { isOpen: false } }));
   };
-  const location = useLocation();
-  const { profile, user, tierOverride, setTierOverride } = useAuth();
+
   const { isCommissionConfigured } = useAppData();
 
   const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
@@ -133,23 +136,52 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                       }
 
                       return (
-                        <Link
-                          key={item.id}
-                          to={item.path}
-                          onClick={closeDrawer}
-                          className={cn(
-                            "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
-                            isActive 
-                              ? "bg-white/[0.03] text-brand-primary" 
-                              : "text-slate-500 hover:bg-white/5 hover:text-white"
+                        <React.Fragment key={item.id}>
+                          <Link
+                            to={item.path}
+                            onClick={closeDrawer}
+                            className={cn(
+                              "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
+                              isActive 
+                                ? "bg-white/[0.03] text-brand-primary" 
+                                : "text-slate-500 hover:bg-white/5 hover:text-white"
+                            )}
+                          >
+                            {isActive && (
+                              <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                            )}
+                            <AppIcon name={item.icon as any} size={20} className={cn(isActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
+                            {item.label}
+                          </Link>
+
+                          {isActive && item.id === 'settings' && (
+                            <div className="ml-12 flex flex-col gap-1 border-l border-white/10 pl-4 py-2 mb-2">
+                              {navigationConfig.settingsSubmenu
+                                .filter(sub => {
+                                  if (sub.adminOnly && !isAdmin && !isDeveloper) return false;
+                                  if (sub.roles && profile && !sub.roles.includes(profile.role)) return false;
+                                  return true;
+                                })
+                                .map(sub => (
+                                  <button
+                                    key={sub.id}
+                                    onClick={() => {
+                                      closeDrawer();
+                                      const id = sub.path.replace('#', '');
+                                      const el = document.getElementById(id);
+                                      if (el) {
+                                        el.scrollIntoView({ behavior: 'smooth' });
+                                      }
+                                    }}
+                                    className="py-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-brand-primary transition-colors text-left"
+                                  >
+                                    {sub.label}
+                                  </button>
+                                ))
+                              }
+                            </div>
                           )}
-                        >
-                          {isActive && (
-                            <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
-                          )}
-                          <AppIcon name={item.icon as any} size={20} className={cn(isActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
-                          {item.label}
-                        </Link>
+                        </React.Fragment>
                       );
                     })}
                   </nav>
@@ -197,12 +229,12 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                     </div>
                     <div className="flex-1 min-w-0 relative z-10">
                       <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 text-sm">
-                        {profile?.displayName || 'Operator'}
+                        {profile.displayName}
                       </Typography>
                       <div className="flex items-center gap-2 opacity-80 overflow-hidden">
                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] shrink-0 animate-pulse" />
                         <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.1em] truncate">
-                          {profile?.role || 'Sales'}
+                          {profile.role}
                         </Typography>
                       </div>
                     </div>

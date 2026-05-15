@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { DealerInviteManagerModal } from '../dealer/DealerInviteManagerModal';
 import { 
   AreaChart, 
   Area, 
@@ -39,6 +40,7 @@ export const AdminAnalyticsDashboard: React.FC = () => {
   const [aggregates, setAggregates] = useState<DailyAnalyticsAggregate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [periodDays, setPeriodDays] = useState(14);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -103,18 +105,30 @@ export const AdminAnalyticsDashboard: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-2 bg-white/[0.03] p-1.5 rounded-2xl border border-white/5">
-          {[7, 14, 30].map((days) => (
-            <button
-              key={days}
-              onClick={() => setPeriodDays(days)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                periodDays === days ? "bg-brand-primary text-bg-deep shadow-glow" : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              {days}D
-            </button>
-          ))}
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-white/10 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-brand-primary/10 hover:border-brand-primary/20 transition-all"
+            onClick={() => setIsInviteModalOpen(true)}
+          >
+            <UserPlus size={14} className="mr-2 text-brand-primary" />
+            Invite Global Manager
+          </Button>
+
+          <div className="flex items-center gap-2 bg-white/[0.03] p-1.5 rounded-2xl border border-white/5">
+            {[7, 14, 30].map((days) => (
+              <button
+                key={days}
+                onClick={() => setPeriodDays(days)}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  periodDays === days ? "bg-brand-primary text-bg-deep shadow-glow" : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                {days}D
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -326,6 +340,11 @@ export const AdminAnalyticsDashboard: React.FC = () => {
           </table>
         </div>
       </Card>
+
+      <DealerInviteManagerModal 
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+      />
     </div>
   );
 };

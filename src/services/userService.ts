@@ -40,6 +40,32 @@ export const userService = {
   },
 
   /**
+   * Fetches a single user by email.
+   */
+  async getUserByEmail(email: string): Promise<UserProfile | null> {
+    try {
+      const usersRef = collection(db, COLL_CONST.USERS);
+      const q = query(usersRef, where('email', '==', email.toLowerCase().trim()));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) return null;
+      
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      return {
+        ...data,
+        uid: doc.id,
+        createdAt: data.createdAt?.toMillis?.() || data.createdAt || Date.now(),
+        updatedAt: data.updatedAt?.toMillis?.() || data.updatedAt || Date.now(),
+      } as any as UserProfile;
+    } catch (error) {
+      console.error("Error fetching user by email:", error);
+      handleFirestoreError(error, OperationType.GET, COLL_CONST.USERS);
+      throw error;
+    }
+  },
+
+  /**
    * Updates a user's subscription tier.
    * Only authorized admins or developers can trigger this.
    */
@@ -69,6 +95,41 @@ export const userService = {
       });
     } catch (error) {
       console.error("Error updating user role:", error);
+      handleFirestoreError(error, OperationType.UPDATE, `${COLL_CONST.USERS}/${userId}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Freezes or unfreezes a user account.
+   */
+  async setUserFrozen(userId: string, isFrozen: boolean): Promise<void> {
+    try {
+      const userRef = doc(db, COLL_CONST.USERS, userId);
+      await updateDoc(userRef, {
+        isFrozen,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Error setting user frozen status:", error);
+      handleFirestoreError(error, OperationType.UPDATE, `${COLL_CONST.USERS}/${userId}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Soft-deletes a user account.
+   */
+  async deleteUser(userId: string): Promise<void> {
+    try {
+      const userRef = doc(db, COLL_CONST.USERS, userId);
+      await updateDoc(userRef, {
+        isDeleted: true,
+        orgId: '', // Strip organizational access
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Error deleting user:", error);
       handleFirestoreError(error, OperationType.UPDATE, `${COLL_CONST.USERS}/${userId}`);
       throw error;
     }

@@ -16,6 +16,8 @@ interface MetricCardProps {
   icon: LucideIcon;
   subtext?: string;
   subValue?: string;
+  secondaryLabel?: string;
+  secondaryValue?: string;
   color?: 'cyan' | 'emerald' | 'amber' | 'rose' | 'purple' | 'orange';
   loading?: boolean;
   isLocked?: boolean;
@@ -39,6 +41,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   icon: Icon,
   subtext,
   subValue,
+  secondaryLabel,
+  secondaryValue,
   color = 'cyan',
   loading,
   isLocked,
@@ -102,17 +106,30 @@ export const MetricCard: React.FC<MetricCardProps> = ({
               {label}
             </Typography>
             
-            <div className="flex items-baseline gap-3">
-              <Typography variant="h1" className="text-white text-2xl sm:text-4xl tracking-tighter font-black italic leading-none shrink-0">
-                {loading ? '...' : value}
-              </Typography>
-              
-              {subValue && !loading && (
-                <div className="flex flex-col items-end shrink-0 ml-auto leading-none gap-0.5">
-                  <Typography variant="mono" className="text-[12px] text-brand-primary font-black italic tracking-tighter">
-                    {subValue}<span className="text-[7px] ml-0.5 text-slate-600 font-bold uppercase not-italic">/mo</span>
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-3">
+                <Typography variant="h1" className="text-white text-2xl sm:text-4xl tracking-tighter font-black italic leading-none shrink-0">
+                  {loading ? '...' : value}
+                </Typography>
+                
+                {subValue && !loading && (
+                  <div className="flex flex-col items-end shrink-0 ml-auto leading-none gap-0.5">
+                    <Typography variant="mono" className="text-[12px] text-brand-primary font-black italic tracking-tighter">
+                      {subValue}<span className="text-[7px] ml-0.5 text-slate-600 font-bold uppercase not-italic">/mo</span>
+                    </Typography>
+                    <Typography variant="mono" className="text-[6px] text-slate-600 uppercase font-bold tracking-[0.1em]">Pacing</Typography>
+                  </div>
+                )}
+              </div>
+
+              {secondaryValue && !loading && (
+                <div className="flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-500">
+                  <Typography variant="mono" className="text-[10px] text-emerald-400 font-bold italic tracking-tighter">
+                    +{secondaryValue}
                   </Typography>
-                  <Typography variant="mono" className="text-[6px] text-slate-600 uppercase font-bold tracking-[0.1em]">Pacing</Typography>
+                  <Typography variant="mono" className="text-[8px] text-slate-700 uppercase font-bold tracking-widest">
+                    {secondaryLabel}
+                  </Typography>
                 </div>
               )}
             </div>
@@ -157,6 +174,17 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <Typography variant="h1" className={cn("text-white tracking-tighter font-black italic leading-none", isTelemetry ? "text-2xl" : "text-2xl sm:text-3xl lg:text-4xl")}>
             {loading ? '...' : value}
           </Typography>
+
+          {secondaryValue && !loading && (
+            <div className={cn("flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-500", isTelemetry ? "pb-1" : "")}>
+              <Typography variant="mono" className={cn("text-emerald-400 font-bold italic tracking-tighter", isTelemetry ? "text-[11px]" : "text-[14px]")}>
+                +{secondaryValue}
+              </Typography>
+              <Typography variant="mono" className={cn("text-slate-700 uppercase font-bold tracking-widest", isTelemetry ? "text-[7px]" : "text-[9px]")}>
+                {secondaryLabel}
+              </Typography>
+            </div>
+          )}
 
           {subValue && !loading && !isTelemetry && (
             <div className="flex items-center gap-1.5 mt-2 animate-in fade-in slide-in-from-left-2 duration-700">

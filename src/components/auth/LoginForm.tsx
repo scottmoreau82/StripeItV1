@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, mapAuthError } from '@/src/lib/firebase';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { analyticsService } from '@/src/services/analyticsService';
-import { AnalyticsEventType } from '@/src/types';
+import { AnalyticsEventType, UserRole } from '@/src/types';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { Typography } from '@/src/components/ui/Typography';
 import { Card } from '@/src/components/ui/Card';
-import { DollarSign, UserPlus, LogIn, Sparkles, AlertTriangle } from 'lucide-react';
+import { DollarSign, UserPlus, LogIn, Sparkles, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { inviteService } from '@/src/services/inviteService';
+import { cn } from '@/src/lib/utils';
 
 /**
  * StripeItAuthSystem - AuthView
@@ -121,7 +123,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
 
           {mode === 'signup' && (
             <div className="absolute top-0 right-0 p-1">
-              <div className="bg-brand-primary/10 border border-brand-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5">
+              <div className="px-3 py-1 rounded-full flex items-center gap-1.5 border bg-brand-primary/10 border-brand-primary/20">
                 <Sparkles className="h-3 w-3 text-brand-primary" />
                 <Typography variant="mono" className="text-[10px] text-brand-primary uppercase font-bold">Free Tier Beta</Typography>
               </div>

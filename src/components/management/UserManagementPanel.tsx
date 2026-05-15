@@ -33,6 +33,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [hasDuplicates, setHasDuplicates] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -41,17 +42,57 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
       const isBootstrapAdmin = currentUser?.email?.toLowerCase() === 'scottmoreau82@gmail.com';
       const data = await userService.getUsers(isBootstrapAdmin ? undefined : orgId);
       
-      // Strict deduplication by UID to prevent rendering redundant user records
-      const uniqueUsersMap = new Map<string, UserProfile>();
+      // Identity mapping for deduplication
+      const identityMap = new Map<string, UserProfile>();
+      const emailToCanonicalKey = new Map<string, string>();
+      let detectedDuplicates = false;
+
+      // Helper to calculate record quality score
+      const getRecordScore = (u: UserProfile) => {
+        let score = 0;
+        // Assume longer strings are real Firebase UIDs (vs short auto-ids or placeholders)
+        if (u.uid && u.uid.length > 15) score += 1000;
+        if (u.displayName) score += 100;
+        if (u.email && u.email !== 'No Email Address') score += 50;
+        if (u.photoURL) score += 20;
+        // Use updatedAt as a tie-breaker for freshness (normalized to prevent overflow)
+        score += (Number(u.updatedAt) || 0) / 1000000000000;
+        return score;
+      };
+
       data.forEach(u => {
-        if (u.uid) uniqueUsersMap.set(u.uid, u);
+        const normEmail = u.email?.trim().toLowerCase() || '';
+        
+        // Priority Identity: 1. UID if it exists, 2. Normalized Email
+        let identityKey = u.uid;
+        
+        // If we've seen this email before, use the canonical record's key for grouping
+        if (normEmail) {
+          if (emailToCanonicalKey.has(normEmail)) {
+            identityKey = emailToCanonicalKey.get(normEmail)!;
+          } else {
+            emailToCanonicalKey.set(normEmail, identityKey);
+          }
+        }
+
+        const existing = identityMap.get(identityKey);
+        if (!existing) {
+          identityMap.set(identityKey, u);
+        } else {
+          detectedDuplicates = true;
+          // Conflict Resolution: Prefer more complete/recent data
+          if (getRecordScore(u) > getRecordScore(existing)) {
+            identityMap.set(identityKey, u);
+          }
+        }
       });
       
-      const uniqueUsers = Array.from(uniqueUsersMap.values()).sort((a, b) => 
+      const uniqueUsers = Array.from(identityMap.values()).sort((a, b) => 
         (a.displayName || '').localeCompare(b.displayName || '')
       );
 
       setUsers(uniqueUsers);
+      setHasDuplicates(detectedDuplicates);
     } catch (error) {
       addToast('Failed to load users.', 'error');
     } finally {
@@ -121,6 +162,15 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
       </div>
 
       <div className="space-y-3">
+        {hasDuplicates && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
+            <Shield className="h-3.5 w-3.5 text-amber-500" />
+            <Typography variant="small" className="text-amber-500 font-bold text-[10px] uppercase tracking-wider">
+              Duplicate profile records detected & resolved automatically
+            </Typography>
+          </div>
+        )}
+
         {filteredUsers.length === 0 ? (
           <div className="p-12 text-center bg-white/[0.02] border border-dashed border-white/10 rounded-3xl">
             <Typography variant="p" className="text-slate-500">No users found matching your search.</Typography>
@@ -141,7 +191,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Typography variant="label" className="text-white truncate">
-                        {user.displayName || 'Anonymous User'}
+                        {user.displayName}
                       </Typography>
                       {user.isAdmin && (
                         <Shield className="h-3 w-3 text-brand-primary" title="Admin" />

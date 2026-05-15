@@ -249,7 +249,9 @@ export const calculateDashboardMetrics = (deals: Deal[], payPlan: PayPlan | null
   const backEnd = mtdDeals.reduce((sum, d) => sum + (d.backEndGross || 0), 0);
   const gross = frontEnd + backEnd;
   
-  const commission = payPlan ? calculatePeriodEarnings(mtdDeals, payPlan, monthlySpiffs).grandTotal : 0;
+  const earnings = payPlan ? calculatePeriodEarnings(mtdDeals, payPlan, monthlySpiffs) : null;
+  const commission = earnings ? earnings.totalPayout + earnings.totalTierBonuses : 0;
+  const spiffsMTD = earnings ? earnings.totalMonthlySpiffs || 0 : 0;
 
   const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
   const dayOfMonth = new Date().getDate();
@@ -260,8 +262,9 @@ export const calculateDashboardMetrics = (deals: Deal[], payPlan: PayPlan | null
     backEnd,
     gross,
     commission,
+    spiffsMTD,
     avgGross: unitCount > 0 ? gross / unitCount : 0,
-    avgCommission: unitCount > 0 ? commission / unitCount : 0,
+    avgCommission: unitCount > 0 ? (commission + spiffsMTD) / unitCount : 0,
     dealPace: (unitCount / (dayOfMonth || 1)) * daysInMonth
   };
 };

@@ -136,7 +136,20 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, 8000); 
 
     setIsLoading(true);
-    loadStaticData(profile.orgId, user.uid);
+    
+    // StripeItDataHydrationSystem - Wait for critical data before releasing UI
+    const initializeData = async () => {
+      try {
+        await loadStaticData(profile.orgId, user.uid);
+      } catch (err) {
+        console.error("Static data hydration failed:", err);
+      } finally {
+        // We release loading only after the first snap of the most critical collection (Deals)
+        // that is also ordered by current month logic.
+      }
+    };
+
+    initializeData();
 
     // 1. Subscription to Deals
     let dealsQuery = query(
@@ -159,8 +172,12 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         } as Deal;
       });
       setDeals(dealData);
-      setIsLoading(false);
-      clearTimeout(loadTimeout);
+      
+      // Delay releasing loading slightly to ensure state reconcilliation
+      setTimeout(() => {
+        setIsLoading(false);
+        clearTimeout(loadTimeout);
+      }, 50);
     }, (error) => {
       console.error("Deals subscription error:", error);
       setIsLoading(false);
@@ -278,7 +295,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
           await activityService.logEvent(profile.orgId, {
             type: ActivityEventType.DEAL_FINALIZED,
             userId: user.uid,
-            userName: profile.displayName || 'Salesperson',
+            userName: profile.displayName,
             orgId: profile.orgId,
             message: `Closed a deal for ${dealData.customerName || 'Customer'}!`,
             payload: { dealId: editingId, vehicle: dealData.purchasedVehicle }
@@ -311,7 +328,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         await activityService.logEvent(profile.orgId, {
           type: ActivityEventType.DEAL_CREATED,
           userId: user.uid,
-          userName: profile.displayName || 'Salesperson',
+          userName: profile.displayName,
           orgId: profile.orgId,
           message: `Logged a new ${dealData.newOrUsed || ''} deal for ${dealData.customerName}`,
           payload: { dealId, vehicle: dealData.purchasedVehicle }
@@ -364,7 +381,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         await activityService.logEvent(profile.orgId, {
           type: ActivityEventType.DEAL_FINALIZED,
           userId: user.uid,
-          userName: profile.displayName || 'Salesperson',
+          userName: profile.displayName,
           orgId: profile.orgId,
           message: `Finalized a deal for ${deal?.customerName || 'Customer'}!`,
           payload: { dealId, vehicle: deal?.purchasedVehicle }
@@ -418,8 +435,24 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       });
       await loadStaticData(profile.orgId, user.uid);
       triggerSuccess('Monthly adjustment saved.');
-    } catch (error) {
-      triggerError('Failed to save adjustment.');
+    } catch (error: any) {
+      console.error("Monthly Spiff Save Error:", error);
+      let message = 'Failed to save adjustment.';
+      
+      try {
+        const parsed = JSON.parse(error.message);
+        if (parsed.error && parsed.error.includes('permission')) {
+          message = "Permission Denied: You don't have authority to save adjustments.";
+        } else if (parsed.error) {
+          message = `Persistence Error: ${parsed.error}`;
+        }
+      } catch (e) {
+        if (error.message && !error.message.includes('{')) {
+          message = error.message;
+        }
+      }
+      
+      triggerError(message);
     }
   };
 
@@ -496,7 +529,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       await activityService.logEvent(profile.orgId, {
         type: ActivityEventType.COMPETITION_STARTED,
         userId: user.uid,
-        userName: profile.displayName || 'Manager',
+        userName: profile.displayName,
         orgId: profile.orgId,
         message: `Launched a new battle: ${data.title}!`,
       });

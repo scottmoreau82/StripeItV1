@@ -78,7 +78,11 @@ export interface UserProfile {
   isAdmin?: boolean;
   dashboardPreference?: UserDashboardPreference;
   createdAt: number;
+  updatedAt: number;
   preferences?: UserPreferences;
+  isFrozen?: boolean;
+  isDeleted?: boolean;
+  lastActive?: number;
 }
 
 export interface PayPlanRule {
@@ -318,6 +322,7 @@ export interface DashboardMetrics {
   avgGross: number;
   avgCommission: number;
   dealPace: number;
+  spiffsMTD: number;
 }
 
 export enum ActivityEventType {
@@ -329,7 +334,8 @@ export enum ActivityEventType {
   COMPETITION_ENDED = 'competition_ended',
   ANNOUNCEMENT = 'announcement',
   REMINDER = 'reminder',
-  FEEDBACK_SUBMITTED = 'feedback_submitted'
+  FEEDBACK_SUBMITTED = 'feedback_submitted',
+  ORG_INVITE = 'org_invite'
 }
 
 export enum FeedbackType {
@@ -501,4 +507,49 @@ export interface MonthlySpiff {
   notes?: string;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface DealerDeal {
+  id: string;
+  orgId: string;
+  createdByUserId: string;
+  date: string; // ISO string YYYY-MM-DD
+  desk: string;
+  customerName: string;
+  dealNumber: string;
+  year: string;
+  newOrUsed: 'N' | 'U';
+  model: string;
+  stockNumber: string;
+  frontGross: number;
+  tradeInfo: string;
+  salesperson: string;
+  source: string;
+  fiManager: string;
+  backGross: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export enum InviteStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled'
+}
+
+export interface Invite {
+  id: string;
+  email: string;
+  role: UserRole;
+  orgId: string;
+  orgName: string;
+  token: string;
+  status: InviteStatus;
+  invitedBy: string;
+  invitedByDisplayName: string;
+  invitedUserId: string;
+  expiresAt: number;
+  createdAt: number;
+  acceptedAt?: number;
 }

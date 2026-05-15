@@ -59,6 +59,8 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
         <MetricCard 
           label="Est. Payout"
           value={`$${metrics.commission.toLocaleString()}`}
+          secondaryLabel="spiffs"
+          secondaryValue={`$${metrics.spiffsMTD.toLocaleString()}`}
           icon={Wallet}
           loading={isLoading}
           color="emerald"

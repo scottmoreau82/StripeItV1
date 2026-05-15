@@ -1,5 +1,5 @@
 import { Feature, featureAccessService } from '@/src/services/featureAccessService';
-import { UserProfile, SubscriptionTier } from '@/src/types';
+import { UserProfile, SubscriptionTier, UserRole } from '@/src/types';
 
 export const navigationConfig = {
   main: [
@@ -15,9 +15,11 @@ export const navigationConfig = {
   ],
   settingsSubmenu: [
     { id: 'profile', label: 'PROFILE', path: '#profile' },
-    { id: 'account', label: 'ACCOUNT', path: '#account' },
+    { id: 'theme', label: 'THEME', path: '#theme' },
+    { id: 'organization', label: 'ORGANIZATION', path: '#organization', roles: [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN] },
     { id: 'admin', label: 'ADMIN', path: '#admin', adminOnly: true },
     { id: 'developer', label: 'DEVELOPER TOOLS', path: '#developer', adminOnly: true },
+    { id: 'account', label: 'ACCOUNT', path: '#account' },
   ],
   quickActions: [
     { id: 'log-deal', label: 'LOG DEAL', icon: 'plus', variant: 'primary' as const },

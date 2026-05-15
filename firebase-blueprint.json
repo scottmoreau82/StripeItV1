@@ -222,6 +222,51 @@
       },
       "required": ["id", "userId", "orgId", "amount", "month", "date", "createdAt", "updatedAt"]
     },
+    "DealerDeal": {
+      "title": "DealerDeal",
+      "description": "A dealership-level deal record for organizations.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "orgId": { "type": "string" },
+        "createdByUserId": { "type": "string" },
+        "date": { "type": "string" },
+        "desk": { "type": "string" },
+        "customerName": { "type": "string" },
+        "dealNumber": { "type": "string" },
+        "year": { "type": "string" },
+        "newOrUsed": { "type": "string", "enum": ["N", "U"] },
+        "model": { "type": "string" },
+        "stockNumber": { "type": "string" },
+        "frontGross": { "type": "number" },
+        "tradeInfo": { "type": "string" },
+        "salesperson": { "type": "string" },
+        "source": { "type": "string" },
+        "fiManager": { "type": "string" },
+        "backGross": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "orgId", "createdByUserId", "date", "desk", "customerName", "dealNumber", "year", "newOrUsed", "model", "stockNumber", "frontGross", "salesperson", "fiManager", "backGross", "createdAt"]
+    },
+    "Invite": {
+      "title": "Invite",
+      "description": "An organizational invite for a specific role.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["manager", "gm"] },
+        "orgId": { "type": "string" },
+        "token": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "expired", "cancelled"] },
+        "invitedBy": { "type": "string" },
+        "expiresAt": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "acceptedAt": { "type": "number" }
+      },
+      "required": ["id", "email", "role", "orgId", "token", "status", "invitedBy", "expiresAt", "createdAt"]
+    },
     "DailyAnalyticsAggregate": {
       "title": "DailyAnalyticsAggregate",
       "description": "Daily roll-up of core metrics.",
@@ -312,6 +357,14 @@
     "/organizations/{orgId}/monthlySpiffs/{spiffId}": {
       "schema": "MonthlySpiff",
       "description": "Payout adjustments and SPIFFs."
+    },
+    "/organizations/{orgId}/dealerDeals/{dealId}": {
+      "schema": "DealerDeal",
+      "description": "High-level inventory/deal management for the entire organization."
+    },
+    "/invites/{inviteId}": {
+      "schema": "Invite",
+      "description": "Organizational invites for managers and GMs."
     },
     "/goals/{goalId}": {
       "schema": "Goal",

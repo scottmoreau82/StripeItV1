@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   TrendingUp, 
@@ -49,19 +49,46 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
   const handleSignUp = () => navigate('/signup');
   const handleLogin = () => navigate('/login');
 
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-bg-deep flex flex-col items-center justify-center p-6 text-center">
+        {/* Atmosphere for minimal splash */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40%] h-[40%] bg-brand-primary/10 blur-[120px] rounded-full" />
+        </div>
+
+        <motion.div
+           initial={{ opacity: 0, scale: 0.95 }}
+           animate={{ opacity: 1, scale: 1 }}
+           className="relative z-10 flex flex-col items-center gap-8"
+        >
+          <div className="h-16 w-16 rounded-2xl bg-brand-primary flex items-center justify-center shadow-glow glow-primary">
+            <DollarSign className="text-white h-10 w-10" />
+          </div>
+          
+          <div className="space-y-2">
+            <Typography variant="h3" className="text-white italic font-black uppercase tracking-tighter text-2xl">StripeIt</Typography>
+            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.3em]">
+              Performance Log • Authenticating
+            </Typography>
+          </div>
+
+          <div className="w-32 h-[1px] bg-white/5 relative overflow-hidden">
+            <motion.div 
+              initial={{ x: "-100%" }}
+              animate={{ x: "200%" }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-brand-primary to-transparent"
+            />
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-bg-deep selection:bg-brand-primary/30 selection:text-white overflow-hidden relative">
-      {/* Initialization Progress Bar (Subtle) */}
-      {isInitializing && (
-        <div className="fixed top-0 left-0 w-full h-[2px] bg-brand-primary/20 z-[100]">
-          <motion.div 
-            initial={{ width: "0%" }}
-            animate={{ width: "90%" }}
-            transition={{ duration: 2, ease: "easeInOut" }}
-            className="h-full bg-brand-primary shadow-glow glow-primary"
-          />
-        </div>
-      )}
+      {/* Initialization Progress Bar removed from here as we use the early return splash ^ */}
 
       {/* Background Atmosphere */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
@@ -83,24 +110,25 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
             <Typography variant="h3" className="text-white italic font-black uppercase tracking-tighter">StripeIt</Typography>
           </div>
           
-          <div className="flex items-center gap-4">
-            {!isMobile && (
-              <button 
-                onClick={handleLogin}
-                className="text-[10px] text-slate-500 hover:text-white uppercase font-black tracking-[0.2em] transition-colors"
-                id="landing-login-btn-top"
-              >
-                Login
-              </button>
-            )}
-            <Button 
-              onClick={handleSignUp}
-              className="h-10 px-6 text-[10px] uppercase font-black tracking-widest shadow-glow glow-primary"
-              id="landing-signup-btn-top"
-            >
-              Sign Up Free
-            </Button>
-          </div>
+            <div className="flex items-center gap-4">
+              {!isMobile && (
+                <Link 
+                  to="/login"
+                  className="text-[10px] text-slate-500 hover:text-white uppercase font-black tracking-[0.2em] transition-colors"
+                  id="landing-login-btn-top"
+                >
+                  Login
+                </Link>
+              )}
+              <Link to="/signup">
+                <Button 
+                  className="h-10 px-6 text-[10px] uppercase font-black tracking-widest shadow-glow glow-primary"
+                  id="landing-signup-btn-top"
+                >
+                  Sign Up Free
+                </Button>
+              </Link>
+            </div>
         </div>
       </nav>
 
@@ -142,22 +170,24 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
               transition={{ delay: 0.2 }}
               className="flex flex-col sm:flex-row gap-4"
             >
-              <Button 
-                onClick={handleSignUp}
-                className="h-14 px-10 text-base font-black italic uppercase tracking-tighter shadow-glow glow-primary group"
-                id="landing-hero-signup-btn"
-              >
-                Start Free Account
-                <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={handleLogin}
-                className="h-14 px-10 text-base font-black italic uppercase tracking-tighter border-white/10 hover:bg-white/5"
-                id="landing-hero-login-btn"
-              >
-                Log In
-              </Button>
+              <Link to="/signup" className="contents">
+                <Button 
+                  className="h-14 px-10 text-base font-black italic uppercase tracking-tighter shadow-glow glow-primary group w-full sm:w-auto"
+                  id="landing-hero-signup-btn"
+                >
+                  Start Free Account
+                  <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link to="/login" className="contents">
+                <Button 
+                  variant="outline"
+                  className="h-14 px-10 text-base font-black italic uppercase tracking-tighter border-white/10 hover:bg-white/5 w-full sm:w-auto"
+                  id="landing-hero-login-btn"
+                >
+                  Log In
+                </Button>
+              </Link>
             </motion.div>
 
             {/* Features List */}

@@ -54,21 +54,30 @@ export const spiffService = {
   async saveMonthlySpiff(orgId: string, spiffData: Partial<MonthlySpiff>): Promise<string> {
     try {
       const spiffsRef = collection(db, COLLECTIONS.ORGANIZATIONS, orgId, 'monthlySpiffs');
-      const id = spiffData.id || doc(spiffsRef).id;
-      const docRef = doc(spiffsRef, id);
-
-      const dataToSave: any = {
-        ...spiffData,
-        id,
-        updatedAt: serverTimestamp(),
-      };
-
-      if (!spiffData.id) {
-        dataToSave.createdAt = serverTimestamp();
+      
+      if (spiffData.id) {
+        // Update existing
+        const { id, createdAt, updatedAt, ...updates } = spiffData;
+        const docRef = doc(spiffsRef, id);
+        
+        await updateDoc(docRef, {
+          ...updates,
+          updatedAt: serverTimestamp(),
+        });
+        return id;
+      } else {
+        // Create new
+        const docRef = doc(spiffsRef);
+        const id = docRef.id;
+        
+        await setDoc(docRef, {
+          ...spiffData,
+          id,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        return id;
       }
-
-      await setDoc(docRef, dataToSave, { merge: true });
-      return id;
     } catch (error) {
       console.error('Error saving monthly spiff:', error);
       handleFirestoreError(error, OperationType.WRITE, `organizations/${orgId}/monthlySpiffs`);

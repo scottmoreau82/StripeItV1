@@ -10,7 +10,12 @@ service cloud.firestore {
     // --- HELPER FUNCTIONS ---
     
     function isSignedIn() { return request.auth != null; }
-    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isNotFrozen() {
+      let user = getUserSafe(request.auth.uid);
+      return user == null || user.get('isFrozen', false) == false;
+    }
+
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId && isNotFrozen(); }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
     
     function incoming() { return request.resource.data; }
@@ -34,7 +39,11 @@ service cloud.firestore {
 
     function isAnyAdmin() {
       let user = getUserSafe(request.auth.uid);
-      return isBootstrapAdmin() || (user != null && (user.role.lower() in ['gm', 'admin'] || user.get('isAdmin', false) == true));
+      return isBootstrapAdmin() || (user != null && isNotFrozen() && (
+        user.role.lower() in ['gm', 'admin'] || 
+        user.get('isAdmin', false) == true ||
+        user.get('subscriptionTier', '').lower() == 'organization'
+      ));
     }
 
     function isAnyManager() {
@@ -43,7 +52,7 @@ service cloud.firestore {
 
     function isOrgMember(orgId) {
       let user = getUserSafe(request.auth.uid);
-      return isBootstrapAdmin() || (isSignedIn() && user != null && user.orgId == orgId);
+      return isBootstrapAdmin() || (isSignedIn() && isNotFrozen() && user != null && user.orgId == orgId);
     }
 
     // --- VALIDATION HELPERS ---
@@ -51,8 +60,29 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.uid == request.auth.uid &&
              data.email is string &&
-             data.role.lower() in ['sales', 'manager', 'gm', 'admin'] &&
              data.subscriptionTier.lower() in ['free', 'basic', 'pro', 'organization'];
+    }
+
+    function checkInvite(data) {
+      let inviteId = data.get('inviteId', 'none');
+      let inviteToken = data.get('inviteToken', 'none');
+      let invite = get(/databases/$(database)/documents/invites/$(inviteId)).data;
+      return invite != null && 
+             invite.token == inviteToken && 
+             invite.email.lower() == data.email.lower() &&
+             invite.role.lower() == data.role.lower() &&
+             invite.orgId == data.orgId &&
+             invite.status == 'pending';
+    }
+
+    function isValidInvite(data) {
+      return data.email is string &&
+             data.role.lower() in ['manager', 'gm'] &&
+             data.orgId is string &&
+             data.token is string &&
+             data.status in ['pending', 'accepted', 'expired', 'cancelled'] &&
+             data.expiresAt is number &&
+             data.createdAt is number;
     }
 
     function isValidDeal(data) {
@@ -74,14 +104,26 @@ service cloud.firestore {
              data.month is string;
     }
 
-    function isValidSpiff(data) {
+    function isValidDealerDeal(data) {
+      return data.orgId is string &&
+             data.createdByUserId == request.auth.uid &&
+             data.date is string &&
+             data.customerName is string &&
+             data.dealNumber is string &&
+             data.newOrUsed in ['N', 'U'] &&
+             data.frontGross is number &&
+             data.backGross is number &&
+             data.createdAt is number;
+    }
+
+    function isValidSpiff(data, isCreate) {
       return data.userId == request.auth.uid &&
              data.orgId is string &&
              data.amount is number &&
              data.month is string &&
              data.date is string &&
-             data.createdAt is number &&
-             data.updatedAt is number;
+             (isCreate ? data.createdAt is timestamp : true) &&
+             data.updatedAt is timestamp;
     }
 
     function isValidFeedback(data) {
@@ -135,17 +177,35 @@ service cloud.firestore {
       allow update, delete: if isAnyAdmin();
     }
 
+    // Invites Collection
+    match /invites/{inviteId} {
+      // Anyone signed in can read an invite if they have the ID (token check)
+      allow get: if isSignedIn();
+      // Only admins/GMs can list or create invites
+      allow list: if isAnyAdmin();
+      allow create: if isAnyAdmin() && isValidInvite(incoming());
+      // Users can update status when accepting
+      allow update: if isSignedIn() && (
+        isAnyAdmin() || 
+        (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'acceptedAt']) && incoming().status == 'accepted')
+      );
+      allow delete: if isAnyAdmin();
+    }
+
     // User Collection
     match /users/{userId} {
       // isOwner is primary gate. Managers can see profiles within their org.
       allow get: if isOwner(userId) || isBootstrapAdmin() || (isSignedIn() && isAnyManager() && isOrgMember(getUserSafe(userId).orgId));
       allow list: if isSignedIn() && (isAnyManager() || isAnyAdmin()); 
-      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().get('isAdmin', false) == false;
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().get('isAdmin', false) == false && (
+        (incoming().role.lower() == 'sales') || 
+        (incoming().role.lower() in ['manager', 'gm'] && checkInvite(incoming()))
+      );
       allow update: if isOwner(userId) && (
         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId'])
       ) || (
-        isAnyAdmin() && 
-        incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt', 'isAdmin', 'subscriptionTier'])
+        isAnyAdmin() && isOrgMember(existing().orgId) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt', 'isAdmin', 'subscriptionTier', 'isFrozen', 'isDeleted', 'orgId'])
       );
       
       match /notifications/{notifId} {
@@ -191,8 +251,16 @@ service cloud.firestore {
 
       match /monthlySpiffs/{spiffId} {
         allow get, list: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.userId == request.auth.uid));
-        allow create: if isOrgMember(orgId) && isValidSpiff(incoming());
-        allow update, delete: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.userId == request.auth.uid));
+        allow create: if isOrgMember(orgId) && isValidId(spiffId) && isValidSpiff(incoming(), true);
+        allow update: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.userId == request.auth.uid)) && isValidSpiff(incoming(), false);
+        allow delete: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.userId == request.auth.uid));
+      }
+
+      match /dealerDeals/{dealId} {
+        allow get, list: if isOrgMember(orgId);
+        allow create: if isOrgMember(orgId) && isValidDealerDeal(incoming());
+        allow update: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.createdByUserId == request.auth.uid));
+        allow delete: if isOrgMember(orgId) && (isAnyManager() || (resource != null && resource.data.createdByUserId == request.auth.uid));
       }
 
       match /users/{userId}/payPlans/{planId} {

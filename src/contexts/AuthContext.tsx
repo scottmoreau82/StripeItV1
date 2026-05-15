@@ -195,35 +195,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDocRef = doc(db, COLLECTIONS.USERS, firebaseUser.uid);
       
       let retryCount = 0;
-      const MAX_RETRIES = 2;
+      const MAX_RETRIES = 3;
 
-      const setupProfileListener = () => {
-        unsubscribeProfile = onSnapshot(userDocRef, async (docSnap) => {
-          // If user changed mid-stream, disregard
-          if (auth.currentUser?.uid !== firebaseUser.uid) return;
-
-          setConnectionError(null);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const profileData = {
-              uid: firebaseUser.uid, // Ensure UID is always present
-              ...data,
-              createdAt: data.createdAt?.toMillis?.() || data.createdAt || Date.now(),
-              updatedAt: data.updatedAt?.toMillis?.() || data.updatedAt || Date.now(),
-            } as any as UserProfile;
-            setProfile(profileData);
-            setLoading(false);
-            setInitialized(true);
-          } else {
-            // Auto-provision initial Free Tier profile
+      const setupProfileListener = async () => {
+        // Use getDoc first for a definitive existence check before subscribing
+        // this prevents race conditions where onSnapshot might fire with null before local cache syncs
+        try {
+          const { getDoc } = await import('firebase/firestore');
+          const initialSnap = await getDoc(userDocRef);
+          
+          if (!initialSnap.exists()) {
+            // Only provision if we are SURE it doesn't exist
+            console.log("No profile found, provisioning...");
             try {
-              const { writeBatch, serverTimestamp } = await import('firebase/firestore');
-              const { UserRole, SubscriptionTier, IconTheme } = await import('../types');
+              const { writeBatch, serverTimestamp, getDoc: getDocDirect } = await import('firebase/firestore');
+              const { UserRole, SubscriptionTier, IconTheme, InviteStatus } = await import('../types');
               
-              const orgId = `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
-              const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId);
               const batch = writeBatch(db);
-              
+              const orgId = `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
+              const role = UserRole.SALES;
+              const tier = SubscriptionTier.FREE;
+
+              const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId);
               batch.set(orgDocRef, {
                 id: orgId,
                 name: 'Personal Workspace',
@@ -232,12 +225,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 createdAt: serverTimestamp()
               });
 
-              batch.set(userDocRef, {
+              const userProfileData: any = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email || '',
                 displayName: firebaseUser.displayName || 'New Salesperson',
-                role: UserRole.SALES,
-                subscriptionTier: SubscriptionTier.FREE,
+                role: role,
+                subscriptionTier: tier,
                 orgId: orgId,
                 dealershipId: '',
                 createdAt: serverTimestamp(),
@@ -265,49 +258,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     compactMode: false
                   }
                 }
-              });
+              };
+
+              batch.set(userDocRef, userProfileData);
               
               await batch.commit();
+
               analyticsService.trackEvent(AnalyticsEventType.SIGNUP_COMPLETED, { email: firebaseUser.email });
-              // Note: snapshot will re-fire after commit
             } catch (err) {
               console.error("Failed to auto-provision user profile:", err);
-              if (retryCount < MAX_RETRIES) {
-                retryCount++;
-                setTimeout(setupProfileListener, 1000);
-              } else {
-                setConnectionError("Account initialization failed. Please contact support.");
-                setLoading(false);
-                setInitialized(true);
-                handleFirestoreError(err, OperationType.WRITE, 'batch-init');
-              }
+              // Fallback to onSnapshot even if provisioning failed - maybe it exists now?
             }
           }
-        }, (error) => {
-          if (!auth.currentUser) return;
+          
+          // Now subscribe for real-time updates
+          unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
+            // If user changed mid-stream, disregard
+            if (auth.currentUser?.uid !== firebaseUser.uid) return;
 
-          console.error("Error fetching user profile:", error);
-          if (error.message.includes('offline') || error.message.includes('network')) {
-            setConnectionError("Network issue. Retrying...");
-            setTimeout(setupProfileListener, 3000);
-          } else if (error.message.includes('permission')) {
-            // Likely a race condition where user is authenticated but Firestore doesn't know yet
-            if (retryCount < MAX_RETRIES) {
-              retryCount++;
-              setTimeout(setupProfileListener, 1000);
-            } else {
-              setConnectionError("Permission issues loading your profile.");
+            setConnectionError(null);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+
+              // 🛡️ BLOCK FROZEN ACCOUNTS
+              if (data.isFrozen) {
+                console.warn("Account is frozen. Blocking access.");
+                setProfile(null);
+                setLoading(false);
+                setInitialized(true);
+                // Trigger an error state that the UI can pick up
+                setConnectionError("ACCOUNT_FROZEN");
+                return;
+              }
+
+              const profileData = {
+                uid: firebaseUser.uid,
+                ...data,
+                createdAt: data.createdAt?.toMillis?.() || data.createdAt || Date.now(),
+                updatedAt: data.updatedAt?.toMillis?.() || data.updatedAt || Date.now(),
+              } as any as UserProfile;
+              setProfile(profileData);
               setLoading(false);
               setInitialized(true);
-              handleFirestoreError(error, OperationType.GET, `${COLLECTIONS.USERS}/${firebaseUser.uid}`);
+            } else {
+              // This is highly unusual after the getDoc check, but handle it
+              setConnectionError("Profile disappeared. Please refresh.");
+              setLoading(false);
+              setInitialized(true);
             }
+          }, (error) => {
+            if (!auth.currentUser) return;
+            console.error("Profile subscription error:", error);
+            handleFirestoreError(error, OperationType.GET, `${COLLECTIONS.USERS}/${firebaseUser.uid}`);
+          });
+        } catch (error: any) {
+          console.error("Initial profile fetch error:", error);
+          if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            setTimeout(setupProfileListener, 1000);
           } else {
-            setConnectionError("Unable to load profile data.");
+            setConnectionError("Unable to establish profile link.");
             setLoading(false);
             setInitialized(true);
             handleFirestoreError(error, OperationType.GET, `${COLLECTIONS.USERS}/${firebaseUser.uid}`);
           }
-        });
+        }
       };
 
       setupProfileListener();

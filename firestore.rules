@@ -179,15 +179,13 @@ service cloud.firestore {
 
     // Invites Collection
     match /invites/{inviteId} {
-      // Anyone signed in can read an invite if they have the ID (token check)
       allow get: if isSignedIn();
-      // Only admins/GMs can list or create invites
       allow list: if isAnyAdmin();
       allow create: if isAnyAdmin() && isValidInvite(incoming());
-      // Users can update status when accepting
       allow update: if isSignedIn() && (
-        isAnyAdmin() || 
-        (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'acceptedAt']) && incoming().status == 'accepted')
+        (isAnyAdmin() && (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) && incoming().status == 'cancelled')) ||
+        (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'acceptedAt']) && incoming().status == 'accepted') ||
+        isAnyAdmin()
       );
       allow delete: if isAnyAdmin();
     }
@@ -209,7 +207,8 @@ service cloud.firestore {
       );
       
       match /notifications/{notifId} {
-        allow read, write: if isOwner(userId);
+        allow read, update, delete: if isOwner(userId);
+        allow create: if isSignedIn();
       }
     }
 

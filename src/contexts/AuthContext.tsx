@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { UserProfile, SubscriptionTier } from '../types';
+import { UserProfile, SubscriptionTier, UserRole, IconTheme } from '../types';
 import { STRIPEIT_DEVELOPER_EMAIL, COLLECTIONS } from '../constants';
 import { Typography } from '../components/ui/Typography';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
@@ -208,27 +208,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Only provision if we are SURE it doesn't exist
             console.log("No profile found, provisioning...");
             try {
-              const { writeBatch, serverTimestamp, getDoc: getDocDirect } = await import('firebase/firestore');
-              const { UserRole, SubscriptionTier, IconTheme, InviteStatus } = await import('../types');
+              const { writeBatch, serverTimestamp } = await import('firebase/firestore');
+              const { inviteService } = await import('../services/inviteService');
               
               const batch = writeBatch(db);
-              const orgId = `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
-              const role = UserRole.SALES;
-              const tier = SubscriptionTier.FREE;
+              
+              // StripeItInviteResolutionSystem - Check for pending organizational invites
+              const pendingInvites = await inviteService.getPendingInvitesForUser(firebaseUser.uid);
+              const activeInvite = pendingInvites[0]; // Join the most recent invitation
 
-              const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId);
-              batch.set(orgDocRef, {
-                id: orgId,
-                name: 'Personal Workspace',
-                ownerId: firebaseUser.uid,
-                subscriptionTier: SubscriptionTier.FREE,
-                createdAt: serverTimestamp()
-              });
+              let orgId: string;
+              let role: UserRole;
+              let tier: SubscriptionTier;
+
+              if (activeInvite) {
+                console.log("Active invite found, joining organization:", activeInvite.orgId);
+                orgId = activeInvite.orgId;
+                role = activeInvite.role as UserRole;
+                tier = SubscriptionTier.ORGANIZATION;
+                
+                // Mark invite as accepted via the service
+                await inviteService.acceptInvite(activeInvite.id, firebaseUser.uid);
+              } else {
+                console.log("No invite found, provisioning personal workspace.");
+                orgId = `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
+                role = UserRole.SALES;
+                tier = SubscriptionTier.FREE;
+
+                const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId);
+                batch.set(orgDocRef, {
+                  id: orgId,
+                  name: 'Personal Workspace',
+                  ownerId: firebaseUser.uid,
+                  subscriptionTier: SubscriptionTier.FREE,
+                  createdAt: serverTimestamp()
+                });
+              }
 
               const userProfileData: any = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email || '',
-                displayName: firebaseUser.displayName || 'New Salesperson',
+                displayName: firebaseUser.displayName || (activeInvite ? 'New Manager' : 'New Salesperson'),
                 role: role,
                 subscriptionTier: tier,
                 orgId: orgId,
@@ -264,7 +284,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               
               await batch.commit();
 
-              analyticsService.trackEvent(AnalyticsEventType.SIGNUP_COMPLETED, { email: firebaseUser.email });
+              analyticsService.trackEvent(AnalyticsEventType.SIGNUP_COMPLETED, { 
+                email: firebaseUser.email,
+                joinedOrg: !!activeInvite 
+              });
             } catch (err) {
               console.error("Failed to auto-provision user profile:", err);
               // Fallback to onSnapshot even if provisioning failed - maybe it exists now?

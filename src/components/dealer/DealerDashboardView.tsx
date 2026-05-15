@@ -14,8 +14,6 @@ import {
   ClipboardCheck, 
   Car, 
   BarChart3, 
-  ArrowUpRight, 
-  Users,
   Activity
 } from 'lucide-react';
 import { DashboardLayout } from '../layout/DashboardLayout';
@@ -77,7 +75,7 @@ export const DealerDashboardView: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div className="flex-1">
           <Typography variant="h1" className="mb-2 italic font-black uppercase tracking-tighter">
-            Operational<br />Command
+            Operational Command
           </Typography>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-brand-primary animate-pulse shadow-glow glow-primary" />
@@ -85,16 +83,6 @@ export const DealerDashboardView: React.FC = () => {
               Live Organizational Telemetry • {profile?.dealershipId}
             </Typography>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button 
-            className="shadow-glow glow-primary h-11 px-6 font-black uppercase tracking-widest text-[10px]"
-            onClick={() => window.location.href = '/dealer/sales-log'}
-          >
-            Access Sales Log
-            <ArrowUpRight size={14} className="ml-2" />
-          </Button>
         </div>
       </div>
     </div>
@@ -224,27 +212,6 @@ export const DealerDashboardView: React.FC = () => {
                  <HealthItem label="Daily Pacing" percentage={deals.length > 0 ? 88 : 0} color="brand" />
                  <HealthItem label="Gross Retention" percentage={74} color="cyan" />
                  <HealthItem label="F&I Penetration" percentage={92} color="brand-deep" />
-              </div>
-           </Card>
-
-           <Card className="bg-bg-card/20 border-white/5 p-8 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-5">
-                 <Users size={120} className="text-brand-primary" />
-              </div>
-              <div className="relative z-10 space-y-4">
-                 <Typography variant="h3" className="italic font-black uppercase tracking-tight text-white leading-none">
-                   Manager Oversight
-                 </Typography>
-                 <Typography variant="p" className="text-slate-500 text-[11px] font-bold leading-relaxed">
-                   Review organizational performance across all active desks and finance offices.
-                 </Typography>
-                 <Button 
-                   variant="outline" 
-                   className="w-full border-white/10 group-hover:border-brand-primary/30 transition-all text-[10px] font-black uppercase tracking-widest h-10"
-                   onClick={() => window.location.href = '/dealer/settings'}
-                 >
-                   Manage Team Access
-                 </Button>
               </div>
            </Card>
         </div>

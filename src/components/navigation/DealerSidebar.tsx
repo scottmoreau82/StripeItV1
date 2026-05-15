@@ -112,7 +112,7 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
                 "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
                 isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
               )}>
-                <span className={cn("font-bold text-[11px] uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all", isSalesLogActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Sales Log</span>
+                <span className={cn("font-bold text-[11px] uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all", isSalesLogActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Sales Report</span>
               </div>
             </div>
           </Link>

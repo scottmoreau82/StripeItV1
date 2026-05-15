@@ -5,7 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { notificationService } from '@/src/services/notificationService';
 import { feedbackService } from '@/src/services/feedbackService';
-import { Notification, FeedbackReport, FeedbackType, SubscriptionTier } from '@/src/types';
+import { Notification, FeedbackReport, FeedbackType, SubscriptionTier, ActivityEventType, Invite } from '@/src/types';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { NotificationItem } from './NotificationItem';
 import { InviteModal } from './InviteModal';
@@ -14,7 +14,6 @@ import { Button } from '../ui/Button';
 import { cn } from '@/src/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { inviteService } from '@/src/services/inviteService';
-import { ActivityEventType, Invite } from '@/src/types';
 
 /**
  * StripeItNotificationSystem - NotificationTray

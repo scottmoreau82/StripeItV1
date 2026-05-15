@@ -22,7 +22,6 @@ export const DealerSalesLogView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [deals, setDeals] = useState<DealerDeal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   useEffect(() => {
     const fetchDeals = async () => {
@@ -71,7 +70,7 @@ export const DealerSalesLogView: React.FC = () => {
                 <AppIcon name="salesLog" className="text-brand-primary h-5 w-5" />
              </div>
              <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter">
-               Dealer Sales Log
+               Daily Sales Report
              </Typography>
           </div>
           <Typography variant="mono" className="text-slate-500 uppercase tracking-[0.3em] text-[10px] font-black pl-1">
@@ -100,14 +99,6 @@ export const DealerSalesLogView: React.FC = () => {
                <AppIcon name="calendar" size={16} className="text-brand-primary/60" />
             </div>
           </div>
-          
-          <Button 
-            variant="outline" 
-            className="h-10 border-border-subtle bg-bg-card/20 hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest px-6"
-            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-          >
-             Desk Observation
-          </Button>
         </div>
       </div>
 
@@ -246,39 +237,6 @@ export const DealerSalesLogView: React.FC = () => {
           </table>
         </div>
       </Card>
-
-      {/* Notes / Manager Observations Placeholder */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:hidden">
-        <Card className="bg-bg-card/20 border-border-subtle p-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <Typography variant="h3" className="italic font-black uppercase tracking-tight text-brand-primary">
-              Desk Observations
-            </Typography>
-            <AppIcon name="trending" size={20} className="text-slate-700" />
-          </div>
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-              <Typography variant="p" className="text-slate-500 text-xs italic">
-                Awaiting manager input for desk performance review...
-              </Typography>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-bg-card/20 border-border-subtle p-8 space-y-6 opacity-30 cursor-not-allowed grayscale">
-           <div className="flex items-center justify-between">
-            <Typography variant="h3" className="italic font-black uppercase tracking-tight text-white">
-              Inventory Trends
-            </Typography>
-            <AppIcon name="lock" size={16} className="text-slate-500" />
-          </div>
-          <div className="h-24 flex items-center justify-center">
-            <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-500">
-              Analysis Engine Offline
-            </Typography>
-          </div>
-        </Card>
-      </div>
 
       <style>{`
         @media print {

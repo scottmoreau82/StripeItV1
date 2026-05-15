@@ -37,10 +37,13 @@ export const inviteService = {
       throw new Error(`Domain mismatch. You may only invite users with a @${dealerDomain} email address.`);
     }
 
-    // 3. Prevent duplicate active invites
+    // 3. Prevent duplicate active invites - Instead of error, we now allow resending which replaces the old one
     const existingInvites = await this.getInvitesByOrg(orgId);
-    if (existingInvites.some(inv => inv.email === inviteEmail && inv.status === InviteStatus.PENDING)) {
-      throw new Error('A pending invite already exists for this user.');
+    const pendingInvite = existingInvites.find(inv => inv.email === inviteEmail && inv.status === InviteStatus.PENDING);
+    
+    if (pendingInvite) {
+      // Delete the old one so we can create a fresh one with a new token and expiration
+      await deleteDoc(doc(db, 'invites', pendingInvite.id));
     }
 
     // 4. Resolve Org Name
@@ -160,5 +163,26 @@ export const inviteService = {
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => doc.data() as Invite);
+  },
+
+  async cancelInvite(inviteId: string): Promise<void> {
+    const inviteRef = doc(db, 'invites', inviteId);
+    await updateDoc(inviteRef, {
+      status: InviteStatus.CANCELLED,
+      updatedAt: serverTimestamp()
+    });
+  },
+
+  async getPendingInvitesByOrg(orgId: string): Promise<Invite[]> {
+    const invitesRef = collection(db, 'invites');
+    const q = query(
+      invitesRef, 
+      where('orgId', '==', orgId), 
+      where('status', '==', InviteStatus.PENDING)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs
+      .map(doc => doc.data() as Invite)
+      .filter(inv => inv.expiresAt > Date.now());
   }
 };

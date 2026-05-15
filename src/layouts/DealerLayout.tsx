@@ -39,6 +39,12 @@ export const DealerLayout: React.FC<DealerLayoutProps> = ({ children }) => {
         onLogDeal={handleLogDeal}
       />
       
+      {/* Premium Vertical Divider */}
+      <div className="hidden lg:block w-[1px] relative shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent" />
+        <div className="absolute inset-0 bg-brand-primary/20 blur-[2px] opacity-30" />
+      </div>
+      
       <div className="flex flex-1 flex-col min-w-0">
         {/* Dealer Mobile Header */}
         <DealerHeader onLogDeal={handleLogDeal} />

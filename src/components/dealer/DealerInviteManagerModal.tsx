@@ -14,26 +14,26 @@ interface DealerInviteManagerModalProps {
 }
 
 export const DealerInviteManagerModal: React.FC<DealerInviteManagerModalProps> = ({ isOpen, onClose }) => {
-  const { profile, addToast, isAdmin } = useAuth();
+  const { profile, addToast } = useAuth();
   const [email, setEmail] = useState('');
-  const [targetOrgId, setTargetOrgId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lastInviteLink, setLastInviteLink] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile) return;
+    if (!profile?.orgId) {
+      addToast('Organizational context not found.', 'error');
+      return;
+    }
     
-    const finalOrgId = isAdmin ? targetOrgId : profile.orgId;
-    if (!finalOrgId || !email) {
-      addToast('Org ID and Email are required', 'error');
+    if (!email) {
+      addToast('Professional email is required.', 'error');
       return;
     }
 
     setIsSubmitting(true);
     try {
       await inviteService.createInvite(
-        finalOrgId, 
+        profile.orgId, 
         profile, 
         email, 
         UserRole.MANAGER
@@ -41,7 +41,6 @@ export const DealerInviteManagerModal: React.FC<DealerInviteManagerModalProps> =
       
       addToast('Invite sent successfully to the user\'s inbox!', 'success');
       setEmail('');
-      setTargetOrgId('');
       onClose();
     } catch (error: any) {
       console.error("Invite Error:", error);
@@ -79,18 +78,6 @@ export const DealerInviteManagerModal: React.FC<DealerInviteManagerModalProps> =
             required
             className="bg-white/5 border-white/10"
           />
-
-          {isAdmin && (
-            <Input
-              label="Target Organization ID"
-              type="text"
-              placeholder="ORG-NAME"
-              value={targetOrgId}
-              onChange={(e) => setTargetOrgId(e.target.value)}
-              required
-              className="bg-white/5 border-white/10"
-            />
-          )}
 
           <Button 
             type="submit" 

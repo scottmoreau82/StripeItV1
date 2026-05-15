@@ -485,7 +485,7 @@ function MainAppFlow() {
       {/* Global Mobile Log Deal FAB */}
       {isMobile && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
         <div className={cn(
-          "fixed bottom-10 z-50 transition-all duration-500 ease-in-out",
+          "fixed bottom-10 z-50 transition-all duration-500 ease-in-out md:hidden",
           isDrawerOpen ? "right-8 translate-x-0" : "left-1/2 -translate-x-1/2"
         )}>
           <motion.div

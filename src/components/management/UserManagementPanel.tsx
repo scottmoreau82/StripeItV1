@@ -40,7 +40,18 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
       // If user is the bootstrap admin, allow global view by default or if requested
       const isBootstrapAdmin = currentUser?.email?.toLowerCase() === 'scottmoreau82@gmail.com';
       const data = await userService.getUsers(isBootstrapAdmin ? undefined : orgId);
-      setUsers(data);
+      
+      // Strict deduplication by UID to prevent rendering redundant user records
+      const uniqueUsersMap = new Map<string, UserProfile>();
+      data.forEach(u => {
+        if (u.uid) uniqueUsersMap.set(u.uid, u);
+      });
+      
+      const uniqueUsers = Array.from(uniqueUsersMap.values()).sort((a, b) => 
+        (a.displayName || '').localeCompare(b.displayName || '')
+      );
+
+      setUsers(uniqueUsers);
     } catch (error) {
       addToast('Failed to load users.', 'error');
     } finally {
@@ -130,7 +141,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Typography variant="label" className="text-white truncate">
-                        {user.displayName}
+                        {user.displayName || 'Anonymous User'}
                       </Typography>
                       {user.isAdmin && (
                         <Shield className="h-3 w-3 text-brand-primary" title="Admin" />
@@ -142,7 +153,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                       )}
                     </div>
                     <Typography variant="small" className="text-slate-500 truncate block">
-                      {user.email}
+                      {user.email || 'No Email Address'}
                     </Typography>
                   </div>
                 </div>

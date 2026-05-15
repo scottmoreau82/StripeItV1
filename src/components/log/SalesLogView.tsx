@@ -419,13 +419,14 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               </Typography>
                             </td>
                             <td className="py-5 px-4">
-                              <div className="flex items-center justify-end gap-1">
+                              <div className="flex items-center justify-end gap-2">
                                 <button 
                                   onClick={(e) => { 
                                     e.stopPropagation(); 
                                     window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
                                   }}
-                                  className="p-2 rounded-lg text-slate-600 hover:text-cyan-400 hover:bg-cyan-400/10 transition-all opacity-0 group-hover:opacity-100"
+                                  className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-cyan-400/10 transition-all active:scale-95 shadow-sm"
+                                  title="Edit Adjustment"
                                 >
                                   <AppIcon name="edit" size={14} />
                                 </button>
@@ -434,7 +435,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                     e.stopPropagation(); 
                                     if (window.confirm('Delete this adjustment?')) handleDeleteMonthlySpiff?.(spiff.id); 
                                   }}
-                                  className="p-2 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-400/10 transition-all opacity-0 group-hover:opacity-100"
+                                  className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
+                                  title="Delete Adjustment"
                                 >
                                   <AppIcon name="delete" size={14} />
                                 </button>
@@ -513,10 +515,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                       e.stopPropagation();
                                       setExplanationData({ commission, customerName: deal.customerName });
                                     }}
-                                    className="p-1 rounded bg-emerald-400/10 text-emerald-400 hover:bg-emerald-400/20 transition-all active:scale-90"
+                                    className="p-1 px-1.5 rounded border border-emerald-400/20 bg-emerald-400/5 text-emerald-400 hover:bg-emerald-400/20 hover:border-emerald-400/40 transition-all active:scale-90 shadow-sm shadow-emerald-500/5"
                                     title="View Calculation Breakdown"
                                   >
-                                    <AppIcon name="eye" size={10} />
+                                    <div className="flex items-center gap-1">
+                                      <AppIcon name="eye" size={10} />
+                                      <span className="text-[8px] font-black uppercase tracking-tighter">View</span>
+                                    </div>
                                   </button>
                                 )}
                               </div>
@@ -528,10 +533,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             </div>
                           </td>
                           <td className="py-5 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1">
+                            <div className="flex items-center justify-end gap-2">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
-                                className="p-2 rounded-lg text-slate-600 hover:text-cyan-400 hover:bg-cyan-400/10 transition-all opacity-0 group-hover:opacity-100"
+                                className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-cyan-400/10 transition-all active:scale-95 shadow-sm"
+                                title="Edit Deal"
                               >
                                 <AppIcon name="edit" size={14} />
                               </button>
@@ -540,7 +546,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                   e.stopPropagation(); 
                                   if (window.confirm('Delete this deal record?')) handleDeleteDeal?.(deal.id); 
                                 }}
-                                className="p-2 rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-400/10 transition-all opacity-0 group-hover:opacity-100"
+                                className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
+                                title="Delete Deal"
                               >
                                 <AppIcon name="delete" size={14} />
                               </button>
@@ -701,7 +708,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                <div className="flex items-center gap-2">
                                  <button 
                                    onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
-                                   className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-slate-400"
+                                   className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95"
                                  >
                                    <AppIcon name="edit" size={16} />
                                  </button>
@@ -710,7 +717,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                      e.stopPropagation(); 
                                      if (window.confirm('Delete this deal record?')) handleDeleteDeal?.(deal.id); 
                                    }}
-                                   className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500"
+                                   className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-all active:scale-95"
                                  >
                                    <AppIcon name="delete" size={16} />
                                  </button>

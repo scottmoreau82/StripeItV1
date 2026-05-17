@@ -173,7 +173,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                             <div className="ml-12 flex flex-col gap-1 border-l border-white/10 pl-4 py-2 mb-2">
                               {navigationConfig.settingsSubmenu
                                 .filter(sub => {
-                                  if (sub.adminOnly && !isAdmin && !isDeveloper) return false;
+                                  if (sub.adminOnly && !profile?.isAdmin) return false;
                                   if (sub.roles && profile && !sub.roles.includes(profile.role)) return false;
                                   return true;
                                 })

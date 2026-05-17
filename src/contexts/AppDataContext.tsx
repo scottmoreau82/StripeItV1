@@ -147,6 +147,27 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     initializeData();
 
+    // Unified error handler for subscriptions to prevent permission spam
+    const handleSubError = (error: any, path: string) => {
+      setIsLoading(false);
+      clearTimeout(loadTimeout);
+      
+      const isPermissionError = error.code === 'permission-denied' || error.message?.includes('permission-denied');
+      
+      // If user is frozen or losing org access, permission errors are expected and should be silenced
+      if (isPermissionError && (profile?.isFrozen || profile?.subscriptionTier !== SubscriptionTier.ORGANIZATION)) {
+        console.warn(`[AppDataContext] Silencing expected permission error during ejection/freeze: ${path}`);
+        return;
+      }
+
+      console.error(`[AppDataContext] Subscription error at ${path}:`, error);
+      try {
+        handleFirestoreError(error, OperationType.LIST, path);
+      } catch (e) {
+        // Error is logged by handleFirestoreError, we've caught the throw to prevent spam
+      }
+    };
+
     // 1. Subscription to Deals
     const dealsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${effectiveOrgId}/${COLLECTIONS.DEALS}`;
     let dealsQuery = query(
@@ -172,12 +193,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       setIsLoading(false);
       clearTimeout(loadTimeout);
-    }, (error) => {
-      console.error("Deals subscription error:", error);
-      setIsLoading(false);
-      clearTimeout(loadTimeout);
-      handleFirestoreError(error, OperationType.LIST, dealsCollectionPath);
-    });
+    }, (error) => handleSubError(error, dealsCollectionPath));
 
     // 2. Subscription to Notes
     const notesCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${effectiveOrgId}/${COLLECTIONS.NOTES}`;
@@ -198,10 +214,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         } as QuickNote;
       });
       setNotes(noteData);
-    }, (error) => {
-      console.error("Notes subscription error:", error);
-      handleFirestoreError(error, OperationType.LIST, notesCollectionPath);
-    });
+    }, (error) => handleSubError(error, notesCollectionPath));
 
     // 3. Subscription to Competitions
     const compsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${effectiveOrgId}/${COLLECTIONS.COMPETITIONS}`;
@@ -223,10 +236,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         } as Competition;
       });
       setCompetitions(compData);
-    }, (error) => {
-      console.error("Competitions subscription error:", error);
-      handleFirestoreError(error, OperationType.LIST, compsCollectionPath);
-    });
+    }, (error) => handleSubError(error, compsCollectionPath));
 
     // 4. Subscription to Monthly SPIFFs
     const spiffsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${effectiveOrgId}/monthlySpiffs`;
@@ -247,10 +257,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         } as MonthlySpiff;
       });
       setMonthlySpiffs(spiffData);
-    }, (error) => {
-      console.error("Spiffs subscription error:", error);
-      handleFirestoreError(error, OperationType.LIST, spiffsCollectionPath);
-    });
+    }, (error) => handleSubError(error, spiffsCollectionPath));
 
     return () => {
       unsubDeals();

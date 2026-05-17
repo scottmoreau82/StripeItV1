@@ -7,7 +7,7 @@ import { STRIPEIT_DEVELOPER_EMAIL } from '../constants';
  */
 
 const isDeveloper = (profile: UserProfile | null) => {
-  return profile?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
+  return profile?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase() && profile?.isAdmin === true;
 };
 
 export type AppPermission = 

@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
-import { UserProfile, SubscriptionTier } from '../types';
+import { UserProfile, SubscriptionTier, UserRole } from '../types';
 import { STRIPEIT_DEVELOPER_EMAIL, COLLECTIONS } from '../constants';
 import { Typography } from '../components/ui/Typography';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
@@ -32,6 +32,7 @@ interface AuthContextType {
   addToast: (message: string, type: 'success' | 'error' | 'info') => void;
   sendVerificationEmail: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  retryHydration: () => void;
   isAdmin: boolean;
   isDeveloper: boolean;
   isEditMode: boolean;
@@ -52,6 +53,7 @@ const AuthContext = createContext<AuthContextType>({
   addToast: () => {},
   sendVerificationEmail: async () => {},
   refreshUser: async () => {},
+  retryHydration: () => {},
   isAdmin: false,
   isDeveloper: false,
   isEditMode: false,
@@ -119,6 +121,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [tierOverride, setTierOverrideState] = useState<SubscriptionTier | null>(() => {
     return sessionStorage.getItem('stripeit_tier_override') as SubscriptionTier | null;
   });
+  const [retryKey, setRetryKey] = useState(0);
+
+  const retryHydration = useCallback(() => {
+    setLoading(true);
+    setConnectionError(null);
+    setRetryKey(prev => prev + 1);
+  }, []);
 
   const setIsEditMode = useCallback((value: boolean) => {
     localStorage.setItem('stripeit_edit_mode', String(value));
@@ -196,6 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setUser(firebaseUser);
       
+      const isDeveloper = firebaseUser.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
       analyticsService.trackEvent(AnalyticsEventType.LOGIN, { email: firebaseUser.email });
 
       // 2. Setup Profile Sync
@@ -232,7 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 tier = SubscriptionTier.ORGANIZATION; // Managers are part of the dealer tier org
               } else {
                 const isDeveloper = firebaseUser.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
-                orgId = `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
+                orgId = isDeveloper ? 'FOUNDER-ORG-001' : `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
                 const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId);
                 batch.set(orgDocRef, {
                   id: orgId,
@@ -240,7 +250,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   ownerId: firebaseUser.uid,
                   subscriptionTier: isDeveloper ? SubscriptionTier.ORGANIZATION : SubscriptionTier.FREE,
                   createdAt: serverTimestamp()
-                });
+                }, { merge: true }); // Use merge to prevent overwriting existing FOUNDER-ORG
                 
                 if (isDeveloper) {
                   tier = SubscriptionTier.ORGANIZATION;
@@ -320,6 +330,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 createdAt: rawData.createdAt?.toMillis?.() || rawData.createdAt || Date.now(),
                 updatedAt: rawData.updatedAt?.toMillis?.() || rawData.updatedAt || Date.now(),
               } as any as UserProfile;
+
+              // 🛡️ FOUNDER REPAIR: Ensure founder always has valid orgId and role
+              if (isDeveloper) {
+                const needsUserRepair = !profileData.orgId || profileData.role !== UserRole.DEALER_OWNER || !profileData.isAdmin;
+                
+                if (needsUserRepair) {
+                  console.log("[Bootstrap] Repairing founder profile state...");
+                  const repairData: any = {};
+                  if (!profileData.orgId) repairData.orgId = 'FOUNDER-ORG-001';
+                  if (profileData.role !== UserRole.DEALER_OWNER) repairData.role = UserRole.DEALER_OWNER;
+                  if (!profileData.isAdmin) repairData.isAdmin = true;
+                  
+                  updateDoc(userDocRef, { ...repairData, updatedAt: serverTimestamp() }).catch(e => console.error("Repair failed", e));
+                }
+
+                // Org document repair: ensure the specific founder org exists
+                const targetOrgId = profileData.orgId || 'FOUNDER-ORG-001';
+                const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, targetOrgId);
+                getDoc(orgDocRef).then(snap => {
+                  if (!snap.exists()) {
+                    console.log("[Bootstrap] Creating missing founder organization...");
+                    setDoc(orgDocRef, {
+                      id: targetOrgId,
+                      name: 'Founder Dealership',
+                      ownerId: firebaseUser.uid,
+                      subscriptionTier: SubscriptionTier.ORGANIZATION,
+                      createdAt: serverTimestamp(),
+                      updatedAt: serverTimestamp()
+                    }).catch(e => console.error("Org repair failed", e));
+                  }
+                }).catch(e => console.error("Org check failed", e));
+              }
+
               setProfile(profileData);
               setLoading(false);
               setInitialized(true);
@@ -360,7 +403,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       unsubscribeAuth();
       if (unsubscribeProfile) unsubscribeProfile();
     };
-  }, []);
+  }, [retryKey]);
 
   const logout = async () => {
     try {
@@ -427,16 +470,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const effectiveProfile = useMemo(() => {
     if (!profile) return profile;
     
-    // Developer account defaults to ORGANIZATION tier if not explicitly set
-    let baseTier = profile.subscriptionTier;
-    if (isDeveloper && (baseTier === SubscriptionTier.FREE || !baseTier)) {
-      baseTier = SubscriptionTier.ORGANIZATION;
+    // 1. Identify underlying state
+    const underlyingIsDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
+    const underlyingIsAdmin = underlyingIsDeveloper || profile?.isAdmin === true;
+
+    // 2. Resolve target state (Simulated or Real)
+    // We only apply override if the user has admin authority to do so
+    if (underlyingIsAdmin && tierOverride) {
+      const isDealerPreview = tierOverride === SubscriptionTier.ORGANIZATION;
+      
+      return {
+        ...profile,
+        subscriptionTier: tierOverride,
+        // Role simulation to ensure correct sidebar shell and permission triggers
+        role: isDealerPreview ? UserRole.DEALER_OWNER : UserRole.SALES,
+        // Org simulation: Dealers need an orgId, Personal users use PERSONAL- prefixed ones
+        orgId: isDealerPreview 
+          ? (profile.orgId && !profile.orgId.startsWith('PERSONAL-') ? profile.orgId : 'PREVIEW-ORG-001')
+          : `PERSONAL-${profile.uid.slice(0, 5)}`,
+        // We hide Admin status in the profile object during preview to test UI gating,
+        // but the context's top-level isAdmin remains true so they can still see the console.
+        isAdmin: false,
+        isFrozen: false
+      };
     }
 
-    return (isAdmin && tierOverride)
-      ? { ...profile, subscriptionTier: tierOverride }
-      : { ...profile, subscriptionTier: baseTier };
-  }, [profile, isAdmin, tierOverride, isDeveloper]);
+    // 3. Apply Developer Overrides (when no tier override is active)
+    if (underlyingIsDeveloper) {
+      return {
+        ...profile,
+        role: UserRole.DEALER_OWNER,
+        subscriptionTier: SubscriptionTier.ORGANIZATION,
+        isAdmin: true,
+        isFrozen: false, // Founder cannot be frozen
+        orgId: profile.orgId || 'FOUNDER-ORG-001'
+      };
+    }
+
+    // 4. Return standard profile for normal users
+    return profile;
+  }, [profile, tierOverride, user]);
 
   const actualTier = useMemo(() => {
     if (!profile) return null;
@@ -463,6 +536,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addToast,
     sendVerificationEmail,
     refreshUser,
+    retryHydration,
     isAdmin,
     isDeveloper,
     isEditMode,
@@ -481,6 +555,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addToast, 
     sendVerificationEmail, 
     refreshUser, 
+    retryHydration,
     isAdmin, 
     isDeveloper,
     isEditMode, 

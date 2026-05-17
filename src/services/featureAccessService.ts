@@ -7,7 +7,7 @@ import { STRIPEIT_DEVELOPER_EMAIL } from '../constants';
  */
 
 const isDeveloper = (profile: UserProfile | null) => {
-  return profile?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
+  return profile?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase() && profile?.isAdmin === true;
 };
 
 export enum Feature {
@@ -60,7 +60,7 @@ export const featureAccessService = {
       case Feature.ORG_SETTINGS:
         // Organization features require Organization tier AND a leadership role
         const isOrgTier = tier === SubscriptionTier.ORGANIZATION;
-        const isManager = [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN].includes(role);
+        const isManager = [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN, UserRole.DEALER_OWNER].includes(role);
         return isOrgTier && isManager;
 
       default:

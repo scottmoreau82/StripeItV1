@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { UserRole } from '@/src/types';
+import { UserRole, SubscriptionTier } from '@/src/types';
 import { VerificationRequired } from './VerificationRequired';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
@@ -82,8 +82,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     return <VerificationRequired />;
   }
 
-  if (user.emailVerified && profile?.isFrozen && location.pathname.startsWith('/dealer') && !isDeveloper) {
-    return <Navigate to="/" replace />;
+  // StripeItEjectionSystem - Immediate ejection from restricted routes
+  // Handles both account freezing and removal from organization
+  if (user.emailVerified && location.pathname.startsWith('/dealer') && !isDeveloper) {
+    const isDealerMember = profile?.subscriptionTier === SubscriptionTier.ORGANIZATION;
+    const isEjecting = profile?.isFrozen || !isDealerMember;
+
+    if (isEjecting) {
+      // Return to safety (HomeView will handle standard layout)
+      return <Navigate to="/" replace />;
+    }
   }
 
   if (allowedRoles && profile && !allowedRoles.includes(profile.role) && !isDeveloper) {

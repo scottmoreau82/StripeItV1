@@ -140,7 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="mt-1 ml-20 flex flex-col gap-1 border-l border-white/10 pl-4 mb-2">
                     {navigationConfig.settingsSubmenu
                       .filter(sub => {
-                        if (sub.adminOnly && !isAdmin && !isDeveloper) return false;
+                        if (sub.adminOnly && !profile?.isAdmin) return false;
                         if (sub.roles && profile && !sub.roles.includes(profile.role)) return false;
                         return true;
                       })
@@ -254,7 +254,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         {/* StripeItAnalyticsSystem - Admin Tracker */}
-        {(isAdmin || isDeveloper) && <AdminAnalyticsCard isCollapsed={isCollapsed} />}
+        {profile?.isAdmin && <AdminAnalyticsCard isCollapsed={isCollapsed} />}
         
         {/* User Account Hub */}
         <div className={cn("px-4 mb-2 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>

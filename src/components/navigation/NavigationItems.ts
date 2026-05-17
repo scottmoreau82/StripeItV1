@@ -41,12 +41,15 @@ export const navigationConfig = {
    * Filter items based on user profile and tier access rules.
    */
   getVisibleItems: (profile: UserProfile | null) => {
+    // We only grant total visibility if the profile explicitly has Admin status.
+    // In preview mode, profile.isAdmin is set to false, enabling us to test accurate gating.
     const isDeveloper = profile?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
+    const isAdministrativeSession = isDeveloper && profile?.isAdmin;
 
     return navigationConfig.main.filter(item => {
       // Items without featureId (like Dashboard, Settings) are always visible
       if (!item.featureId) return true;
-      if (isDeveloper) return true;
+      if (isAdministrativeSession) return true;
       if (!profile) return false;
       
       const isFree = profile.subscriptionTier === SubscriptionTier.FREE;

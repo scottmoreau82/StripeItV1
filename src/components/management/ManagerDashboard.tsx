@@ -49,11 +49,11 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
             <LayoutDashboard className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
           </div>
           <div className="space-y-1">
-            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
-              Command Center
+            <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-xl md:text-2xl leading-none">
+              Management Feed
             </Typography>
-            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
-              Managing {teamMetrics.length} salespeople at {profile?.orgName || 'Highline Motors'}
+            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-[0.2em] block">
+              Direct oversight • {teamMetrics.length} salespeople at {profile?.orgName || 'Highline Motors'}
             </Typography>
           </div>
         </div>

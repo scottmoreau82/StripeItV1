@@ -102,6 +102,14 @@ export const joinCodeService = {
       const codeData = codeDoc.data() as DealerJoinCode;
       
       // Validation
+      if (userProfile.orgId && !userProfile.orgId.startsWith('PERSONAL-')) {
+        throw new Error('You are already a member of an organization. Please contact your administrator.');
+      }
+
+      if (codeData.usedBy && codeData.usedBy.includes(userProfile.uid)) {
+        throw new Error('You have already redeemed this code.');
+      }
+
       if (codeData.expiresAt < Date.now()) {
         await updateDoc(codeDoc.ref, { status: JoinCodeStatus.EXPIRED });
         throw new Error('This code has expired.');

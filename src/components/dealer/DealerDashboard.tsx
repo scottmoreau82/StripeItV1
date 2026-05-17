@@ -125,37 +125,47 @@ export const DealerDashboard: React.FC = () => {
   }
 
   const header = (
-    <PageHeader
-      title="Dealer Dashboard"
-      subtitle={`${profile?.orgName || 'StripeIt Dealership'} • Total Operational Oversight`}
-      icon={LayoutGrid}
-    >
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex items-center gap-4">
+        <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary border border-brand-primary/20 shadow-glow shadow-brand-primary/5">
+          <LayoutGrid size={18} />
+        </div>
+        <div className="space-y-0.5">
+          <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-xl md:text-2xl leading-none">
+            Operational Oversight
+          </Typography>
+          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-[0.2em] block">
+            {profile?.orgName || 'StripeIt Dealership'} • Global Telemetry
+          </Typography>
+        </div>
+      </div>
+
       <Link to="/dealer/sales-log">
-        <Button variant="outline" className="h-11 border-white/10 bg-white/5 hover:bg-white/10 transition-all text-[11px] font-black uppercase tracking-widest px-6 gap-2">
-          <ClipboardList size={14} />
+        <Button variant="outline" className="h-9 border-white/10 bg-white/5 hover:bg-white/10 transition-all text-[9px] font-black uppercase tracking-widest px-5 gap-2">
+          <ClipboardList size={12} />
           Full Sales Log
         </Button>
       </Link>
-    </PageHeader>
+    </div>
   );
 
   const mainContent = (
-    <div className="space-y-10 pb-20">
+    <div className="space-y-6 pb-20">
       {/* Primary KPI Section */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={16} className="text-brand-primary" />
-          <Typography variant="mono" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Performance Telemetry</Typography>
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 mb-2">
+          <TrendingUp size={14} className="text-brand-primary" />
+          <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-slate-500">Performance Telemetry</Typography>
         </div>
         <DealerKPIOverview />
       </section>
 
       {/* Secondary Operational Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between px-2">
-            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Recent Deal Actions</Typography>
-            <Typography variant="p" className="text-[10px] text-slate-600 italic">Global Sync Status: Active</Typography>
+            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-widest">Recent Deal Actions</Typography>
+            <Typography variant="p" className="text-[9px] text-slate-600 italic">Sync: Active</Typography>
           </div>
 
           <Card className="bg-bg-card/20 border-white/5 overflow-hidden">
@@ -163,9 +173,9 @@ export const DealerDashboard: React.FC = () => {
                <table className="w-full text-left border-collapse">
                  <thead>
                    <tr className="border-b border-white/5 bg-white/[0.01]">
-                     <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-widest">Deal</Typography></th>
-                     <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-widest">Customer</Typography></th>
-                     <th className="px-6 py-4 text-right"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-widest">Total Gross</Typography></th>
+                     <th className="px-6 py-3"><Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-black tracking-widest">Deal</Typography></th>
+                     <th className="px-6 py-3"><Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-black tracking-widest">Customer</Typography></th>
+                     <th className="px-6 py-3 text-right"><Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-black tracking-widest">Total Gross</Typography></th>
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-white/5">
@@ -211,29 +221,29 @@ export const DealerDashboard: React.FC = () => {
           </Card>
         </div>
 
-        <div className="space-y-6">
-          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest px-2">Operational Alerts</Typography>
+        <div className="space-y-4 text-left">
+           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-widest px-2">Operational Alerts</Typography>
           
-          <Card className="p-6 bg-brand-primary/5 border border-brand-primary/10 space-y-4">
-             <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
-                  <AppIcon name="trending" size={16} />
+           <Card className="p-4 bg-brand-primary/5 border border-brand-primary/10 space-y-3">
+              <div className="flex items-center gap-2">
+                 <div className="h-6 w-6 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                  <AppIcon name="trending" size={12} />
                 </div>
-                <Typography variant="label" className="text-white font-black uppercase text-xs tracking-wider">Market Pacing</Typography>
+                <Typography variant="label" className="text-white font-black uppercase text-[10px] tracking-wider">Market Pacing</Typography>
              </div>
-             <Typography variant="p" className="text-slate-400 text-[11px] leading-relaxed italic">
+             <Typography variant="p" className="text-slate-400 text-[10px] leading-relaxed italic">
                 Monthly pacing is calculated based on active deal velocity. Current projections indicate a stable operational month for both Retail and Internet channels.
              </Typography>
           </Card>
 
-          <Card className="p-6 bg-white/[0.02] border border-white/5 space-y-4 opacity-50 grayscale">
-             <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-500">
-                  <AppIcon name="users" size={16} />
+          <Card className="p-4 bg-white/[0.02] border border-white/5 space-y-3 opacity-50 grayscale">
+             <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-500">
+                  <AppIcon name="users" size={12} />
                 </div>
-                <Typography variant="label" className="text-slate-300 font-black uppercase text-xs tracking-wider">Team Performance</Typography>
+                <Typography variant="label" className="text-slate-300 font-black uppercase text-[10px] tracking-wider">Team Performance</Typography>
              </div>
-             <Typography variant="p" className="text-slate-600 text-[10px] uppercase font-bold tracking-widest text-center py-4">
+             <Typography variant="p" className="text-slate-600 text-[9px] uppercase font-bold tracking-widest text-center py-2">
                 Analysis Modules Offline
              </Typography>
           </Card>

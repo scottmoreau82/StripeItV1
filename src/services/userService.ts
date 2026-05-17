@@ -10,13 +10,15 @@ import { COLLECTIONS as COLL_CONST } from '../constants';
 export const userService = {
   /**
    * Fetches users. If orgId is provided, filters by organization.
-   * If orgId is omitted, fetches all users (requires global admin permissions).
+   * If orgId is omitted, fetches all users (requires global admin permissions - isBootstrapAdmin).
+   * NOTE: Firestore security rules require Managers/Local Admins to filter by their specific orgId.
    */
   async getUsers(orgId?: string): Promise<UserProfile[]> {
     try {
       const usersRef = collection(db, COLL_CONST.USERS);
       let q = query(usersRef);
       
+      // Mandatory filter for non-global admins enforced at Firestore Rule level
       if (orgId && orgId !== 'global') {
         q = query(usersRef, where('orgId', '==', orgId));
       }

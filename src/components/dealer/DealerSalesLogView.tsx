@@ -122,14 +122,14 @@ export const DealerSalesLogView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 pb-32">
+    <div className="space-y-6 pb-32">
       {/* Header / Operational Controls */}
       <PageHeader
         title="Daily Sales Report"
         subtitle={renderProtocolSubtitle()}
         icon={ClipboardList}
       >
-        <div className="flex flex-wrap items-center gap-3 print:hidden">
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
           {/* Timeframe Selector */}
           <div className="flex bg-bg-card/40 p-1 rounded-xl border border-border-subtle min-w-fit">
             {[
@@ -146,7 +146,7 @@ export const DealerSalesLogView: React.FC = () => {
                   }
                 }}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                  "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                   timeframe === t.id 
                     ? "bg-brand-primary text-white shadow-glow glow-primary/20" 
                     : "text-slate-500 hover:text-slate-200"
@@ -179,10 +179,10 @@ export const DealerSalesLogView: React.FC = () => {
                       setTimeframe('custom');
                     }
                   }}
-                  className="bg-bg-card/40 border-border-subtle text-white w-48 h-11 uppercase font-mono text-[11px] tracking-widest pl-10"
+                  className="bg-bg-card/40 border-border-subtle text-white w-44 h-10 uppercase font-mono text-[10px] tracking-widest pl-9"
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <AppIcon name="calendar" size={16} className="text-brand-primary/60" />
+                  <AppIcon name="calendar" size={14} className="text-brand-primary/60" />
                 </div>
               </motion.div>
             ) : timeframe === 'custom' ? (
@@ -198,92 +198,90 @@ export const DealerSalesLogView: React.FC = () => {
                     type="date" 
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-bg-card/40 border-border-subtle text-white w-40 h-11 uppercase font-mono text-[11px] tracking-widest pl-10"
+                    className="bg-bg-card/40 border-border-subtle text-white w-36 h-10 uppercase font-mono text-[10px] tracking-widest pl-8"
                   />
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <span className="text-[10px] font-black text-brand-primary/40">FR</span>
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <span className="text-[9px] font-black text-brand-primary/40">FR</span>
                   </div>
                 </div>
-                <div className="text-slate-700 h-px w-2 bg-slate-700" />
+                <div className="text-slate-700 h-px w-1.5 bg-slate-700" />
                 <div className="relative">
                   <Input 
                     type="date" 
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-bg-card/40 border-border-subtle text-white w-40 h-11 uppercase font-mono text-[11px] tracking-widest pl-10"
+                    className="bg-bg-card/40 border-border-subtle text-white w-36 h-10 uppercase font-mono text-[10px] tracking-widest pl-8"
                   />
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <span className="text-[10px] font-black text-brand-primary/40">TO</span>
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <span className="text-[9px] font-black text-brand-primary/40">TO</span>
                   </div>
                 </div>
               </motion.div>
             ) : null}
           </AnimatePresence>
 
-          <div className="h-8 w-[1px] bg-white/5 mx-1" />
-
           <Button 
             variant="ghost" 
-            className="h-11 text-slate-500 hover:text-brand-primary uppercase font-black text-[10px] tracking-widest gap-2"
+            className="h-10 text-slate-500 hover:text-brand-primary uppercase font-black text-[9px] tracking-widest gap-2"
             onClick={() => setIsInviteOpen(true)}
           >
-             <UserPlus size={14} />
+             <UserPlus size={12} />
              Invite
           </Button>
 
           <Button 
             variant="ghost" 
-            className="h-11 text-slate-500 hover:text-brand-primary uppercase font-black text-[10px] tracking-widest gap-2"
+            className="h-10 text-slate-500 hover:text-brand-primary uppercase font-black text-[9px] tracking-widest gap-2"
             onClick={() => window.print()}
           >
-             <Printer size={14} />
+             <Printer size={12} />
              Print
           </Button>
         </div>
       </PageHeader>
 
       {/* Summary Cards (Operational Density) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-        <Card className="bg-bg-card/30 border-border-subtle p-6 relative overflow-hidden group print:bg-white print:border-black print:text-black">
-          <div className="absolute top-0 left-0 w-1 h-full bg-brand-primary/50 shadow-glow glow-primary print:hidden" />
-          <Typography variant="mono" className="text-slate-500 uppercase text-[9px] font-black tracking-widest mb-1 print:text-black">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 print:grid-cols-4">
+        <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden group print:bg-white print:border-black print:text-black">
+          <div className="absolute top-0 left-0 w-1 h-full bg-brand-primary/30 shadow-glow glow-primary print:hidden" />
+          <Typography variant="mono" className="text-slate-500 uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
             Front Gross
           </Typography>
-          <Typography variant="h2" className="text-white font-black tracking-tighter italic print:text-black">
+          <Typography variant="h2" className="text-white font-black tracking-tighter italic text-2xl print:text-black">
             ${totals.front.toLocaleString()}
           </Typography>
         </Card>
 
-        <Card className="bg-bg-card/30 border-border-subtle p-6 relative overflow-hidden group print:bg-white print:border-black print:text-black">
-          <div className="absolute top-0 left-0 w-1 h-full bg-brand-deep/50 shadow-glow glow-brand-deep print:hidden" />
-          <Typography variant="mono" className="text-slate-500 uppercase text-[9px] font-black tracking-widest mb-1 print:text-black">
+        <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden group print:bg-white print:border-black print:text-black">
+          <div className="absolute top-0 left-0 w-1 h-full bg-brand-deep/30 shadow-glow glow-brand-deep print:hidden" />
+          <Typography variant="mono" className="text-slate-500 uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
             Back Gross
           </Typography>
-          <Typography variant="h2" className="text-white font-black tracking-tighter italic print:text-black">
+          <Typography variant="h2" className="text-white font-black tracking-tighter italic text-2xl print:text-black">
             ${totals.back.toLocaleString()}
           </Typography>
         </Card>
 
-        <Card className="bg-bg-card/30 border-border-subtle p-6 relative overflow-hidden print:bg-white print:border-black print:text-black">
-          <Typography variant="mono" className="text-slate-500 uppercase text-[9px] font-black tracking-widest mb-1 print:text-black">
+        <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden print:bg-white print:border-black print:text-black">
+          <Typography variant="mono" className="text-slate-500 uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
             Units (N/U)
           </Typography>
           <div className="flex items-baseline gap-2">
-            <Typography variant="h2" className="text-white font-black tracking-tighter italic mr-2 print:text-black">
+            <Typography variant="h2" className="text-white font-black tracking-tighter italic mr-2 text-2xl print:text-black">
               {deals.length}
             </Typography>
-            <Typography variant="mono" className="text-brand-primary text-[11px] font-bold print:text-black">
+            <Typography variant="mono" className="text-brand-primary text-[10px] font-bold print:text-black">
               {totals.newCount}N / {totals.usedCount}U
             </Typography>
           </div>
         </Card>
 
-        <Card className="bg-bg-card/30 border-border-subtle p-6 relative overflow-hidden print:bg-white print:border-black print:text-black">
+        <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden print:bg-white print:border-black print:text-black">
           <div className="absolute inset-0 bg-brand-primary/5 opacity-0 group-hover:opacity-100 transition-opacity print:hidden" />
-          <Typography variant="mono" className="text-slate-500 uppercase text-[9px] font-black tracking-widest mb-1 print:text-black">
-            {timeframe === 'today' ? 'Day Combined' : 'Period Combined'}
+          <Typography variant="mono" className="text-slate-500 uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
+            Combined Total
           </Typography>
-          <Typography variant="h2" className="text-brand-primary font-black tracking-tighter italic shadow-glow print:text-black">
+          <Typography variant="h2" className="text-brand-primary font-black tracking-tighter italic text-2xl shadow-glow print:text-black">
             ${totals.total.toLocaleString()}
           </Typography>
         </Card>

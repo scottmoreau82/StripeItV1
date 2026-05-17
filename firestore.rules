@@ -161,6 +161,27 @@ service cloud.firestore {
              (data.get('status', 'active') in ['active', 'trial', 'suspended']);
     }
 
+    function isValidJoinCodeRedemption(existing, incoming) {
+      let isIncrement = incoming.usedCount == existing.usedCount + 1;
+      let addsSelf = incoming.usedBy.size() == existing.usedBy.size() + 1 && incoming.usedBy.hasAll(existing.usedBy) && (request.auth.uid in incoming.usedBy);
+      let notExpired = (existing.expiresAt is number ? existing.expiresAt : existing.expiresAt.toMillis()) > request.time.toMillis();
+      let notAlreadyIn = !(request.auth.uid in existing.usedBy);
+      let statusValid = (incoming.usedCount >= existing.maxUses) ? (incoming.status == 'used') : (incoming.status == 'active');
+      
+      // Domain validation
+      let hasDomain = existing.get('dealerDomain', '') != '';
+      let domainMatches = !hasDomain || (request.auth.token.get('email', '').lower().split('@')[1] == existing.dealerDomain.lower());
+
+      return existing.status == 'active' && 
+             notExpired && 
+             notAlreadyIn && 
+             isIncrement && 
+             addsSelf && 
+             statusValid &&
+             domainMatches &&
+             incoming.diff(existing).affectedKeys().hasOnly(['usedCount', 'usedBy', 'status']);
+    }
+
     // --- COLLECTION RULES ---
 
     // Analytics Collections (Admin Only)
@@ -213,14 +234,21 @@ service cloud.firestore {
 
       // isOwner is primary gate. Managers can see profiles within their org.
       allow get: if isOwner(userId) || isBootstrapAdmin() || (isSignedIn() && isAnyManager() && isOrgMember(getUserSafe(userId).get('orgId', 'none')));
-      allow list: if isSignedIn() && (isAnyManager() || isAnyAdmin()); 
+      allow list: if isBootstrapAdmin() || (isSignedIn() && (isAnyManager() || isAnyAdmin()) && resource.data.get('orgId', 'none') == getUserSafe(request.auth.uid).get('orgId', 'other')); 
       allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().get('isAdmin', false) == false && (
         (incoming().get('role', '').lower() == 'sales') || 
         (incoming().get('role', '').lower() in ['manager', 'gm'] && checkInvite(incoming()))
       );
       
       allow update: if isBootstrapAdmin() || (isOwner(userId) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId', 'role', 'department', 'suspensionAcknowledgedAt'])
+        // Standard profile updates
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'suspensionAcknowledgedAt']) ||
+        // Joining an organization via join code/invite (transitioning from personal or none)
+        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId', 'role', 'department', 'suspensionAcknowledgedAt']) &&
+         existing().role in ['sales', 'none', ''] &&
+         incoming().role in ['manager', 'sales'] &&
+         incoming().get('isAdmin', false) == false &&
+         (existing().orgId == null || existing().orgId.lower().startsWith('personal-')))
       )) || (
         isAnyManager() && (isBootstrapAdmin() || isOrgMember(existing().get('orgId', 'none'))) &&
         // Protect owners from being frozen/deleted by non-founders/non-bootstrap/non-owner
@@ -325,7 +353,7 @@ service cloud.firestore {
       // Managers can update codes, OR any user can update when redeeming (increment count, update status)
       allow update: if isSignedIn() && (
         (isAnyManager() && isOrgMember(resource.data.organizationId)) ||
-        (incoming().diff(existing()).affectedKeys().hasOnly(['usedCount', 'usedBy', 'status']))
+        isValidJoinCodeRedemption(existing(), incoming())
       );
       
       allow delete: if isSignedIn() && isAnyManager() && isOrgMember(resource.data.organizationId);

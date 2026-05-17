@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -38,6 +38,7 @@ import { SpiffEntryForm } from './components/log/SpiffEntryForm';
 import { CreateCompetitionForm } from './components/competitions/CreateCompetitionForm';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { LandingView } from './components/landing/LandingView';
+import { DealerDashboard } from './components/dealer/DealerDashboard';
 import { UpgradePrompt } from './components/ui/UpgradePrompt';
 import { FeedbackSystem } from './components/feedback/FeedbackSystem';
 import { FeedbackReviewPage } from './components/feedback/FeedbackReviewPage';
@@ -59,6 +60,7 @@ import { DealerLogBuilderView } from './components/dealer/DealerLogBuilderView';
 import { DealerAccessRequestFlow } from './components/dealer/DealerAccessRequestFlow';
 import { DealerRequestsAdminView } from './components/management/DealerRequestsAdminView';
 
+import { AuthHydrationFallback } from './components/auth/AuthHydrationFallback';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 
 function MainAppFlow() {
@@ -240,7 +242,9 @@ function MainAppFlow() {
             <Route 
               path="/" 
               element={
-                permissionService.isManager(profile) ? (
+                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? (
+                  <DealerDashboard />
+                ) : permissionService.isManager(profile) ? (
                   <ManagerView 
                     onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
                     onQuickNote={() => setIsQuickNoteOpen(true)}
@@ -375,7 +379,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/sales-log" 
               element={
-                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION || isDeveloper) 
+                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) 
                   ? <DealerSalesLogView /> 
                   : <Navigate to="/" />
               } 
@@ -383,7 +387,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/settings" 
               element={
-                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION || isDeveloper) 
+                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) 
                   ? <DealerSettingsView /> 
                   : <Navigate to="/" />
               } 
@@ -391,7 +395,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/users" 
               element={
-                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION || isDeveloper) 
+                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) 
                   ? <DealerUserManagementView /> 
                   : <Navigate to="/" />
               } 
@@ -399,7 +403,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/log-builder" 
               element={
-                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION || isDeveloper) 
+                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) 
                   ? <DealerLogBuilderView /> 
                   : <Navigate to="/" />
               } 
@@ -421,7 +425,7 @@ function MainAppFlow() {
             <Route 
               path="/admin/feedback" 
               element={
-                isAdmin 
+                profile?.isAdmin 
                   ? <FeedbackReviewPage /> 
                   : <Navigate to="/" />
               } 
@@ -429,7 +433,7 @@ function MainAppFlow() {
             <Route 
               path="/admin/analytics" 
               element={
-                isAdmin 
+                profile?.isAdmin 
                   ? <AdminAnalyticsDashboard /> 
                   : <Navigate to="/" />
               } 
@@ -437,7 +441,7 @@ function MainAppFlow() {
             <Route 
               path="/admin/users" 
               element={
-                isAdmin 
+                profile?.isAdmin 
                   ? <UserManagementPage /> 
                   : <Navigate to="/" />
               } 
@@ -445,7 +449,7 @@ function MainAppFlow() {
             <Route 
               path="/admin/dealer-requests" 
               element={
-                isAdmin 
+                profile?.isAdmin 
                   ? <DealerRequestsAdminView /> 
                   : <Navigate to="/" />
               } 
@@ -621,7 +625,63 @@ function MainAppFlow() {
 }
 
 function AppContent() {
-  const { user, profile, initialized, loading, connectionError } = useAuth();
+  const { user, profile, initialized, loading, connectionError, logout, retryHydration, addToast } = useAuth();
+  const [showFallback, setShowFallback] = useState(false);
+  const previousMemberState = useRef<{ isFrozen: boolean, orgId: string | null } | null>(null);
+
+  // StripeItEjectionNotificationSystem
+  useEffect(() => {
+    if (profile && previousMemberState.current && !loading) {
+      const wasInDealerOrg = previousMemberState.current.orgId && !previousMemberState.current.orgId.startsWith('PERSONAL-');
+      const isInDealerOrg = profile.orgId && !profile.orgId.startsWith('PERSONAL-');
+      
+      const justFrozen = profile.isFrozen && !previousMemberState.current.isFrozen;
+      const justRemoved = wasInDealerOrg && !isInDealerOrg;
+
+      if (justFrozen || justRemoved) {
+        const message = justFrozen 
+          ? "Organization Access Frozen. Reverting to personal workspace." 
+          : "Organizational membership revoked. Reverting to personal workspace.";
+        
+        addToast(message, 'info');
+      }
+    }
+    
+    if (profile && !loading) {
+      previousMemberState.current = { isFrozen: !!profile.isFrozen, orgId: profile.orgId };
+    }
+  }, [profile, loading, addToast]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    // If we have a user but no profile and we are stuck in a loading state,
+    // trigger the fallback after a 10s safety window.
+    if (user && !profile && loading) {
+      timer = setTimeout(() => {
+        // Double check conditions before showing fallback
+        setShowFallback(true);
+      }, 10000);
+    } else {
+      setShowFallback(false);
+    }
+
+    return () => clearTimeout(timer);
+  }, [user, profile, loading]);
+
+  // 0. Fallback UI if hydration hangs or fails critically
+  if (showFallback) {
+    return (
+      <AuthHydrationFallback 
+        onSignOut={logout}
+        onRetry={() => {
+          setShowFallback(false);
+          retryHydration();
+        }}
+        error={connectionError}
+      />
+    );
+  }
   
   // 1. App is determining if a session exists
   if (!initialized) {

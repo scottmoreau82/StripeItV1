@@ -125,7 +125,7 @@ export const DealerKPIOverview: React.FC = () => {
           <div className="h-1.5 w-1.5 rounded-full bg-brand-primary shadow-glow glow-primary animate-pulse" />
         </div>
 
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/5">
+        <div className="flex-1 grid grid-cols-1 xl:grid-cols-2 divide-y xl:divide-y-0 xl:divide-x divide-white/5">
           {/* Retail Section */}
           <div className="p-4 space-y-4">
             <div className="flex items-center gap-2 mb-2">
@@ -179,29 +179,27 @@ export const DealerKPIOverview: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <KPICard 
         title="Units" 
         retail={metrics.units.retail} 
         internet={metrics.units.internet} 
         icon={Activity} 
       />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <KPICard 
-          title="Front Gross" 
-          retail={metrics.frontGross.retail} 
-          internet={metrics.frontGross.internet} 
-          icon={TrendingUp} 
-          isCurrency 
-        />
-        <KPICard 
-          title="Back Gross" 
-          retail={metrics.backGross.retail} 
-          internet={metrics.backGross.internet} 
-          icon={Calculator} 
-          isCurrency 
-        />
-      </div>
+      <KPICard 
+        title="Front Gross" 
+        retail={metrics.frontGross.retail} 
+        internet={metrics.frontGross.internet} 
+        icon={TrendingUp} 
+        isCurrency 
+      />
+      <KPICard 
+        title="Back Gross" 
+        retail={metrics.backGross.retail} 
+        internet={metrics.backGross.internet} 
+        icon={Calculator} 
+        isCurrency 
+      />
     </div>
   );
 };

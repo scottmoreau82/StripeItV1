@@ -7,6 +7,8 @@ import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { TierBadge } from './TierBadge';
 
+import { AdminAnalyticsCard } from './AdminAnalyticsCard';
+
 /**
  * DealerSidebar
  * Minimal navigation for the Dealer tier.
@@ -22,7 +24,7 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
   onToggleCollapse,
   onLogDeal
 }) => {
-  const { profile } = useAuth();
+  const { profile, isAdmin, isDeveloper } = useAuth();
   const location = useLocation();
 
   const handleLogout = async () => {
@@ -235,6 +237,11 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
           </Link>
         </nav>
       </div>
+
+      {/* Admin / Developer Tools */}
+      {profile?.isAdmin && (
+        <AdminAnalyticsCard isCollapsed={isCollapsed} />
+      )}
 
       {/* Footer / Account */}
       <div className="shrink-0 border-t border-white/5 bg-black/40 backdrop-blur-md z-10 py-6">

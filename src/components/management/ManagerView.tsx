@@ -100,10 +100,10 @@ export const ManagerView: React.FC<ManagerViewProps> = ({
 
       {viewMode === 'management' ? (
         <div className="space-y-6">
-          <div className="px-2 relative">
+        <div className="px-2 relative flex justify-start">
             <Button 
                onClick={onCreateCompetition}
-               className="w-full bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] h-11"
+               className="bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[9px] h-9 px-6 rounded-lg shadow-glow shadow-brand-primary/10"
             >
               Launch Spiff / Competition
             </Button>

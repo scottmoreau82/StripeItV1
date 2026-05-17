@@ -11,6 +11,7 @@ import { Button } from '../ui/Button';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { LayoutGrid, ClipboardList, TrendingUp } from 'lucide-react';
+import { DealerPageHeader } from './DealerPageHeader';
 
 export const DealerDashboard: React.FC = () => {
   const { profile } = useAuth();
@@ -33,30 +34,18 @@ export const DealerDashboard: React.FC = () => {
   }, [profile?.orgId]);
 
   const header = (
-    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-           <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-glow glow-indigo/5">
-              <LayoutGrid className="text-indigo-400 h-5 w-5" />
-           </div>
-           <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter">
-             Executive Dashboard
-           </Typography>
-        </div>
-        <Typography variant="p" className="text-slate-500 font-bold uppercase text-[10px] tracking-widest pl-1 opacity-60">
-           {profile?.orgName || 'StripeIt Dealership'} • Total Operational Oversight
-        </Typography>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Link to="/dealer/sales-log">
-          <Button variant="outline" className="h-10 border-white/10 bg-white/5 hover:bg-white/10 transition-all text-[11px] font-black uppercase tracking-widest px-6 gap-2">
-            <ClipboardList size={14} />
-            Full Sales Log
-          </Button>
-        </Link>
-      </div>
-    </div>
+    <DealerPageHeader
+      title="Executive Dashboard"
+      subtitle={`${profile?.orgName || 'StripeIt Dealership'} • Total Operational Oversight`}
+      icon={LayoutGrid}
+    >
+      <Link to="/dealer/sales-log">
+        <Button variant="outline" className="h-11 border-white/10 bg-white/5 hover:bg-white/10 transition-all text-[11px] font-black uppercase tracking-widest px-6 gap-2">
+          <ClipboardList size={14} />
+          Full Sales Log
+        </Button>
+      </Link>
+    </DealerPageHeader>
   );
 
   const mainContent = (

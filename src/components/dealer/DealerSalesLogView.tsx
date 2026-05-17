@@ -10,11 +10,11 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { cn } from '@/src/lib/utils';
 import { AppIcon } from '../ui/AppIcon';
 import { motion, AnimatePresence } from 'motion/react';
-import { LoadingOverlay } from '../ui/LoadingOverlay';
 import { DealerInviteManagerModal } from './DealerInviteManagerModal';
 import { getFriendlyErrorMessage } from '@/src/lib/firebase';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Search, Printer, UserPlus, ClipboardList } from 'lucide-react';
 import { DEFAULT_LOG_FIELDS } from '@/src/constants';
+import { DealerPageHeader } from './DealerPageHeader';
 
 /**
  * DealerSalesLogView
@@ -32,7 +32,6 @@ export const DealerSalesLogView: React.FC = () => {
   const [fields, setFields] = useState<LogField[]>(DEFAULT_LOG_FIELDS);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   useEffect(() => {
@@ -123,26 +122,16 @@ export const DealerSalesLogView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8 pb-32">
       {/* Header / Operational Controls */}
-      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 print:flex-row print:items-end print:gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-             <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shadow-glow glow-primary/5">
-                <AppIcon name="salesLog" className="text-brand-primary h-5 w-5" />
-             </div>
-             <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter whitespace-nowrap">
-               Daily Sales Report
-             </Typography>
-          </div>
-          <Typography variant="mono" className="text-slate-500 uppercase tracking-[0.3em] text-[10px] font-black pl-1">
-            {renderProtocolSubtitle()}
-          </Typography>
-        </div>
-
-        <div className="flex items-center gap-3 print:hidden">
+      <DealerPageHeader
+        title="Daily Sales Report"
+        subtitle={renderProtocolSubtitle()}
+        icon={ClipboardList}
+      >
+        <div className="flex flex-wrap items-center gap-3 print:hidden">
           {/* Timeframe Selector */}
-          <div className="flex bg-bg-card/40 p-1 rounded-xl border border-border-subtle mr-2 min-w-fit">
+          <div className="flex bg-bg-card/40 p-1 rounded-xl border border-border-subtle min-w-fit">
             {[
               { id: 'today', label: 'Today' },
               { id: 'mtd', label: 'MTD' },
@@ -190,7 +179,7 @@ export const DealerSalesLogView: React.FC = () => {
                       setTimeframe('custom');
                     }
                   }}
-                  className="bg-bg-card/40 border-border-subtle text-white w-48 h-10 uppercase font-mono text-[11px] tracking-widest pl-10"
+                  className="bg-bg-card/40 border-border-subtle text-white w-48 h-11 uppercase font-mono text-[11px] tracking-widest pl-10"
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                   <AppIcon name="calendar" size={16} className="text-brand-primary/60" />
@@ -209,7 +198,7 @@ export const DealerSalesLogView: React.FC = () => {
                     type="date" 
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-bg-card/40 border-border-subtle text-white w-40 h-10 uppercase font-mono text-[11px] tracking-widest pl-10"
+                    className="bg-bg-card/40 border-border-subtle text-white w-40 h-11 uppercase font-mono text-[11px] tracking-widest pl-10"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <span className="text-[10px] font-black text-brand-primary/40">FR</span>
@@ -221,7 +210,7 @@ export const DealerSalesLogView: React.FC = () => {
                     type="date" 
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-bg-card/40 border-border-subtle text-white w-40 h-10 uppercase font-mono text-[11px] tracking-widest pl-10"
+                    className="bg-bg-card/40 border-border-subtle text-white w-40 h-11 uppercase font-mono text-[11px] tracking-widest pl-10"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <span className="text-[10px] font-black text-brand-primary/40">TO</span>
@@ -231,39 +220,31 @@ export const DealerSalesLogView: React.FC = () => {
             ) : null}
           </AnimatePresence>
 
-          <div className="h-8 w-[1px] bg-white/5 mx-2" />
+          <div className="h-8 w-[1px] bg-white/5 mx-1" />
 
           <Button 
             variant="ghost" 
-            className="h-10 text-slate-500 hover:text-brand-primary uppercase font-black text-[10px] tracking-widest gap-2"
+            className="h-11 text-slate-500 hover:text-brand-primary uppercase font-black text-[10px] tracking-widest gap-2"
             onClick={() => setIsInviteOpen(true)}
           >
-             <AppIcon name="userPlus" size={14} />
+             <UserPlus size={14} />
              Invite
           </Button>
 
           <Button 
             variant="ghost" 
-            className="h-10 text-slate-500 hover:text-brand-primary uppercase font-black text-[10px] tracking-widest gap-2"
+            className="h-11 text-slate-500 hover:text-brand-primary uppercase font-black text-[10px] tracking-widest gap-2"
             onClick={() => window.print()}
           >
-             <AppIcon name="printer" size={14} />
+             <Printer size={14} />
              Print
           </Button>
-          
-          <Button 
-            variant="outline" 
-            className="h-10 border-border-subtle bg-bg-card/20 hover:bg-white/5 transition-all text-[11px] font-black uppercase tracking-widest px-6"
-            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-          >
-             Desk Observation
-          </Button>
         </div>
-      </div>
+      </DealerPageHeader>
 
       {/* Summary Cards (Operational Density) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-        <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden group print:bg-white print:border-black print:text-black">
+        <Card className="bg-bg-card/30 border-border-subtle p-6 relative overflow-hidden group print:bg-white print:border-black print:text-black">
           <div className="absolute top-0 left-0 w-1 h-full bg-brand-primary/50 shadow-glow glow-primary print:hidden" />
           <Typography variant="mono" className="text-slate-500 uppercase text-[9px] font-black tracking-widest mb-1 print:text-black">
             Front Gross
@@ -273,7 +254,7 @@ export const DealerSalesLogView: React.FC = () => {
           </Typography>
         </Card>
 
-        <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden group print:bg-white print:border-black print:text-black">
+        <Card className="bg-bg-card/30 border-border-subtle p-6 relative overflow-hidden group print:bg-white print:border-black print:text-black">
           <div className="absolute top-0 left-0 w-1 h-full bg-brand-deep/50 shadow-glow glow-brand-deep print:hidden" />
           <Typography variant="mono" className="text-slate-500 uppercase text-[9px] font-black tracking-widest mb-1 print:text-black">
             Back Gross
@@ -283,7 +264,7 @@ export const DealerSalesLogView: React.FC = () => {
           </Typography>
         </Card>
 
-        <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden print:bg-white print:border-black print:text-black">
+        <Card className="bg-bg-card/30 border-border-subtle p-6 relative overflow-hidden print:bg-white print:border-black print:text-black">
           <Typography variant="mono" className="text-slate-500 uppercase text-[9px] font-black tracking-widest mb-1 print:text-black">
             Units (N/U)
           </Typography>
@@ -297,7 +278,7 @@ export const DealerSalesLogView: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden print:bg-white print:border-black print:text-black">
+        <Card className="bg-bg-card/30 border-border-subtle p-6 relative overflow-hidden print:bg-white print:border-black print:text-black">
           <div className="absolute inset-0 bg-brand-primary/5 opacity-0 group-hover:opacity-100 transition-opacity print:hidden" />
           <Typography variant="mono" className="text-slate-500 uppercase text-[9px] font-black tracking-widest mb-1 print:text-black">
             {timeframe === 'today' ? 'Day Combined' : 'Period Combined'}
@@ -334,13 +315,13 @@ export const DealerSalesLogView: React.FC = () => {
       <Card className="bg-bg-card/20 border-border-subtle overflow-hidden relative print:bg-white print:border-black print:text-black">
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-primary/30 to-transparent print:hidden" />
         
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-x-auto custom-scrollbar font-sans">
           <table className="w-full text-left border-collapse min-w-[max-content] print:min-w-full">
             <thead>
               <tr className="border-b border-border-subtle bg-bg-deep/50 print:bg-gray-100 print:text-black">
                 {fields.map(field => (
-                  <th key={field.id} className={cn("px-4 py-4", (field.type === LogFieldType.NUMBER || field.type === LogFieldType.CURRENCY) ? "text-right" : "text-left")}>
-                    <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-widest print:text-black">
+                  <th key={field.id} className={cn("px-4 py-6", (field.type === LogFieldType.NUMBER || field.type === LogFieldType.CURRENCY) ? "text-right" : "text-left")}>
+                    <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest print:text-black opacity-80">
                       {field.label}
                     </Typography>
                   </th>
@@ -353,7 +334,7 @@ export const DealerSalesLogView: React.FC = () => {
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={`skeleton-${i}`} className="animate-pulse print:hidden">
                       {fields.map((_, j) => (
-                        <td key={`j-${j}`} className="px-4 py-6">
+                        <td key={`j-${j}`} className="px-4 py-8">
                           <div className="h-3 w-full bg-white/5 rounded" />
                         </td>
                       ))}
@@ -361,10 +342,15 @@ export const DealerSalesLogView: React.FC = () => {
                   ))
                 ) : deals.length === 0 ? (
                   <tr>
-                    <td colSpan={fields.length} className="px-4 py-20 text-center">
-                      <Typography variant="mono" className="text-slate-600 uppercase tracking-widest text-[10px] print:text-black">
-                        No deal activity recorded for this period
-                      </Typography>
+                    <td colSpan={fields.length} className="px-4 py-24 text-center">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 opacity-20">
+                          <ClipboardList size={24} />
+                        </div>
+                        <Typography variant="mono" className="text-slate-600 uppercase tracking-widest text-[10px] print:text-black">
+                          No deal activity recorded for this period
+                        </Typography>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -380,7 +366,7 @@ export const DealerSalesLogView: React.FC = () => {
                         const isPrimary = field.id === 'customerName' || field.id === 'dealNumber';
                         const isNumeric = field.type === LogFieldType.NUMBER || field.type === LogFieldType.CURRENCY;
                         return (
-                          <td key={field.id} className={cn("px-4 py-4", isNumeric ? "text-right" : "text-left")}>
+                          <td key={field.id} className={cn("px-4 py-6", isNumeric ? "text-right" : "text-left")}>
                             <Typography 
                               variant={isNumeric ? "mono" : "p"} 
                               className={cn(
@@ -403,37 +389,10 @@ export const DealerSalesLogView: React.FC = () => {
         </div>
       </Card>
 
-      {/* Notes / Manager Observations Placeholder */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:hidden">
-        <Card className="bg-bg-card/20 border-border-subtle p-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <Typography variant="h3" className="italic font-black uppercase tracking-tight text-brand-primary">
-              Desk Observations
-            </Typography>
-            <AppIcon name="trending" size={20} className="text-slate-700" />
-          </div>
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-              <Typography variant="p" className="text-slate-500 text-xs italic">
-                Awaiting manager input for desk performance review...
-              </Typography>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-bg-card/20 border-border-subtle p-8 space-y-6 opacity-30 cursor-not-allowed grayscale">
-           <div className="flex items-center justify-between">
-            <Typography variant="h3" className="italic font-black uppercase tracking-tight text-white">
-              Inventory Trends
-            </Typography>
-            <AppIcon name="lock" size={16} className="text-slate-500" />
-          </div>
-          <div className="h-24 flex items-center justify-center">
-            <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-500">
-              Analysis Engine Offline
-            </Typography>
-          </div>
-        </Card>
+      {/* Hidden placeholder modules preserved in architecture but visually removed */}
+      <div className="hidden">
+        <Typography variant="h3">Desk Observations</Typography>
+        <Typography variant="h3">Inventory Trends</Typography>
       </div>
 
       <DealerInviteManagerModal 

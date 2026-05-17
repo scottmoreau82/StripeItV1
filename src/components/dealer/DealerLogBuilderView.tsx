@@ -31,6 +31,8 @@ import { cn } from '@/src/lib/utils';
 import { motion, Reorder, AnimatePresence } from 'motion/react';
 import { DEFAULT_LOG_FIELDS } from '@/src/constants';
 
+import { DealerPageHeader } from './DealerPageHeader';
+
 export const DealerLogBuilderView: React.FC = () => {
   const { profile, addToast, isAdmin } = useAuth();
   const [fields, setFields] = useState<LogField[]>([]);
@@ -173,44 +175,32 @@ export const DealerLogBuilderView: React.FC = () => {
   };
 
   const header = (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shadow-glow glow-primary/5">
-            <LayoutGrid className="h-6 w-6 text-brand-primary" />
-          </div>
-          <div>
-            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter leading-none">
-              Log Builder
-            </Typography>
-            <Typography variant="p" className="text-slate-500 font-bold mt-1 uppercase text-[10px] tracking-widest opacity-60">
-              Configure Shared Operational Deal Log Schema
-            </Typography>
-          </div>
+    <DealerPageHeader
+      title="Log Builder"
+      subtitle="Configure Shared Operational Deal Log Schema"
+      icon={LayoutGrid}
+    >
+      {hasConfig && (
+        <div className="flex items-center gap-3">
+           <Button 
+              variant="ghost" 
+              onClick={() => setHasConfig(false)}
+              className="text-slate-500 hover:text-white"
+           >
+              <RotateCcw size={16} className="mr-2" />
+              Reset
+           </Button>
+           <Button 
+              onClick={handleSave}
+              disabled={isSaving}
+              className="shadow-glow glow-primary h-11 px-8 font-black uppercase tracking-widest text-xs"
+           >
+              <Save size={16} className="mr-2" />
+              {isSaving ? 'Saving...' : 'Save Schema'}
+           </Button>
         </div>
-
-        {hasConfig && (
-          <div className="flex items-center gap-3">
-             <Button 
-                variant="ghost" 
-                onClick={() => setHasConfig(false)}
-                className="text-slate-500 hover:text-white"
-             >
-                <RotateCcw size={16} className="mr-2" />
-                Reset
-             </Button>
-             <Button 
-                onClick={handleSave}
-                disabled={isSaving}
-                className="shadow-glow glow-primary h-11 px-8 font-black uppercase tracking-widest text-xs"
-             >
-                <Save size={16} className="mr-2" />
-                {isSaving ? 'Saving...' : 'Save Schema'}
-             </Button>
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </DealerPageHeader>
   );
 
   const mainContent = (

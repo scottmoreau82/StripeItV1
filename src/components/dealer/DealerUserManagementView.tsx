@@ -22,11 +22,13 @@ import {
   UserPlus,
   Lock,
   History,
-  Zap
+  Zap,
+  Users2
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { DealerInviteManagerModal } from './DealerInviteManagerModal';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { DealerPageHeader } from './DealerPageHeader';
 
 /**
  * DealerUserManagementView
@@ -112,32 +114,21 @@ export const DealerUserManagementView: React.FC = () => {
   );
 
   const header = (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-glow glow-indigo/5">
-            <Users className="h-6 w-6 text-indigo-400" />
-          </div>
-          <div>
-            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter leading-none">
-              Management
-            </Typography>
-            <Typography variant="p" className="text-slate-500 font-bold mt-1 uppercase text-[10px] tracking-widest opacity-60">
-              Dealership Operational Authorization Control
-            </Typography>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button 
-            onClick={() => setIsInviteModalOpen(true)}
-            className="shadow-glow glow-primary h-11 px-6 font-black uppercase tracking-widest text-xs"
-          >
-            <UserPlus size={16} className="mr-2" />
-            Invite Manager
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-8">
+      <DealerPageHeader
+        title="Management"
+        subtitle="Dealership Operational Authorization Control"
+        icon={Users2}
+        iconColor="bg-brand-primary"
+      >
+        <Button 
+          onClick={() => setIsInviteModalOpen(true)}
+          className="shadow-glow glow-primary h-11 px-6 font-black uppercase tracking-widest text-xs"
+        >
+          <UserPlus size={16} className="mr-2" />
+          Invite Manager
+        </Button>
+      </DealerPageHeader>
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-1 border-b border-white/5 pb-px">

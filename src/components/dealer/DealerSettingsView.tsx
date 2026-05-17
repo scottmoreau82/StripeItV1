@@ -19,6 +19,7 @@ import {
 import { cn } from '@/src/lib/utils';
 import { DealerInviteManagerModal } from './DealerInviteManagerModal';
 import { Link } from 'react-router-dom';
+import { DealerPageHeader } from './DealerPageHeader';
 
 /**
  * DealerSettingsView
@@ -83,33 +84,19 @@ export const DealerSettingsView: React.FC = () => {
   };
 
   const header = (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shadow-glow glow-primary/5">
-            <Settings className="h-6 w-6 text-brand-primary" />
-          </div>
-          <div>
-            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter leading-none">
-              Dealer Settings
-            </Typography>
-            <Typography variant="p" className="text-slate-500 font-bold mt-1 uppercase text-[10px] tracking-widest opacity-60">
-              Organizational Parameters & Global Controls
-            </Typography>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button 
-            onClick={() => setIsInviteModalOpen(true)}
-            className="shadow-glow glow-primary h-11 px-6 font-black uppercase tracking-widest text-xs"
-          >
-            <UserPlus size={16} className="mr-2" />
-            Invite Member
-          </Button>
-        </div>
-      </div>
-    </div>
+    <DealerPageHeader
+      title="Global Settings"
+      subtitle="Organizational Configuration & Governance"
+      icon={Settings}
+    >
+      <Button 
+        onClick={() => setIsInviteModalOpen(true)}
+        className="shadow-glow glow-primary h-11 px-6 font-black uppercase tracking-widest text-xs"
+      >
+        <UserPlus size={16} className="mr-2" />
+        Invite Member
+      </Button>
+    </DealerPageHeader>
   );
 
   const mainContent = (

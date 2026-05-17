@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Clock, Filter, Search } from 'lucide-react';
+import { DealerPageHeader } from '../dealer/DealerPageHeader';
 import { activityService } from '@/src/services/activityService';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { ActivityEvent } from '@/src/types';
@@ -39,31 +40,21 @@ export const ActivityFeed: React.FC = () => {
   return (
     <div className="space-y-8 h-full">
       {/* Header & Search */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary flex items-center justify-center shadow-glow glow-primary">
-            <Activity className="h-6 w-6 text-bg-deep" />
-          </div>
-          <div className="space-y-1">
-            <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter">
-              Activity Feed
-            </Typography>
-            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em]">
-              Org-wide transparency
-            </Typography>
-          </div>
-        </div>
-
+      <DealerPageHeader
+        title="Activity Feed"
+        subtitle="Org-wide transparency"
+        icon={Activity}
+      >
         <div className="relative w-full md:w-80">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
           <Input 
             placeholder="Search activity..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 bg-white/[0.02] border-white/10"
+            className="pl-12 bg-white/[0.02] border-white/10 h-11"
           />
         </div>
-      </div>
+      </DealerPageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Main Feed */}

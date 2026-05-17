@@ -59,7 +59,7 @@ export const permissionService = {
    * Core check for any permission
    */
   hasPermission: (profile: UserProfile | null, permission: AppPermission): boolean => {
-    if (!profile) return false;
+    if (!profile || profile.isFrozen) return false;
     return rolePermissions[profile.role]?.includes(permission) || false;
   },
 
@@ -67,7 +67,7 @@ export const permissionService = {
    * Helper for manager-level checks (legacy support + convenience)
    */
   isManager: (profile: UserProfile | null): boolean => {
-    if (!profile) return false;
+    if (!profile || profile.isFrozen) return false;
     return [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN, UserRole.DEALER_OWNER].includes(profile.role);
   },
 

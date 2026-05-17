@@ -41,7 +41,8 @@ import {
   Calculator,
   Lock,
   Settings2,
-  Plus
+  Plus,
+  Snowflake
 } from 'lucide-react';
 
 import { DealerDashboard } from '../dealer/DealerDashboard';
@@ -78,6 +79,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
   const isDealer = profile?.subscriptionTier === SubscriptionTier.ORGANIZATION;
+  const isFrozen = profile?.isFrozen;
 
   const [showMetrics, setShowMetrics] = useState(!isMobile);
   const [activeTab, setActiveTab] = useState<'overview' | 'trends'>('overview');
@@ -130,37 +132,58 @@ export const HomeView: React.FC<HomeViewProps> = ({
   };
 
   const header = (
-    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-0.5 lg:gap-6">
-      <div className="flex-1">
-        <div className="flex flex-col sm:flex-row gap-0.5 lg:gap-3 mb-0 lg:mb-1">
-          <Typography variant="h1" className="italic text-[20px] sm:text-[36px] font-bold md:font-black leading-none tracking-tighter opacity-90">
-            Performance Overview
-          </Typography>
-        </div>
-        {!isMobile && (
-          <Typography variant="p" className="text-slate-500 max-w-xs font-semibold leading-tight text-sm sm:text-lg">
-            {profile?.dealershipId ? "Tracking dealership gross analytics" : "Real-time tracking system"}
-          </Typography>
-        )}
-      </div>
-      
-      <div className="flex items-center gap-3">
-        {hasCustomizationAccess && (
-          <div className="relative group">
-            <button 
-              onClick={() => setIsCustomizing(true)}
-              className="h-10 w-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 hover:text-brand-primary transition-all active:scale-95 group"
-              title="Customize Dashboard"
-            >
-              <Settings2 size={18} className="group-hover:rotate-45 transition-transform" />
-            </button>
-            <ComingSoonIndicator 
-              featureId={Feature.CUSTOM_DASHBOARD} 
-              size="sm" 
-              className="absolute -top-1 -right-1 scale-75" 
-            />
+    <div className="space-y-6">
+      {isFrozen && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 flex items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0">
+              <Snowflake size={14} className="text-rose-500 animate-pulse" />
+            </div>
+            <div>
+              <Typography variant="label" className="text-rose-400 font-black uppercase text-[10px] tracking-widest block">Dealership Access Suspended</Typography>
+              <Typography variant="p" className="text-slate-400 text-[11px] font-medium leading-tight">Your organizational membership is currently frozen. You have been reverted to your personal StripeIt toolkit.</Typography>
+            </div>
           </div>
-        )}
+          <Button variant="ghost" className="h-8 px-4 text-slate-500 hover:text-white uppercase font-black tracking-widest text-[9px] border-white/5" onClick={() => window.location.hash = '#settings'}>View Details</Button>
+        </motion.div>
+      )}
+
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-0.5 lg:gap-6">
+        <div className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-0.5 lg:gap-3 mb-0 lg:mb-1">
+            <Typography variant="h1" className="italic text-[20px] sm:text-[36px] font-bold md:font-black leading-none tracking-tighter opacity-90">
+              Performance Overview
+            </Typography>
+          </div>
+          {!isMobile && (
+            <Typography variant="p" className="text-slate-500 max-w-xs font-semibold leading-tight text-sm sm:text-lg">
+              {profile?.dealershipId ? "Tracking dealership gross analytics" : "Real-time tracking system"}
+            </Typography>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {hasCustomizationAccess && (
+            <div className="relative group">
+              <button 
+                onClick={() => setIsCustomizing(true)}
+                className="h-10 w-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 hover:text-brand-primary transition-all active:scale-95 group"
+                title="Customize Dashboard"
+              >
+                <Settings2 size={18} className="group-hover:rotate-45 transition-transform" />
+              </button>
+              <ComingSoonIndicator 
+                featureId={Feature.CUSTOM_DASHBOARD} 
+                size="sm" 
+                className="absolute -top-1 -right-1 scale-75" 
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

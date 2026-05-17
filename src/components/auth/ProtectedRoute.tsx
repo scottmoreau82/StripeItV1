@@ -22,8 +22,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   const { user, profile, loading, initialized, connectionError } = useAuth();
   const location = useLocation();
 
-  // Handle initialization and connection errors (e.g. FROZEN) first
-  if (!initialized || (user && !profile && loading) || connectionError) {
+  // Handle initialization and connection errors first
+  if (!initialized || (user && !profile && loading) || (connectionError && connectionError !== 'ACCOUNT_FROZEN')) {
     return (
       <div className="min-h-screen bg-bg-deep flex flex-col items-center justify-center p-6 text-center">
         {/* Atmosphere for minimal splash */}
@@ -36,47 +36,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
            animate={{ opacity: 1, scale: 1 }}
            className="relative z-10 flex flex-col items-center gap-8"
         >
-          {connectionError === 'ACCOUNT_FROZEN' ? (
-            <div className="h-16 w-16 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 shadow-glow glow-rose/5">
-              <AlertCircle className="text-rose-500 h-10 w-10 animate-pulse" />
-            </div>
-          ) : (
-            <div className="h-16 w-16 rounded-2xl bg-brand-primary flex items-center justify-center shadow-glow glow-primary">
-              <DollarSign className="text-white h-10 w-10 animate-pulse" />
-            </div>
-          )}
+          <div className="h-16 w-16 rounded-2xl bg-brand-primary flex items-center justify-center shadow-glow glow-primary">
+            <DollarSign className="text-white h-10 w-10 animate-pulse" />
+          </div>
           
           <div className="space-y-3">
             <Typography variant="h3" className="text-white italic font-black uppercase tracking-tighter text-2xl">StripeIt</Typography>
             {connectionError ? (
               <div className="flex flex-col items-center gap-4">
-                {connectionError === 'ACCOUNT_FROZEN' ? (
-                  <>
-                    <Typography variant="p" className="text-rose-400 font-bold text-[11px] uppercase tracking-[0.2em] max-w-xs leading-relaxed">
-                      This manager account has been frozen by the Dealer organization. Access is restricted.
-                    </Typography>
-                    <Typography variant="mono" className="text-[9px] text-slate-500 uppercase">
-                      Contact your administrator to resolve.
-                    </Typography>
-                    <Button 
-                      onClick={() => import('@/src/lib/firebase').then(f => f.auth.signOut())} 
-                      size="sm" 
-                      variant="ghost" 
-                      className="text-slate-500 hover:text-white uppercase font-black tracking-widest text-[10px]"
-                    >
-                      Return to Login
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Typography variant="p" className="text-red-400 font-bold text-[11px] uppercase tracking-wider">
-                      Connection Error: {connectionError}
-                    </Typography>
-                    <Button onClick={() => window.location.reload()} size="sm" variant="outline" className="h-9 px-6 text-[10px] uppercase font-black tracking-widest border-red-500/20 text-red-400 hover:bg-red-500/10">
-                       Reconnect Now
-                    </Button>
-                  </>
-                )}
+                <Typography variant="p" className="text-red-400 font-bold text-[11px] uppercase tracking-wider">
+                  Connection Error: {connectionError}
+                </Typography>
+                <Button onClick={() => window.location.reload()} size="sm" variant="outline" className="h-9 px-6 text-[10px] uppercase font-black tracking-widest border-red-500/20 text-red-400 hover:bg-red-500/10">
+                   Reconnect Now
+                </Button>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-4">
@@ -107,6 +80,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   // StripeItVerificationGuard - Block unverified users except on specific flows
   if (!user.emailVerified) {
     return <VerificationRequired />;
+  }
+
+  if (user.emailVerified && profile?.isFrozen && location.pathname.startsWith('/dealer')) {
+    return <Navigate to="/" replace />;
   }
 
   if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {

@@ -93,15 +93,19 @@ export const userService = {
 
   /**
    * Removes a user from the organization safely.
-   * Does NOT delete the auth user or profile globally, just revokes org access.
+   * Does NOT delete the auth user or profile globally, just revokes org access and resets to personal defaults.
    */
   async deleteUser(userId: string): Promise<void> {
     try {
       const userRef = doc(db, COLL_CONST.USERS, userId);
+      const personalOrgId = `PERSONAL-${userId.slice(0, 5)}`;
+      
       await updateDoc(userRef, {
-        orgId: '', // Strip organizational access
+        orgId: personalOrgId, // Return to personal workspace
         role: 'Sales', // Revert to base role
+        subscriptionTier: 'free', // Revert to personal free tier
         department: null, // Clear department assignment
+        isFrozen: false, // Ensure account is usable in personal mode
         updatedAt: serverTimestamp()
       });
     } catch (error) {

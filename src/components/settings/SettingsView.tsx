@@ -692,14 +692,25 @@ const OrganizationPanel = ({ profile, isMobile }: { profile: UserProfile | null,
           </div>
           <div className="space-y-1.5">
             <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Status</Typography>
-             <div className="h-10 px-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <Typography variant="mono" className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Active System</Typography>
+             <div className={cn(
+               "h-10 px-4 rounded-xl border flex items-center gap-2", 
+               profile?.isFrozen ? "bg-rose-500/5 border-rose-500/20" : "bg-white/[0.02] border-white/5"
+             )}>
+                <div className={cn(
+                  "h-2 w-2 rounded-full", 
+                  profile?.isFrozen ? "bg-rose-500 animate-pulse" : "bg-emerald-500 animate-pulse"
+                )} />
+                <Typography variant="mono" className={cn(
+                  "text-[10px] font-black uppercase tracking-widest", 
+                  profile?.isFrozen ? "text-rose-500" : "text-emerald-500"
+                )}>
+                  {profile?.isFrozen ? 'Suspended / Frozen' : 'Active System'}
+                </Typography>
              </div>
           </div>
         </div>
 
-        {(profile?.role === UserRole.ADMIN || profile?.role === UserRole.GENERAL_MANAGER || profile?.role === UserRole.DEALER_OWNER) && (
+        {(profile?.role === UserRole.ADMIN || profile?.role === UserRole.GENERAL_MANAGER || profile?.role === UserRole.DEALER_OWNER) && !profile?.isFrozen && (
           <div className={cn("pt-6 space-y-4", isMobile ? "pt-4" : "")}>
             <Typography variant="label" className="text-brand-primary block uppercase tracking-widest text-[9px] font-black">Management Controls</Typography>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

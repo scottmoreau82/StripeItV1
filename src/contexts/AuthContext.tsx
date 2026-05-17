@@ -293,15 +293,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (docSnap.exists()) {
               const rawData = docSnap.data();
 
-              // 🛡️ BLOCK FROZEN ACCOUNTS
-              if (rawData.isFrozen) {
-                console.warn("Account is frozen. Blocking access.");
-                setProfile(null);
-                setLoading(false);
-                setInitialized(true);
-                setConnectionError("ACCOUNT_FROZEN");
-                return;
-              }
+              // 🛡️ BLOCK FROZEN ACCOUNTS (REMOVED GLOBAL BLOCK)
+              // We now allow profile hydration even if frozen, so users can still access personal accounts.
               
               // 🔄 TIER MIGRATION: BASIC -> PRO
               // Critical path for eliminating the legacy basic tier while preserving user access.

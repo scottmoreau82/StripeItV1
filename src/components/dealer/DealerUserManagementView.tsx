@@ -31,7 +31,7 @@ import {
 import { cn } from '@/src/lib/utils';
 import { DealerInviteManagerModal } from './DealerInviteManagerModal';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { DealerPageHeader } from './DealerPageHeader';
+import { PageHeader } from '../ui/PageHeader';
 import { format } from 'date-fns';
 
 /**
@@ -99,7 +99,7 @@ export const DealerUserManagementView: React.FC = () => {
 
   useEffect(() => {
     fetchManagers();
-    if (activeTab === 'codes') {
+    if (activeTab === 'invites') {
       fetchJoinCodes();
     }
   }, [profile?.orgId, activeTab]);
@@ -118,22 +118,30 @@ export const DealerUserManagementView: React.FC = () => {
       return;
     }
     
-    // Prevent subordinates from freezing Dealer Owners
-    if (user.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER) {
-      addToast("Only a Dealer Owner can modify another Owner's status.", "error");
+    // Prevent freezing Dealer Owners
+    if (user.role === UserRole.DEALER_OWNER) {
+      addToast("Dealer Owner accounts are protected and cannot be frozen.", "error");
       return;
     }
+
+    console.log(`[Diagnostic] Attempting to ${user.isFrozen ? 'unfreeze' : 'freeze'} account.`, {
+      orgId: profile?.orgId,
+      targetUid: user.uid,
+      actingRole: profile?.role
+    });
 
     setActionInProgress(user.uid);
     try {
       const newStatus = !user.isFrozen;
       await userService.setUserFrozen(user.uid, newStatus);
       addToast(`Manager account ${newStatus ? 'frozen' : 'unfrozen'} successfully`, 'success');
-      setManagers(prev => prev.map(u => u.uid === user.uid ? { ...u, isFrozen: newStatus } : u));
+      // Refresh list to ensure absolute sync with DB state
+      await fetchManagers();
     } catch (error: any) {
+      console.error("[Diagnostic] Freeze operation failed:", error);
       const message = error?.message?.includes('permission-denied') 
-        ? 'Insufficient permissions to modify this account.'
-        : 'Unable to update manager status. Please try again.';
+        ? 'You do not have permission to modify this account. Owner accounts may be protected.'
+        : 'Unable to update manager status. Please verify networking and permissions.';
       addToast(message, 'error');
     } finally {
       setActionInProgress(null);
@@ -156,15 +164,51 @@ export const DealerUserManagementView: React.FC = () => {
       return;
     }
 
+    console.log(`[Diagnostic] Attempting to remove manager from organization.`, {
+      orgId: profile?.orgId,
+      targetUid: user.uid,
+      actingRole: profile?.role
+    });
+
     setActionInProgress(user.uid);
     try {
       await userService.deleteUser(user.uid);
       addToast('Manager removed from organization successfully', 'success');
-      setManagers(prev => prev.filter(u => u.uid !== user.uid));
+      // Refresh list to ensure absolute sync with DB state
+      await fetchManagers();
     } catch (error: any) {
+      console.error("[Diagnostic] Manager removal failed:", error);
       const message = error?.message?.includes('permission-denied')
-        ? 'You do not have permission to remove this manager.'
-        : 'Manager membership could not be updated.';
+        ? 'You do not have permission to remove this manager. Owner accounts are protected.'
+        : 'Unable to remove manager access. Membership state could not be updated.';
+      addToast(message, 'error');
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const handleDeleteJoinCode = async (code: DealerJoinCode) => {
+    if (!window.confirm(`Deactivate join code ${code.code}? New managers will no longer be able to use it to join.`)) {
+      return;
+    }
+
+    console.log(`[Diagnostic] Attempting to deactivate join code.`, {
+      orgId: profile?.orgId,
+      codeId: code.id,
+      code: code.code
+    });
+
+    setActionInProgress(code.id);
+    try {
+      await joinCodeService.deactivateJoinCode(code.id);
+      addToast('Join code deactivated', 'success');
+      // Refresh list to ensure absolute sync with DB state
+      await fetchJoinCodes();
+    } catch (error: any) {
+      console.error("[Diagnostic] Join code deactivation failed:", error);
+      const message = error?.message?.includes('permission-denied')
+        ? 'You do not have permission to modify join codes.'
+        : 'Unable to cancel invite code.';
       addToast(message, 'error');
     } finally {
       setActionInProgress(null);
@@ -178,7 +222,7 @@ export const DealerUserManagementView: React.FC = () => {
 
   const header = (
     <div className="space-y-8">
-      <DealerPageHeader
+      <PageHeader
         title="Management"
         subtitle="Dealership Operational Authorization Control"
         icon={Users2}
@@ -191,14 +235,14 @@ export const DealerUserManagementView: React.FC = () => {
           <UserPlus size={16} className="mr-2" />
           Invite Manager
         </Button>
-      </DealerPageHeader>
+      </PageHeader>
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-1 border-b border-white/5 pb-px">
         {[
           { id: 'managers', label: 'Managers', icon: Users },
           { id: 'permissions', label: 'Permissions', icon: Lock },
-          { id: 'codes', label: 'Join Codes', icon: Key },
+          { id: 'invites', label: 'Invites', icon: Key },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -382,17 +426,20 @@ export const DealerUserManagementView: React.FC = () => {
                                      variant="ghost" 
                                      size="sm"
                                      onClick={() => handleToggleFreeze(manager)}
-                                     disabled={actionInProgress === manager.uid || manager.uid === profile?.uid || (manager.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER)}
+                                     disabled={actionInProgress === manager.uid || manager.uid === profile?.uid || manager.role === UserRole.DEALER_OWNER}
                                      className={cn(
-                                        "h-9 w-9 p-0 rounded-xl transition-all border border-transparent hover:border-white/10",
-                                        (manager.uid === profile?.uid || (manager.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER)) ? "opacity-20 cursor-not-allowed" : "",
+                                        "h-9 px-3 rounded-xl transition-all border border-transparent hover:border-white/10 flex items-center gap-2",
+                                        (manager.uid === profile?.uid || manager.role === UserRole.DEALER_OWNER) ? "opacity-20 cursor-not-allowed" : "",
                                         manager.isFrozen 
                                           ? "text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 shadow-glow-sm glow-emerald" 
                                           : "text-blue-400 bg-blue-400/5 hover:bg-blue-400/10 shadow-glow-sm glow-blue"
                                      )}
-                                     title={manager.uid === profile?.uid ? "Cannot freeze self" : (manager.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER) ? "Only an Owner can freeze an Owner" : manager.isFrozen ? "Unfreeze Account" : "Freeze Account"}
+                                     title={manager.uid === profile?.uid ? "Cannot freeze self" : manager.role === UserRole.DEALER_OWNER ? "Owner accounts are protected" : manager.isFrozen ? "Unfreeze Account" : "Freeze Account"}
                                   >
-                                     <Snowflake size={16} className={cn(manager.isFrozen && "animate-pulse")} />
+                                     <Snowflake size={14} className={cn(manager.isFrozen && "animate-pulse")} />
+                                     <span className="font-black uppercase tracking-widest text-[9px]">
+                                       {manager.isFrozen ? 'Unfreeze' : 'Freeze'}
+                                     </span>
                                   </Button>
                                   <Button 
                                      variant="ghost" 
@@ -465,13 +512,14 @@ export const DealerUserManagementView: React.FC = () => {
                 <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Department</Typography></th>
                 <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Usage</Typography></th>
                 <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Status</Typography></th>
-                <th className="px-6 py-4 text-right"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Expiration</Typography></th>
+                <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Expiration</Typography></th>
+                <th className="px-6 py-4 text-right"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Actions</Typography></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-xs">
               {joinCodes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
+                  <td colSpan={6} className="px-6 py-20 text-center">
                     <Key className="h-10 w-10 text-slate-700 mx-auto mb-4" />
                     <Typography variant="p" className="text-slate-500">No active join codes found.</Typography>
                   </td>
@@ -500,8 +548,23 @@ export const DealerUserManagementView: React.FC = () => {
                           {isActive ? 'Active' : isExpired ? 'Expired' : code.status}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-right text-slate-500 font-mono">
+                      <td className="px-6 py-4 text-slate-500 font-mono">
                         {format(code.expiresAt, 'MMM d, yyyy')}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteJoinCode(code)}
+                          disabled={actionInProgress === code.id || code.status === JoinCodeStatus.CANCELLED}
+                          className={cn(
+                            "h-8 w-8 p-0 rounded-lg text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all",
+                            (code.status === JoinCodeStatus.CANCELLED) && "opacity-20 cursor-not-allowed"
+                          )}
+                          title="Deactivate Join Code"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -523,7 +586,7 @@ export const DealerUserManagementView: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'permissions': return renderPermissionsContent();
-      case 'codes': return renderCodesContent();
+      case 'invites': return renderCodesContent();
       default: return renderManagersContent();
     }
   };

@@ -71,6 +71,17 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     addToast(message, 'error');
   }, [addToast]);
 
+  // Derive the effective Org ID for data operations.
+  // If the user's connection to their primary dealership org is frozen, 
+  // we fallback to their immutable personal workspace for safe operation.
+  const effectiveOrgId = useMemo(() => {
+    if (!profile) return null;
+    if (profile.isFrozen) {
+      return `PERSONAL-${user?.uid?.slice(0, 5)}`;
+    }
+    return profile.orgId;
+  }, [profile, user]);
+
   // Dashboard Layout
   const dashboardLayout = React.useMemo(() => 
     profile?.dashboardPreference?.layout || dashboardService.generateDefaultLayout(), 
@@ -109,7 +120,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Real-time Subscriptions (Deals, Notes, Competitions)
   useEffect(() => {
     // Parent AppContent ensures we only mount if user and profile are present
-    if (!user || !profile || !profile.orgId) {
+    if (!user || !profile || !effectiveOrgId) {
       if (!user) {
         setDeals([]);
         setNotes([]);
@@ -128,7 +139,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     
     const initializeData = async () => {
       try {
-        await loadStaticData(profile.orgId, user.uid);
+        await loadStaticData(effectiveOrgId, user.uid);
       } catch (err) {
         console.error("Static data hydration failed:", err);
       }
@@ -137,9 +148,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     initializeData();
 
     // 1. Subscription to Deals
-    const dealsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${profile.orgId}/${COLLECTIONS.DEALS}`;
+    const dealsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${effectiveOrgId}/${COLLECTIONS.DEALS}`;
     let dealsQuery = query(
-      collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, COLLECTIONS.DEALS),
+      collection(db, COLLECTIONS.ORGANIZATIONS, effectiveOrgId, COLLECTIONS.DEALS),
       orderBy('createdAt', 'desc')
     );
     
@@ -169,9 +180,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     });
 
     // 2. Subscription to Notes
-    const notesCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${profile.orgId}/${COLLECTIONS.NOTES}`;
+    const notesCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${effectiveOrgId}/${COLLECTIONS.NOTES}`;
     const notesQuery = query(
-      collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, COLLECTIONS.NOTES),
+      collection(db, COLLECTIONS.ORGANIZATIONS, effectiveOrgId, COLLECTIONS.NOTES),
       where('userId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
@@ -193,9 +204,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     });
 
     // 3. Subscription to Competitions
-    const compsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${profile.orgId}/${COLLECTIONS.COMPETITIONS}`;
+    const compsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${effectiveOrgId}/${COLLECTIONS.COMPETITIONS}`;
     const compsQuery = query(
-      collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, COLLECTIONS.COMPETITIONS),
+      collection(db, COLLECTIONS.ORGANIZATIONS, effectiveOrgId, COLLECTIONS.COMPETITIONS),
       where('endDate', '>=', Date.now())
     );
 
@@ -218,9 +229,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     });
 
     // 4. Subscription to Monthly SPIFFs
-    const spiffsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${profile.orgId}/monthlySpiffs`;
+    const spiffsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${effectiveOrgId}/monthlySpiffs`;
     const spiffsQuery = query(
-      collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, 'monthlySpiffs'),
+      collection(db, COLLECTIONS.ORGANIZATIONS, effectiveOrgId, 'monthlySpiffs'),
       where('userId', '==', user.uid),
       orderBy('date', 'desc')
     );
@@ -247,10 +258,10 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       unsubComps();
       unsubSpiffs();
     };
-  }, [profile, user, loadStaticData]);
+  }, [profile, user, effectiveOrgId, loadStaticData]);
 
   const handleSaveDeal = useCallback(async (dealData: Partial<Deal>, editingId?: string) => {
-    if (!profile || !user) return;
+    if (!profile || !user || !effectiveOrgId) return;
     
     try {
       if (!editingId) {
@@ -266,22 +277,22 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
 
       if (editingId) {
-        await dealService.updateDeal(profile.orgId, editingId, dealData);
+        await dealService.updateDeal(effectiveOrgId, editingId, dealData);
         analyticsService.trackEvent(AnalyticsEventType.DEAL_EDITED, { dealId: editingId });
         
         if (dealData.status === DealStatus.FINALIZED) {
-          await activityService.logEvent(profile.orgId, {
+          await activityService.logEvent(effectiveOrgId, {
             type: ActivityEventType.DEAL_FINALIZED,
             userId: user.uid,
             userName: profile.displayName || 'Salesperson',
-            orgId: profile.orgId,
+            orgId: effectiveOrgId,
             message: `Closed a deal for ${dealData.customerName || 'Customer'}!`,
             payload: { dealId: editingId, vehicle: dealData.purchasedVehicle }
           });
         }
         triggerSuccess('Deal updated.');
       } else {
-        const dealId = await dealService.createDeal(profile.orgId, {
+        const dealId = await dealService.createDeal(effectiveOrgId, {
           userId: user.uid,
           createdByUserId: user.uid,
           assignedSalespersonId: user.uid,
@@ -303,11 +314,11 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
           stockNumber: dealData.stockNumber,
         });
 
-        await activityService.logEvent(profile.orgId, {
+        await activityService.logEvent(effectiveOrgId, {
           type: ActivityEventType.DEAL_CREATED,
           userId: user.uid,
           userName: profile.displayName || 'Salesperson',
-          orgId: profile.orgId,
+          orgId: effectiveOrgId,
           message: `Logged a new ${dealData.newOrUsed || ''} deal for ${dealData.customerName}`,
           payload: { dealId, vehicle: dealData.purchasedVehicle }
         });
@@ -319,32 +330,32 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       triggerError(getFriendlyErrorMessage(error));
       throw error;
     }
-  }, [profile, user, deals.length, triggerSuccess, triggerError]);
+  }, [profile, user, effectiveOrgId, deals.length, triggerSuccess, triggerError]);
 
   const handleDeleteDeal = useCallback(async (dealId: string) => {
-    if (!profile) return;
+    if (!effectiveOrgId) return;
     try {
-      await dealService.deleteDeal(profile.orgId, dealId);
+      await dealService.deleteDeal(effectiveOrgId, dealId);
       triggerSuccess('Deal deleted.');
     } catch (error) {
       console.error("Deal deletion error:", error);
       triggerError('Failed to delete deal.');
-      handleFirestoreError(error, OperationType.DELETE, `organizations/${profile.orgId}/deals/${dealId}`);
+      handleFirestoreError(error, OperationType.DELETE, `organizations/${effectiveOrgId}/deals/${dealId}`);
     }
-  }, [profile, triggerSuccess, triggerError]);
+  }, [effectiveOrgId, triggerSuccess, triggerError]);
 
   const handleUpdateDealStatus = useCallback(async (dealId: string, newStatus: DealStatus) => {
-    if (!profile || !user) return;
+    if (!profile || !user || !effectiveOrgId) return;
     try {
-      await dealService.updateDeal(profile.orgId, dealId, { status: newStatus });
+      await dealService.updateDeal(effectiveOrgId, dealId, { status: newStatus });
       
       if (newStatus === DealStatus.FINALIZED) {
         const deal = deals.find(d => d.id === dealId);
-        await activityService.logEvent(profile.orgId, {
+        await activityService.logEvent(effectiveOrgId, {
           type: ActivityEventType.DEAL_FINALIZED,
           userId: user.uid,
           userName: profile.displayName || 'Salesperson',
-          orgId: profile.orgId,
+          orgId: effectiveOrgId,
           message: `Finalized a deal for ${deal?.customerName || 'Customer'}!`,
           payload: { dealId, vehicle: deal?.purchasedVehicle }
         });
@@ -361,14 +372,14 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error) {
       triggerError('Failed to update status.');
     }
-  }, [profile, user, deals, triggerSuccess, triggerError]);
+  }, [profile, user, effectiveOrgId, deals, triggerSuccess, triggerError]);
 
   const handleSavePayPlan = useCallback(async (planData: Partial<PayPlan>) => {
-    if (!profile || !user) return;
+    if (!profile || !user || !effectiveOrgId) return;
     try {
       const { id, createdAt, updatedAt, organizationId, userId, ...cleanPlan } = planData as any;
-      await payPlanService.savePayPlan(profile.orgId, user.uid, cleanPlan);
-      await loadStaticData(profile.orgId, user.uid);
+      await payPlanService.savePayPlan(effectiveOrgId, user.uid, cleanPlan);
+      await loadStaticData(effectiveOrgId, user.uid);
       analyticsService.trackEvent(AnalyticsEventType.COMMISSION_MATRIX_UPDATED);
       triggerSuccess('Pay plan updated.');
     } catch (error: any) {
@@ -376,38 +387,38 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       triggerError(getFriendlyErrorMessage(error));
       throw error;
     }
-  }, [profile, user, loadStaticData, triggerSuccess, triggerError]);
+  }, [profile, user, effectiveOrgId, loadStaticData, triggerSuccess, triggerError]);
 
   const handleSaveMonthlySpiff = useCallback(async (data: Partial<MonthlySpiff>) => {
-    if (!profile || !user) return;
+    if (!profile || !user || !effectiveOrgId) return;
     try {
-      await spiffService.saveMonthlySpiff(profile.orgId, {
+      await spiffService.saveMonthlySpiff(effectiveOrgId, {
         ...data,
         userId: user.uid,
-        orgId: profile.orgId,
+        orgId: effectiveOrgId,
         month: data.month || new Date().toISOString().slice(0, 7)
       });
-      await loadStaticData(profile.orgId, user.uid);
+      await loadStaticData(effectiveOrgId, user.uid);
       triggerSuccess('Monthly adjustment saved.');
     } catch (error: any) {
       console.error("Monthly Spiff Save Error:", error);
       triggerError(getFriendlyErrorMessage(error));
     }
-  }, [profile, user, loadStaticData, triggerSuccess, triggerError]);
+  }, [profile, user, effectiveOrgId, loadStaticData, triggerSuccess, triggerError]);
 
   const handleDeleteMonthlySpiff = useCallback(async (id: string) => {
-    if (!profile || !user) return;
+    if (!profile || !user || !effectiveOrgId) return;
     try {
-      await spiffService.deleteMonthlySpiff(profile.orgId, id);
-      await loadStaticData(profile.orgId, user.uid);
+      await spiffService.deleteMonthlySpiff(effectiveOrgId, id);
+      await loadStaticData(effectiveOrgId, user.uid);
       triggerSuccess('Adjustment deleted.');
     } catch (error) {
       triggerError('Failed to delete adjustment.');
     }
-  }, [profile, user, loadStaticData, triggerSuccess, triggerError]);
+  }, [profile, user, effectiveOrgId, loadStaticData, triggerSuccess, triggerError]);
 
   const handleSaveNote = useCallback(async (noteData: Partial<QuickNote>) => {
-    if (!profile || !user) return;
+    if (!profile || !user || !effectiveOrgId) return;
     
     try {
       // Enforce Note Limit for Free Tier
@@ -421,7 +432,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         throw new Error(`Plan Limit Reached: Your current plan only supports ${planLimitService.getLimit(profile.subscriptionTier || SubscriptionTier.FREE, LimitType.NOTE_COUNT)} notes.`);
       }
 
-      await noteService.createNote(profile.orgId, {
+      await noteService.createNote(effectiveOrgId, {
         userId: user.uid,
         text: noteData.text!,
         customerName: noteData.customerName,
@@ -433,10 +444,10 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error: any) {
       triggerError(getFriendlyErrorMessage(error));
     }
-  }, [profile, user, notes.length, triggerSuccess, triggerError]);
+  }, [profile, user, effectiveOrgId, notes.length, triggerSuccess, triggerError]);
 
   const handleCreateRandomDeal = useCallback(async () => {
-    if (!profile || !user) return;
+    if (!profile || !user || !effectiveOrgId) return;
     try {
       const { randomDealService } = await import('../services/randomDealService');
       const randomData = randomDealService.generateRandomDeal();
@@ -445,31 +456,31 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error: any) {
       triggerError(error.message || 'Failed to generate deal.');
     }
-  }, [profile, user, handleSaveDeal, triggerError]);
+  }, [profile, user, effectiveOrgId, handleSaveDeal, triggerError]);
 
   const handleDeleteNote = useCallback(async (noteId: string) => {
-    if (!profile) return;
+    if (!effectiveOrgId) return;
     try {
-      await noteService.deleteNote(profile.orgId, noteId);
+      await noteService.deleteNote(effectiveOrgId, noteId);
       triggerSuccess('Note deleted.');
     } catch (error) {
       triggerError('Failed to delete note.');
     }
-  }, [profile, triggerSuccess, triggerError]);
+  }, [effectiveOrgId, triggerSuccess, triggerError]);
 
   const handleCreateCompetition = useCallback(async (data: any) => {
-    if (!profile || !user) return;
+    if (!profile || !user || !effectiveOrgId) return;
     try {
-      await competitionService.createCompetition(profile.orgId, {
+      await competitionService.createCompetition(effectiveOrgId, {
         ...data,
         createdByUserId: user.uid,
       });
 
-      await activityService.logEvent(profile.orgId, {
+      await activityService.logEvent(effectiveOrgId, {
         type: ActivityEventType.COMPETITION_STARTED,
         userId: user.uid,
         userName: profile.displayName || 'Manager',
-        orgId: profile.orgId,
+        orgId: effectiveOrgId,
         message: `Launched a new battle: ${data.title}!`,
       });
 
@@ -477,11 +488,12 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error) {
       triggerError('Failed to create competition.');
     }
-  }, [profile, user, triggerSuccess, triggerError]);
+  }, [profile, user, effectiveOrgId, triggerSuccess, triggerError]);
 
   const refreshDeals = useCallback(async () => {
-    await loadStaticData(profile?.orgId || '', user?.uid || '');
-  }, [profile?.orgId, user?.uid, loadStaticData]);
+    if (!effectiveOrgId || !user) return;
+    await loadStaticData(effectiveOrgId, user.uid);
+  }, [effectiveOrgId, user, loadStaticData]);
 
   const isCommissionConfigured = React.useMemo(() => {
     if (!payPlan) return false;

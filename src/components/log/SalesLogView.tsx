@@ -192,22 +192,31 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   };
 
   const header = (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center justify-between">
-        <Typography variant="h1" className="text-white text-2xl lg:text-3xl font-black italic tracking-tighter">Sales Log</Typography>
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex items-center gap-4">
+        <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
+          <AppIcon name="salesLog" className="h-6 w-6 text-bg-deep" />
+        </div>
+        <div className="space-y-1">
+          <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
+            Sales Log
+          </Typography>
+          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
+            {currentMonthDeals.length} deals / {currentMonthSpiffs.length} spiffs this month
+          </Typography>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-3">
         <button 
           onClick={onConfigPayPlan}
-          className="p-2 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5"
+          className="h-11 px-6 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5 flex items-center gap-2 text-[10px] uppercase font-black tracking-widest"
           title="Est. Payout Engine"
           aria-label="Est. Payout Engine"
         >
           <AppIcon name="calculator" size={16} />
+          Payout Engine
         </button>
-      </div>
-      <div className="flex items-center gap-2">
-        <Typography variant="mono" className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">
-          {currentMonthDeals.length} deals / {currentMonthSpiffs.length} spiffs
-        </Typography>
       </div>
     </div>
   );

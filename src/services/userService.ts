@@ -102,7 +102,7 @@ export const userService = {
       
       await updateDoc(userRef, {
         orgId: personalOrgId, // Return to personal workspace
-        role: 'Sales', // Revert to base role
+        role: 'sales', // Revert to base role
         subscriptionTier: 'free', // Revert to personal free tier
         department: null, // Clear department assignment
         isFrozen: false, // Ensure account is usable in personal mode

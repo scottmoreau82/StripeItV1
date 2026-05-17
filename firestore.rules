@@ -15,7 +15,7 @@ service cloud.firestore {
       return user == null || user.get('isFrozen', false) == false;
     }
 
-    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId && isNotFrozen(); }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
     
     function incoming() { return request.resource.data; }
@@ -39,7 +39,7 @@ service cloud.firestore {
 
     function isAnyAdmin() {
       let user = getUserSafe(request.auth.uid);
-      return isBootstrapAdmin() || (user != null && isNotFrozen() && (user.get('role', 'none').lower() in ['gm', 'admin', 'dealer_owner'] || user.get('isAdmin', false) == true));
+      return isBootstrapAdmin() || (user != null && user.get('isFrozen', false) == false && (user.get('role', 'none').lower() in ['gm', 'admin', 'dealer_owner'] || user.get('isAdmin', false) == true));
     }
 
     function isAnyManager() {
@@ -47,8 +47,18 @@ service cloud.firestore {
     }
 
     function isOrgMember(orgId) {
+      let isAdmin = isBootstrapAdmin();
       let user = getUserSafe(request.auth.uid);
-      return isBootstrapAdmin() || (isSignedIn() && isNotFrozen() && user != null && user.orgId == orgId);
+      let isPersonal = orgId.lower().startsWith('personal-');
+      
+      return isAdmin || (
+        isSignedIn() && user != null && (
+          // Access assigned org if it's personal OR user is not frozen
+          (user.orgId == orgId && (isPersonal || user.get('isFrozen', false) == false)) ||
+          // Always allow users to access their own personal workspace by checking ownerId
+          (isPersonal && exists(/databases/$(database)/documents/organizations/$(orgId)) && get(/databases/$(database)/documents/organizations/$(orgId)).data.ownerId == request.auth.uid)
+        )
+      );
     }
 
     // --- VALIDATION HELPERS ---
@@ -197,6 +207,10 @@ service cloud.firestore {
 
     // User Collection
     match /users/{userId} {
+      function isTargetOwner() {
+        return existing().get('role', '').lower() == 'dealer_owner';
+      }
+
       // isOwner is primary gate. Managers can see profiles within their org.
       allow get: if isOwner(userId) || isBootstrapAdmin() || (isSignedIn() && isAnyManager() && isOrgMember(getUserSafe(userId).get('orgId', 'none')));
       allow list: if isSignedIn() && (isAnyManager() || isAnyAdmin()); 
@@ -204,15 +218,18 @@ service cloud.firestore {
         (incoming().get('role', '').lower() == 'sales') || 
         (incoming().get('role', '').lower() in ['manager', 'gm'] && checkInvite(incoming()))
       );
-      allow update: if (isOwner(userId) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId', 'role', 'department'])
+      
+      allow update: if isBootstrapAdmin() || (isOwner(userId) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId', 'role', 'department', 'suspensionAcknowledgedAt'])
       )) || (
-        isAnyAdmin() && (isBootstrapAdmin() || isOrgMember(existing().get('orgId', 'none'))) &&
+        isAnyManager() && (isBootstrapAdmin() || isOrgMember(existing().get('orgId', 'none'))) &&
+        // Protect owners from being frozen/deleted by non-founders/non-bootstrap/non-owner
+        (!isTargetOwner() || getRole() == 'dealer_owner') &&
         incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt', 'isAdmin', 'subscriptionTier', 'isFrozen', 'isDeleted', 'orgId', 'department'])
       );
       
       match /notifications/{notifId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isBootstrapAdmin();
       }
     }
 
@@ -271,7 +288,7 @@ service cloud.firestore {
       }
 
       match /users/{userId}/payPlans/{planId} {
-        allow read, write: if isOrgMember(orgId) && isOwner(userId);
+        allow read, write: if (isOrgMember(orgId) && isOwner(userId)) || isBootstrapAdmin();
       }
     }
 

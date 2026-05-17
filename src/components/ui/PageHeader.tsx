@@ -4,12 +4,12 @@ import { LucideIcon } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 
 /**
- * DealerPageHeader
- * Standardized header component for Dealer-tier pages.
- * Matches the layout and style of the Activity Feed header.
+ * PageHeader
+ * Standardized header component for all StripeIt pages, adhering to the 
+ * bold, high-contrast typography system of the Dealer shell.
  */
 
-interface DealerPageHeaderProps {
+interface PageHeaderProps {
   title: string;
   subtitle: string;
   icon: LucideIcon;
@@ -18,7 +18,7 @@ interface DealerPageHeaderProps {
   className?: string;
 }
 
-export const DealerPageHeader: React.FC<DealerPageHeaderProps> = ({
+export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   subtitle,
   icon: Icon,
@@ -36,10 +36,10 @@ export const DealerPageHeader: React.FC<DealerPageHeaderProps> = ({
           <Icon className={cn("h-6 w-6", iconColor === "bg-brand-primary" ? "text-bg-deep" : "text-white")} />
         </div>
         <div className="space-y-1">
-          <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter">
+          <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
             {title}
           </Typography>
-          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em]">
+          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
             {subtitle}
           </Typography>
         </div>

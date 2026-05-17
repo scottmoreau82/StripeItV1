@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { auth, db, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
 import { UserProfile, SubscriptionTier } from '../types';
 import { STRIPEIT_DEVELOPER_EMAIL, COLLECTIONS } from '../constants';
 import { Typography } from '../components/ui/Typography';
@@ -33,10 +33,12 @@ interface AuthContextType {
   sendVerificationEmail: () => Promise<void>;
   refreshUser: () => Promise<void>;
   isAdmin: boolean;
+  isDeveloper: boolean;
   isEditMode: boolean;
   setIsEditMode: (value: boolean) => void;
   tierOverride: SubscriptionTier | null;
   setTierOverride: (tier: SubscriptionTier | null) => void;
+  actualTier: SubscriptionTier | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -51,10 +53,12 @@ const AuthContext = createContext<AuthContextType>({
   sendVerificationEmail: async () => {},
   refreshUser: async () => {},
   isAdmin: false,
+  isDeveloper: false,
   isEditMode: false,
   setIsEditMode: () => {},
   tierOverride: null,
   setTierOverride: () => {},
+  actualTier: null,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -227,15 +231,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 role = inviteData.role;
                 tier = SubscriptionTier.ORGANIZATION; // Managers are part of the dealer tier org
               } else {
+                const isDeveloper = firebaseUser.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
                 orgId = `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
                 const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId);
                 batch.set(orgDocRef, {
                   id: orgId,
-                  name: 'Personal Workspace',
+                  name: isDeveloper ? 'Founder Dealership' : 'Personal Workspace',
                   ownerId: firebaseUser.uid,
-                  subscriptionTier: SubscriptionTier.FREE,
+                  subscriptionTier: isDeveloper ? SubscriptionTier.ORGANIZATION : SubscriptionTier.FREE,
                   createdAt: serverTimestamp()
                 });
+                
+                if (isDeveloper) {
+                  tier = SubscriptionTier.ORGANIZATION;
+                  role = UserRole.DEALER_OWNER;
+                }
               }
 
               const userProfileData: any = {
@@ -322,7 +332,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }, (error) => {
             if (!auth.currentUser) return;
             console.error("Profile subscription error:", error);
-            handleFirestoreError(error, OperationType.GET, `${COLLECTIONS.USERS}/${firebaseUser.uid}`);
+            setConnectionError(getFriendlyErrorMessage(error));
+            setLoading(false);
+            setInitialized(true);
           });
         } catch (error: any) {
           console.error("Initial profile fetch error:", error);
@@ -330,10 +342,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             retryCount++;
             setTimeout(setupProfileListener, 1000);
           } else {
-            setConnectionError("Unable to establish profile link.");
+            setConnectionError(getFriendlyErrorMessage(error));
             setLoading(false);
             setInitialized(true);
-            handleFirestoreError(error, OperationType.GET, `${COLLECTIONS.USERS}/${firebaseUser.uid}`);
           }
         }
       };
@@ -406,18 +417,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /**
    * StripeItAdminAccessSystem
-   * Centralized admin detection logic.
+   * Centralized admin and developer detection logic.
    */
-  const isAdmin = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase() || profile?.isAdmin === true;
+  const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
+  const isAdmin = isDeveloper || profile?.isAdmin === true;
 
   // StripeItIdentitySystem - Effective Profile Resolution
   // We memoize this to prevent downstream infinite loops in contexts that depend on the profile object
   const effectiveProfile = useMemo(() => {
     if (!profile) return profile;
+    
+    // Developer account defaults to ORGANIZATION tier if not explicitly set
+    let baseTier = profile.subscriptionTier;
+    if (isDeveloper && (baseTier === SubscriptionTier.FREE || !baseTier)) {
+      baseTier = SubscriptionTier.ORGANIZATION;
+    }
+
     return (isAdmin && tierOverride)
       ? { ...profile, subscriptionTier: tierOverride }
-      : profile;
-  }, [profile, isAdmin, tierOverride]);
+      : { ...profile, subscriptionTier: baseTier };
+  }, [profile, isAdmin, tierOverride, isDeveloper]);
+
+  const actualTier = useMemo(() => {
+    if (!profile) return null;
+    if (isDeveloper && (profile.subscriptionTier === SubscriptionTier.FREE || !profile.subscriptionTier)) {
+      return SubscriptionTier.ORGANIZATION;
+    }
+    return profile.subscriptionTier;
+  }, [profile, isDeveloper]);
 
   // StripeItThemeSystem - Apply visual theme to document
   useEffect(() => {
@@ -437,10 +464,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sendVerificationEmail,
     refreshUser,
     isAdmin,
+    isDeveloper,
     isEditMode,
     setIsEditMode,
     tierOverride: isAdmin ? tierOverride : null,
     setTierOverride: isAdmin ? setTierOverride : () => {},
+    actualTier,
   }), [
     user, 
     effectiveProfile, 
@@ -453,10 +482,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sendVerificationEmail, 
     refreshUser, 
     isAdmin, 
+    isDeveloper,
     isEditMode, 
     setIsEditMode, 
     tierOverride,
-    setTierOverride
+    setTierOverride,
+    actualTier
   ]);
 
   return (

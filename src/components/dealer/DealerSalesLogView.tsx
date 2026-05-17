@@ -14,7 +14,7 @@ import { DealerInviteManagerModal } from './DealerInviteManagerModal';
 import { getFriendlyErrorMessage } from '@/src/lib/firebase';
 import { AlertCircle, Search, Printer, UserPlus, ClipboardList } from 'lucide-react';
 import { DEFAULT_LOG_FIELDS } from '@/src/constants';
-import { DealerPageHeader } from './DealerPageHeader';
+import { PageHeader } from '../ui/PageHeader';
 
 /**
  * DealerSalesLogView
@@ -124,7 +124,7 @@ export const DealerSalesLogView: React.FC = () => {
   return (
     <div className="space-y-8 pb-32">
       {/* Header / Operational Controls */}
-      <DealerPageHeader
+      <PageHeader
         title="Daily Sales Report"
         subtitle={renderProtocolSubtitle()}
         icon={ClipboardList}
@@ -240,7 +240,7 @@ export const DealerSalesLogView: React.FC = () => {
              Print
           </Button>
         </div>
-      </DealerPageHeader>
+      </PageHeader>
 
       {/* Summary Cards (Operational Density) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">

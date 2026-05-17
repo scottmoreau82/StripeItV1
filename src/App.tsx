@@ -75,7 +75,7 @@ function MainAppFlow() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const { isMobile } = useResponsive();
-  const { profile, user, isAdmin } = useAuth();
+  const { profile, user, isAdmin, isDeveloper } = useAuth();
   const location = useLocation();
 
   // StripeItAnalyticsSystem - Global Lifecycle Tracking
@@ -274,7 +274,26 @@ function MainAppFlow() {
               path="/analytics" 
               element={
                 featureAccessService.hasAccess(profile, Feature.ADVANCED_ANALYTICS) 
-                  ? <div className="p-8"><Typography variant="h1">Analytics</Typography></div>
+                  ? (
+                    <DashboardLayout
+                      header={
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
+                            <TrendingUp className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
+                          </div>
+                          <div className="space-y-1">
+                            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
+                              Market Analytics
+                            </Typography>
+                            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
+                              Performance telemetry • historical trends
+                            </Typography>
+                          </div>
+                        </div>
+                      }
+                      main={<div className="py-20 text-center text-slate-500 italic uppercase tracking-[0.2em] text-xs">Analytics Module Loading...</div>}
+                    />
+                  )
                   : <UpgradeAccessScreen feature={Feature.ADVANCED_ANALYTICS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
               } 
             />
@@ -283,7 +302,26 @@ function MainAppFlow() {
               path="/goals" 
               element={
                 featureAccessService.hasAccess(profile, Feature.GOALS) 
-                  ? <div className="p-8"><Typography variant="h1">Goals</Typography></div>
+                  ? (
+                    <DashboardLayout
+                      header={
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
+                            <ArrowUpRight className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
+                          </div>
+                          <div className="space-y-1">
+                            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
+                              Career Goals
+                            </Typography>
+                            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
+                              Pacing • targets • ambition
+                            </Typography>
+                          </div>
+                        </div>
+                      }
+                      main={<div className="py-20 text-center text-slate-500 italic uppercase tracking-[0.2em] text-xs">Goal Management System Offline</div>}
+                    />
+                  )
                   : <UpgradeAccessScreen feature={Feature.GOALS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
               } 
             />
@@ -301,7 +339,26 @@ function MainAppFlow() {
               path="/inventory" 
               element={
                 featureAccessService.hasAccess(profile, Feature.INVENTORY_MANAGEMENT) 
-                  ? <div className="p-8"><Typography variant="h1">Inventory</Typography></div>
+                  ? (
+                    <DashboardLayout
+                      header={
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
+                            <Car className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
+                          </div>
+                          <div className="space-y-1">
+                            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
+                              Inventory Log
+                            </Typography>
+                            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
+                              Lot status • vehicle telemetry
+                            </Typography>
+                          </div>
+                        </div>
+                      }
+                      main={<div className="py-20 text-center text-slate-500 italic uppercase tracking-[0.2em] text-xs">Inventory Access Restricted</div>}
+                    />
+                  )
                   : <UpgradeAccessScreen feature={Feature.INVENTORY_MANAGEMENT} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
               } 
             />
@@ -318,7 +375,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/sales-log" 
               element={
-                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION 
+                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION || isDeveloper) 
                   ? <DealerSalesLogView /> 
                   : <Navigate to="/" />
               } 
@@ -326,7 +383,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/settings" 
               element={
-                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION 
+                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION || isDeveloper) 
                   ? <DealerSettingsView /> 
                   : <Navigate to="/" />
               } 
@@ -334,7 +391,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/users" 
               element={
-                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION 
+                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION || isDeveloper) 
                   ? <DealerUserManagementView /> 
                   : <Navigate to="/" />
               } 
@@ -342,7 +399,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/log-builder" 
               element={
-                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION 
+                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION || isDeveloper) 
                   ? <DealerLogBuilderView /> 
                   : <Navigate to="/" />
               } 

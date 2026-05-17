@@ -43,14 +43,19 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
 
   const header = (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div className="flex-1">
-          <Typography variant="h1" className="mb-2 italic font-black uppercase tracking-tighter">
-            Command<br />Center
-          </Typography>
-          <Typography variant="p" className="text-slate-500 max-w-xs font-bold leading-tight">
-            Managing {teamMetrics.length} salespeople at {profile?.dealershipId || 'Highline Motors'}
-          </Typography>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
+            <LayoutDashboard className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
+          </div>
+          <div className="space-y-1">
+            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
+              Command Center
+            </Typography>
+            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
+              Managing {teamMetrics.length} salespeople at {profile?.orgName || 'Highline Motors'}
+            </Typography>
+          </div>
         </div>
 
         <div className="flex bg-white/[0.03] border border-white/5 rounded-full p-1 self-start lg:self-auto">

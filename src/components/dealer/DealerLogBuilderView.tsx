@@ -31,7 +31,7 @@ import { cn } from '@/src/lib/utils';
 import { motion, Reorder, AnimatePresence } from 'motion/react';
 import { DEFAULT_LOG_FIELDS } from '@/src/constants';
 
-import { DealerPageHeader } from './DealerPageHeader';
+import { PageHeader } from '../ui/PageHeader';
 
 export const DealerLogBuilderView: React.FC = () => {
   const { profile, addToast, isAdmin } = useAuth();
@@ -175,7 +175,7 @@ export const DealerLogBuilderView: React.FC = () => {
   };
 
   const header = (
-    <DealerPageHeader
+    <PageHeader
       title="Log Builder"
       subtitle="Configure Shared Operational Deal Log Schema"
       icon={LayoutGrid}
@@ -200,7 +200,7 @@ export const DealerLogBuilderView: React.FC = () => {
            </Button>
         </div>
       )}
-    </DealerPageHeader>
+    </PageHeader>
   );
 
   const mainContent = (

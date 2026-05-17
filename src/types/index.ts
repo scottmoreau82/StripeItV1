@@ -92,6 +92,7 @@ export interface UserProfile {
   updatedAt: number;
   preferences?: UserPreferences;
   isFrozen?: boolean;
+  suspensionAcknowledgedAt?: number;
   isDeleted?: boolean;
   lastActive?: number;
 }

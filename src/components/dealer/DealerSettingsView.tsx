@@ -19,7 +19,7 @@ import {
 import { cn } from '@/src/lib/utils';
 import { DealerInviteManagerModal } from './DealerInviteManagerModal';
 import { Link } from 'react-router-dom';
-import { DealerPageHeader } from './DealerPageHeader';
+import { PageHeader } from '../ui/PageHeader';
 
 /**
  * DealerSettingsView
@@ -84,7 +84,7 @@ export const DealerSettingsView: React.FC = () => {
   };
 
   const header = (
-    <DealerPageHeader
+    <PageHeader
       title="Global Settings"
       subtitle="Organizational Configuration & Governance"
       icon={Settings}
@@ -96,7 +96,7 @@ export const DealerSettingsView: React.FC = () => {
         <UserPlus size={16} className="mr-2" />
         Invite Member
       </Button>
-    </DealerPageHeader>
+    </PageHeader>
   );
 
   const mainContent = (

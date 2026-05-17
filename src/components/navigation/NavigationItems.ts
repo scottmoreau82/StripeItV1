@@ -1,5 +1,6 @@
 import { Feature, featureAccessService } from '@/src/services/featureAccessService';
 import { UserProfile, SubscriptionTier, UserRole } from '@/src/types';
+import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 
 export const navigationConfig = {
   main: [
@@ -8,8 +9,17 @@ export const navigationConfig = {
     { id: 'activity', label: 'ACTIVITY', icon: 'activity', path: '/activity', featureId: Feature.ACTIVITY_FEED },
     { id: 'analytics', label: 'ANALYTICS', icon: 'analytics', path: '/analytics', featureId: Feature.ADVANCED_ANALYTICS },
     { id: 'goals', label: 'GOALS', icon: 'goals', path: '/goals', featureId: Feature.GOALS },
-    { id: 'reports', label: 'REPORTS', icon: 'reports', path: '/reports', featureId: Feature.ADVANCED_ANALYTICS },
+    { id: 'reports', label: 'SALES REPORT', icon: 'reports', path: '/reports', featureId: Feature.ADVANCED_ANALYTICS },
     { id: 'inventory', label: 'INVENTORY', icon: 'inventory', path: '/inventory', featureId: Feature.INVENTORY_MANAGEMENT },
+    
+    // Dealer Management Tier
+    { id: 'dealer-log', label: 'DEALER LOG', icon: 'car', path: '/dealer/sales-log', featureId: Feature.ORG_SETTINGS },
+    { id: 'dealer-managers', label: 'MANAGERS', icon: 'users', path: '/dealer/users?tab=managers', featureId: Feature.ORG_SETTINGS },
+    { id: 'dealer-permissions', label: 'PERMISSIONS', icon: 'shield', path: '/dealer/users?tab=permissions', featureId: Feature.ORG_SETTINGS },
+    { id: 'dealer-codes', label: 'INVITES / JOIN CODES', icon: 'userPlus', path: '/dealer/users?tab=codes', featureId: Feature.ORG_SETTINGS },
+    { id: 'dealer-builder', label: 'LOG BUILDER', icon: 'logBuilder', path: '/dealer/log-builder', featureId: Feature.ORG_SETTINGS },
+    { id: 'dealer-config', label: 'DEALER SETTINGS', icon: 'tuning', path: '/dealer/settings', featureId: Feature.ORG_SETTINGS },
+
     { id: 'settings', label: 'SETTINGS', icon: 'settings', path: '/settings' },
     { id: 'feedback', label: 'FEEDBACK', icon: 'feedback', path: '#feedback' },
   ],
@@ -31,9 +41,12 @@ export const navigationConfig = {
    * Filter items based on user profile and tier access rules.
    */
   getVisibleItems: (profile: UserProfile | null) => {
+    const isDeveloper = profile?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
+
     return navigationConfig.main.filter(item => {
       // Items without featureId (like Dashboard, Settings) are always visible
       if (!item.featureId) return true;
+      if (isDeveloper) return true;
       if (!profile) return false;
       
       const isFree = profile.subscriptionTier === SubscriptionTier.FREE;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Clock, Filter, Search } from 'lucide-react';
-import { DealerPageHeader } from '../dealer/DealerPageHeader';
+import { PageHeader } from '../ui/PageHeader';
 import { activityService } from '@/src/services/activityService';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { ActivityEvent } from '@/src/types';
@@ -40,7 +40,7 @@ export const ActivityFeed: React.FC = () => {
   return (
     <div className="space-y-8 h-full">
       {/* Header & Search */}
-      <DealerPageHeader
+      <PageHeader
         title="Activity Feed"
         subtitle="Org-wide transparency"
         icon={Activity}
@@ -54,7 +54,7 @@ export const ActivityFeed: React.FC = () => {
             className="pl-12 bg-white/[0.02] border-white/10 h-11"
           />
         </div>
-      </DealerPageHeader>
+      </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Main Feed */}

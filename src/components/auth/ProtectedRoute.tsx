@@ -19,7 +19,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { user, profile, loading, initialized, connectionError } = useAuth();
+  const { user, profile, loading, initialized, connectionError, isDeveloper } = useAuth();
   const location = useLocation();
 
   // Handle initialization and connection errors first
@@ -82,11 +82,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     return <VerificationRequired />;
   }
 
-  if (user.emailVerified && profile?.isFrozen && location.pathname.startsWith('/dealer')) {
+  if (user.emailVerified && profile?.isFrozen && location.pathname.startsWith('/dealer') && !isDeveloper) {
     return <Navigate to="/" replace />;
   }
 
-  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
+  if (allowedRoles && profile && !allowedRoles.includes(profile.role) && !isDeveloper) {
     // Role not authorized
     return (
       <div className="flex h-screen w-full items-center justify-center bg-bg-deep p-6 text-center">

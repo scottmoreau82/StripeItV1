@@ -23,6 +23,8 @@ import { UserProfile, UserRole, SubscriptionTier, IconTheme } from '@/src/types'
 import { useAuth } from '@/src/contexts/AuthContext';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { AppIcon } from '../ui/AppIcon';
+import { PageHeader } from '../ui/PageHeader';
+import { Settings } from 'lucide-react';
 
 import { DashboardLayout } from '../layout/DashboardLayout';
 
@@ -156,26 +158,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
   const [successMsg, setSuccessMsg] = useState('');
 
   const header = (
-    <div className={cn("flex flex-col", isMobile ? "gap-0.5" : "gap-2")}>
-      <Typography 
-        variant="h1" 
-        className={cn(
-          "text-white italic font-black uppercase tracking-tighter",
-          isMobile ? "text-xl" : "text-3xl"
-        )}
+    <PageHeader
+      title="Settings"
+      subtitle="Account oversight • system preferences"
+      icon={Settings}
+    >
+      <Button 
+        variant="outline" 
+        onClick={onLogout}
+        className="h-11 px-6 border-rose-500/10 bg-rose-500/5 hover:bg-rose-500 hover:text-white transition-all text-rose-500 font-black uppercase tracking-widest text-[10px] rounded-xl gap-2"
       >
-        Settings
-      </Typography>
-      <Typography 
-        variant="p" 
-        className={cn(
-          "text-slate-500 font-bold",
-          isMobile ? "text-[10px] uppercase tracking-widest opacity-60" : "text-sm"
-        )}
-      >
-        Manage your account and preferences
-      </Typography>
-    </div>
+        <LogOut size={16} />
+        Sign Out
+      </Button>
+    </PageHeader>
   );
 
   const mainContent = (
@@ -196,11 +192,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
         <JoinDealershipPanel profile={profile} isMobile={isMobile} />
       </section>
 
-      {profile?.role && [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN].includes(profile.role) && (
-        <section id="organization" className="scroll-mt-24">
-          <OrganizationPanel profile={profile} isMobile={isMobile} />
-        </section>
-      )}
+      <section id="membership" className="scroll-mt-24">
+        <MembershipPanel profile={profile} isMobile={isMobile} />
+      </section>
 
       {isAdmin && (
         <>
@@ -665,73 +659,87 @@ const AccountPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMo
   );
 };
 
-const OrganizationPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMobile?: boolean }) => {
+const MembershipPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMobile?: boolean }) => {
   const navigate = useNavigate();
+  if (!profile) return null;
+
+  const isFrozen = profile.isFrozen;
+  const isPreviouslyFrozen = !!profile.suspensionAcknowledgedAt;
+  const isManager = [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN, UserRole.DEALER_OWNER].includes(profile.role);
+  const isInDealerOrg = profile.subscriptionTier === SubscriptionTier.ORGANIZATION;
+
+  // If not a manager, not frozen, and not previously frozen, don't show the panel
+  // Unless they have an orgName that isn't Personal
+  const isPersonalOrg = profile.orgId?.startsWith('PERSONAL-');
+  
+  if (!isManager && !isFrozen && !isPreviouslyFrozen && isPersonalOrg) return null;
+
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
-      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Dealership / Org</Typography>
+      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>
+        {isFrozen || isPreviouslyFrozen ? 'Membership History' : 'Dealership / Org'}
+      </Typography>
       
       <Card className={cn("bg-bg-card/20 border-white/5", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
-        <div className={cn("flex items-center", isMobile ? "gap-4" : "gap-8")}>
+        <div className={cn("flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8")}>
           <div className={cn("rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0", isMobile ? "h-12 w-12" : "h-20 w-20 rounded-3xl")}>
             <Building2 className={cn("text-slate-400", isMobile ? "h-6 w-6" : "h-10 w-10")} />
           </div>
-          <div className="space-y-0.5 min-w-0">
-            <Typography variant="h2" className={cn("text-white leading-none truncate font-black italic uppercase", isMobile ? "text-lg" : "text-3xl")}>{profile?.orgName || 'Highline Motors'}</Typography>
-            <Typography variant="p" className={cn("text-slate-500 font-bold truncate", isMobile ? "text-[11px]" : "")}>Organization Member Since 2024</Typography>
-            <div className="inline-flex mt-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest text-emerald-400">
-              Verified Partner
+          <div className="space-y-1 min-w-0 flex-1">
+            <Typography variant="h2" className={cn("text-white leading-none truncate font-black italic uppercase", isMobile ? "text-lg" : "text-3xl")}>
+              {profile.orgName || (isPersonalOrg ? 'Personal Workspace' : 'Dealership Partner')}
+            </Typography>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <div className={cn(
+                "px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border",
+                isFrozen ? "bg-rose-500/10 border-rose-500/20 text-rose-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+              )}>
+                {isFrozen ? 'Suspended' : 'Active Member'}
+              </div>
+              <div className="px-2.5 py-0.5 rounded-full bg-white/5 border border-white/5 text-[8px] font-black uppercase tracking-widest text-slate-500">
+                Tier: {profile.subscriptionTier.toUpperCase()}
+              </div>
+              {profile.suspensionAcknowledgedAt && (
+                <div className="px-2.5 py-0.5 rounded-full bg-white/5 border border-white/5 text-[8px] font-black uppercase tracking-widest text-slate-500">
+                  Ack: {new Date(profile.suspensionAcknowledgedAt).toLocaleDateString()}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className={cn("grid grid-cols-1 md:grid-cols-2 pt-6 border-t border-white/5", isMobile ? "gap-4" : "gap-6")}>
-          <div className="space-y-1.5">
-            <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Organization ID</Typography>
-            <Input defaultValue={profile?.orgId} disabled className="bg-white/[0.02] font-mono text-[10px] opacity-20 h-10 truncate border-white/5 cursor-not-allowed" />
+        {(isFrozen || isPreviouslyFrozen) && (
+          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
+            <Typography variant="label" className="text-slate-500 text-[9px] uppercase font-black tracking-widest block">System Status Note</Typography>
+            <Typography variant="p" className="text-slate-400 text-xs leading-relaxed">
+              Your connection to <span className="text-white font-bold">{profile.orgName || 'your dealership'}</span> is currently <span className="text-rose-400 font-bold">inactive</span>. 
+              You have been reverted to your personal StripeIt toolkit to ensure continuous operation of your individual deal logging and commissions.
+            </Typography>
           </div>
-          <div className="space-y-1.5">
-            <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Status</Typography>
-             <div className={cn(
-               "h-10 px-4 rounded-xl border flex items-center gap-2", 
-               profile?.isFrozen ? "bg-rose-500/5 border-rose-500/20" : "bg-white/[0.02] border-white/5"
-             )}>
-                <div className={cn(
-                  "h-2 w-2 rounded-full", 
-                  profile?.isFrozen ? "bg-rose-500 animate-pulse" : "bg-emerald-500 animate-pulse"
-                )} />
-                <Typography variant="mono" className={cn(
-                  "text-[10px] font-black uppercase tracking-widest", 
-                  profile?.isFrozen ? "text-rose-500" : "text-emerald-500"
-                )}>
-                  {profile?.isFrozen ? 'Suspended / Frozen' : 'Active System'}
-                </Typography>
-             </div>
-          </div>
-        </div>
+        )}
 
-        {(profile?.role === UserRole.ADMIN || profile?.role === UserRole.GENERAL_MANAGER || profile?.role === UserRole.DEALER_OWNER) && !profile?.isFrozen && (
-          <div className={cn("pt-6 space-y-4", isMobile ? "pt-4" : "")}>
+        {isManager && !isFrozen && (
+          <div className={cn("pt-6 space-y-4 border-t border-white/5", isMobile ? "pt-4" : "")}>
             <Typography variant="label" className="text-brand-primary block uppercase tracking-widest text-[9px] font-black">Management Controls</Typography>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Button 
                 variant="secondary" 
                 className={cn("w-full bg-brand-primary text-bg-deep border-none font-black uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
-                onClick={() => navigate(profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? '/dealer/users' : '/admin/users')}
+                onClick={() => navigate(isInDealerOrg ? '/dealer/users' : '/admin/users')}
               >
                 Manage Team
               </Button>
               <Button 
                 variant="secondary" 
                 className={cn("w-full bg-white/5 border-white/10 text-white font-bold uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
-                onClick={() => navigate(profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? '/dealer/settings' : '/settings')}
+                onClick={() => navigate(isInDealerOrg ? '/dealer/settings' : '/settings')}
               >
                 Org Settings
               </Button>
               <Button 
                 variant="secondary" 
                 className={cn("w-full bg-white/5 border-white/10 text-white font-bold uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
-                onClick={() => navigate(profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? '/dealer/log-builder' : '/')}
+                onClick={() => navigate(isInDealerOrg ? '/dealer/log-builder' : '/')}
               >
                 Log Builder
               </Button>
@@ -742,3 +750,4 @@ const OrganizationPanel = ({ profile, isMobile }: { profile: UserProfile | null,
     </div>
   );
 };
+

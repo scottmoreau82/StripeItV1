@@ -45,7 +45,10 @@ import {
   Snowflake
 } from 'lucide-react';
 
+import { AppIcon } from '../ui/AppIcon';
 import { DealerDashboard } from '../dealer/DealerDashboard';
+import { PageHeader } from '../ui/PageHeader';
+import { LayoutGrid } from 'lucide-react';
 
 /**
  * StripeItDashboardMetricSystem
@@ -74,17 +77,29 @@ export const HomeView: React.FC<HomeViewProps> = ({
     handleDeleteNote 
   } = useAppData();
   
-  const { profile } = useAuth();
+  const { profile, updateProfileData, isDeveloper } = useAuth();
   const { isMobile } = useResponsive();
 
   const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
   const isDealer = profile?.subscriptionTier === SubscriptionTier.ORGANIZATION;
-  const isFrozen = profile?.isFrozen;
+  const isFrozen = profile?.isFrozen && !profile?.suspensionAcknowledgedAt && !isDeveloper;
 
   const [showMetrics, setShowMetrics] = useState(!isMobile);
   const [activeTab, setActiveTab] = useState<'overview' | 'trends'>('overview');
   const [selectedCompId, setSelectedCompId] = useState<string | null>(null);
   const [isCustomizing, setIsCustomizing] = useState(false);
+  const [showSuspensionDetails, setShowSuspensionDetails] = useState(false);
+
+  const handleAcknowledgeSuspension = async () => {
+    try {
+      await updateProfileData({
+        suspensionAcknowledgedAt: Date.now()
+      });
+      setShowSuspensionDetails(false);
+    } catch (error) {
+      console.error("Failed to acknowledge suspension:", error);
+    }
+  };
 
   // If Dealer, return specific Dealer Dashboard
   if (isDealer) {
@@ -132,40 +147,58 @@ export const HomeView: React.FC<HomeViewProps> = ({
   };
 
   const header = (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {isFrozen && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 flex items-center justify-between gap-4"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0">
-              <Snowflake size={14} className="text-rose-500 animate-pulse" />
-            </div>
-            <div>
-              <Typography variant="label" className="text-rose-400 font-black uppercase text-[10px] tracking-widest block">Dealership Access Suspended</Typography>
-              <Typography variant="p" className="text-slate-400 text-[11px] font-medium leading-tight">Your organizational membership is currently frozen. You have been reverted to your personal StripeIt toolkit.</Typography>
-            </div>
-          </div>
-          <Button variant="ghost" className="h-8 px-4 text-slate-500 hover:text-white uppercase font-black tracking-widest text-[9px] border-white/5" onClick={() => window.location.hash = '#settings'}>View Details</Button>
-        </motion.div>
+        <AnimatePresence mode="wait">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-8"
+          >
+            <Card className="bg-rose-950/20 backdrop-blur-xl border-rose-500/20 p-4 border-l-4 border-l-rose-600/80 shadow-glow glow-rose/5 relative overflow-hidden group transition-all duration-500">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
+                    <Snowflake size={18} className="text-rose-500 animate-pulse" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                       <Typography variant="label" className="text-rose-500 font-black uppercase text-[10px] tracking-widest block">Operational Suspension</Typography>
+                       <span className="h-1 w-1 rounded-full bg-rose-500/30" />
+                       <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-bold tracking-widest leading-none">Status: Frozen</Typography>
+                    </div>
+                    <Typography variant="p" className="text-slate-400 text-[11px] font-medium leading-tight">
+                      Dealership connection restricted. Operating on personal toolkit.
+                    </Typography>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="ghost" 
+                    className="h-9 px-4 text-slate-500 hover:text-white uppercase font-black tracking-widest text-[9px] border-white/5 hover:bg-white/5" 
+                    onClick={() => setShowSuspensionDetails(true)}
+                  >
+                    View Details
+                  </Button>
+                  <Button 
+                    onClick={handleAcknowledgeSuspension}
+                    className="h-9 px-6 bg-rose-600/10 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-500/20 font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95"
+                  >
+                    Acknowledge
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        </AnimatePresence>
       )}
 
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-0.5 lg:gap-6">
-        <div className="flex-1">
-          <div className="flex flex-col sm:flex-row gap-0.5 lg:gap-3 mb-0 lg:mb-1">
-            <Typography variant="h1" className="italic text-[20px] sm:text-[36px] font-bold md:font-black leading-none tracking-tighter opacity-90">
-              Performance Overview
-            </Typography>
-          </div>
-          {!isMobile && (
-            <Typography variant="p" className="text-slate-500 max-w-xs font-semibold leading-tight text-sm sm:text-lg">
-              {profile?.dealershipId ? "Tracking dealership gross analytics" : "Real-time tracking system"}
-            </Typography>
-          )}
-        </div>
-        
+      <PageHeader
+        title="Performance Overview"
+        subtitle={`${profile?.displayName || 'Personal'} • ${profile?.subscriptionTier.toUpperCase() || 'FREE'} Tooling Activity`}
+        icon={LayoutGrid}
+      >
         <div className="flex items-center gap-3">
           {hasCustomizationAccess && (
             <div className="relative group">
@@ -183,8 +216,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
               />
             </div>
           )}
+
+          <Button
+            onClick={onLogDeal}
+            className="h-11 px-6 bg-brand-primary text-bg-deep shadow-glow glow-primary transition-all font-black uppercase tracking-widest text-[11px] rounded-xl hover:scale-105 active:scale-95"
+          >
+            <Plus size={16} className="mr-2" />
+            New Deal
+          </Button>
         </div>
-      </div>
+      </PageHeader>
     </div>
   );
 
@@ -426,6 +467,62 @@ export const HomeView: React.FC<HomeViewProps> = ({
       />
 
       <AnimatePresence>
+        {showSuspensionDetails && (
+          <Modal
+            isOpen={showSuspensionDetails}
+            onClose={() => setShowSuspensionDetails(false)}
+            title="Dealership Access Details"
+          >
+            <div className="space-y-6 py-4">
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10">
+                <div className="h-12 w-12 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
+                  <Snowflake className="text-rose-500 h-6 w-6" />
+                </div>
+                <div>
+                  <Typography variant="label" className="text-rose-400 font-black uppercase text-[10px] tracking-widest block">Membership Status</Typography>
+                  <Typography variant="h3" className="italic font-black uppercase tracking-tighter text-white">Frozen / Suspended</Typography>
+                </div>
+              </div>
+
+              <div className="space-y-4 px-2">
+                <div className="space-y-2">
+                  <Typography variant="label" className="text-slate-500 text-[9px] uppercase font-black tracking-widest">What this means</Typography>
+                  <Typography variant="p" className="text-slate-400 text-sm leading-relaxed">
+                    Your account has been placed in a "Frozen" state by the <span className="text-white font-bold">{profile?.orgName || 'Dealership'}</span> administration. 
+                    This typically occurs when a manager leaves an organization or during administrative audits.
+                  </Typography>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                    <Typography variant="label" className="text-brand-primary text-[8px] uppercase font-black tracking-widest block mb-1">Personal Toolkit</Typography>
+                    <Typography variant="mono" className="text-emerald-500 text-[10px] font-black">Active</Typography>
+                    <Typography variant="p" className="text-[10px] text-zinc-500 mt-2">All personal deals and data remain fully accessible.</Typography>
+                  </div>
+                  <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                    <Typography variant="label" className="text-slate-500 text-[8px] uppercase font-black tracking-widest block mb-1">Dealership Logs</Typography>
+                    <Typography variant="mono" className="text-rose-500 text-[10px] font-black">Revoked</Typography>
+                    <Typography variant="p" className="text-[10px] text-zinc-500 mt-2">Access to organizational logs and reports is restricted.</Typography>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
+                   <Typography variant="label" className="text-slate-500 text-[9px] uppercase font-black tracking-widest block">Next Steps</Typography>
+                   <Typography variant="p" className="text-slate-500 text-xs italic">
+                     If you believe this is an error, please contact your Dealership Administrator or General Manager.
+                   </Typography>
+                </div>
+              </div>
+
+              <div className="pt-4 px-2">
+                <Button variant="outline" className="w-full h-12 uppercase font-black tracking-widest border-white/10" onClick={handleAcknowledgeSuspension}>
+                  Acknowledged
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
         {selectedCompId && selectedComp && (
            isMobile ? (
             <FullscreenMobileFlow

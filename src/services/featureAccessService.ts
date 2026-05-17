@@ -1,9 +1,14 @@
 import { UserProfile, SubscriptionTier, UserRole } from '../types';
+import { STRIPEIT_DEVELOPER_EMAIL } from '../constants';
 
 /**
  * StripeItFeatureAccessSystem
  * Centralized logic for determining if a feature is available to a user.
  */
+
+const isDeveloper = (profile: UserProfile | null) => {
+  return profile?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
+};
 
 export enum Feature {
   GOALS = 'goals',
@@ -27,6 +32,7 @@ export const featureAccessService = {
    */
   hasAccess: (profile: UserProfile | null, feature: Feature): boolean => {
     if (!profile) return false;
+    if (isDeveloper(profile)) return true;
 
     const tier = profile.subscriptionTier;
     const role = profile.role;

@@ -10,17 +10,24 @@ import { AppIcon } from '../ui/AppIcon';
 import { Button } from '../ui/Button';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { LayoutGrid, ClipboardList, TrendingUp } from 'lucide-react';
-import { DealerPageHeader } from './DealerPageHeader';
+import { LayoutGrid, ClipboardList, TrendingUp, Snowflake, Info, ShieldAlert } from 'lucide-react';
+import { PageHeader } from '../ui/PageHeader';
 
 export const DealerDashboard: React.FC = () => {
-  const { profile } = useAuth();
+  const { profile, isDeveloper, updateProfileData } = useAuth();
   const [recentDeals, setRecentDeals] = useState<DealerDeal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAcknowledging, setIsAcknowledging] = useState(false);
+
+  const isFrozen = profile?.isFrozen && !isDeveloper;
+  const isAwaitingAcknowledge = isFrozen && !profile?.suspensionAcknowledgedAt;
 
   useEffect(() => {
     const fetchRecent = async () => {
-      if (!profile?.orgId) return;
+      if (!profile?.orgId || isFrozen) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const data = await dealerService.getDeals(profile.orgId, 5);
         setRecentDeals(data);
@@ -31,10 +38,94 @@ export const DealerDashboard: React.FC = () => {
       }
     };
     fetchRecent();
-  }, [profile?.orgId]);
+  }, [profile?.orgId, isFrozen]);
+
+  const handleAcknowledge = async () => {
+    setIsAcknowledging(true);
+    try {
+      await updateProfileData({
+        suspensionAcknowledgedAt: Date.now()
+      });
+    } catch (error) {
+      console.error("Failed to acknowledge suspension:", error);
+    } finally {
+      setIsAcknowledging(false);
+    }
+  };
+
+  if (isFrozen) {
+    return (
+      <DashboardLayout
+        header={
+          <PageHeader
+            title="Access Restricted"
+            subtitle="Dealership Operational Suspension"
+            icon={Snowflake}
+            iconColor="bg-rose-500/20 text-rose-500"
+          />
+        }
+        main={
+          <div className="flex flex-col items-center justify-center py-20 px-6 max-w-2xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+             <div className="relative">
+                <div className="h-24 w-24 rounded-3xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shadow-glow glow-rose/20">
+                   <Snowflake size={48} className="text-rose-500 animate-pulse" />
+                </div>
+                <div className="absolute -top-2 -right-2 bg-rose-600 rounded-full p-1.5 border-4 border-bg-deep">
+                   <ShieldAlert size={16} className="text-white" />
+                </div>
+             </div>
+
+             <div className="space-y-4">
+                <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-3xl">Account Suspended</Typography>
+                <Typography variant="p" className="text-slate-400 text-lg leading-relaxed">
+                   Your organizational access to <span className="text-white font-bold">{profile?.orgName || 'the dealership'}</span> has been frozen by an administrator.
+                </Typography>
+                <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-left space-y-4">
+                   <div className="flex gap-3">
+                      <div className="h-5 w-5 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                         <Info size={12} className="text-indigo-400" />
+                      </div>
+                      <Typography variant="p" className="text-[13px] text-slate-400">
+                         All operational logs, reporting, and KPI dashboards are restricted until account reactivation.
+                      </Typography>
+                   </div>
+                   <div className="flex gap-3">
+                      <div className="h-5 w-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                         <Info size={12} className="text-emerald-400" />
+                      </div>
+                      <Typography variant="p" className="text-[13px] text-slate-400">
+                         Your personal toolkit and historical data remain preserved and accessible via your personal workspace.
+                      </Typography>
+                   </div>
+                </div>
+             </div>
+
+             <div className="flex flex-col sm:flex-row gap-4 w-full pt-4">
+                <Button 
+                   className="flex-1 h-12 bg-rose-600 hover:bg-rose-500 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-glow glow-rose/30 transition-all active:scale-95"
+                   onClick={handleAcknowledge}
+                   isLoading={isAcknowledging}
+                >
+                   {isAwaitingAcknowledge ? 'Acknowledge & Sync' : 'Status Acknowledged'}
+                </Button>
+                <Link to="/settings" className="flex-1">
+                   <Button variant="outline" className="w-full h-12 border-white/10 hover:bg-white/5 text-slate-400 font-black uppercase tracking-widest text-xs rounded-xl">
+                      Account Settings
+                   </Button>
+                </Link>
+             </div>
+
+             <Typography variant="mono" className="text-[10px] text-slate-600 uppercase tracking-[0.2em] pt-8">
+                System Logic Version: 4.2.1-SECURE
+             </Typography>
+          </div>
+        }
+      />
+    );
+  }
 
   const header = (
-    <DealerPageHeader
+    <PageHeader
       title="Dealer Dashboard"
       subtitle={`${profile?.orgName || 'StripeIt Dealership'} • Total Operational Oversight`}
       icon={LayoutGrid}
@@ -45,7 +136,7 @@ export const DealerDashboard: React.FC = () => {
           Full Sales Log
         </Button>
       </Link>
-    </DealerPageHeader>
+    </PageHeader>
   );
 
   const mainContent = (

@@ -99,14 +99,19 @@ export const ReportView: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-4xl">
-            Reports & Export
-          </Typography>
-          <Typography variant="p" className="text-slate-500 font-medium">
-            Generate dealership performance summaries and portable deal logs.
-          </Typography>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
+            <PieChart className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
+          </div>
+          <div className="space-y-1">
+            <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
+              Reports & Export
+            </Typography>
+            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
+              Performance summaries • data portability
+            </Typography>
+          </div>
         </div>
         
         <div className="flex items-center gap-3">

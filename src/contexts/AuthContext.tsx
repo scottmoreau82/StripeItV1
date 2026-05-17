@@ -214,20 +214,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const { writeBatch, serverTimestamp, getDoc: getDocDirect } = await import('firebase/firestore');
               const { UserRole, SubscriptionTier, IconTheme, InviteStatus } = await import('../types');
               
-              // Check for invite in session
-              const inviteId = sessionStorage.getItem('stripeit_invite_id');
-              const inviteToken = sessionStorage.getItem('stripeit_invite_token');
-              let inviteData = null;
-
-              if (inviteId && inviteToken) {
-                const inviteSnap = await getDocDirect(doc(db, 'invites', inviteId));
-                if (inviteSnap.exists()) {
-                  const data = inviteSnap.data();
-                  if (data.token === inviteToken && data.status === InviteStatus.PENDING && data.email.toLowerCase() === firebaseUser.email?.toLowerCase()) {
-                    inviteData = data;
-                  }
-                }
-              }
+              // Check for invite in session (LEGACY REMOVED)
+              const inviteData = null;
 
               const batch = writeBatch(db);
               let orgId = '';
@@ -285,23 +273,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
               };
 
-              // Add invite fields for security rule satisfaction
-              if (inviteId && inviteToken) {
-                userProfileData.inviteId = inviteId;
-                userProfileData.inviteToken = inviteToken;
-              }
-
               batch.set(userDocRef, userProfileData);
               
               await batch.commit();
-
-              // Mark invite as accepted if applicable
-              if (inviteId) {
-                const { inviteService } = await import('../services/inviteService');
-                await inviteService.acceptInvite(inviteId);
-                sessionStorage.removeItem('stripeit_invite_id');
-                sessionStorage.removeItem('stripeit_invite_token');
-              }
 
               analyticsService.trackEvent(AnalyticsEventType.SIGNUP_COMPLETED, { email: firebaseUser.email });
             } catch (err) {

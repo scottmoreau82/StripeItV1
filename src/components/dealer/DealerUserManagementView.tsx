@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { userService } from '@/src/services/userService';
-import { UserProfile, UserRole } from '@/src/types';
+import { UserProfile, UserRole, DealerJoinCode, JoinCodeStatus } from '@/src/types';
 import { DashboardLayout } from '../layout/DashboardLayout';
 import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
-import { AppIcon } from '../ui/AppIcon';
+import { joinCodeService } from '@/src/services/joinCodeService';
 import { 
   Users, 
   Shield, 
@@ -23,12 +23,16 @@ import {
   Lock,
   History,
   Zap,
-  Users2
+  Users2,
+  Key,
+  Archive,
+  ExternalLink
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { DealerInviteManagerModal } from './DealerInviteManagerModal';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DealerPageHeader } from './DealerPageHeader';
+import { format } from 'date-fns';
 
 /**
  * DealerUserManagementView
@@ -42,6 +46,7 @@ export const DealerUserManagementView: React.FC = () => {
   const activeTab = queryParams.get('tab') || 'managers';
 
   const [managers, setManagers] = useState<UserProfile[]>([]);
+  const [joinCodes, setJoinCodes] = useState<DealerJoinCode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -52,12 +57,29 @@ export const DealerUserManagementView: React.FC = () => {
     setIsLoading(true);
     try {
       const allUsers = await userService.getUsers(profile.orgId);
-      const managerUsers = allUsers.filter(u => 
-        (u.role === UserRole.MANAGER || u.role === UserRole.GENERAL_MANAGER) && 
-        !u.isDeleted &&
-        u.uid !== profile.uid
+      
+      // Identity deduplication to ensure clean organizational view
+      const identityMap = new Map<string, UserProfile>();
+      allUsers.forEach(u => {
+        const key = u.uid || u.email?.toLowerCase() || Math.random().toString();
+        const existing = identityMap.get(key);
+        // Conflict Resolution: Prefer records with timestamps or higher information density
+        if (!existing || (Number(u.updatedAt || 0) > Number(existing.updatedAt || 0))) {
+          identityMap.set(key, u);
+        }
+      });
+
+      const uniqueUsers = Array.from(identityMap.values());
+
+      // Broadened role check to ensure all organizational management entities are visible
+      const managerUsers = uniqueUsers.filter(u => 
+        (u.role === UserRole.MANAGER || 
+         u.role === UserRole.GENERAL_MANAGER || 
+         u.role === UserRole.DEALER_OWNER || 
+         u.role === UserRole.ADMIN) && 
+        !u.isDeleted
       );
-      setManagers(managerUsers);
+      setManagers(managerUsers.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')));
     } catch (error) {
       addToast('Failed to load managers', 'error');
     } finally {
@@ -65,9 +87,22 @@ export const DealerUserManagementView: React.FC = () => {
     }
   };
 
+  const fetchJoinCodes = async () => {
+    if (!profile?.orgId) return;
+    try {
+      const codes = await joinCodeService.getJoinCodes(profile.orgId);
+      setJoinCodes(codes.sort((a, b) => b.createdAt - a.createdAt));
+    } catch (error) {
+      console.error("Error fetching codes:", error);
+    }
+  };
+
   useEffect(() => {
     fetchManagers();
-  }, [profile?.orgId]);
+    if (activeTab === 'codes') {
+      fetchJoinCodes();
+    }
+  }, [profile?.orgId, activeTab]);
 
   const handleTabChange = (tab: string) => {
     if (tab === 'managers') {
@@ -78,31 +113,59 @@ export const DealerUserManagementView: React.FC = () => {
   };
 
   const handleToggleFreeze = async (user: UserProfile) => {
+    if (user.uid === profile?.uid) {
+      addToast("You cannot freeze your own account.", "error");
+      return;
+    }
+    
+    // Prevent subordinates from freezing Dealer Owners
+    if (user.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER) {
+      addToast("Only a Dealer Owner can modify another Owner's status.", "error");
+      return;
+    }
+
     setActionInProgress(user.uid);
     try {
       const newStatus = !user.isFrozen;
       await userService.setUserFrozen(user.uid, newStatus);
       addToast(`Manager account ${newStatus ? 'frozen' : 'unfrozen'} successfully`, 'success');
       setManagers(prev => prev.map(u => u.uid === user.uid ? { ...u, isFrozen: newStatus } : u));
-    } catch (error) {
-      addToast('Failed to update account status', 'error');
+    } catch (error: any) {
+      const message = error?.message?.includes('permission-denied') 
+        ? 'Insufficient permissions to modify this account.'
+        : 'Unable to update manager status. Please try again.';
+      addToast(message, 'error');
     } finally {
       setActionInProgress(null);
     }
   };
 
   const handleDelete = async (user: UserProfile) => {
-    if (!window.confirm(`Are you sure you want to remove ${user.displayName || user.email} from the organization? This will revoke their access immediately.`)) {
+    if (user.uid === profile?.uid) {
+      addToast("You cannot remove your own account from the organization here.", "error");
+      return;
+    }
+
+    // Prevent subordinates from removing Dealer Owners
+    if (user.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER) {
+      addToast("Only a Dealer Owner can remove another Owner from the organization.", "error");
+      return;
+    }
+
+    if (!window.confirm(`Remove ${user.displayName || user.email} from organization? Their access will be revoked immediately, but their personal account will be preserved.`)) {
       return;
     }
 
     setActionInProgress(user.uid);
     try {
       await userService.deleteUser(user.uid);
-      addToast('Manager removed successfully', 'success');
+      addToast('Manager removed from organization successfully', 'success');
       setManagers(prev => prev.filter(u => u.uid !== user.uid));
-    } catch (error) {
-      addToast('Failed to remove manager', 'error');
+    } catch (error: any) {
+      const message = error?.message?.includes('permission-denied')
+        ? 'You do not have permission to remove this manager.'
+        : 'Manager membership could not be updated.';
+      addToast(message, 'error');
     } finally {
       setActionInProgress(null);
     }
@@ -135,7 +198,7 @@ export const DealerUserManagementView: React.FC = () => {
         {[
           { id: 'managers', label: 'Managers', icon: Users },
           { id: 'permissions', label: 'Permissions', icon: Lock },
-          { id: 'invites', label: 'Pending Invites', icon: Mail },
+          { id: 'codes', label: 'Join Codes', icon: Key },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -209,7 +272,7 @@ export const DealerUserManagementView: React.FC = () => {
                          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Identity</Typography>
                       </th>
                       <th className="px-6 py-4">
-                         <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Role & Access</Typography>
+                         <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Role & Department</Typography>
                       </th>
                       <th className="px-6 py-4">
                          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Status</Typography>
@@ -264,15 +327,23 @@ export const DealerUserManagementView: React.FC = () => {
                                </div>
                             </td>
                             <td className="px-6 py-5">
-                               <Badge 
-                                  variant="outline" 
-                                  className={cn(
-                                     "text-[9px] font-black uppercase tracking-widest border-white/10",
-                                     manager.role === UserRole.GENERAL_MANAGER ? "text-indigo-400" : "text-slate-400"
+                                <div className="flex flex-col gap-1">
+                                  <Badge 
+                                     variant="outline" 
+                                     className={cn(
+                                        "text-[9px] font-black uppercase tracking-widest border-white/10 w-fit",
+                                        manager.role === UserRole.GENERAL_MANAGER || manager.role === UserRole.DEALER_OWNER ? "text-indigo-400" : "text-slate-400"
+                                     )}
+                                  >
+                                     {manager.role === UserRole.DEALER_OWNER ? 'Dealer Owner' : 
+                                      manager.role === UserRole.GENERAL_MANAGER ? 'General Manager' : 'Manager'}
+                                  </Badge>
+                                  {manager.department && (
+                                    <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-tighter">
+                                      {manager.department} Dept
+                                    </Typography>
                                   )}
-                               >
-                                  {manager.role === UserRole.GENERAL_MANAGER ? 'General Manager' : 'Manager'}
-                               </Badge>
+                                </div>
                             </td>
                             <td className="px-6 py-5">
                                {manager.isFrozen ? (
@@ -306,17 +377,20 @@ export const DealerUserManagementView: React.FC = () => {
                                </div>
                             </td>
                             <td className="px-6 py-5 text-right">
-                               <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                               <div className="flex items-center justify-end gap-2 transition-all">
                                   <Button 
                                      variant="ghost" 
                                      size="sm"
                                      onClick={() => handleToggleFreeze(manager)}
-                                     disabled={actionInProgress === manager.uid}
+                                     disabled={actionInProgress === manager.uid || manager.uid === profile?.uid || (manager.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER)}
                                      className={cn(
-                                        "h-9 w-9 p-0 rounded-xl",
-                                        manager.isFrozen ? "text-emerald-500 hover:bg-emerald-500/10" : "text-blue-400 hover:bg-blue-400/10"
+                                        "h-9 w-9 p-0 rounded-xl transition-all border border-transparent hover:border-white/10",
+                                        (manager.uid === profile?.uid || (manager.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER)) ? "opacity-20 cursor-not-allowed" : "",
+                                        manager.isFrozen 
+                                          ? "text-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10 shadow-glow-sm glow-emerald" 
+                                          : "text-blue-400 bg-blue-400/5 hover:bg-blue-400/10 shadow-glow-sm glow-blue"
                                      )}
-                                     title={manager.isFrozen ? "Unfreeze Account" : "Freeze Account"}
+                                     title={manager.uid === profile?.uid ? "Cannot freeze self" : (manager.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER) ? "Only an Owner can freeze an Owner" : manager.isFrozen ? "Unfreeze Account" : "Freeze Account"}
                                   >
                                      <Snowflake size={16} className={cn(manager.isFrozen && "animate-pulse")} />
                                   </Button>
@@ -324,18 +398,14 @@ export const DealerUserManagementView: React.FC = () => {
                                      variant="ghost" 
                                      size="sm"
                                      onClick={() => handleDelete(manager)}
-                                     disabled={actionInProgress === manager.uid}
-                                     className="h-9 w-9 p-0 rounded-xl text-rose-500 hover:bg-rose-500/10"
-                                     title="Delete Account"
+                                     disabled={actionInProgress === manager.uid || manager.uid === profile?.uid || (manager.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER)}
+                                     className={cn(
+                                       "h-9 w-9 p-0 rounded-xl text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all shadow-glow-sm glow-rose",
+                                       (manager.uid === profile?.uid || (manager.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER)) ? "opacity-20 cursor-not-allowed" : ""
+                                     )}
+                                     title={manager.uid === profile?.uid ? "Cannot remove self" : (manager.role === UserRole.DEALER_OWNER && profile?.role !== UserRole.DEALER_OWNER) ? "Only an Owner can remove an Owner" : "Remove Manager from Organization"}
                                   >
                                      <Trash2 size={16} />
-                                  </Button>
-                                  <Button 
-                                     variant="ghost" 
-                                     size="sm"
-                                     className="h-9 w-9 p-0 rounded-xl text-slate-500"
-                                  >
-                                     <MoreVertical size={16} />
                                   </Button>
                                 </div>
                             </td>
@@ -384,36 +454,68 @@ export const DealerUserManagementView: React.FC = () => {
     </div>
   );
 
-  const renderInvitesContent = () => (
+  const renderCodesContent = () => (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <Card className="bg-bg-card/20 border-white/5 overflow-hidden">
-        <div className="p-20 text-center">
-          <div className="h-16 w-16 bg-slate-800 rounded-full flex items-center justify-center border border-white/10 mx-auto mb-6">
-            <Mail className="h-8 w-8 text-slate-500" />
-          </div>
-          <Typography variant="h3" className="text-white font-black italic uppercase mb-2">No Pending Invites</Typography>
-          <Typography variant="p" className="text-slate-500 text-sm max-w-md mx-auto">
-            All organizational invitations have been resolved or accepted. Use the button above to invite new managers.
-          </Typography>
-          <Button 
-            onClick={() => setIsInviteModalOpen(true)}
-            className="mt-8 bg-brand-primary h-11 px-8 font-black uppercase tracking-widest text-[10px] shadow-glow glow-primary"
-          >
-            Invite Now
-          </Button>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-white/5 bg-white/[0.01]">
+                <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Join Code</Typography></th>
+                <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Department</Typography></th>
+                <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Usage</Typography></th>
+                <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Status</Typography></th>
+                <th className="px-6 py-4 text-right"><Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Expiration</Typography></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5 text-xs">
+              {joinCodes.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-20 text-center">
+                    <Key className="h-10 w-10 text-slate-700 mx-auto mb-4" />
+                    <Typography variant="p" className="text-slate-500">No active join codes found.</Typography>
+                  </td>
+                </tr>
+              ) : (
+                joinCodes.map(code => {
+                  const isExpired = code.expiresAt < Date.now();
+                  const isActive = code.status === JoinCodeStatus.ACTIVE && !isExpired;
+                  return (
+                    <tr key={code.id} className="hover:bg-white/[0.01] transition-colors group">
+                      <td className="px-6 py-4 font-mono font-black text-brand-primary text-sm tracking-widest">{code.code}</td>
+                      <td className="px-6 py-4 text-white font-bold">{code.department}</td>
+                      <td className="px-6 py-4 text-slate-400">
+                        {code.usedCount} / {code.maxUses}
+                        {code.usedBy.length > 0 && (
+                          <div className="text-[9px] text-slate-600 mt-1">
+                            Redeemed by {code.usedBy.length} user{code.usedBy.length > 1 ? 's' : ''}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant="outline" className={cn(
+                          "text-[9px] font-black uppercase tracking-widest",
+                          isActive ? "text-emerald-500 border-emerald-500/20" : "text-rose-500 border-rose-500/20"
+                        )}>
+                          {isActive ? 'Active' : isExpired ? 'Expired' : code.status}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-right text-slate-500 font-mono">
+                        {format(code.expiresAt, 'MMM d, yyyy')}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
-      
-      <Card className="p-8 bg-white/[0.01] border border-white/5 rounded-3xl">
-        <div className="flex items-center gap-4">
-          <div className="h-10 w-10 bg-white/5 rounded-xl flex items-center justify-center">
-            <History size={20} className="text-slate-500" />
-          </div>
-          <div>
-             <Typography variant="label" className="text-slate-400 uppercase text-[11px] font-black tracking-widest">Audit Log</Typography>
-             <Typography variant="p" className="text-slate-600 text-xs">Last organization invite was sent 4 days ago to dealer@example.com</Typography>
-          </div>
-        </div>
+
+      <Card className="p-8 bg-white/[0.01] border border-dashed border-white/10 rounded-3xl">
+        <Typography variant="p" className="text-slate-500 text-xs italic text-center">
+          Join codes allow managers to join your organization using their own accounts. Existing email invitations are no longer supported.
+        </Typography>
       </Card>
     </div>
   );
@@ -421,7 +523,7 @@ export const DealerUserManagementView: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'permissions': return renderPermissionsContent();
-      case 'invites': return renderInvitesContent();
+      case 'codes': return renderCodesContent();
       default: return renderManagersContent();
     }
   };

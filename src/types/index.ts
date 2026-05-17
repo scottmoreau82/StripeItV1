@@ -82,6 +82,8 @@ export interface UserProfile {
   role: UserRole;
   dealershipId: string;
   orgId: string;
+  orgName?: string;
+  department?: 'Retail' | 'Internet';
   photoURL?: string;
   subscriptionTier: SubscriptionTier;
   isAdmin?: boolean;
@@ -584,6 +586,30 @@ export interface DealerAccessRequest {
   updatedAt: number;
   reviewedAt?: number;
   reviewedBy?: string;
+}
+
+export enum JoinCodeStatus {
+  ACTIVE = 'active',
+  USED = 'used',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled'
+}
+
+export interface DealerJoinCode {
+  id: string;
+  code: string;
+  organizationId: string;
+  dealerName: string;
+  dealerDomain?: string;
+  createdBy: string;
+  createdAt: number;
+  expiresAt: number;
+  maxUses: number;
+  usedCount: number;
+  usedBy: string[]; // List of UIDs who used it
+  status: JoinCodeStatus;
+  department: 'Retail' | 'Internet';
+  permissionsTemplate?: string;
 }
 
 export interface Invite {

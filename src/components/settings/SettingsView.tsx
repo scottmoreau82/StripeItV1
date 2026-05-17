@@ -192,6 +192,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
         <DealerProgressionPanel profile={profile} isMobile={isMobile} />
       </section>
 
+      <section id="join-dealership" className="scroll-mt-24">
+        <JoinDealershipPanel profile={profile} isMobile={isMobile} />
+      </section>
+
       {profile?.role && [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN].includes(profile.role) && (
         <section id="organization" className="scroll-mt-24">
           <OrganizationPanel profile={profile} isMobile={isMobile} />
@@ -279,6 +283,84 @@ const DealerProgressionPanel = ({ profile, isMobile }: { profile: UserProfile | 
           >
             Request Access
           </Button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const JoinDealershipPanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobile?: boolean }) => {
+  const { addToast } = useAuth();
+  const [code, setCode] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isAlreadyManaged = profile?.orgId && profile.role !== UserRole.SALES;
+
+  if (isAlreadyManaged) return null;
+
+  const handleJoin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim() || !profile) return;
+
+    setIsSubmitting(true);
+    try {
+      const { joinCodeService } = await import('@/src/services/joinCodeService');
+      const { dealerName } = await joinCodeService.redeemJoinCode(code, profile);
+      
+      addToast(`You have joined ${dealerName} as a Manager.`, 'success');
+      // Refresh page or update state to reflect new role/org
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error: any) {
+      addToast(error.message || 'Unable to join this dealership.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
+      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Onboarding</Typography>
+      
+      <Card className={cn("bg-indigo-500/5 border-indigo-500/10 overflow-hidden relative group transition-all duration-500 hover:border-indigo-500/30", isMobile ? "p-6" : "p-10")}>
+        <div className="absolute -right-20 -bottom-20 h-64 w-64 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/10 transition-colors" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="space-y-4 max-w-lg">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <ShieldCheck size={20} />
+              </div>
+              <Typography variant="mono" className="text-[10px] text-indigo-400 uppercase font-black tracking-[0.3em]">Institutional Verification</Typography>
+            </div>
+            
+            <div className="space-y-2">
+              <Typography variant="h2" className={cn("text-white italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-2xl" : "text-4xl")}>
+                Join Dealership
+              </Typography>
+              <Typography variant="p" className="text-slate-400 text-sm leading-relaxed">
+                Elevate your account to Manager by entering a secure join code provided by your dealership administrator.
+              </Typography>
+            </div>
+          </div>
+
+          <form onSubmit={handleJoin} className="flex flex-col gap-3 min-w-[240px]">
+            <Input 
+              placeholder="ENTER JOIN CODE"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="bg-black/40 border-white/10 h-14 text-center font-mono font-black tracking-[0.2em] uppercase"
+              required
+            />
+            <Button 
+              type="submit"
+              isLoading={isSubmitting}
+              className={cn(
+                "bg-indigo-500 hover:bg-indigo-400 text-white font-black uppercase tracking-widest italic transition-all rounded-2xl h-14",
+                isMobile ? "w-full text-xs" : "text-sm"
+              )}
+            >
+              Verify & Join
+            </Button>
+          </form>
         </div>
       </Card>
     </div>
@@ -595,8 +677,8 @@ const OrganizationPanel = ({ profile, isMobile }: { profile: UserProfile | null,
             <Building2 className={cn("text-slate-400", isMobile ? "h-6 w-6" : "h-10 w-10")} />
           </div>
           <div className="space-y-0.5 min-w-0">
-            <Typography variant="h2" className={cn("text-white leading-none truncate", isMobile ? "text-lg" : "")}>Highline Motors</Typography>
-            <Typography variant="p" className={cn("text-slate-500 font-bold truncate", isMobile ? "text-[11px]" : "")}>Organization Member Since May 2024</Typography>
+            <Typography variant="h2" className={cn("text-white leading-none truncate font-black italic uppercase", isMobile ? "text-lg" : "text-3xl")}>{profile?.orgName || 'Highline Motors'}</Typography>
+            <Typography variant="p" className={cn("text-slate-500 font-bold truncate", isMobile ? "text-[11px]" : "")}>Organization Member Since 2024</Typography>
             <div className="inline-flex mt-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest text-emerald-400">
               Verified Partner
             </div>
@@ -606,30 +688,41 @@ const OrganizationPanel = ({ profile, isMobile }: { profile: UserProfile | null,
         <div className={cn("grid grid-cols-1 md:grid-cols-2 pt-6 border-t border-white/5", isMobile ? "gap-4" : "gap-6")}>
           <div className="space-y-1.5">
             <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Organization ID</Typography>
-            <Input defaultValue={profile?.orgId} disabled className="bg-white/[0.02] font-mono text-[10px] opacity-50 h-10 truncate" />
+            <Input defaultValue={profile?.orgId} disabled className="bg-white/[0.02] font-mono text-[10px] opacity-20 h-10 truncate border-white/5 cursor-not-allowed" />
           </div>
           <div className="space-y-1.5">
-            <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Dealership ID</Typography>
-            <Input defaultValue={profile?.dealershipId} disabled className="bg-white/[0.02] font-mono text-[10px] opacity-50 h-10 truncate" />
+            <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Status</Typography>
+             <div className="h-10 px-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <Typography variant="mono" className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Active System</Typography>
+             </div>
           </div>
         </div>
 
-        {(profile?.role === UserRole.ADMIN || profile?.role === UserRole.GENERAL_MANAGER) && (
+        {(profile?.role === UserRole.ADMIN || profile?.role === UserRole.GENERAL_MANAGER || profile?.role === UserRole.DEALER_OWNER) && (
           <div className={cn("pt-6 space-y-4", isMobile ? "pt-4" : "")}>
             <Typography variant="label" className="text-brand-primary block uppercase tracking-widest text-[9px] font-black">Management Controls</Typography>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Button 
                 variant="secondary" 
-                className={cn("w-full bg-white/5 border-white/10", isMobile ? "text-[10px] h-10" : "text-xs")}
-                onClick={() => navigate('/admin/users')}
+                className={cn("w-full bg-brand-primary text-bg-deep border-none font-black uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
+                onClick={() => navigate(profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? '/dealer/users' : '/admin/users')}
               >
-                Manage Users
+                Manage Team
               </Button>
               <Button 
                 variant="secondary" 
-                className={cn("w-full bg-white/5 border-white/10", isMobile ? "text-[10px] h-10" : "text-xs")}
+                className={cn("w-full bg-white/5 border-white/10 text-white font-bold uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
+                onClick={() => navigate(profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? '/dealer/settings' : '/settings')}
               >
                 Org Settings
+              </Button>
+              <Button 
+                variant="secondary" 
+                className={cn("w-full bg-white/5 border-white/10 text-white font-bold uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
+                onClick={() => navigate(profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? '/dealer/log-builder' : '/')}
+              >
+                Log Builder
               </Button>
             </div>
           </div>

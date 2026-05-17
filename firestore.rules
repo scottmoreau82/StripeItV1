@@ -34,16 +34,16 @@ service cloud.firestore {
 
     function getRole() {
       let user = getUserSafe(request.auth.uid);
-      return user != null ? user.role.lower() : 'none';
+      return user != null ? user.get('role', 'none').lower() : 'none';
     }
 
     function isAnyAdmin() {
       let user = getUserSafe(request.auth.uid);
-      return isBootstrapAdmin() || (user != null && isNotFrozen() && (user.role.lower() in ['gm', 'admin', 'dealer_owner'] || user.get('isAdmin', false) == true));
+      return isBootstrapAdmin() || (user != null && isNotFrozen() && (user.get('role', 'none').lower() in ['gm', 'admin', 'dealer_owner'] || user.get('isAdmin', false) == true));
     }
 
     function isAnyManager() {
-      return isAnyAdmin() || getRole() in ['manager', 'dealer_owner'];
+      return isAnyAdmin() || (getRole() in ['manager', 'dealer_owner', 'gm']);
     }
 
     function isOrgMember(orgId) {
@@ -198,17 +198,17 @@ service cloud.firestore {
     // User Collection
     match /users/{userId} {
       // isOwner is primary gate. Managers can see profiles within their org.
-      allow get: if isOwner(userId) || isBootstrapAdmin() || (isSignedIn() && isAnyManager() && isOrgMember(getUserSafe(userId).orgId));
+      allow get: if isOwner(userId) || isBootstrapAdmin() || (isSignedIn() && isAnyManager() && isOrgMember(getUserSafe(userId).get('orgId', 'none')));
       allow list: if isSignedIn() && (isAnyManager() || isAnyAdmin()); 
       allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().get('isAdmin', false) == false && (
-        (incoming().role.lower() == 'sales') || 
-        (incoming().role.lower() in ['manager', 'gm'] && checkInvite(incoming()))
+        (incoming().get('role', '').lower() == 'sales') || 
+        (incoming().get('role', '').lower() in ['manager', 'gm'] && checkInvite(incoming()))
       );
-      allow update: if isOwner(userId) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId'])
-      ) || (
-        isAnyAdmin() && isOrgMember(existing().orgId) &&
-        incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt', 'isAdmin', 'subscriptionTier'])
+      allow update: if (isOwner(userId) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId', 'role', 'department'])
+      )) || (
+        isAnyAdmin() && (isBootstrapAdmin() || isOrgMember(existing().get('orgId', 'none'))) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt', 'isAdmin', 'subscriptionTier', 'isFrozen', 'isDeleted', 'orgId', 'department'])
       );
       
       match /notifications/{notifId} {
@@ -294,6 +294,24 @@ service cloud.firestore {
       // Only admins can update the status (approve/reject)
       allow update: if isAnyAdmin();
       allow delete: if isAnyAdmin();
+    }
+
+    // Dealer Join Codes Collection
+    match /dealerJoinCodes/{codeId} {
+      // Users can get codes for redemption, managers can list/manage
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && isAnyManager();
+      
+      // Managers can create codes for their own org
+      allow create: if isSignedIn() && isAnyManager() && isOrgMember(incoming().organizationId);
+      
+      // Managers can update codes, OR any user can update when redeeming (increment count, update status)
+      allow update: if isSignedIn() && (
+        (isAnyManager() && isOrgMember(resource.data.organizationId)) ||
+        (incoming().diff(existing()).affectedKeys().hasOnly(['usedCount', 'usedBy', 'status']))
+      );
+      
+      allow delete: if isSignedIn() && isAnyManager() && isOrgMember(resource.data.organizationId);
     }
   }
 }

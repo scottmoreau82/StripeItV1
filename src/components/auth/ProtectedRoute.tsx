@@ -22,7 +22,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   const { user, profile, loading, initialized, connectionError } = useAuth();
   const location = useLocation();
 
-  if (!initialized || (user && !profile && loading)) {
+  // Handle initialization and connection errors (e.g. FROZEN) first
+  if (!initialized || (user && !profile && loading) || connectionError) {
     return (
       <div className="min-h-screen bg-bg-deep flex flex-col items-center justify-center p-6 text-center">
         {/* Atmosphere for minimal splash */}

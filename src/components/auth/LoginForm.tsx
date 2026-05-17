@@ -10,7 +10,6 @@ import { Typography } from '@/src/components/ui/Typography';
 import { Card } from '@/src/components/ui/Card';
 import { DollarSign, UserPlus, LogIn, Sparkles, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { inviteService } from '@/src/services/inviteService';
 import { cn } from '@/src/lib/utils';
 
 /**
@@ -36,29 +35,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
   const { addToast, connectionError } = useAuth();
 
   useEffect(() => {
+    // Legacy Invite System Disabled - Replaced by Manager Join Codes
+    /*
     const params = new URLSearchParams(window.location.search);
     const inviteId = params.get('inviteId');
     const token = params.get('token');
-
-    if (inviteId && token) {
-      setLoading(true);
-      inviteService.getInviteByToken(token).then(invite => {
-        if (invite && invite.id === inviteId) {
-          setEmail(invite.email);
-          setInviteRole(invite.role);
-          setMode('signup');
-          sessionStorage.setItem('stripeit_invite_id', inviteId);
-          sessionStorage.setItem('stripeit_invite_token', token);
-          addToast('Organizational invite detected. Create your manager account.', 'info');
-        } else {
-          addToast('Invalid or expired invite link.', 'error');
-        }
-      }).catch(err => {
-        console.error("Invite processing error:", err);
-      }).finally(() => {
-        setLoading(false);
-      });
-    }
+    ...
+    */
   }, [addToast]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {

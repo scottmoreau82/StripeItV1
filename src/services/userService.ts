@@ -92,18 +92,20 @@ export const userService = {
   },
 
   /**
-   * Soft-deletes a user account.
+   * Removes a user from the organization safely.
+   * Does NOT delete the auth user or profile globally, just revokes org access.
    */
   async deleteUser(userId: string): Promise<void> {
     try {
       const userRef = doc(db, COLL_CONST.USERS, userId);
       await updateDoc(userRef, {
-        isDeleted: true,
         orgId: '', // Strip organizational access
+        role: 'Sales', // Revert to base role
+        department: null, // Clear department assignment
         updatedAt: serverTimestamp()
       });
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error removing user from organization:", error);
       handleFirestoreError(error, OperationType.UPDATE, `${COLL_CONST.USERS}/${userId}`);
       throw error;
     }

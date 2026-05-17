@@ -20,7 +20,7 @@ interface UpgradeAccessScreenProps {
 
 export const UpgradeAccessScreen: React.FC<UpgradeAccessScreenProps> = ({ 
   feature, 
-  tierRequired = SubscriptionTier.BASIC,
+  tierRequired = SubscriptionTier.PRO,
   onUpgrade
 }) => {
   const getFeatureDetails = (f: Feature) => {

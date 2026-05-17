@@ -41,9 +41,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const location = useLocation();
   const [isSpiffModalOpen, setIsSpiffModalOpen] = React.useState(false);
 
-  // StripeItLayoutHydrationGate - The Sidebar component assumes a valid profile is provided by the parent layout
-  if (!profile) return null;
-
   const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
 
   const handleLogout = async () => {
@@ -275,12 +272,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div className="flex-1 min-w-0 pr-4">
                 <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 text-[11px] group-hover/user:text-brand-primary transition-colors">
-                  {profile.displayName}
+                  {profile?.displayName || 'Operator'}
                 </Typography>
                 <div className="flex items-center gap-2 opacity-80 overflow-hidden">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_#22C55E] shrink-0 pulse" />
                   <Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-black tracking-[0.15em] truncate">
-                    {profile.role}
+                    {profile?.role || 'Sales'}
                   </Typography>
                 </div>
               </div>

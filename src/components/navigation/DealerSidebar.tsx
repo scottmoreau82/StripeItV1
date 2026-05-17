@@ -25,8 +25,6 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
   const { profile } = useAuth();
   const location = useLocation();
 
-  if (!profile) return null;
-
   const handleLogout = async () => {
     try {
       await auth.signOut();
@@ -36,7 +34,9 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
   };
 
   const isDashboardActive = location.pathname === '/';
-  const isSalesLogActive = location.pathname === '/dealer/sales-log';
+  const isSalesReportActive = location.pathname === '/dealer/sales-log';
+  const isUserManagementActive = location.pathname === '/dealer/users';
+  const isLogBuilderActive = location.pathname === '/dealer/log-builder';
   const isSettingsActive = location.pathname === '/dealer/settings';
 
   return (
@@ -70,105 +70,178 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
 
       {/* Navigation */}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar overflow-x-hidden">
-        <nav className="flex flex-col gap-1 py-4">
+        <nav className="flex flex-col py-6">
+          {/* Dashboard - Top Level */}
           <Link
             to="/"
             className={cn(
-              "block w-full py-4 transition-all text-left group",
-              isDashboardActive ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
+              "flex items-center w-full py-3.5 transition-all group relative",
+              isDashboardActive ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
             )}
           >
-            <div className="flex items-center w-full">
-              <div className="w-20 shrink-0 flex items-center justify-center relative">
-                {isDashboardActive && !isCollapsed && (
-                  <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
-                )}
-                <AppIcon name="trending" className={cn("h-6 w-6 shrink-0 transition-all", isDashboardActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]" : "text-slate-600 group-hover:text-slate-400")} />
-              </div>
-              <div className={cn(
-                "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
-                isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
-              )}>
-                <span className={cn("font-bold text-[11px] uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all", isDashboardActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Dashboard</span>
-              </div>
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              {isDashboardActive && !isCollapsed && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+              )}
+              <AppIcon name="dashboard" className={cn("h-5 w-5 shrink-0 transition-all", isDashboardActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+            </div>
+            <div className={cn(
+              "flex-1 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", isDashboardActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Dashboard</span>
             </div>
           </Link>
+
+          {/* OPERATIONS SECTION */}
+          <div className={cn("mt-8 mb-2 px-6 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">Operations</span>
+          </div>
 
           <Link
             to="/dealer/sales-log"
             className={cn(
-              "block w-full py-4 transition-all text-left group",
-              isSalesLogActive ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
+              "flex items-center w-full py-3 transition-all group relative",
+              isSalesReportActive ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
             )}
           >
-            <div className="flex items-center w-full">
-              <div className="w-20 shrink-0 flex items-center justify-center relative">
-                {isSalesLogActive && !isCollapsed && (
-                  <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
-                )}
-                <AppIcon name="salesLog" className={cn("h-6 w-6 shrink-0 transition-all", isSalesLogActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]" : "text-slate-600 group-hover:text-slate-400")} />
-              </div>
-              <div className={cn(
-                "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
-                isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
-              )}>
-                <span className={cn("font-bold text-[11px] uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all", isSalesLogActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Sales Report</span>
-              </div>
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              {isSalesReportActive && !isCollapsed && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+              )}
+              <AppIcon name="salesLog" className={cn("h-5 w-5 shrink-0 transition-all", isSalesReportActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+            </div>
+            <div className={cn(
+              "flex-1 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", isSalesReportActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Sales Report</span>
             </div>
           </Link>
 
           <Link
-            to="/dealer/settings"
+            to="/activity"
             className={cn(
-              "block w-full py-4 transition-all text-left group",
-              isSettingsActive ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
+              "flex items-center w-full py-3 transition-all group relative",
+              location.pathname === '/activity' ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
             )}
           >
-            <div className="flex items-center w-full">
-              <div className="w-20 shrink-0 flex items-center justify-center relative">
-                {isSettingsActive && !isCollapsed && (
-                  <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
-                )}
-                <AppIcon name="settings" className={cn("h-6 w-6 shrink-0 transition-all", isSettingsActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]" : "text-slate-600 group-hover:text-slate-400")} />
-              </div>
-              <div className={cn(
-                "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
-                isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
-              )}>
-                <span className={cn("font-bold text-[11px] uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all", isSettingsActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Settings</span>
-              </div>
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              {location.pathname === '/activity' && !isCollapsed && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+              )}
+              <AppIcon name="activity" className={cn("h-5 w-5 shrink-0 transition-all", location.pathname === '/activity' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+            </div>
+            <div className={cn(
+              "flex-1 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", location.pathname === '/activity' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Activity Feed</span>
             </div>
           </Link>
 
-          <button
-            onClick={onLogDeal}
+          {/* MANAGEMENT SECTION */}
+          <div className={cn("mt-8 mb-2 px-6 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">Management</span>
+          </div>
+
+          <Link
+            to="/dealer/users"
             className={cn(
-              "block w-full py-4 transition-all text-left group hover:bg-white/[0.02]"
+              "flex items-center w-full py-3 transition-all group relative",
+              location.pathname === '/dealer/users' && !location.search ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
             )}
           >
-            <div className="flex items-center w-full">
-              <div className="w-20 shrink-0 flex items-center justify-center relative">
-                <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center group-hover:bg-brand-primary/20 transition-all shadow-glow glow-primary/5">
-                  <AppIcon name="plus" className="h-5 w-5 text-brand-primary" />
-                </div>
-              </div>
-              <div className={cn(
-                "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
-                isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
-              )}>
-                <span className="font-bold text-[11px] uppercase tracking-[0.2em] truncate whitespace-nowrap text-slate-500 group-hover:text-brand-primary transition-all">Log Deal</span>
-              </div>
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              {location.pathname === '/dealer/users' && !location.search && !isCollapsed && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+              )}
+              <AppIcon name="users" className={cn("h-5 w-5 shrink-0 transition-all", location.pathname === '/dealer/users' && !location.search ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
             </div>
-          </button>
+            <div className={cn(
+              "flex-1 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", location.pathname === '/dealer/users' && !location.search ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Managers</span>
+            </div>
+          </Link>
+
+          <Link
+            to="/dealer/users?tab=permissions"
+            className={cn(
+              "flex items-center w-full py-3 transition-all group relative",
+              location.search === '?tab=permissions' ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
+            )}
+          >
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              {location.search === '?tab=permissions' && !isCollapsed && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+              )}
+              <AppIcon name="lock" className={cn("h-5 w-5 shrink-0 transition-all", location.search === '?tab=permissions' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+            </div>
+            <div className={cn(
+              "flex-1 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", location.search === '?tab=permissions' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Permissions</span>
+            </div>
+          </Link>
+
+          <Link
+            to="/dealer/users?tab=invites"
+            className={cn(
+              "flex items-center w-full py-3 transition-all group relative",
+              location.search === '?tab=invites' ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
+            )}
+          >
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              {location.search === '?tab=invites' && !isCollapsed && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+              )}
+              <AppIcon name="mail" className={cn("h-5 w-5 shrink-0 transition-all", location.search === '?tab=invites' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+            </div>
+            <div className={cn(
+              "flex-1 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", location.search === '?tab=invites' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Invites</span>
+            </div>
+          </Link>
+
+          {/* CONFIGURATION SECTION */}
+          <div className={cn("mt-8 mb-2 px-6 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">Configuration</span>
+          </div>
+
+          <Link
+            to="/dealer/settings"
+            className={cn(
+              "flex items-center w-full py-3 transition-all group relative",
+              isSettingsActive ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
+            )}
+          >
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              {isSettingsActive && !isCollapsed && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+              )}
+              <AppIcon name="settings" className={cn("h-5 w-5 shrink-0 transition-all", isSettingsActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+            </div>
+            <div className={cn(
+              "flex-1 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", isSettingsActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Settings</span>
+            </div>
+          </Link>
         </nav>
       </div>
 
       {/* Footer / Account */}
-      <div className="shrink-0 border-t border-border-subtle bg-bg-deep/80 backdrop-blur-sm z-10 py-6">
-        <div className={cn("px-4 mb-2 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
-          <div className="bg-bg-card/40 border border-border-subtle rounded-2xl p-4 shadow-glow glow-primary/5 transition-all hover:bg-bg-card/60 relative overflow-hidden group/user">
+      <div className="shrink-0 border-t border-white/5 bg-black/40 backdrop-blur-md z-10 py-6">
+        <div className={cn("px-4 mb-4 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
+          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 shadow-glow glow-primary/5 transition-all hover:bg-white/[0.04] relative overflow-hidden group/user">
             <div className="flex items-center gap-3 relative z-10">
-              <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 text-white font-bold uppercase overflow-hidden shrink-0 shadow-lg">
+              <div className="h-10 w-10 rounded-xl bg-slate-800 flex items-center justify-center border border-white/10 text-white font-bold uppercase overflow-hidden shrink-0 shadow-lg">
                 {profile?.photoURL ? (
                   <img src={profile.photoURL} alt="" className="h-full w-full object-cover" />
                 ) : (
@@ -176,11 +249,11 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
                 )}
               </div>
               <div className="flex-1 min-w-0 pr-4">
-                <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 text-[11px] group-hover/user:text-brand-primary transition-colors">
-                  {profile.displayName}
+                <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 text-[11px] group-hover/user:text-brand-primary transition-colors italic leading-none">
+                  {profile?.displayName || 'Dealer Operator'}
                 </Typography>
                 <div className="flex items-center gap-2 opacity-80 overflow-hidden">
-                  <div className="h-1.5 w-1.5 rounded-full bg-brand-primary shadow-[0_0_5px_rgba(0,242,255,0.5)] shrink-0" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-brand-primary shadow-glow glow-primary animate-pulse shrink-0" />
                   <Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-black tracking-[0.15em] truncate">
                     Authorized Representative
                   </Typography>
@@ -189,6 +262,10 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               <div className="shrink-0 flex items-center">
                 <TierBadge tier={profile?.subscriptionTier} size="sm" />
               </div>
+            </div>
+            {/* Background Texture/Accents */}
+            <div className="absolute top-0 right-0 p-1 opacity-5 group-hover/user:opacity-10 transition-opacity">
+              <AppIcon name="dashboard" className="h-12 w-12 text-brand-primary" />
             </div>
           </div>
         </div>
@@ -202,7 +279,7 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
             )}
           >
             <div className={cn("shrink-0 flex items-center justify-center", isCollapsed ? "w-full" : "w-6")}>
-              <AppIcon name="logout" className="h-5 w-5 text-slate-600 group-hover:text-rose-500 transition-colors" />
+              <AppIcon name="logout" className="h-5 w-5 text-slate-600 group-hover:text-rose-500 transition-colors drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]" />
             </div>
             {!isCollapsed && (
               <span className="text-[10px] font-black text-slate-500 group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all">Sign Out</span>

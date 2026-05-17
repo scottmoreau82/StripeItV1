@@ -46,7 +46,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
 
   const handleIconThemeChange = async (newTheme: IconTheme) => {
     if (isFreeTier) {
-      addToast('Upgrade to Basic or higher to change icon themes.', 'info');
+      addToast('Upgrade to Pro or higher to change icon themes.', 'info');
       return;
     }
     
@@ -113,7 +113,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                 <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
                   <AppIcon name="lock" size={12} className="text-brand-primary" />
                   <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
-                    BASIC+ EXCLUSIVE
+                    PRO+ EXCLUSIVE
                   </Typography>
                 </div>
               )}

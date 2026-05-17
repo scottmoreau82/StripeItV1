@@ -1,5 +1,5 @@
 import { collection, doc, setDoc, query, where, getDocs, orderBy, limit, serverTimestamp, deleteDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { DealerDeal } from '../types';
 
 /**
@@ -10,6 +10,7 @@ export const dealerService = {
   async saveDeal(orgId: string, userId: string, dealData: Partial<DealerDeal>, dealId?: string): Promise<string> {
     const isNew = !dealId;
     const finalDealId = dealId || doc(collection(db, 'temp')).id;
+    const path = `organizations/${orgId}/dealerDeals/${finalDealId}`;
     const dealRef = doc(db, 'organizations', orgId, 'dealerDeals', finalDealId);
 
     const fullData = {
@@ -21,16 +22,28 @@ export const dealerService = {
       updatedAt: Date.now(),
     };
 
-    await setDoc(dealRef, fullData, { merge: true });
-    return finalDealId;
+    try {
+      await setDoc(dealRef, fullData, { merge: true });
+      return finalDealId;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
   },
 
   async deleteDeal(orgId: string, dealId: string): Promise<void> {
+    const path = `organizations/${orgId}/dealerDeals/${dealId}`;
     const dealRef = doc(db, 'organizations', orgId, 'dealerDeals', dealId);
-    await deleteDoc(dealRef);
+    try {
+      await deleteDoc(dealRef);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+      throw error;
+    }
   },
 
   async getDeals(orgId: string, limitCount: number = 50): Promise<DealerDeal[]> {
+    const path = `organizations/${orgId}/dealerDeals`;
     const dealsRef = collection(db, 'organizations', orgId, 'dealerDeals');
     const q = query(
       dealsRef,
@@ -38,11 +51,17 @@ export const dealerService = {
       limit(limitCount)
     );
 
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as DealerDeal);
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => doc.data() as DealerDeal);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      throw error;
+    }
   },
 
   async getDealsByDate(orgId: string, date: string): Promise<DealerDeal[]> {
+    const path = `organizations/${orgId}/dealerDeals`;
     const dealsRef = collection(db, 'organizations', orgId, 'dealerDeals');
     const q = query(
       dealsRef,
@@ -50,7 +69,54 @@ export const dealerService = {
       orderBy('createdAt', 'asc')
     );
 
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as DealerDeal);
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => doc.data() as DealerDeal);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      throw error;
+    }
+  },
+
+  async getMTDDeals(orgId: string): Promise<DealerDeal[]> {
+    const path = `organizations/${orgId}/dealerDeals`;
+    const dealsRef = collection(db, 'organizations', orgId, 'dealerDeals');
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    const dateStr = startOfMonth.toISOString().split('T')[0];
+    
+    const q = query(
+      dealsRef,
+      where('date', '>=', dateStr),
+      orderBy('date', 'desc')
+    );
+
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => doc.data() as DealerDeal);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      throw error;
+    }
+  },
+
+  async getDealsByRange(orgId: string, startDate: string, endDate: string): Promise<DealerDeal[]> {
+    const path = `organizations/${orgId}/dealerDeals`;
+    const dealsRef = collection(db, 'organizations', orgId, 'dealerDeals');
+    
+    const q = query(
+      dealsRef,
+      where('date', '>=', startDate),
+      where('date', '<=', endDate),
+      orderBy('date', 'desc')
+    );
+
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => doc.data() as DealerDeal);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      throw error;
+    }
   }
 };

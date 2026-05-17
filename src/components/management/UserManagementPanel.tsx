@@ -52,7 +52,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
         let score = 0;
         // Assume longer strings are real Firebase UIDs (vs short auto-ids or placeholders)
         if (u.uid && u.uid.length > 15) score += 1000;
-        if (u.displayName) score += 100;
+        if (u.displayName && u.displayName !== 'Anonymous User') score += 100;
         if (u.email && u.email !== 'No Email Address') score += 50;
         if (u.photoURL) score += 20;
         // Use updatedAt as a tie-breaker for freshness (normalized to prevent overflow)
@@ -127,7 +127,6 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
   const getTierColor = (tier: SubscriptionTier) => {
     switch (tier) {
       case SubscriptionTier.FREE: return 'text-slate-500 border-slate-500/20 bg-slate-500/5';
-      case SubscriptionTier.BASIC: return 'text-blue-400 border-blue-400/20 bg-blue-400/5';
       case SubscriptionTier.PRO: return 'text-brand-primary border-brand-primary/20 bg-brand-primary/5';
       case SubscriptionTier.ORGANIZATION: return 'text-emerald-400 border-emerald-400/20 bg-emerald-400/5';
       default: return 'text-slate-500';
@@ -191,7 +190,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <Typography variant="label" className="text-white truncate">
-                        {user.displayName}
+                        {user.displayName || 'Anonymous User'}
                       </Typography>
                       {user.isAdmin && (
                         <Shield className="h-3 w-3 text-brand-primary" title="Admin" />
@@ -222,7 +221,6 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                           )}
                         >
                           <option value={SubscriptionTier.FREE}>Free</option>
-                          <option value={SubscriptionTier.BASIC}>Basic</option>
                           <option value={SubscriptionTier.PRO}>Pro</option>
                           <option value={SubscriptionTier.ORGANIZATION}>Dealer</option>
                         </select>

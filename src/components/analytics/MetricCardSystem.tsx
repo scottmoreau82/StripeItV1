@@ -55,10 +55,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   if (isLocked) {
     return (
-      <Card className={cn(
-        "bg-[#050505] border-white/[0.03] hover:border-purple-500/30 transition-all group relative overflow-hidden flex flex-col justify-center",
-        isTelemetry ? "p-3 min-h-[75px]" : isHorizontal ? "p-3.5 min-h-[90px]" : "p-4 min-h-[140px]"
-      )}>
+      <Card 
+        onClick={onUnlock}
+        className={cn(
+          "bg-[#050505] border-white/[0.03] hover:border-purple-500/30 transition-all group relative overflow-hidden flex flex-col justify-center",
+          onUnlock && "cursor-pointer hover:shadow-purple-glow active:scale-[0.98]",
+          isTelemetry ? "p-3 min-h-[75px]" : isHorizontal ? "p-3.5 min-h-[90px]" : "p-4 min-h-[140px]"
+        )}
+      >
         {/* Cinematic Locked Decor */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.08)_0%,transparent_70%)] opacity-70 group-hover:opacity-100 transition-opacity" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100%_3px] pointer-events-none opacity-20" />

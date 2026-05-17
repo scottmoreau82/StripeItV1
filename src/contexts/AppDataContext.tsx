@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { dealService } from '../services/dealService';
 import { payPlanService } from '../services/payPlanService';
@@ -13,7 +13,7 @@ import { activityService } from '../services/activityService';
 import { notificationService } from '../services/notificationService';
 import { Deal, PayPlan, Goal, DealStatus, QuickNote, Competition, SubscriptionTier, DashboardLayout, ActivityEventType, AnalyticsEventType, MonthlySpiff } from '../types';
 import { onSnapshot, query, collection, orderBy, where } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
 import { analyticsService } from '../services/analyticsService';
 import { COLLECTIONS } from '../constants';
 
@@ -77,7 +77,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     [profile?.dashboardPreference?.layout]
   );
 
-  const handleSaveDashboardLayout = async (layout: DashboardLayout) => {
+  const handleSaveDashboardLayout = useCallback(async (layout: DashboardLayout) => {
     if (!user) return;
     try {
       await dashboardService.saveUserLayout(user.uid, layout);
@@ -87,7 +87,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       triggerError('Failed to save layout.');
       throw error;
     }
-  };
+  }, [user, triggerSuccess, triggerError]);
 
   // Static Data Fetching (Pay Plans, Goals)
   const loadStaticData = useCallback(async (orgId: string, userId: string) => {
@@ -108,25 +108,14 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Real-time Subscriptions (Deals, Notes, Competitions)
   useEffect(() => {
-    // If not logged in, we're not loading app data
-    if (!user) {
-      setDeals([]);
-      setNotes([]);
-      setCompetitions([]);
-      setIsLoading(false);
-      return;
-    }
-
-    // If logged in but profile hasn't arrived yet, we ARE loading
-    if (!profile) {
-      if (initialized) {
-        // If Auth says it's initialized but profile is still null, 
-        // something is wrong with the profile fetch but auth is technically "ready".
-        // We shouldn't hang here forever.
-        setIsLoading(false);
-      } else {
-        setIsLoading(true);
+    // Parent AppContent ensures we only mount if user and profile are present
+    if (!user || !profile || !profile.orgId) {
+      if (!user) {
+        setDeals([]);
+        setNotes([]);
+        setCompetitions([]);
       }
+      setIsLoading(false);
       return;
     }
 
@@ -137,21 +126,18 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     setIsLoading(true);
     
-    // StripeItDataHydrationSystem - Wait for critical data before releasing UI
     const initializeData = async () => {
       try {
         await loadStaticData(profile.orgId, user.uid);
       } catch (err) {
         console.error("Static data hydration failed:", err);
-      } finally {
-        // We release loading only after the first snap of the most critical collection (Deals)
-        // that is also ordered by current month logic.
       }
     };
 
     initializeData();
 
     // 1. Subscription to Deals
+    const dealsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${profile.orgId}/${COLLECTIONS.DEALS}`;
     let dealsQuery = query(
       collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, COLLECTIONS.DEALS),
       orderBy('createdAt', 'desc')
@@ -173,21 +159,17 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       });
       setDeals(dealData);
       
-      // Delay releasing loading slightly to ensure state reconcilliation
-      setTimeout(() => {
-        setIsLoading(false);
-        clearTimeout(loadTimeout);
-      }, 50);
+      setIsLoading(false);
+      clearTimeout(loadTimeout);
     }, (error) => {
       console.error("Deals subscription error:", error);
       setIsLoading(false);
       clearTimeout(loadTimeout);
-      if (error.message.includes('permission')) {
-        handleFirestoreError(error, OperationType.LIST, `organizations/${profile.orgId}/deals`);
-      }
+      handleFirestoreError(error, OperationType.LIST, dealsCollectionPath);
     });
 
     // 2. Subscription to Notes
+    const notesCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${profile.orgId}/${COLLECTIONS.NOTES}`;
     const notesQuery = query(
       collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, COLLECTIONS.NOTES),
       where('userId', '==', user.uid),
@@ -207,12 +189,11 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       setNotes(noteData);
     }, (error) => {
       console.error("Notes subscription error:", error);
-      if (error.message.includes('permission')) {
-        handleFirestoreError(error, OperationType.LIST, `organizations/${profile.orgId}/notes`);
-      }
+      handleFirestoreError(error, OperationType.LIST, notesCollectionPath);
     });
 
     // 3. Subscription to Competitions
+    const compsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${profile.orgId}/${COLLECTIONS.COMPETITIONS}`;
     const compsQuery = query(
       collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, COLLECTIONS.COMPETITIONS),
       where('endDate', '>=', Date.now())
@@ -233,12 +214,11 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       setCompetitions(compData);
     }, (error) => {
       console.error("Competitions subscription error:", error);
-      if (error.message.includes('permission')) {
-        handleFirestoreError(error, OperationType.LIST, `organizations/${profile.orgId}/competitions`);
-      }
+      handleFirestoreError(error, OperationType.LIST, compsCollectionPath);
     });
 
     // 4. Subscription to Monthly SPIFFs
+    const spiffsCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${profile.orgId}/monthlySpiffs`;
     const spiffsQuery = query(
       collection(db, COLLECTIONS.ORGANIZATIONS, profile.orgId, 'monthlySpiffs'),
       where('userId', '==', user.uid),
@@ -258,9 +238,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       setMonthlySpiffs(spiffData);
     }, (error) => {
       console.error("Spiffs subscription error:", error);
-      if (error.message.includes('permission')) {
-        handleFirestoreError(error, OperationType.LIST, `organizations/${profile.orgId}/monthlySpiffs`);
-      }
+      handleFirestoreError(error, OperationType.LIST, spiffsCollectionPath);
     });
 
     return () => {
@@ -271,7 +249,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
   }, [profile, user, loadStaticData]);
 
-  const handleSaveDeal = async (dealData: Partial<Deal>, editingId?: string) => {
+  const handleSaveDeal = useCallback(async (dealData: Partial<Deal>, editingId?: string) => {
     if (!profile || !user) return;
     
     try {
@@ -295,7 +273,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
           await activityService.logEvent(profile.orgId, {
             type: ActivityEventType.DEAL_FINALIZED,
             userId: user.uid,
-            userName: profile.displayName,
+            userName: profile.displayName || 'Salesperson',
             orgId: profile.orgId,
             message: `Closed a deal for ${dealData.customerName || 'Customer'}!`,
             payload: { dealId: editingId, vehicle: dealData.purchasedVehicle }
@@ -328,7 +306,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         await activityService.logEvent(profile.orgId, {
           type: ActivityEventType.DEAL_CREATED,
           userId: user.uid,
-          userName: profile.displayName,
+          userName: profile.displayName || 'Salesperson',
           orgId: profile.orgId,
           message: `Logged a new ${dealData.newOrUsed || ''} deal for ${dealData.customerName}`,
           payload: { dealId, vehicle: dealData.purchasedVehicle }
@@ -338,28 +316,12 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
     } catch (error: any) {
       console.error("Deal Save Error:", error);
-      let message = editingId ? 'Failed to update deal.' : 'Failed to save deal.';
-      
-      // Attempt to parse stringified Firestore error
-      try {
-        const parsed = JSON.parse(error.message);
-        if (parsed.error && parsed.error.includes('permission')) {
-          message = "Permission Denied: You don't have authority to modify deals in this organization.";
-        } else if (parsed.error) {
-          message = `Persistence Error: ${parsed.error}`;
-        }
-      } catch (e) {
-        if (error.message && !error.message.includes('{')) {
-          message = error.message;
-        }
-      }
-      
-      triggerError(message);
+      triggerError(getFriendlyErrorMessage(error));
       throw error;
     }
-  };
+  }, [profile, user, deals.length, triggerSuccess, triggerError]);
 
-  const handleDeleteDeal = async (dealId: string) => {
+  const handleDeleteDeal = useCallback(async (dealId: string) => {
     if (!profile) return;
     try {
       await dealService.deleteDeal(profile.orgId, dealId);
@@ -369,9 +331,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       triggerError('Failed to delete deal.');
       handleFirestoreError(error, OperationType.DELETE, `organizations/${profile.orgId}/deals/${dealId}`);
     }
-  };
+  }, [profile, triggerSuccess, triggerError]);
 
-  const handleUpdateDealStatus = async (dealId: string, newStatus: DealStatus) => {
+  const handleUpdateDealStatus = useCallback(async (dealId: string, newStatus: DealStatus) => {
     if (!profile || !user) return;
     try {
       await dealService.updateDeal(profile.orgId, dealId, { status: newStatus });
@@ -381,7 +343,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         await activityService.logEvent(profile.orgId, {
           type: ActivityEventType.DEAL_FINALIZED,
           userId: user.uid,
-          userName: profile.displayName,
+          userName: profile.displayName || 'Salesperson',
           orgId: profile.orgId,
           message: `Finalized a deal for ${deal?.customerName || 'Customer'}!`,
           payload: { dealId, vehicle: deal?.purchasedVehicle }
@@ -399,9 +361,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error) {
       triggerError('Failed to update status.');
     }
-  };
+  }, [profile, user, deals, triggerSuccess, triggerError]);
 
-  const handleSavePayPlan = async (planData: Partial<PayPlan>) => {
+  const handleSavePayPlan = useCallback(async (planData: Partial<PayPlan>) => {
     if (!profile || !user) return;
     try {
       const { id, createdAt, updatedAt, organizationId, userId, ...cleanPlan } = planData as any;
@@ -411,20 +373,12 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       triggerSuccess('Pay plan updated.');
     } catch (error: any) {
       console.error("Pay Plan Save Error:", error);
-      // If it's a Firestore error object from our helper, it might be stringified JSON
-      let message = 'Failed to save pay plan.';
-      try {
-        const parsed = JSON.parse(error.message);
-        if (parsed.error) message = `Persistence Error: ${parsed.error}`;
-      } catch (e) {
-        if (error.message) message = error.message;
-      }
-      triggerError(message);
+      triggerError(getFriendlyErrorMessage(error));
       throw error;
     }
-  };
+  }, [profile, user, loadStaticData, triggerSuccess, triggerError]);
 
-  const handleSaveMonthlySpiff = async (data: Partial<MonthlySpiff>) => {
+  const handleSaveMonthlySpiff = useCallback(async (data: Partial<MonthlySpiff>) => {
     if (!profile || !user) return;
     try {
       await spiffService.saveMonthlySpiff(profile.orgId, {
@@ -437,26 +391,11 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       triggerSuccess('Monthly adjustment saved.');
     } catch (error: any) {
       console.error("Monthly Spiff Save Error:", error);
-      let message = 'Failed to save adjustment.';
-      
-      try {
-        const parsed = JSON.parse(error.message);
-        if (parsed.error && parsed.error.includes('permission')) {
-          message = "Permission Denied: You don't have authority to save adjustments.";
-        } else if (parsed.error) {
-          message = `Persistence Error: ${parsed.error}`;
-        }
-      } catch (e) {
-        if (error.message && !error.message.includes('{')) {
-          message = error.message;
-        }
-      }
-      
-      triggerError(message);
+      triggerError(getFriendlyErrorMessage(error));
     }
-  };
+  }, [profile, user, loadStaticData, triggerSuccess, triggerError]);
 
-  const handleDeleteMonthlySpiff = async (id: string) => {
+  const handleDeleteMonthlySpiff = useCallback(async (id: string) => {
     if (!profile || !user) return;
     try {
       await spiffService.deleteMonthlySpiff(profile.orgId, id);
@@ -465,9 +404,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error) {
       triggerError('Failed to delete adjustment.');
     }
-  };
+  }, [profile, user, loadStaticData, triggerSuccess, triggerError]);
 
-  const handleSaveNote = async (noteData: Partial<QuickNote>) => {
+  const handleSaveNote = useCallback(async (noteData: Partial<QuickNote>) => {
     if (!profile || !user) return;
     
     try {
@@ -492,11 +431,11 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       });
       triggerSuccess('Note saved.');
     } catch (error: any) {
-      triggerError(error.message || 'Failed to save note.');
+      triggerError(getFriendlyErrorMessage(error));
     }
-  };
+  }, [profile, user, notes.length, triggerSuccess, triggerError]);
 
-  const handleCreateRandomDeal = async () => {
+  const handleCreateRandomDeal = useCallback(async () => {
     if (!profile || !user) return;
     try {
       const { randomDealService } = await import('../services/randomDealService');
@@ -506,9 +445,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error: any) {
       triggerError(error.message || 'Failed to generate deal.');
     }
-  };
+  }, [profile, user, handleSaveDeal, triggerError]);
 
-  const handleDeleteNote = async (noteId: string) => {
+  const handleDeleteNote = useCallback(async (noteId: string) => {
     if (!profile) return;
     try {
       await noteService.deleteNote(profile.orgId, noteId);
@@ -516,9 +455,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error) {
       triggerError('Failed to delete note.');
     }
-  };
+  }, [profile, triggerSuccess, triggerError]);
 
-  const handleCreateCompetition = async (data: any) => {
+  const handleCreateCompetition = useCallback(async (data: any) => {
     if (!profile || !user) return;
     try {
       await competitionService.createCompetition(profile.orgId, {
@@ -529,7 +468,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       await activityService.logEvent(profile.orgId, {
         type: ActivityEventType.COMPETITION_STARTED,
         userId: user.uid,
-        userName: profile.displayName,
+        userName: profile.displayName || 'Manager',
         orgId: profile.orgId,
         message: `Launched a new battle: ${data.title}!`,
       });
@@ -538,11 +477,11 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error) {
       triggerError('Failed to create competition.');
     }
-  };
+  }, [profile, user, triggerSuccess, triggerError]);
 
-  const refreshDeals = async () => {
+  const refreshDeals = useCallback(async () => {
     await loadStaticData(profile?.orgId || '', user?.uid || '');
-  };
+  }, [profile?.orgId, user?.uid, loadStaticData]);
 
   const isCommissionConfigured = React.useMemo(() => {
     if (!payPlan) return false;
@@ -551,33 +490,60 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     return hasStandardTiers || hasMiniTiers;
   }, [payPlan]);
 
+  const value = React.useMemo(() => ({
+    deals,
+    payPlan,
+    goal,
+    notes,
+    monthlySpiffs,
+    competitions,
+    isLoading,
+    showSuccess,
+    dashboardLayout,
+    handleSaveDeal,
+    handleDeleteDeal,
+    handleUpdateDealStatus,
+    handleSavePayPlan,
+    handleSaveMonthlySpiff,
+    handleDeleteMonthlySpiff,
+    handleSaveNote,
+    handleDeleteNote,
+    handleCreateCompetition,
+    handleSaveDashboardLayout,
+    handleCreateRandomDeal,
+    refreshDeals,
+    triggerSuccess,
+    triggerError,
+    isCommissionConfigured
+  }), [
+    deals,
+    payPlan,
+    goal,
+    notes,
+    monthlySpiffs,
+    competitions,
+    isLoading,
+    showSuccess,
+    dashboardLayout,
+    handleSaveDeal,
+    handleDeleteDeal,
+    handleUpdateDealStatus,
+    handleSavePayPlan,
+    handleSaveMonthlySpiff,
+    handleDeleteMonthlySpiff,
+    handleSaveNote,
+    handleDeleteNote,
+    handleCreateCompetition,
+    handleSaveDashboardLayout,
+    handleCreateRandomDeal,
+    refreshDeals,
+    triggerSuccess,
+    triggerError,
+    isCommissionConfigured
+  ]);
+
   return (
-    <AppDataContext.Provider value={{
-      deals,
-      payPlan,
-      goal,
-      notes,
-      monthlySpiffs,
-      competitions,
-      isLoading,
-      showSuccess,
-      dashboardLayout,
-      handleSaveDeal,
-      handleDeleteDeal,
-      handleUpdateDealStatus,
-      handleSavePayPlan,
-      handleSaveMonthlySpiff,
-      handleDeleteMonthlySpiff,
-      handleSaveNote,
-      handleDeleteNote,
-      handleCreateCompetition,
-      handleSaveDashboardLayout,
-      handleCreateRandomDeal,
-      refreshDeals,
-      triggerSuccess,
-      triggerError,
-      isCommissionConfigured
-    }}>
+    <AppDataContext.Provider value={value}>
       {children}
     </AppDataContext.Provider>
   );

@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { UserProfile, SubscriptionTier, UserRole, IconTheme } from '../types';
+import { UserProfile, SubscriptionTier } from '../types';
 import { STRIPEIT_DEVELOPER_EMAIL, COLLECTIONS } from '../constants';
 import { Typography } from '../components/ui/Typography';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
@@ -178,20 +178,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         unsubscribeProfile = null;
       }
 
-      setUser(firebaseUser);
       setConnectionError(null);
       
       if (!firebaseUser) {
+        setUser(null);
         setProfile(null);
         setLoading(false);
         setInitialized(true);
         return;
       }
 
+      // If we have a user, we ARE loading the profile
+      setLoading(true);
+      setUser(firebaseUser);
+      
       analyticsService.trackEvent(AnalyticsEventType.LOGIN, { email: firebaseUser.email });
 
       // 2. Setup Profile Sync
-      setLoading(true);
       const userDocRef = doc(db, COLLECTIONS.USERS, firebaseUser.uid);
       
       let retryCount = 0;
@@ -208,33 +211,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Only provision if we are SURE it doesn't exist
             console.log("No profile found, provisioning...");
             try {
-              const { writeBatch, serverTimestamp } = await import('firebase/firestore');
-              const { inviteService } = await import('../services/inviteService');
+              const { writeBatch, serverTimestamp, getDoc: getDocDirect } = await import('firebase/firestore');
+              const { UserRole, SubscriptionTier, IconTheme, InviteStatus } = await import('../types');
               
+              // Check for invite in session
+              const inviteId = sessionStorage.getItem('stripeit_invite_id');
+              const inviteToken = sessionStorage.getItem('stripeit_invite_token');
+              let inviteData = null;
+
+              if (inviteId && inviteToken) {
+                const inviteSnap = await getDocDirect(doc(db, 'invites', inviteId));
+                if (inviteSnap.exists()) {
+                  const data = inviteSnap.data();
+                  if (data.token === inviteToken && data.status === InviteStatus.PENDING && data.email.toLowerCase() === firebaseUser.email?.toLowerCase()) {
+                    inviteData = data;
+                  }
+                }
+              }
+
               const batch = writeBatch(db);
-              
-              // StripeItInviteResolutionSystem - Check for pending organizational invites
-              const pendingInvites = await inviteService.getPendingInvitesForUser(firebaseUser.uid);
-              const activeInvite = pendingInvites[0]; // Join the most recent invitation
+              let orgId = '';
+              let role = UserRole.SALES;
+              let tier = SubscriptionTier.FREE;
 
-              let orgId: string;
-              let role: UserRole;
-              let tier: SubscriptionTier;
-
-              if (activeInvite) {
-                console.log("Active invite found, joining organization:", activeInvite.orgId);
-                orgId = activeInvite.orgId;
-                role = activeInvite.role as UserRole;
-                tier = SubscriptionTier.ORGANIZATION;
-                
-                // Mark invite as accepted via the service
-                await inviteService.acceptInvite(activeInvite.id, firebaseUser.uid);
+              if (inviteData) {
+                orgId = inviteData.orgId;
+                role = inviteData.role;
+                tier = SubscriptionTier.ORGANIZATION; // Managers are part of the dealer tier org
               } else {
-                console.log("No invite found, provisioning personal workspace.");
                 orgId = `PERSONAL-${firebaseUser.uid.slice(0, 5)}`;
-                role = UserRole.SALES;
-                tier = SubscriptionTier.FREE;
-
                 const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId);
                 batch.set(orgDocRef, {
                   id: orgId,
@@ -248,7 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const userProfileData: any = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email || '',
-                displayName: firebaseUser.displayName || (activeInvite ? 'New Manager' : 'New Salesperson'),
+                displayName: firebaseUser.displayName || (inviteData ? 'New Manager' : 'New Salesperson'),
                 role: role,
                 subscriptionTier: tier,
                 orgId: orgId,
@@ -280,14 +285,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
               };
 
+              // Add invite fields for security rule satisfaction
+              if (inviteId && inviteToken) {
+                userProfileData.inviteId = inviteId;
+                userProfileData.inviteToken = inviteToken;
+              }
+
               batch.set(userDocRef, userProfileData);
               
               await batch.commit();
 
-              analyticsService.trackEvent(AnalyticsEventType.SIGNUP_COMPLETED, { 
-                email: firebaseUser.email,
-                joinedOrg: !!activeInvite 
-              });
+              // Mark invite as accepted if applicable
+              if (inviteId) {
+                const { inviteService } = await import('../services/inviteService');
+                await inviteService.acceptInvite(inviteId);
+                sessionStorage.removeItem('stripeit_invite_id');
+                sessionStorage.removeItem('stripeit_invite_token');
+              }
+
+              analyticsService.trackEvent(AnalyticsEventType.SIGNUP_COMPLETED, { email: firebaseUser.email });
             } catch (err) {
               console.error("Failed to auto-provision user profile:", err);
               // Fallback to onSnapshot even if provisioning failed - maybe it exists now?
@@ -301,24 +317,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setConnectionError(null);
             if (docSnap.exists()) {
-              const data = docSnap.data();
+              const rawData = docSnap.data();
 
               // 🛡️ BLOCK FROZEN ACCOUNTS
-              if (data.isFrozen) {
+              if (rawData.isFrozen) {
                 console.warn("Account is frozen. Blocking access.");
                 setProfile(null);
                 setLoading(false);
                 setInitialized(true);
-                // Trigger an error state that the UI can pick up
                 setConnectionError("ACCOUNT_FROZEN");
                 return;
+              }
+              
+              // 🔄 TIER MIGRATION: BASIC -> PRO
+              // Critical path for eliminating the legacy basic tier while preserving user access.
+              let subscriptionTier = rawData.subscriptionTier;
+              if (subscriptionTier === 'basic') {
+                subscriptionTier = SubscriptionTier.PRO;
               }
 
               const profileData = {
                 uid: firebaseUser.uid,
-                ...data,
-                createdAt: data.createdAt?.toMillis?.() || data.createdAt || Date.now(),
-                updatedAt: data.updatedAt?.toMillis?.() || data.updatedAt || Date.now(),
+                ...rawData,
+                subscriptionTier,
+                createdAt: rawData.createdAt?.toMillis?.() || rawData.createdAt || Date.now(),
+                updatedAt: rawData.updatedAt?.toMillis?.() || rawData.updatedAt || Date.now(),
               } as any as UserProfile;
               setProfile(profileData);
               setLoading(false);
@@ -415,20 +438,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
-   * StripeItDeveloperTierOverrideSystem
-   * Only allows the specific developer account to simulate different subscription tiers.
-   */
-  const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
-  
-  const effectiveProfile = profile && (isDeveloper && tierOverride)
-    ? { ...profile, subscriptionTier: tierOverride }
-    : profile;
-
-  /**
    * StripeItAdminAccessSystem
    * Centralized admin detection logic.
    */
   const isAdmin = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase() || profile?.isAdmin === true;
+
+  // StripeItIdentitySystem - Effective Profile Resolution
+  // We memoize this to prevent downstream infinite loops in contexts that depend on the profile object
+  const effectiveProfile = useMemo(() => {
+    if (!profile) return profile;
+    return (isAdmin && tierOverride)
+      ? { ...profile, subscriptionTier: tierOverride }
+      : profile;
+  }, [profile, isAdmin, tierOverride]);
 
   // StripeItThemeSystem - Apply visual theme to document
   useEffect(() => {
@@ -436,7 +458,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     document.documentElement.setAttribute('data-visual-theme', visualTheme);
   }, [profile?.preferences?.visualTheme]);
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     profile: effectiveProfile,
     loading,
@@ -450,9 +472,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin,
     isEditMode,
     setIsEditMode,
-    tierOverride: isDeveloper ? tierOverride : null,
-    setTierOverride: isDeveloper ? setTierOverride : () => {},
-  };
+    tierOverride: isAdmin ? tierOverride : null,
+    setTierOverride: isAdmin ? setTierOverride : () => {},
+  }), [
+    user, 
+    effectiveProfile, 
+    loading, 
+    initialized, 
+    connectionError, 
+    logout, 
+    updateProfileData, 
+    addToast, 
+    sendVerificationEmail, 
+    refreshUser, 
+    isAdmin, 
+    isEditMode, 
+    setIsEditMode, 
+    tierOverride,
+    setTierOverride
+  ]);
 
   return (
     <AuthContext.Provider value={value}>

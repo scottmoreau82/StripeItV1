@@ -5,15 +5,13 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { notificationService } from '@/src/services/notificationService';
 import { feedbackService } from '@/src/services/feedbackService';
-import { Notification, FeedbackReport, FeedbackType, SubscriptionTier, ActivityEventType, Invite } from '@/src/types';
+import { Notification, FeedbackReport, FeedbackType, SubscriptionTier } from '@/src/types';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { NotificationItem } from './NotificationItem';
-import { InviteModal } from './InviteModal';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { cn } from '@/src/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { inviteService } from '@/src/services/inviteService';
 
 /**
  * StripeItNotificationSystem - NotificationTray
@@ -27,8 +25,6 @@ export const NotificationTray: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [feedbackReports, setFeedbackReports] = useState<FeedbackReport[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedInvite, setSelectedInvite] = useState<Invite | null>(null);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const currentTier = tierOverride || profile?.subscriptionTier;
   const isFreeTier = currentTier === SubscriptionTier.FREE;
@@ -107,17 +103,6 @@ export const NotificationTray: React.FC = () => {
     await feedbackService.markAsRead(id);
   };
 
-  const handleNotificationAction = async (n: Notification) => {
-    setIsOpen(false);
-    if (n.type === ActivityEventType.ORG_INVITE && n.metadata?.inviteId) {
-      const invite = await inviteService.getInviteById(n.metadata.inviteId);
-      if (invite) {
-        setSelectedInvite(invite);
-        setIsInviteModalOpen(true);
-      }
-    }
-  };
-
   return (
     <div className="relative" ref={containerRef}>
       <Button
@@ -136,17 +121,6 @@ export const NotificationTray: React.FC = () => {
           </span>
         )}
       </Button>
-
-      <InviteModal 
-        invite={selectedInvite}
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-        onSuccess={() => {
-          if (profile?.uid) {
-            notificationService.markAllAsRead(profile.uid);
-          }
-        }}
-      />
 
       <AnimatePresence>
         {isOpen && (
@@ -260,7 +234,6 @@ export const NotificationTray: React.FC = () => {
                         key={n.id} 
                         notification={n} 
                         onRead={handleReadOne}
-                        onAction={handleNotificationAction}
                       />
                     ))
                   )}

@@ -125,8 +125,13 @@ export const dealService = {
       q = query(q, where('date', '<=', filters.endDate));
     }
 
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Deal));
+    try {
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Deal));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, `organizations/${orgId}/deals`);
+      throw error;
+    }
   },
 
   /**

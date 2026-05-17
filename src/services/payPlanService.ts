@@ -10,7 +10,7 @@ import {
   serverTimestamp,
   deleteDoc
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { PayPlan } from '../types';
 import { COLLECTIONS } from '../constants';
 
@@ -24,28 +24,40 @@ export const payPlanService = {
    * Create or Update a Pay Plan
    */
   async savePayPlan(orgId: string, userId: string, plan: Omit<PayPlan, 'id' | 'createdAt' | 'updatedAt' | 'organizationId' | 'userId'>): Promise<void> {
-    const planRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.USERS, userId, 'payPlans', 'primary'); // For now, we only support one 'primary' plan
+    const path = `${COLLECTIONS.ORGANIZATIONS}/${orgId}/${COLLECTIONS.USERS}/${userId}/payPlans/primary`;
+    const planRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.USERS, userId, 'payPlans', 'primary'); 
     
-    await setDoc(planRef, {
-      ...plan,
-      id: 'primary',
-      organizationId: orgId,
-      userId: userId,
-      updatedAt: serverTimestamp(),
-      createdAt: serverTimestamp() // setDoc with merge:true or separate check would be better but keeping it simple for setup
-    }, { merge: true });
+    try {
+      await setDoc(planRef, {
+        ...plan,
+        id: 'primary',
+        organizationId: orgId,
+        userId: userId,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp() 
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
   },
 
   /**
    * Get the primary pay plan for a user
    */
   async getPrimaryPayPlan(orgId: string, userId: string): Promise<PayPlan | null> {
+    const path = `${COLLECTIONS.ORGANIZATIONS}/${orgId}/${COLLECTIONS.USERS}/${userId}/payPlans/primary`;
     const planRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.USERS, userId, 'payPlans', 'primary');
-    const snap = await getDoc(planRef);
-    
-    if (snap.exists()) {
-      return snap.data() as PayPlan;
+    try {
+      const snap = await getDoc(planRef);
+      
+      if (snap.exists()) {
+        return snap.data() as PayPlan;
+      }
+      return null;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, path);
+      throw error;
     }
-    return null;
   }
 };

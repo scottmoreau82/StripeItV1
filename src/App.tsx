@@ -54,7 +54,8 @@ import { AdminAnalyticsDashboard } from './components/analytics/AdminAnalyticsDa
 import { UserManagementPage } from './components/management/UserManagementPage';
 import { DealerSalesLogView } from './components/dealer/DealerSalesLogView';
 import { DealerSettingsView } from './components/dealer/DealerSettingsView';
-import { DealerDashboardView } from './components/dealer/DealerDashboardView';
+import { DealerUserManagementView } from './components/dealer/DealerUserManagementView';
+import { DealerLogBuilderView } from './components/dealer/DealerLogBuilderView';
 
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 
@@ -237,9 +238,7 @@ function MainAppFlow() {
             <Route 
               path="/" 
               element={
-                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? (
-                  <DealerDashboardView />
-                ) : permissionService.isManager(profile) ? (
+                permissionService.isManager(profile) ? (
                   <ManagerView 
                     onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
                     onQuickNote={() => setIsQuickNoteOpen(true)}
@@ -265,7 +264,7 @@ function MainAppFlow() {
               element={
                 featureAccessService.hasAccess(profile, Feature.ACTIVITY_FEED) 
                   ? <ActivityFeed /> 
-                  : <UpgradeAccessScreen feature={Feature.ACTIVITY_FEED} tierRequired={SubscriptionTier.BASIC} onUpgrade={onUpgradeClick} />
+                  : <UpgradeAccessScreen feature={Feature.ACTIVITY_FEED} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
               } 
             />
             
@@ -283,7 +282,7 @@ function MainAppFlow() {
               element={
                 featureAccessService.hasAccess(profile, Feature.GOALS) 
                   ? <div className="p-8"><Typography variant="h1">Goals</Typography></div>
-                  : <UpgradeAccessScreen feature={Feature.GOALS} tierRequired={SubscriptionTier.BASIC} onUpgrade={onUpgradeClick} />
+                  : <UpgradeAccessScreen feature={Feature.GOALS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
               } 
             />
     
@@ -327,6 +326,22 @@ function MainAppFlow() {
               element={
                 profile?.subscriptionTier === SubscriptionTier.ORGANIZATION 
                   ? <DealerSettingsView /> 
+                  : <Navigate to="/" />
+              } 
+            />
+            <Route 
+              path="/dealer/users" 
+              element={
+                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION 
+                  ? <DealerUserManagementView /> 
+                  : <Navigate to="/" />
+              } 
+            />
+            <Route 
+              path="/dealer/log-builder" 
+              element={
+                profile?.subscriptionTier === SubscriptionTier.ORGANIZATION 
+                  ? <DealerLogBuilderView /> 
                   : <Navigate to="/" />
               } 
             />
@@ -495,7 +510,7 @@ function MainAppFlow() {
         <UpgradePrompt 
           title="Unlimited Deal Logging"
           description={limitMessage}
-          tierRequired="Basic"
+          tierRequired="Pro"
           onUpgrade={() => {
             // In a real app, this would trigger the checkout flow
             setIsUpgradeOpen(false);
@@ -535,29 +550,38 @@ function MainAppFlow() {
 }
 
 function AppContent() {
-  const { user, profile, initialized, loading } = useAuth();
+  const { user, profile, initialized, loading, connectionError } = useAuth();
   
-  // 1. App is still determining if a session exists
+  // 1. App is determining if a session exists
   if (!initialized) {
     return <LandingView isInitializing />;
   }
 
-  // 2. User is authenticated but profile is still hydrating from Firestore
-  // This prevents briefly showing "new user" or "unconfigured" states for existing users
+  // 2. User is authenticated but profile is still hydrating
+  // We MUST wait for the profile to resolve (or fail) before mounting shells
   if (user && !profile && loading) {
     return <LandingView isInitializing />;
   }
 
-  // 3. User is authenticated but profile fetch failed definitively
-  // (we allow fallthrough to MainAppFlow where error states or fallback UI can show)
+  // 3. User is NOT authenticated -> Show public shell
+  if (!user) {
+    return (
+      <Routes>
+         <Route path="/" element={<LandingView />} />
+         <Route path="/login" element={<LoginForm initialMode="signin" />} />
+         <Route path="/signup" element={<LoginForm initialMode="signup" />} />
+         <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    );
+  }
   
+  // 4. User is authenticated -> Hand over to AppDataProvider & MainAppFlow
+  // ProtectedRoute inside MainAppFlow handles specific profile/connection error UI
   return (
     <AppDataProvider>
       <Routes>
-        {/* Public Landing & Auth */}
-        <Route path="/" element={!user ? <LandingView /> : <ProtectedRoute><MainAppFlow /></ProtectedRoute>} />
-        <Route path="/login" element={!user ? <LoginForm initialMode="signin" /> : <Navigate to="/" />} />
-        <Route path="/signup" element={!user ? <LoginForm initialMode="signup" /> : <Navigate to="/" />} />
+        <Route path="/login" element={<Navigate to="/" />} />
+        <Route path="/signup" element={<Navigate to="/" />} />
         
         {/* Protected Main Entry Points */}
         <Route 

@@ -26,10 +26,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const location = useLocation();
-  const { profile, user, tierOverride, setTierOverride, isAdmin } = useAuth();
-
-  if (!profile) return null;
 
   const toggleDrawer = () => {
     const newState = !isOpen;
@@ -41,7 +37,8 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
     setIsOpen(false);
     window.dispatchEvent(new CustomEvent('stripeit:drawer-toggle', { detail: { isOpen: false } }));
   };
-
+  const location = useLocation();
+  const { profile, user, tierOverride, setTierOverride, isAdmin } = useAuth();
   const { isCommissionConfigured } = useAppData();
 
   const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
@@ -71,6 +68,24 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
         </Link>
         
         <div className="flex items-center gap-4">
+          {isAdmin && (
+            <select
+              value={tierOverride || 'real'}
+              onChange={(e) => {
+                const val = e.target.value;
+                setTierOverride(val === 'real' ? null : (val as SubscriptionTier));
+              }}
+              className={cn(
+                "bg-white/[0.03] border border-white/5 text-[9px] uppercase tracking-widest font-black rounded-lg px-2 py-1.5 cursor-pointer outline-hidden focus:ring-1 focus:ring-purple-500/50 appearance-none text-center min-w-[70px] transition-all",
+                tierOverride ? "text-purple-400 border-purple-500/30" : "text-emerald-400"
+              )}
+            >
+              <option value="real" className="bg-bg-card">Real</option>
+              <option value={SubscriptionTier.FREE} className="bg-bg-card">Free</option>
+              <option value={SubscriptionTier.PRO} className="bg-bg-card">Pro</option>
+              <option value={SubscriptionTier.ORGANIZATION} className="bg-bg-card">Dealer</option>
+            </select>
+          )}
           <NotificationTray />
           <button 
             onClick={toggleDrawer}
@@ -229,12 +244,12 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                     </div>
                     <div className="flex-1 min-w-0 relative z-10">
                       <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 text-sm">
-                        {profile.displayName}
+                        {profile?.displayName || 'Operator'}
                       </Typography>
                       <div className="flex items-center gap-2 opacity-80 overflow-hidden">
                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] shrink-0 animate-pulse" />
                         <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.1em] truncate">
-                          {profile.role}
+                          {profile?.role || 'Sales'}
                         </Typography>
                       </div>
                     </div>

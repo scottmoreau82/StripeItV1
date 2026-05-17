@@ -19,7 +19,7 @@ interface RootLayoutProps {
 }
 
 export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onLogSpiff, onConfigPayPlan }) => {
-  const { profile, loading } = useAuth();
+  const { profile } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('stripeit_sidebar_collapsed') === 'true';
@@ -31,18 +31,12 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onL
     localStorage.setItem('stripeit_sidebar_collapsed', String(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
 
-  // StripeItLayoutHydrationGate - Prevent layout flashing/fallback rendering during profile resolution
-  if (loading || !profile) {
-    return (
-      <div className="min-h-screen bg-bg-deep flex items-center justify-center">
-        <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center animate-pulse">
-          <div className="h-6 w-6 rounded-full bg-brand-primary shadow-glow glow-primary" />
-        </div>
-      </div>
-    );
+  // StripeItLayoutTierSwitch - Direct Dealer users to their dedicated layout shell
+  // We must have a profile to determine which shell to mount
+  if (!profile) {
+    return null; // Should be caught by ProtectedRoute/AppContent, but prevents flash
   }
 
-  // StripeItLayoutTierSwitch - Direct Dealer users to their dedicated layout shell
   if (profile.subscriptionTier === SubscriptionTier.ORGANIZATION) {
     return <DealerLayout>{children}</DealerLayout>;
   }

@@ -63,7 +63,7 @@ export const WIDGET_DEFINITIONS: Record<WidgetType, WidgetDefinition> = {
     type: WidgetType.TOTAL_GROSS,
     label: 'Total Gross',
     description: 'Combined front and back end dealership profit.',
-    minTier: SubscriptionTier.BASIC,
+    minTier: SubscriptionTier.PRO,
     defaultVisible: true
   },
   [WidgetType.AVERAGE_GROSS]: {
@@ -78,7 +78,7 @@ export const WIDGET_DEFINITIONS: Record<WidgetType, WidgetDefinition> = {
     type: WidgetType.GOAL_PROGRESS,
     label: 'Goal Progress',
     description: 'Visual tracking against monthly unit targets.',
-    minTier: SubscriptionTier.BASIC,
+    minTier: SubscriptionTier.PRO,
     defaultVisible: true,
     requiredFeature: Feature.GOALS
   },
@@ -93,7 +93,7 @@ export const WIDGET_DEFINITIONS: Record<WidgetType, WidgetDefinition> = {
     type: WidgetType.QUICK_NOTES,
     label: 'Quick Notes',
     description: 'Draft customer follow-ups and deal reminders.',
-    minTier: SubscriptionTier.BASIC,
+    minTier: SubscriptionTier.PRO,
     defaultVisible: true,
     requiredFeature: Feature.QUICK_NOTES
   },
@@ -117,7 +117,7 @@ export const WIDGET_DEFINITIONS: Record<WidgetType, WidgetDefinition> = {
     type: WidgetType.ADJUSTMENTS,
     label: 'Adjustments',
     description: '1-time monthly SPIFFs and payout adjustments.',
-    minTier: SubscriptionTier.BASIC,
+    minTier: SubscriptionTier.PRO,
     defaultVisible: true
   }
 };

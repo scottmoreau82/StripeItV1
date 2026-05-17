@@ -21,8 +21,6 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
   const location = useLocation();
   const { profile } = useAuth();
 
-  if (!profile) return null;
-
   const toggleDrawer = () => setIsOpen(!isOpen);
   const closeDrawer = () => setIsOpen(false);
 
@@ -41,7 +39,8 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
   };
 
   const isDashboardActive = location.pathname === '/';
-  const isSalesLogActive = location.pathname === '/dealer/sales-log';
+  const isSalesReportActive = location.pathname === '/dealer/sales-log';
+  const isUserManagementActive = location.pathname === '/dealer/users';
   const isSettingsActive = location.pathname === '/dealer/settings';
 
   return (
@@ -94,67 +93,141 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                 </div>
 
                 <div className="p-6 overflow-y-auto flex-1 flex flex-col">
-                  <nav className="flex flex-col gap-1 mb-8">
+                  <nav className="flex flex-col mb-8">
+                    {/* Top Level */}
                     <Link
                       to="/"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
                         isDashboardActive 
-                          ? "bg-white/[0.03] text-brand-primary" 
+                          ? "bg-brand-primary/[0.03] text-brand-primary shadow-glow glow-primary/5" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
                       )}
                     >
                       {isDashboardActive && (
-                        <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                        <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="trending" size={20} className={cn(isDashboardActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
+                      <AppIcon name="dashboard" size={18} className={cn(isDashboardActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Dashboard
                     </Link>
+
+                    {/* OPERATIONS */}
+                    <div className="mt-8 mb-2 px-4">
+                      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">Operations</span>
+                    </div>
 
                     <Link
                       to="/dealer/sales-log"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
-                        isSalesLogActive 
-                          ? "bg-white/[0.03] text-brand-primary" 
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        isSalesReportActive 
+                          ? "bg-brand-primary/[0.03] text-brand-primary" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
                       )}
                     >
-                      {isSalesLogActive && (
-                        <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                      {isSalesReportActive && (
+                        <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="salesLog" size={20} className={cn(isSalesLogActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
-                      Sales Log
+                      <AppIcon name="salesLog" size={18} className={cn(isSalesReportActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      Sales Report
                     </Link>
+
+                    <Link
+                      to="/activity"
+                      onClick={closeDrawer}
+                      className={cn(
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        location.pathname === '/activity' 
+                          ? "bg-brand-primary/[0.03] text-brand-primary" 
+                          : "text-slate-500 hover:bg-white/5 hover:text-white"
+                      )}
+                    >
+                      {location.pathname === '/activity' && (
+                        <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                      )}
+                      <AppIcon name="activity" size={18} className={cn(location.pathname === '/activity' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      Activity Feed
+                    </Link>
+
+                    {/* MANAGEMENT */}
+                    <div className="mt-8 mb-2 px-4">
+                      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">Management</span>
+                    </div>
+
+                    <Link
+                      to="/dealer/users"
+                      onClick={closeDrawer}
+                      className={cn(
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        location.pathname === '/dealer/users' && !location.search
+                          ? "bg-brand-primary/[0.03] text-brand-primary" 
+                          : "text-slate-500 hover:bg-white/5 hover:text-white"
+                      )}
+                    >
+                      {location.pathname === '/dealer/users' && !location.search && (
+                        <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                      )}
+                      <AppIcon name="users" size={18} className={cn(location.pathname === '/dealer/users' && !location.search && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      Managers
+                    </Link>
+
+                    <Link
+                      to="/dealer/users?tab=permissions"
+                      onClick={closeDrawer}
+                      className={cn(
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        location.search === '?tab=permissions' 
+                          ? "bg-brand-primary/[0.03] text-brand-primary" 
+                          : "text-slate-500 hover:bg-white/5 hover:text-white"
+                      )}
+                    >
+                      {location.search === '?tab=permissions' && (
+                        <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                      )}
+                      <AppIcon name="lock" size={18} className={cn(location.search === '?tab=permissions' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      Permissions
+                    </Link>
+
+                    <Link
+                      to="/dealer/users?tab=invites"
+                      onClick={closeDrawer}
+                      className={cn(
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        location.search === '?tab=invites' 
+                          ? "bg-brand-primary/[0.03] text-brand-primary" 
+                          : "text-slate-500 hover:bg-white/5 hover:text-white"
+                      )}
+                    >
+                      {location.search === '?tab=invites' && (
+                        <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                      )}
+                      <AppIcon name="mail" size={18} className={cn(location.search === '?tab=invites' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      Invites
+                    </Link>
+
+                    {/* CONFIGURATION */}
+                    <div className="mt-8 mb-2 px-4">
+                      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">Configuration</span>
+                    </div>
 
                     <Link
                       to="/dealer/settings"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
                         isSettingsActive 
-                          ? "bg-white/[0.03] text-brand-primary" 
+                          ? "bg-brand-primary/[0.03] text-brand-primary" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
                       )}
                     >
                       {isSettingsActive && (
-                        <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                        <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="settings" size={20} className={cn(isSettingsActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
+                      <AppIcon name="settings" size={18} className={cn(isSettingsActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Settings
                     </Link>
-
-                    <button
-                      onClick={handleLogDealClick}
-                      className="relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left text-slate-500 hover:bg-white/5 hover:text-white"
-                    >
-                      <div className="h-8 w-8 rounded-lg bg-brand-primary/10 flex items-center justify-center">
-                        <AppIcon name="plus" size={18} className="text-brand-primary" />
-                      </div>
-                      Log Deal
-                    </button>
                   </nav>
                 </div>
 
@@ -169,7 +242,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                     </div>
                     <div className="flex-1 min-w-0 relative z-10">
                       <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 text-sm">
-                        {profile.displayName}
+                        {profile?.displayName || 'Dealer Operator'}
                       </Typography>
                       <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.1em] truncate">
                         Organization Auth

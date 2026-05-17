@@ -34,13 +34,13 @@ export const featureAccessService = {
     switch (feature) {
       case Feature.SALES_LOG_FILTERS:
       case Feature.QUICK_NOTES:
-        return [SubscriptionTier.FREE, SubscriptionTier.BASIC, SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
+        return [SubscriptionTier.FREE, SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
 
       case Feature.GOALS:
       case Feature.ACTIVITY_FEED:
       case Feature.SPIFF_TRACKING:
         // Restricted for Free users
-        return [SubscriptionTier.BASIC, SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
+        return [SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
 
       case Feature.CUSTOM_DASHBOARD:
       case Feature.ADVANCED_ANALYTICS:
@@ -68,7 +68,6 @@ export const featureAccessService = {
   getTierLabel: (tier: SubscriptionTier): string => {
     switch (tier) {
       case SubscriptionTier.FREE: return 'Free';
-      case SubscriptionTier.BASIC: return 'Basic';
       case SubscriptionTier.PRO: return 'Pro';
       case SubscriptionTier.ORGANIZATION: return 'Organization';
       default: return 'Free';

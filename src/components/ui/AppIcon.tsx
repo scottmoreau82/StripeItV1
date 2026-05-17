@@ -163,6 +163,7 @@ export type IconName =
   | 'pointer'
   | 'userPlus'
   | 'target'
+  | 'logBuilder'
   | 'car';
 
 /**
@@ -246,6 +247,7 @@ const themedRegistry: Record<IconTheme, Partial<Record<IconName, any>>> = {
     pointer: MousePointer2,
     userPlus: UserPlus,
     target: Target,
+    logBuilder: Layout,
     car: Car
   },
   [IconTheme.PHOSPHOR]: {

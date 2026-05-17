@@ -113,6 +113,9 @@
   .shadow-cyan-glow {
     @apply shadow-[0_0_15px_rgba(0,242,255,0.3)];
   }
+  .shadow-purple-glow {
+    @apply shadow-[0_0_15px_rgba(168,85,247,0.3)];
+  }
 
   .scrollbar-hide {
     -ms-overflow-style: none;  /* IE and Edge */
@@ -140,10 +143,4 @@
 @keyframes accordion-up {
   from { height: var(--radix-accordion-content-height); }
   to { height: 0; }
-}
-
-@keyframes loading-bar {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
 }

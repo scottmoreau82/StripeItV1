@@ -8,7 +8,7 @@ import {
   where,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Goal } from '../types';
 import { COLLECTIONS } from '../constants';
 
@@ -21,12 +21,17 @@ export const goalService = {
   async getGoalForMonth(userId: string, orgId: string, month: string): Promise<Goal | null> {
     const goalId = `${userId}-${month}`;
     const docRef = doc(db, COLLECTIONS.GOALS, goalId);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      return docSnap.data() as Goal;
+    try {
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return docSnap.data() as Goal;
+      }
+      return null;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, `${COLLECTIONS.GOALS}/${goalId}`);
+      throw error;
     }
-    return null;
   },
 
   async saveGoal(goalData: Partial<Goal>): Promise<void> {
@@ -42,6 +47,11 @@ export const goalService = {
       createdAt: goalData.createdAt || serverTimestamp()
     };
 
-    await setDoc(docRef, finalGoal, { merge: true });
+    try {
+      await setDoc(docRef, finalGoal, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `${COLLECTIONS.GOALS}/${goalId}`);
+      throw error;
+    }
   }
 };

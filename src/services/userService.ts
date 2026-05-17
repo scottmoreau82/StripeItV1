@@ -40,32 +40,6 @@ export const userService = {
   },
 
   /**
-   * Fetches a single user by email.
-   */
-  async getUserByEmail(email: string): Promise<UserProfile | null> {
-    try {
-      const usersRef = collection(db, COLL_CONST.USERS);
-      const q = query(usersRef, where('email', '==', email.toLowerCase().trim()));
-      const snapshot = await getDocs(q);
-      
-      if (snapshot.empty) return null;
-      
-      const doc = snapshot.docs[0];
-      const data = doc.data();
-      return {
-        ...data,
-        uid: doc.id,
-        createdAt: data.createdAt?.toMillis?.() || data.createdAt || Date.now(),
-        updatedAt: data.updatedAt?.toMillis?.() || data.updatedAt || Date.now(),
-      } as any as UserProfile;
-    } catch (error) {
-      console.error("Error fetching user by email:", error);
-      handleFirestoreError(error, OperationType.GET, COLL_CONST.USERS);
-      throw error;
-    }
-  },
-
-  /**
    * Updates a user's subscription tier.
    * Only authorized admins or developers can trigger this.
    */

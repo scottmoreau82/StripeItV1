@@ -11,9 +11,17 @@ export enum UserRole {
 
 export enum SubscriptionTier {
   FREE = 'free',
-  BASIC = 'basic',
   PRO = 'pro',
-  ORGANIZATION = 'organization'
+  ORGANIZATION = 'organization',
+  TRIAL = 'trial',
+  PREMIUM = 'premium',
+  ENTERPRISE = 'enterprise'
+}
+
+export enum OrganizationStatus {
+  ACTIVE = 'active',
+  TRIAL = 'trial',
+  SUSPENDED = 'suspended',
 }
 
 export enum IconTheme {
@@ -209,12 +217,40 @@ export interface PayPlan {
   updatedAt: number;
 }
 
+export enum LogFieldType {
+  TEXT = 'text',
+  NUMBER = 'number',
+  CURRENCY = 'currency',
+  DROPDOWN = 'dropdown',
+  TOGGLE = 'toggle',
+  DATE = 'date'
+}
+
+export interface LogField {
+  id: string;
+  label: string;
+  type: LogFieldType;
+  required: boolean;
+  visible: boolean;
+  options?: string[];
+  order: number;
+}
+
+export interface LogConfig {
+  fields: LogField[];
+  updatedAt: number;
+}
+
 export interface Organization {
   id: string;
   name: string;
   ownerId: string;
   subscriptionTier: SubscriptionTier;
+  status: OrganizationStatus;
+  logConfig?: LogConfig;
   createdAt: number;
+  updatedAt?: number;
+  updatedBy?: string;
 }
 
 export interface Dealership {
@@ -334,8 +370,7 @@ export enum ActivityEventType {
   COMPETITION_ENDED = 'competition_ended',
   ANNOUNCEMENT = 'announcement',
   REMINDER = 'reminder',
-  FEEDBACK_SUBMITTED = 'feedback_submitted',
-  ORG_INVITE = 'org_invite'
+  FEEDBACK_SUBMITTED = 'feedback_submitted'
 }
 
 export enum FeedbackType {
@@ -513,22 +548,9 @@ export interface DealerDeal {
   id: string;
   orgId: string;
   createdByUserId: string;
-  date: string; // ISO string YYYY-MM-DD
-  desk: string;
-  customerName: string;
-  dealNumber: string;
-  year: string;
-  newOrUsed: 'N' | 'U';
-  model: string;
-  stockNumber: string;
-  frontGross: number;
-  tradeInfo: string;
-  salesperson: string;
-  source: string;
-  fiManager: string;
-  backGross: number;
   createdAt: number;
   updatedAt: number;
+  [key: string]: any;
 }
 
 export enum InviteStatus {
@@ -543,12 +565,9 @@ export interface Invite {
   email: string;
   role: UserRole;
   orgId: string;
-  orgName: string;
   token: string;
   status: InviteStatus;
   invitedBy: string;
-  invitedByDisplayName: string;
-  invitedUserId: string;
   expiresAt: number;
   createdAt: number;
   acceptedAt?: number;

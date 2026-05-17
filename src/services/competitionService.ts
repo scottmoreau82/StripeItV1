@@ -9,7 +9,7 @@ import {
   serverTimestamp,
   orderBy
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { 
   Competition, 
   CompetitionType, 
@@ -107,43 +107,61 @@ export const competitionService = {
    * Fetch active competitions for an organization
    */
   async getActiveCompetitions(orgId: string): Promise<Competition[]> {
+    const path = `${COLLECTIONS.ORGANIZATIONS}/${orgId}/${COLLECTIONS.COMPETITIONS}`;
     const q = query(
       collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.COMPETITIONS),
       where('status', 'in', [CompetitionStatus.ACTIVE, CompetitionStatus.COMPLETED]),
       orderBy('endDate', 'desc')
     );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => ({ 
-      id: d.id, 
-      ...d.data(),
-      // Handle timestamps if coming back as Firestore Timestamps
-      startDate: (d.data() as any).startDate?.seconds ? (d.data() as any).startDate.seconds * 1000 : (d.data() as any).startDate,
-      endDate: (d.data() as any).endDate?.seconds ? (d.data() as any).endDate.seconds * 1000 : (d.data() as any).endDate,
-    } as Competition));
+    try {
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(d => ({ 
+        id: d.id, 
+        ...d.data(),
+        // Handle timestamps if coming back as Firestore Timestamps
+        startDate: (d.data() as any).startDate?.seconds ? (d.data() as any).startDate.seconds * 1000 : (d.data() as any).startDate,
+        endDate: (d.data() as any).endDate?.seconds ? (d.data() as any).endDate.seconds * 1000 : (d.data() as any).endDate,
+      } as Competition));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      throw error;
+    }
   },
 
   /**
    * Create a new competition
    */
   async createCompetition(orgId: string, data: Omit<Competition, 'id' | 'createdAt' | 'updatedAt' | 'orgId'>): Promise<string> {
-    const docRef = await addDoc(collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.COMPETITIONS), {
-      ...data,
-      orgId,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    return docRef.id;
+    const path = `${COLLECTIONS.ORGANIZATIONS}/${orgId}/${COLLECTIONS.COMPETITIONS}`;
+    try {
+      const docRef = await addDoc(collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.COMPETITIONS), {
+        ...data,
+        orgId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      return docRef.id;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
   },
 
   /**
    * Update competition status
    */
   async updateStatus(orgId: string, compId: string, status: CompetitionStatus): Promise<void> {
+     const path = `${COLLECTIONS.ORGANIZATIONS}/${orgId}/${COLLECTIONS.COMPETITIONS}/${compId}`;
      const docRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.COMPETITIONS, compId);
-     await updateDoc(docRef, { 
-       status,
-       updatedAt: serverTimestamp()
-     });
+     try {
+       await updateDoc(docRef, { 
+         status,
+         updatedAt: serverTimestamp()
+       });
+     } catch (error) {
+       handleFirestoreError(error, OperationType.UPDATE, path);
+       throw error;
+     }
   },
 
   /**

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { DealerDeal } from '@/src/types';
+import React, { useState, useEffect } from 'react';
+import { DealerDeal, LogField, LogFieldType } from '@/src/types';
 import { Input } from '@/src/components/ui/Input';
 import { Select } from '@/src/components/ui/Select';
 import { CurrencyInput } from '@/src/components/ui/CurrencyInput';
 import { Typography } from '@/src/components/ui/Typography';
+import { Checkbox } from '@/src/components/ui/Checkbox';
 import { AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
@@ -11,57 +12,60 @@ import { cn } from '@/src/lib/utils';
 /**
  * DealerDealForm
  * Specialized form for organizational deal entry.
+ * Dynamic rendering based on LogField configuration.
  */
 interface DealerDealFormProps {
   initialData?: Partial<DealerDeal>;
+  fields: LogField[];
   onSubmit: (data: Partial<DealerDeal>) => void;
   isLoading?: boolean;
 }
 
 export const DealerDealForm: React.FC<DealerDealFormProps> = ({
-  initialData = {} as Partial<DealerDeal>,
+  initialData = {},
+  fields,
   onSubmit,
   isLoading
 }) => {
-  const [formData, setFormData] = useState<Partial<DealerDeal>>({
-    date: initialData.date || new Date().toISOString().split('T')[0],
-    desk: initialData.desk || '',
-    customerName: initialData.customerName || '',
-    dealNumber: initialData.dealNumber || '',
-    year: initialData.year || '',
-    newOrUsed: initialData.newOrUsed || 'N',
-    model: initialData.model || '',
-    stockNumber: initialData.stockNumber || '',
-    frontGross: initialData.frontGross || 0,
-    tradeInfo: initialData.tradeInfo || '',
-    salesperson: initialData.salesperson || '',
-    source: initialData.source || '',
-    fiManager: initialData.fiManager || '',
-    backGross: initialData.backGross || 0,
-  });
-
+  const [formData, setFormData] = useState<Partial<DealerDeal>>({});
   const [errors, setErrors] = useState<string[]>([]);
 
-  const handleChange = (field: keyof DealerDeal, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    setErrors([]);
+  // Initialize form data with defaults and initial values
+  useEffect(() => {
+    const data: Partial<DealerDeal> = { ...initialData };
+    fields.forEach(field => {
+      if (data[field.id] === undefined) {
+        if (field.type === LogFieldType.DATE && field.id === 'date') {
+          data[field.id] = new Date().toISOString().split('T')[0];
+        } else if (field.type === LogFieldType.NUMBER || field.type === LogFieldType.CURRENCY) {
+          data[field.id] = 0;
+        } else if (field.type === LogFieldType.TOGGLE) {
+          data[field.id] = false;
+        } else {
+          data[field.id] = '';
+        }
+      }
+    });
+    setFormData(data);
+  }, [fields, initialData]);
+
+  const handleChange = (fieldId: string, value: any) => {
+    setFormData(prev => ({ ...prev, [fieldId]: value }));
+    setErrors(prev => prev.filter(f => f !== fieldId));
   };
 
-  const handleNumericChange = (field: keyof DealerDeal, value: string) => {
+  const handleNumericChange = (fieldId: string, value: string) => {
     const numValue = parseFloat(value) || 0;
-    handleChange(field, numValue);
+    handleChange(fieldId, numValue);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic Validation
-    const requiredFields: (keyof DealerDeal)[] = [
-      'date', 'desk', 'customerName', 'dealNumber', 'year', 'newOrUsed', 
-      'model', 'stockNumber', 'frontGross', 'salesperson', 'fiManager', 'backGross'
-    ];
-
-    const missingFields = requiredFields.filter(f => !formData[f] && formData[f] !== 0);
+    // Dynamic Validation
+    const missingFields = fields
+      .filter(f => f.required && (formData[f.id] === undefined || formData[f.id] === '' || formData[f.id] === null))
+      .map(f => f.id);
     
     if (missingFields.length > 0) {
       setErrors(missingFields);
@@ -69,6 +73,70 @@ export const DealerDealForm: React.FC<DealerDealFormProps> = ({
     }
 
     onSubmit(formData);
+  };
+
+  const renderField = (field: LogField) => {
+    if (!field.visible) return null;
+
+    const commonProps = {
+      label: field.label,
+      value: formData[field.id] ?? '',
+      required: field.required,
+      onChange: (e: any) => handleChange(field.id, e.target.value),
+      placeholder: field.label,
+      error: errors.includes(field.id)
+    };
+
+    switch (field.type) {
+      case LogFieldType.TEXT:
+        return <Input {...commonProps} />;
+      
+      case LogFieldType.NUMBER:
+        return (
+          <Input 
+            {...commonProps} 
+            type="number" 
+            onChange={(e) => handleNumericChange(field.id, e.target.value)}
+          />
+        );
+      
+      case LogFieldType.CURRENCY:
+        return (
+          <CurrencyInput 
+            {...commonProps} 
+            value={Number(formData[field.id] || 0)}
+            onChange={(e) => handleNumericChange(field.id, e.target.value)}
+          />
+        );
+      
+      case LogFieldType.DATE:
+        return <Input {...commonProps} type="date" />;
+      
+      case LogFieldType.DROPDOWN:
+        return (
+          <Select 
+            {...commonProps}
+            options={field.options?.map(o => ({ value: o, label: o })) || []}
+          />
+        );
+      
+      case LogFieldType.TOGGLE:
+        return (
+          <div className="flex items-center gap-3 h-10 px-1">
+             <Checkbox 
+                id={field.id}
+                checked={!!formData[field.id]}
+                onCheckedChange={(checked) => handleChange(field.id, checked)}
+             />
+             <Typography variant="label" htmlFor={field.id} className="text-slate-400 cursor-pointer">
+                {field.label}
+             </Typography>
+          </div>
+        );
+
+      default:
+        return <Input {...commonProps} />;
+    }
   };
 
   return (
@@ -87,7 +155,7 @@ export const DealerDealForm: React.FC<DealerDealFormProps> = ({
                 Required Fields Missing
               </Typography>
               <Typography variant="small" className="text-orange-200/70">
-                Please ensure all required fields are filled out correctly.
+                Please ensure all required fields marked as mandatory are filled out.
               </Typography>
             </div>
           </motion.div>
@@ -95,105 +163,11 @@ export const DealerDealForm: React.FC<DealerDealFormProps> = ({
       </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <Input
-          label="Date"
-          type="date"
-          value={formData.date}
-          onChange={(e) => handleChange('date', e.target.value)}
-          required
-        />
-        <Input
-          label="Desk"
-          placeholder="Sales Desk ID"
-          value={formData.desk}
-          onChange={(e) => handleChange('desk', e.target.value)}
-          required
-        />
-        <Input
-          label="Customer"
-          placeholder="Full Name"
-          value={formData.customerName}
-          onChange={(e) => handleChange('customerName', e.target.value)}
-          required
-        />
-        <Input
-          label="Deal #"
-          placeholder="Ref Number"
-          value={formData.dealNumber}
-          onChange={(e) => handleChange('dealNumber', e.target.value)}
-          required
-        />
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Year"
-            placeholder="YYYY"
-            value={formData.year}
-            onChange={(e) => handleChange('year', e.target.value)}
-            required
-          />
-          <Select
-            label="N or U"
-            options={[
-              { value: 'N', label: 'New' },
-              { value: 'U', label: 'Used' },
-            ]}
-            value={formData.newOrUsed}
-            onChange={(e) => handleChange('newOrUsed', e.target.value)}
-            required
-          />
-        </div>
-        <Input
-          label="Model"
-          placeholder="Vehicle Model"
-          value={formData.model}
-          onChange={(e) => handleChange('model', e.target.value)}
-          required
-        />
-        <Input
-          label="Stock #"
-          placeholder="Inventory ID"
-          value={formData.stockNumber}
-          onChange={(e) => handleChange('stockNumber', e.target.value)}
-          required
-        />
-        <CurrencyInput
-          label="Front $"
-          value={formData.frontGross || 0}
-          onChange={(e) => handleNumericChange('frontGross', e.target.value)}
-          required
-        />
-         <Input
-          label="Trade"
-          placeholder="Trade-in info (Optional)"
-          value={formData.tradeInfo}
-          onChange={(e) => handleChange('tradeInfo', e.target.value)}
-        />
-        <Input
-          label="Sales P"
-          placeholder="Salesperson Name"
-          value={formData.salesperson}
-          onChange={(e) => handleChange('salesperson', e.target.value)}
-          required
-        />
-        <Input
-          label="Source"
-          placeholder="Lead Source"
-          value={formData.source}
-          onChange={(e) => handleChange('source', e.target.value)}
-        />
-        <Input
-          label="F&I"
-          placeholder="F&I Manager"
-          value={formData.fiManager}
-          onChange={(e) => handleChange('fiManager', e.target.value)}
-          required
-        />
-        <CurrencyInput
-          label="Back $"
-          value={formData.backGross || 0}
-          onChange={(e) => handleNumericChange('backGross', e.target.value)}
-          required
-        />
+        {fields.map(field => (
+          <React.Fragment key={field.id}>
+            {renderField(field)}
+          </React.Fragment>
+        ))}
       </div>
     </form>
   );

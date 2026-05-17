@@ -35,10 +35,18 @@ export const navigationConfig = {
       if (!profile) return false;
       
       const isFree = profile.subscriptionTier === SubscriptionTier.FREE;
+      const isSalesperson = profile.subscriptionTier !== SubscriptionTier.ORGANIZATION;
+
+      // Hide specific unfinished routes for all Salespeople (Free, Basic, Pro)
+      const unfinishedRoutes = ['analytics', 'goals', 'inventory'];
+      if (isSalesperson && unfinishedRoutes.includes(item.id)) {
+        return false;
+      }
+
       const hasAccess = featureAccessService.hasAccess(profile, item.featureId as Feature);
 
       // Hard gate: Hide specific items for Free tier even if hasAccess might return true (extra safety/clarity)
-      const restrictedForFree = ['activity', 'analytics', 'goals', 'reports', 'inventory'];
+      const restrictedForFree = ['activity', 'reports'];
       if (isFree && restrictedForFree.includes(item.id)) {
         return false;
       }

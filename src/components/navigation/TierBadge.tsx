@@ -19,8 +19,6 @@ export const TierBadge: React.FC<TierBadgeProps> = ({ tier, isCollapsed }) => {
         return "bg-brand-primary/10 border-brand-primary/20 text-brand-primary shadow-[0_0_8px_rgba(33,197,219,0.1)]";
       case SubscriptionTier.PRO:
         return "bg-amber-500/10 border-amber-500/20 text-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.1)]";
-      case SubscriptionTier.BASIC:
-        return "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.1)]";
       default:
         return "bg-slate-500/10 border-white/10 text-slate-500";
     }

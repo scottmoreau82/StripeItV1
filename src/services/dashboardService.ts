@@ -1,5 +1,5 @@
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { DashboardLayout, WidgetConfig } from '../types';
 import { WidgetType, widgetService } from './widgetService';
 import { COLLECTIONS } from '../constants';
@@ -14,13 +14,19 @@ export const dashboardService = {
    * Save a user's dashboard layout to Firestore
    */
   async saveUserLayout(userId: string, layout: DashboardLayout): Promise<void> {
+    const path = `${COLLECTIONS.USERS}/${userId}`;
     const userRef = doc(db, COLLECTIONS.USERS, userId);
-    await updateDoc(userRef, {
-      dashboardPreference: {
-        layout,
-        lastUpdated: Date.now()
-      }
-    });
+    try {
+      await updateDoc(userRef, {
+        dashboardPreference: {
+          layout,
+          lastUpdated: Date.now()
+        }
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+      throw error;
+    }
   },
 
   /**

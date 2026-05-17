@@ -19,7 +19,6 @@ export const planLimitService = {
       case LimitType.DEAL_STORAGE:
         switch (tier) {
           case SubscriptionTier.FREE: return 8;
-          case SubscriptionTier.BASIC: return 50;
           case SubscriptionTier.PRO: return 500;
           case SubscriptionTier.ORGANIZATION: return Infinity;
           default: return 5;
@@ -27,7 +26,6 @@ export const planLimitService = {
       case LimitType.NOTE_COUNT:
         switch (tier) {
           case SubscriptionTier.FREE: return 5;
-          case SubscriptionTier.BASIC: return 20;
           case SubscriptionTier.PRO: return 100;
           case SubscriptionTier.ORGANIZATION: return Infinity;
           default: return 0;

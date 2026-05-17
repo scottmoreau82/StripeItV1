@@ -39,11 +39,7 @@ service cloud.firestore {
 
     function isAnyAdmin() {
       let user = getUserSafe(request.auth.uid);
-      return isBootstrapAdmin() || (user != null && isNotFrozen() && (
-        user.role.lower() in ['gm', 'admin'] || 
-        user.get('isAdmin', false) == true ||
-        user.get('subscriptionTier', '').lower() == 'organization'
-      ));
+      return isBootstrapAdmin() || (user != null && isNotFrozen() && (user.role.lower() in ['gm', 'admin'] || user.get('isAdmin', false) == true));
     }
 
     function isAnyManager() {
@@ -60,7 +56,7 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.uid == request.auth.uid &&
              data.email is string &&
-             data.subscriptionTier.lower() in ['free', 'basic', 'pro', 'organization'];
+             data.get('subscriptionTier', 'free').lower() in ['free', 'pro', 'organization', 'trial', 'premium', 'enterprise'];
     }
 
     function checkInvite(data) {
@@ -81,8 +77,8 @@ service cloud.firestore {
              data.orgId is string &&
              data.token is string &&
              data.status in ['pending', 'accepted', 'expired', 'cancelled'] &&
-             data.expiresAt is number &&
-             data.createdAt is number;
+             (data.expiresAt is number || data.expiresAt is timestamp) &&
+             (data.createdAt is number || data.createdAt is timestamp);
     }
 
     function isValidDeal(data) {
@@ -113,7 +109,7 @@ service cloud.firestore {
              data.newOrUsed in ['N', 'U'] &&
              data.frontGross is number &&
              data.backGross is number &&
-             data.createdAt is number;
+             (data.createdAt is number || data.createdAt is timestamp);
     }
 
     function isValidSpiff(data, isCreate) {
@@ -137,8 +133,8 @@ service cloud.firestore {
              (data.get('attachmentFileName', '') is string) &&
              (data.get('attachmentContentType', '') is string) &&
              (data.get('attachmentSize', 0) is number) &&
-             data.createdAt is number &&
-             data.updatedAt is number;
+             (data.createdAt is number || data.createdAt is timestamp) &&
+             (data.updatedAt is number || data.updatedAt is timestamp);
     }
 
     function isValidAnalyticsEvent(data) {
@@ -146,6 +142,13 @@ service cloud.firestore {
              data.sessionId is string &&
              data.type is string &&
              data.timestamp is number;
+    }
+
+    function isValidOrganization(data) {
+      return data.get('name', 'Personal Workspace') is string &&
+             data.get('ownerId', '') is string &&
+             data.get('subscriptionTier', 'free').lower() in ['free', 'pro', 'organization', 'trial', 'premium', 'enterprise'] &&
+             (data.get('status', 'active') in ['active', 'trial', 'suspended']);
     }
 
     // --- COLLECTION RULES ---
@@ -179,13 +182,15 @@ service cloud.firestore {
 
     // Invites Collection
     match /invites/{inviteId} {
+      // Anyone signed in can read an invite if they have the ID (token check)
       allow get: if isSignedIn();
+      // Only admins/GMs can list or create invites
       allow list: if isAnyAdmin();
       allow create: if isAnyAdmin() && isValidInvite(incoming());
+      // Users can update status when accepting
       allow update: if isSignedIn() && (
-        (isAnyAdmin() && (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) && incoming().status == 'cancelled')) ||
-        (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'acceptedAt']) && incoming().status == 'accepted') ||
-        isAnyAdmin()
+        isAnyAdmin() || 
+        (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'acceptedAt']) && incoming().status == 'accepted')
       );
       allow delete: if isAnyAdmin();
     }
@@ -203,12 +208,11 @@ service cloud.firestore {
         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId'])
       ) || (
         isAnyAdmin() && isOrgMember(existing().orgId) &&
-        incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt', 'isAdmin', 'subscriptionTier', 'isFrozen', 'isDeleted', 'orgId'])
+        incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt', 'isAdmin', 'subscriptionTier'])
       );
       
       match /notifications/{notifId} {
-        allow read, update, delete: if isOwner(userId);
-        allow create: if isSignedIn();
+        allow read, write: if isOwner(userId);
       }
     }
 
@@ -217,7 +221,11 @@ service cloud.firestore {
       allow get: if isSignedIn() && (isOrgMember(orgId) || isBootstrapAdmin() || (resource != null && resource.data.ownerId == request.auth.uid));
       allow list: if isSignedIn() && isBootstrapAdmin();
       allow create: if isSignedIn(); 
-      allow update: if isSignedIn() && (isAnyAdmin() || (resource != null && resource.data.ownerId == request.auth.uid));
+      allow update: if isSignedIn() && (
+        isBootstrapAdmin() ||
+        (resource != null && resource.data.ownerId == request.auth.uid) ||
+        (isOrgMember(orgId) && isAnyManager())
+      ) && isValidOrganization(incoming());
 
       match /activity/{eventId} {
         allow get, list: if isOrgMember(orgId);

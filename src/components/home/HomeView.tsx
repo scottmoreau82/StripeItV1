@@ -44,6 +44,8 @@ import {
   Plus
 } from 'lucide-react';
 
+import { DealerDashboard } from '../dealer/DealerDashboard';
+
 /**
  * StripeItDashboardMetricSystem
  * Integrated dashboard with analytics, goals, and trends.
@@ -75,11 +77,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const { isMobile } = useResponsive();
 
   const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
+  const isDealer = profile?.subscriptionTier === SubscriptionTier.ORGANIZATION;
 
   const [showMetrics, setShowMetrics] = useState(!isMobile);
   const [activeTab, setActiveTab] = useState<'overview' | 'trends'>('overview');
   const [selectedCompId, setSelectedCompId] = useState<string | null>(null);
   const [isCustomizing, setIsCustomizing] = useState(false);
+
+  // If Dealer, return specific Dealer Dashboard
+  if (isDealer) {
+    return <DealerDashboard />;
+  }
 
   // Force overview tab for free users
   useMemo(() => {
@@ -183,6 +191,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
                           type={type as WidgetType} 
                           data={widgetData}
                           variant="hero-horizontal"
+                          onUpgrade={() => {
+                            window.location.hash = '#settings';
+                          }}
                         />
                       );
                     })}
@@ -207,6 +218,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
                             type={type as WidgetType} 
                             data={widgetData}
                             variant="telemetry"
+                            onUpgrade={() => {
+                              window.location.hash = '#settings';
+                            }}
                           />
                         </div>
                       );
@@ -279,7 +293,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* Dynamic Main Widgets */}
             {dashboardLayout.widgets
               .filter(w => w.visible && [WidgetType.RECENT_DEALS].includes(w.type as WidgetType))
-              .filter(w => !(isFree && w.type === WidgetType.RECENT_DEALS))
               .sort((a, b) => a.order - b.order)
               .map(widget => (
                 <WidgetRegistry 
@@ -359,7 +372,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
               <Card className="p-4 bg-white/[0.02] border-white/5 text-center">
                   <Typography variant="p" className="text-[9px] text-slate-600 uppercase font-bold tracking-widest mb-2">Notes Locked</Typography>
-                  <Button variant="ghost" className="h-7 text-[8px] uppercase tracking-widest border-white/10 w-full">Upgrade</Button>
+                  <Button 
+                    variant="ghost" 
+                    className="h-7 text-[8px] uppercase tracking-widest border-white/10 w-full"
+                    onClick={() => { window.location.hash = '#settings'; }}
+                  >
+                    Upgrade
+                  </Button>
               </Card>
             </div>
           )}

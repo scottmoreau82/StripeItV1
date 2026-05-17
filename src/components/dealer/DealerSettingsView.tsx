@@ -1,150 +1,100 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { userService } from '@/src/services/userService';
-import { inviteService } from '@/src/services/inviteService';
-import { UserProfile, UserRole, Invite } from '@/src/types';
+import { organizationService } from '@/src/services/organizationService';
+import { Organization, SubscriptionTier, OrganizationStatus } from '@/src/types';
 import { DashboardLayout } from '../layout/DashboardLayout';
 import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
-import { AppIcon } from '../ui/AppIcon';
 import { 
-  Users, 
   UserPlus, 
   Shield, 
-  Snowflake, 
-  Trash2, 
-  MoreVertical,
-  Mail,
-  Calendar,
   Clock,
-  Search,
-  CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Zap,
+  Settings,
+  LayoutGrid
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { DealerInviteManagerModal } from './DealerInviteManagerModal';
-import { motion, AnimatePresence } from 'motion/react';
+import { Link } from 'react-router-dom';
 
 /**
  * DealerSettingsView
  * Operational control center for Dealer organizations.
  */
 export const DealerSettingsView: React.FC = () => {
-  const { profile, addToast } = useAuth();
-  const [managers, setManagers] = useState<UserProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const { profile, addToast, isAdmin, user } = useAuth();
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [isOrgLoading, setIsOrgLoading] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
-  const [pendingInvites, setPendingInvites] = useState<Invite[]>([]);
-  const [isLoadingInvites, setIsLoadingInvites] = useState(false);
+  const [isUpdatingOrg, setIsUpdatingOrg] = useState(false);
 
-  const fetchManagers = async () => {
-    if (!profile?.orgId) return;
-    setIsLoading(true);
+  const fetchOrganization = async () => {
+    if (!profile?.orgId || !isAdmin) return;
+    setIsOrgLoading(true);
     try {
-      const allUsers = await userService.getUsers(profile.orgId);
-      // Filter for Managers (not sales or the dealer itself, though dealer might want to see themselves?)
-      // Actually, prompt says "manage Managers".
-      const managerUsers = allUsers.filter(u => 
-        (u.role === UserRole.MANAGER || u.role === UserRole.GENERAL_MANAGER) && 
-        !u.isDeleted &&
-        u.uid !== profile.uid
-      );
-      setManagers(managerUsers);
+      const org = await organizationService.getOrganization(profile.orgId);
+      setOrganization(org);
     } catch (error) {
-      addToast('Failed to load managers', 'error');
+      addToast('Failed to load organization details', 'error');
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchPendingInvites = async () => {
-    if (!profile?.orgId) return;
-    setIsLoadingInvites(true);
-    try {
-      const invites = await inviteService.getPendingInvitesByOrg(profile.orgId);
-      setPendingInvites(invites);
-    } catch (error) {
-      console.error('Failed to load pending invites:', error);
-    } finally {
-      setIsLoadingInvites(false);
+      setIsOrgLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchManagers();
-    fetchPendingInvites();
-  }, [profile?.orgId]);
+    if (isAdmin) fetchOrganization();
+  }, [profile?.orgId, isAdmin]);
 
-  const handleToggleFreeze = async (user: UserProfile) => {
-    setActionInProgress(user.uid);
+  const handleUpdateOrgTier = async (tier: SubscriptionTier) => {
+    if (!profile?.orgId || !user || !organization) return;
+    setIsUpdatingOrg(true);
     try {
-      const newStatus = !user.isFrozen;
-      await userService.setUserFrozen(user.uid, newStatus);
-      addToast(`Manager account ${newStatus ? 'frozen' : 'unfrozen'} successfully`, 'success');
-      setManagers(prev => prev.map(u => u.uid === user.uid ? { ...u, isFrozen: newStatus } : u));
+      await organizationService.updateOrgTierAndStatus(profile.orgId, user.uid, {
+        tier,
+        status: organization.status || OrganizationStatus.ACTIVE
+      });
+      setOrganization(prev => prev ? { ...prev, subscriptionTier: tier } : null);
+      addToast(`Organization tier updated to ${tier} successfully`, 'success');
     } catch (error) {
-      addToast('Failed to update account status', 'error');
+      addToast('Failed to update tier', 'error');
     } finally {
-      setActionInProgress(null);
+      setIsUpdatingOrg(false);
     }
   };
 
-  const handleDelete = async (user: UserProfile) => {
-    if (!window.confirm(`Are you sure you want to remove ${user.displayName || user.email} from the organization? This will revoke their access immediately.`)) {
-      return;
-    }
-
-    setActionInProgress(user.uid);
+  const handleUpdateOrgStatus = async (status: OrganizationStatus) => {
+    if (!profile?.orgId || !user || !organization) return;
+    setIsUpdatingOrg(true);
     try {
-      await userService.deleteUser(user.uid);
-      addToast('Manager removed successfully', 'success');
-      setManagers(prev => prev.filter(u => u.uid !== user.uid));
+      await organizationService.updateOrgTierAndStatus(profile.orgId, user.uid, {
+        tier: organization.subscriptionTier,
+        status
+      });
+      setOrganization(prev => prev ? { ...prev, status } : null);
+      addToast(`Organization status updated to ${status} successfully`, 'success');
     } catch (error) {
-      addToast('Failed to remove manager', 'error');
+      addToast('Failed to update status', 'error');
     } finally {
-      setActionInProgress(null);
+      setIsUpdatingOrg(false);
     }
   };
-
-  const handleCancelInvite = async (inviteId: string) => {
-    if (!window.confirm('Are you sure you want to cancel this invite? This will invalidate the registration link.')) {
-      return;
-    }
-
-    setActionInProgress(inviteId);
-    try {
-      await inviteService.cancelInvite(inviteId);
-      addToast('Invite invalidated successfully', 'success');
-      setPendingInvites(prev => prev.filter(inv => inv.id !== inviteId));
-    } catch (error) {
-      addToast('Failed to cancel invite', 'error');
-    } finally {
-      setActionInProgress(null);
-    }
-  };
-
-  const filteredManagers = managers.filter(m => 
-    m.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const header = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shadow-glow glow-primary/5">
-            <AppIcon name="settings" className="h-6 w-6 text-brand-primary" />
+            <Settings className="h-6 w-6 text-brand-primary" />
           </div>
           <div>
             <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter leading-none">
               Dealer Settings
             </Typography>
             <Typography variant="p" className="text-slate-500 font-bold mt-1 uppercase text-[10px] tracking-widest opacity-60">
-              Organizational Management & Oversight
+              Organizational Parameters & Global Controls
             </Typography>
           </div>
         </div>
@@ -155,7 +105,7 @@ export const DealerSettingsView: React.FC = () => {
             className="shadow-glow glow-primary h-11 px-6 font-black uppercase tracking-widest text-xs"
           >
             <UserPlus size={16} className="mr-2" />
-            Invite Manager
+            Invite Member
           </Button>
         </div>
       </div>
@@ -164,294 +114,163 @@ export const DealerSettingsView: React.FC = () => {
 
   const mainContent = (
     <div className="space-y-8 pb-32">
-       {/* Stats Grid */}
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6 bg-bg-card/20 border-white/5 space-y-4">
-             <div className="flex items-center justify-between">
-                <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Total Managers</Typography>
-                <Users size={16} className="text-brand-primary" />
+       {/* Organization Profile Card */}
+       <Card className="p-8 bg-bg-card/20 border-white/5 space-y-6">
+          <div className="flex items-center justify-between">
+             <div className="space-y-1">
+                <Typography variant="label" className="text-slate-500 uppercase text-[11px] font-black tracking-widest">Dealership Identity</Typography>
+                <Typography variant="h2" className="text-white font-black italic">{profile?.orgName || 'StripeIt Organization'}</Typography>
              </div>
-             <Typography variant="h2" className="text-white font-black italic">{managers.length}</Typography>
-          </Card>
-          <Card className="p-6 bg-bg-card/20 border-white/5 space-y-4">
-             <div className="flex items-center justify-between">
-                <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Active Seats</Typography>
-                <CheckCircle2 size={16} className="text-emerald-500" />
-             </div>
-             <Typography variant="h2" className="text-white font-black italic">{managers.filter(m => !m.isFrozen).length}</Typography>
-          </Card>
-          <Card className="p-6 bg-bg-card/20 border-white/5 space-y-4">
-             <div className="flex items-center justify-between">
-                <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Frozen Accounts</Typography>
-                <Snowflake size={16} className="text-blue-400" />
-             </div>
-             <Typography variant="h2" className="text-white font-black italic">{managers.filter(m => m.isFrozen).length}</Typography>
-          </Card>
-       </div>
-
-       {/* Search & Actions Bar */}
-       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:max-w-md">
-             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-             <input 
-                type="text" 
-                placeholder="Find manager by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-sm text-white focus:outline-none focus:border-brand-primary/50 transition-all placeholder:text-slate-600 font-medium"
-             />
-          </div>
-       </div>
-
-       {/* Manager Directory */}
-       <div className="space-y-4">
-          <div className="flex items-center gap-2">
-             <Users size={16} className="text-brand-primary" />
-             <Typography variant="h3" className="italic font-black uppercase tracking-tight text-white leading-none">
-                Active Management Team
-             </Typography>
-          </div>
-          <Card className="bg-bg-card/20 border-white/5 overflow-hidden">
-             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                   <thead>
-                      <tr className="border-b border-white/5 bg-white/[0.01]">
-                         <th className="px-6 py-4">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Identity</Typography>
-                         </th>
-                         <th className="px-6 py-4">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Role & Access</Typography>
-                         </th>
-                         <th className="px-6 py-4">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Status</Typography>
-                         </th>
-                         <th className="px-6 py-4">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Created</Typography>
-                         </th>
-                         <th className="px-6 py-4 text-right">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Actions</Typography>
-                         </th>
-                      </tr>
-                   </thead>
-                   <tbody className="divide-y divide-white/5">
-                      {isLoading ? (
-                         [1,2,3].map(i => (
-                            <tr key={i} className="animate-pulse">
-                               <td colSpan={5} className="px-6 py-8">
-                                  <div className="h-10 bg-white/5 rounded-xl w-full" />
-                               </td>
-                            </tr>
-                         ))
-                      ) : filteredManagers.length === 0 ? (
-                         <tr>
-                            <td colSpan={5} className="px-6 py-20 text-center">
-                               <Users className="h-12 w-12 text-slate-700 mx-auto mb-4" />
-                               <Typography variant="p" className="text-slate-500 font-bold">No managers found in this organization.</Typography>
-                            </td>
-                         </tr>
-                      ) : (
-                         filteredManagers.map((manager) => (
-                            <tr key={manager.uid} className="hover:bg-white/[0.01] transition-colors group">
-                               <td className="px-6 py-5">
-                                  <div className="flex items-center gap-4">
-                                     <div className="h-10 w-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-white font-bold uppercase overflow-hidden shrink-0">
-                                        {manager.photoURL ? (
-                                           <img src={manager.photoURL} alt="" className="h-full w-full object-cover" />
-                                        ) : (
-                                           manager.displayName?.charAt(0) || manager.email.charAt(0)
-                                        )}
-                                     </div>
-                                     <div className="min-w-0">
-                                        <Typography variant="label" className="text-white block font-black truncate text-[13px]">
-                                           {manager.displayName || 'Unnamed Manager'}
-                                        </Typography>
-                                        <div className="flex items-center gap-1.5 min-w-0">
-                                           <Mail size={10} className="text-slate-600 shrink-0" />
-                                           <Typography variant="mono" className="text-[10px] text-slate-500 truncate lowercase">
-                                              {manager.email}
-                                           </Typography>
-                                        </div>
-                                     </div>
-                                  </div>
-                               </td>
-                               <td className="px-6 py-5">
-                                  <Badge 
-                                     variant="outline" 
-                                     className={cn(
-                                        "text-[9px] font-black uppercase tracking-widest border-white/10",
-                                        manager.role === UserRole.GENERAL_MANAGER ? "text-brand-primary" : "text-slate-400"
-                                     )}
-                                  >
-                                     {manager.role === UserRole.GENERAL_MANAGER ? 'General Manager' : 'Manager'}
-                                  </Badge>
-                               </td>
-                               <td className="px-6 py-5">
-                                  {manager.isFrozen ? (
-                                     <div className="flex items-center gap-1.5 text-blue-400">
-                                        <Snowflake size={14} />
-                                        <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest">Frozen</Typography>
-                                     </div>
-                                  ) : (
-                                     <div className="flex items-center gap-1.5 text-emerald-500">
-                                        <CheckCircle2 size={14} />
-                                        <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest">Active</Typography>
-                                     </div>
-                                  )}
-                               </td>
-                               <td className="px-6 py-5">
-                                  <div className="space-y-1">
-                                     <div className="flex items-center gap-1.5">
-                                        <Calendar size={12} className="text-slate-600" />
-                                        <Typography variant="mono" className="text-[10px] text-slate-500">
-                                           {new Date(manager.createdAt).toLocaleDateString()}
-                                        </Typography>
-                                     </div>
-                                     {manager.lastActive && (
-                                        <div className="flex items-center gap-1.5">
-                                           <Clock size={12} className="text-slate-600" />
-                                           <Typography variant="mono" className="text-[9px] text-slate-600">
-                                              {new Date(manager.lastActive).toLocaleDateString()}
-                                           </Typography>
-                                        </div>
-                                     )}
-                                  </div>
-                               </td>
-                               <td className="px-6 py-5 text-right">
-                                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                     <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        onClick={() => handleToggleFreeze(manager)}
-                                        disabled={actionInProgress === manager.uid}
-                                        className={cn(
-                                           "h-9 w-9 p-0 rounded-xl",
-                                           manager.isFrozen ? "text-emerald-500 hover:bg-emerald-500/10" : "text-blue-400 hover:bg-blue-400/10"
-                                        )}
-                                        title={manager.isFrozen ? "Unfreeze Account" : "Freeze Account"}
-                                     >
-                                        <Snowflake size={16} className={cn(manager.isFrozen && "animate-pulse")} />
-                                     </Button>
-                                     <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        onClick={() => handleDelete(manager)}
-                                        disabled={actionInProgress === manager.uid}
-                                        className="h-9 w-9 p-0 rounded-xl text-rose-500 hover:bg-rose-500/10"
-                                        title="Delete Account"
-                                     >
-                                        <Trash2 size={16} />
-                                     </Button>
-                                     <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        className="h-9 w-9 p-0 rounded-xl text-slate-500"
-                                     >
-                                        <MoreVertical size={16} />
-                                     </Button>
-                                  </div>
-                               </td>
-                            </tr>
-                         ))
-                      )}
-                   </tbody>
-                </table>
-             </div>
-          </Card>
-       </div>
-
-       {/* Pending Invites Management */}
-       <div className="space-y-4">
-          <div className="flex items-center gap-2">
-             <Clock size={16} className="text-brand-primary" />
-             <Typography variant="h3" className="italic font-black uppercase tracking-tight text-white leading-none">
-                Pending Invites
-             </Typography>
-             {pendingInvites.length > 0 && (
-                <Badge variant="outline" className="text-brand-primary border-brand-primary/20 bg-brand-primary/5 text-[9px] font-black">{pendingInvites.length}</Badge>
-             )}
+             <Badge variant="outline" className="text-brand-primary border-brand-primary/20 uppercase tracking-widest font-black text-[10px]">
+                {profile?.subscriptionTier} TIER
+             </Badge>
           </div>
           
-          <Card className="bg-bg-card/20 border-white/5 overflow-hidden">
-             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                   <thead>
-                      <tr className="border-b border-white/5 bg-white/[0.01]">
-                         <th className="px-6 py-4">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Invited User</Typography>
-                         </th>
-                         <th className="px-6 py-4">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Role</Typography>
-                         </th>
-                         <th className="px-6 py-4">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Invited By</Typography>
-                         </th>
-                         <th className="px-6 py-4">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Expires</Typography>
-                         </th>
-                         <th className="px-6 py-4 text-right">
-                            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Actions</Typography>
-                         </th>
-                      </tr>
-                   </thead>
-                   <tbody className="divide-y divide-white/5">
-                      {isLoadingInvites ? (
-                         <tr>
-                            <td colSpan={5} className="px-6 py-12 text-center animate-pulse">
-                               <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest">Polling Secure Invites...</Typography>
-                            </td>
-                         </tr>
-                      ) : pendingInvites.length === 0 ? (
-                         <tr>
-                            <td colSpan={5} className="px-6 py-12 text-center">
-                               <Typography variant="p" className="text-slate-600 text-[11px] font-bold">No outstanding management invites found.</Typography>
-                            </td>
-                         </tr>
-                      ) : (
-                         pendingInvites.map((invite) => (
-                            <tr key={invite.id} className="hover:bg-white/[0.01] transition-colors group">
-                               <td className="px-6 py-4">
-                                  <div className="flex items-center gap-3">
-                                     <div className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                                        <Mail size={14} className="text-slate-500" />
-                                     </div>
-                                     <Typography variant="mono" className="text-[11px] text-white font-bold">{invite.email}</Typography>
-                                  </div>
-                               </td>
-                               <td className="px-6 py-4">
-                                  <Badge variant="outline" className="text-[9px] font-black uppercase border-white/10 text-slate-400">
-                                     {invite.role === UserRole.GENERAL_MANAGER ? 'GM' : 'Manager'}
-                                  </Badge>
-                               </td>
-                               <td className="px-6 py-4">
-                                  <Typography variant="mono" className="text-[10px] text-slate-500">{invite.invitedByDisplayName}</Typography>
-                               </td>
-                               <td className="px-6 py-4">
-                                  <div className="flex items-center gap-1.5 text-amber-500/80">
-                                     <Clock size={12} />
-                                     <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest">
-                                        {Math.max(0, Math.ceil((invite.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)))} Days
-                                     </Typography>
-                                  </div>
-                               </td>
-                               <td className="px-6 py-4 text-right">
-                                  <Button 
-                                     variant="ghost" 
-                                     size="sm"
-                                     onClick={() => handleCancelInvite(invite.id)}
-                                     disabled={actionInProgress === invite.id}
-                                     className="h-8 px-3 text-rose-500 hover:bg-rose-500/10 text-[9px] font-black uppercase tracking-widest border border-white/5 hover:border-rose-500/20 rounded-lg"
-                                  >
-                                     Cancel Invite
-                                  </Button>
-                               </td>
-                            </tr>
-                         ))
-                      )}
-                   </tbody>
-                </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-white/5">
+             <div className="space-y-2">
+                <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Owner Email</Typography>
+                <Typography variant="p" className="text-white font-medium">{profile?.email}</Typography>
              </div>
-          </Card>
-       </div>
+             <div className="space-y-2">
+                <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Member Domains</Typography>
+                <Typography variant="p" className="text-white font-medium">@{profile?.email?.split('@')[1]}</Typography>
+             </div>
+          </div>
+       </Card>
+ 
+        {/* Log Builder & Operational Config */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+           <Link to="/dealer/log-builder" className="group">
+              <Card className="p-8 bg-blue-500/[0.03] border border-blue-500/20 rounded-3xl hover:border-blue-500/40 transition-all relative overflow-hidden">
+                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <LayoutGrid size={120} className="text-blue-500" />
+                 </div>
+                 <div className="relative z-10 space-y-4">
+                    <div className="h-12 w-12 rounded-2xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                       <LayoutGrid size={24} className="text-blue-400" />
+                    </div>
+                    <div className="space-y-1">
+                       <Typography variant="h3" className="text-white font-black italic uppercase tracking-tight">Log Builder</Typography>
+                       <Typography variant="p" className="text-slate-400 text-sm leading-relaxed">
+                          Define your operational dealership deal log structure. Synchronize report columns and entry forms across the organization.
+                       </Typography>
+                    </div>
+                    <Button variant="outline" className="border-blue-500/20 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all uppercase font-black text-[10px] tracking-widest px-6 mt-4">
+                       Configure Schema
+                    </Button>
+                 </div>
+              </Card>
+           </Link>
+
+           <Card className="p-8 bg-white/[0.02] border border-white/5 rounded-3xl opacity-50 grayscale cursor-not-allowed">
+              <div className="space-y-4">
+                 <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
+                    <Zap size={24} className="text-slate-500" />
+                 </div>
+                 <div className="space-y-1">
+                    <Typography variant="h3" className="text-slate-400 font-black italic uppercase tracking-tight">Workflow Engine</Typography>
+                    <Typography variant="p" className="text-slate-600 text-sm leading-relaxed">
+                       Advanced automations and approvals based on your operational schema. Coming soon for enterprise tiers.
+                    </Typography>
+                 </div>
+              </div>
+           </Card>
+        </div>
+
+        {/* Admin: Organization Control */}
+       {isAdmin && organization && (
+         <Card className="p-8 bg-purple-500/[0.03] border border-purple-500/20 rounded-3xl relative overflow-hidden">
+           <div className="absolute top-0 right-0 p-8 opacity-5">
+              <Settings size={120} className="text-purple-500" />
+           </div>
+           
+           <div className="relative z-10 space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30 shadow-purple-glow">
+                  <Zap size={16} className="text-purple-400" />
+                </div>
+                <div>
+                  <Typography variant="h3" className="text-white font-black italic uppercase tracking-tight">Admin: Organizational Elevation</Typography>
+                  <Typography variant="mono" className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">Override Core Operational Parameters</Typography>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Tier Management */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Typography variant="label" className="text-slate-400 uppercase text-[11px] font-black tracking-widest">Subscription Tier</Typography>
+                    <div className="h-px flex-1 bg-white/5" />
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {[SubscriptionTier.FREE, SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION, SubscriptionTier.TRIAL, SubscriptionTier.PREMIUM, SubscriptionTier.ENTERPRISE].map((tier) => (
+                      <Button
+                        key={tier}
+                        variant={organization.subscriptionTier === tier ? 'primary' : 'outline'}
+                        size="sm"
+                        disabled={isUpdatingOrg}
+                        onClick={() => handleUpdateOrgTier(tier)}
+                        className={cn(
+                          "h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all",
+                          organization.subscriptionTier === tier 
+                            ? "bg-purple-600 border-purple-400 shadow-purple-glow" 
+                            : "bg-white/[0.02] border-white/10 text-slate-500 hover:text-white hover:border-purple-500/50"
+                        )}
+                      >
+                        {tier}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status Management */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Typography variant="label" className="text-slate-400 uppercase text-[11px] font-black tracking-widest">Organization Status</Typography>
+                    <div className="h-px flex-1 bg-white/5" />
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {Object.values(OrganizationStatus).map((status) => (
+                      <Button
+                        key={status}
+                        variant={organization.status === status ? 'primary' : 'outline'}
+                        size="sm"
+                        disabled={isUpdatingOrg}
+                        onClick={() => handleUpdateOrgStatus(status as OrganizationStatus)}
+                        className={cn(
+                          "h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all",
+                          organization.status === status 
+                            ? "bg-emerald-600 border-emerald-400 shadow-emerald-500/20" 
+                            : "bg-white/[0.02] border-white/10 text-slate-500 hover:text-white hover:border-emerald-500/50"
+                        )}
+                      >
+                        {status}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {organization.updatedAt && (
+                <div className="pt-6 border-t border-white/5 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-slate-500">
+                    <Clock size={12} />
+                    <Typography variant="mono" className="text-[9px] uppercase tracking-widest font-bold">
+                      Last modified: {new Date(organization.updatedAt).toLocaleString()}
+                    </Typography>
+                  </div>
+                  {organization.updatedBy && (
+                    <Typography variant="mono" className="text-[9px] text-slate-600 uppercase tracking-widest font-black">
+                      BY ADMIN: {organization.updatedBy.slice(0, 8)}
+                    </Typography>
+                  )}
+                </div>
+              )}
+           </div>
+        </Card>
+       )}
 
        {/* Organizational Context Panel */}
        <Card className="p-8 bg-brand-primary/[0.02] border border-brand-primary/10 rounded-3xl relative overflow-hidden">
@@ -489,8 +308,6 @@ export const DealerSettingsView: React.FC = () => {
           isOpen={isInviteModalOpen}
           onClose={() => {
              setIsInviteModalOpen(false);
-             fetchManagers();
-             fetchPendingInvites();
           }}
        />
     </div>

@@ -30,8 +30,6 @@ const getIcon = (type: ActivityEventType) => {
       return <AppIcon name="trophy" size={16} className="text-amber-500" />;
     case ActivityEventType.REMINDER:
       return <AppIcon name="bell" size={16} className="text-indigo-500" />;
-    case ActivityEventType.ORG_INVITE:
-      return <AppIcon name="shield" size={16} className="text-brand-primary" />;
     default:
       return <AppIcon name="info" size={16} className="text-slate-400" />;
   }

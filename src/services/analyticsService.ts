@@ -14,7 +14,7 @@ import {
   limit,
   onSnapshot
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { 
   calculateDealCommission, 
   calculateTotalEarnings,
@@ -72,20 +72,20 @@ class AnalyticsService {
 
   constructor() {
     // Visitor ID persists across sessions
-    let vid = localStorage.getItem('stripeit_visitor_id');
-    if (!vid) {
+    let vid = typeof window !== 'undefined' ? localStorage.getItem('stripeit_visitor_id') : null;
+    if (!vid && typeof window !== 'undefined') {
       vid = generateId();
       localStorage.setItem('stripeit_visitor_id', vid);
     }
-    this.visitorId = vid;
+    this.visitorId = vid || 'unknown';
 
     // Session ID is for the tab/browser session
-    let sid = sessionStorage.getItem('stripeit_session_id');
-    if (!sid) {
+    let sid = typeof window !== 'undefined' ? sessionStorage.getItem('stripeit_session_id') : null;
+    if (!sid && typeof window !== 'undefined') {
       sid = generateId();
       sessionStorage.setItem('stripeit_session_id', sid);
     }
-    this.sessionId = sid;
+    this.sessionId = sid || 'unknown';
   }
 
   setUser(userId: string | null, email: string | null) {
@@ -101,7 +101,7 @@ class AnalyticsService {
         sessionId: this.sessionId,
         userId: this.currentUserId || undefined,
         userEmail: this.currentUserEmail || undefined,
-        route: window.location.pathname,
+        route: typeof window !== 'undefined' ? window.location.pathname : '/',
         payload,
         timestamp: Date.now()
       };
@@ -120,6 +120,7 @@ class AnalyticsService {
       }
     } catch (error) {
       console.error('Analytics tracking error:', error);
+      handleFirestoreError(error, OperationType.WRITE, COLLECTIONS.EVENTS);
     }
   }
 
@@ -134,12 +135,12 @@ class AnalyticsService {
           visitorId: this.visitorId,
           userId: this.currentUserId || undefined,
           startTime: Date.now(),
-          pagesViewed: [window.location.pathname],
+          pagesViewed: [typeof window !== 'undefined' ? window.location.pathname : '/'],
           clickCount: 0,
           deviceInfo: {
-            browser: navigator.userAgent,
-            os: navigator.platform,
-            isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+            browser: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+            os: typeof navigator !== 'undefined' ? navigator.platform : 'unknown',
+            isMobile: typeof navigator !== 'undefined' ? /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) : false
           }
         };
 
@@ -148,6 +149,7 @@ class AnalyticsService {
       }
     } catch (error) {
       console.error('Error starting analytics session:', error);
+      handleFirestoreError(error, OperationType.WRITE, `${COLLECTIONS.SESSIONS}/${this.sessionId}`);
     }
   }
 
@@ -156,23 +158,21 @@ class AnalyticsService {
       const sessionDoc = doc(db, COLLECTIONS.SESSIONS, this.sessionId);
       if (type === AnalyticsEventType.PAGE_VIEW) {
         await updateDoc(sessionDoc, {
-          pagesViewed: increment(1) as any // This is tricky for arrays, let's just append or count
+          pagesViewed: increment(1) as any
         });
-        // Actually Firestore doesn't support arrayUnion with a string if we want to keep it simple
-        // For simplicity, let's just increment a view count if needed, but the requirement said visitor/session logic
       } else if (type === AnalyticsEventType.BUTTON_CLICK) {
         await updateDoc(sessionDoc, {
           clickCount: increment(1)
         });
       }
     } catch (error) {
-      // Session might not be initialized yet
+      handleFirestoreError(error, OperationType.UPDATE, `${COLLECTIONS.SESSIONS}/${this.sessionId}`);
     }
   }
 
   private async updateDailyAggregate(type: AnalyticsEventType) {
+    const today = new Date().toISOString().split('T')[0];
     try {
-      const today = new Date().toISOString().split('T')[0];
       const aggDoc = doc(db, COLLECTIONS.AGGREGATES, today);
 
       const updateData: any = {
@@ -195,6 +195,7 @@ class AnalyticsService {
       await setDoc(aggDoc, updateData, { merge: true });
     } catch (error) {
       console.error('Error updating daily aggregates:', error);
+      handleFirestoreError(error, OperationType.WRITE, `${COLLECTIONS.AGGREGATES}/${today}`);
     }
   }
 
@@ -209,11 +210,18 @@ class AnalyticsService {
 
   subscribeToLiveMetrics(callback: (metrics: DailyAnalyticsAggregate | null) => void) {
     const today = new Date().toISOString().split('T')[0];
-    return onSnapshot(doc(db, COLLECTIONS.AGGREGATES, today), (doc) => {
-      if (doc.exists()) {
-        callback(doc.data() as DailyAnalyticsAggregate);
-      } else {
-        callback(null);
+    const path = `${COLLECTIONS.AGGREGATES}/${today}`;
+    
+    return onSnapshot(doc(db, COLLECTIONS.AGGREGATES, today), {
+      next: (snapshot) => {
+        if (snapshot.exists()) {
+          callback(snapshot.data() as DailyAnalyticsAggregate);
+        } else {
+          callback(null);
+        }
+      },
+      error: (error) => {
+        handleFirestoreError(error, OperationType.GET, path);
       }
     });
   }
@@ -225,8 +233,13 @@ class AnalyticsService {
       where('date', '<=', endDate),
       orderBy('date', 'asc')
     );
-    const snap = await getDocs(q);
-    return snap.docs.map(d => d.data() as DailyAnalyticsAggregate);
+    try {
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data() as DailyAnalyticsAggregate);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, COLLECTIONS.AGGREGATES);
+      throw error;
+    }
   }
 }
 

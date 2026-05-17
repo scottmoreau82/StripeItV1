@@ -5,7 +5,7 @@ import {
   getDocs, 
   orderBy 
 } from 'firebase/firestore';
-import { db } from '@/src/lib/firebase';
+import { db, handleFirestoreError, OperationType } from '@/src/lib/firebase';
 import { Deal, UserRole, DealStatus } from '../types';
 
 /**
@@ -26,6 +26,7 @@ export const reportService = {
    * Fetches deals based on filters and permissions.
    */
   async getReportDeals(orgId: string, filter: ReportFilter, userRole: UserRole, currentUserId: string): Promise<Deal[]> {
+    const path = `organizations/${orgId}/deals`;
     const dealsRef = collection(db, 'organizations', orgId, 'deals');
     const constraints = [
       where('date', '>=', filter.startDate),
@@ -50,11 +51,16 @@ export const reportService = {
     }
 
     const q = query(dealsRef, ...constraints);
-    const querySnapshot = await getDocs(q);
-    
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Deal[];
+    try {
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Deal[];
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, path);
+      throw error;
+    }
   }
 };

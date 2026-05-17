@@ -218,6 +218,39 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
                 description="High-fidelity analytics to visualize your sales trajectory."
               />
             </motion.div>
+
+            {/* Dealer Solutions Section */}
+            <motion.div 
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.5 }}
+               className="p-8 rounded-3xl bg-brand-primary/[0.03] border border-brand-primary/10 space-y-6 relative overflow-hidden group"
+            >
+              <div className="absolute -right-10 -top-10 h-32 w-32 bg-brand-primary/5 rounded-full blur-3xl pointer-events-none group-hover:bg-brand-primary/10 transition-colors" />
+              
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary border border-brand-primary/20">
+                  <AppWindow size={24} />
+                </div>
+                <div>
+                  <Typography variant="h3" className="text-white italic font-black uppercase text-xl leading-none">Dealership Solutions</Typography>
+                  <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Enterprise Command Tier</Typography>
+                </div>
+              </div>
+
+              <Typography variant="p" className="text-slate-400 text-sm leading-relaxed italic">
+                Manage the entire floor. Unified logs, manager overrides, and dealership-wide performance telemetry for professional automotive groups.
+              </Typography>
+
+              <Link to="/dealer/request">
+                <Button 
+                   variant="ghost" 
+                   className="w-full h-12 bg-white/5 hover:bg-brand-primary hover:text-bg-deep text-[10px] font-black uppercase tracking-[0.2em] italic border-white/5"
+                >
+                   Request Dealer Access
+                </Button>
+              </Link>
+            </motion.div>
           </div>
 
           {/* Right Column: Visuals */}

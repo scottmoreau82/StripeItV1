@@ -42,6 +42,15 @@ const rolePermissions: Record<UserRole, AppPermission[]> = {
     'analytics:view_dealership',
     'management:competitions',
     'admin:settings'
+  ],
+  [UserRole.DEALER_OWNER]: [
+    'deals:create',
+    'deals:view_all',
+    'deals:edit_any',
+    'analytics:view_team',
+    'analytics:view_dealership',
+    'management:competitions',
+    'admin:settings'
   ]
 };
 
@@ -59,7 +68,7 @@ export const permissionService = {
    */
   isManager: (profile: UserProfile | null): boolean => {
     if (!profile) return false;
-    return [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN].includes(profile.role);
+    return [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN, UserRole.DEALER_OWNER].includes(profile.role);
   },
 
   /**

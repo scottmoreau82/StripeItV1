@@ -34,6 +34,7 @@ export const COLLECTIONS = {
   NOTIFICATIONS: 'notifications',
   COMPETITIONS: 'competitions',
   NOTES: 'notes',
+  DEALER_REQUESTS: 'dealerRequests',
 };
 
 export const ROUTES = {

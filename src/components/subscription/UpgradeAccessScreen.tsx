@@ -4,6 +4,7 @@ import { Lock, ArrowUpRight, CheckCircle2, Star, Zap, Shield } from 'lucide-reac
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { useNavigate } from 'react-router-dom';
 import { Feature, featureAccessService } from '@/src/services/featureAccessService';
 import { SubscriptionTier } from '@/src/types';
 
@@ -23,6 +24,7 @@ export const UpgradeAccessScreen: React.FC<UpgradeAccessScreenProps> = ({
   tierRequired = SubscriptionTier.PRO,
   onUpgrade
 }) => {
+  const navigate = useNavigate();
   const getFeatureDetails = (f: Feature) => {
     switch (f) {
       case Feature.ACTIVITY_FEED:
@@ -116,16 +118,33 @@ export const UpgradeAccessScreen: React.FC<UpgradeAccessScreenProps> = ({
 
           {/* Call to Action */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
-              className="w-full sm:w-auto px-10 py-7 bg-brand-primary hover:bg-brand-primary/90 text-bg-deep font-black rounded-2xl shadow-glow glow-primary text-base uppercase tracking-widest flex items-center justify-center gap-3 group"
-              onClick={onUpgrade}
-            >
-              Unlock This Feature
-              <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-            </Button>
-            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-              Starting from $29/mo
-            </Typography>
+            {tierRequired === SubscriptionTier.ORGANIZATION ? (
+              <Button 
+                className="w-full sm:w-auto px-10 py-7 bg-brand-primary hover:bg-brand-primary/90 text-bg-deep font-black rounded-2xl shadow-glow glow-primary text-base uppercase tracking-widest flex items-center justify-center gap-3 group"
+                onClick={() => navigate('/dealer/request')}
+              >
+                Request Dealer Access
+                <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </Button>
+            ) : (
+              <Button 
+                className="w-full sm:w-auto px-10 py-7 bg-brand-primary hover:bg-brand-primary/90 text-bg-deep font-black rounded-2xl shadow-glow glow-primary text-base uppercase tracking-widest flex items-center justify-center gap-3 group"
+                onClick={onUpgrade}
+              >
+                Unlock This Feature
+                <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </Button>
+            )}
+            
+            {tierRequired === SubscriptionTier.ORGANIZATION ? (
+              <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                Verification Required
+              </Typography>
+            ) : (
+              <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                Starting from $29/mo
+              </Typography>
+            )}
           </div>
         </Card>
       </motion.div>

@@ -188,6 +188,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
         <ThemePanel profile={profile} isMobile={isMobile} />
       </section>
 
+      <section id="dealer-progression" className="scroll-mt-24">
+        <DealerProgressionPanel profile={profile} isMobile={isMobile} />
+      </section>
+
       {profile?.role && [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN].includes(profile.role) && (
         <section id="organization" className="scroll-mt-24">
           <OrganizationPanel profile={profile} isMobile={isMobile} />
@@ -231,6 +235,53 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, i
       header={header}
       main={mainContent}
     />
+  );
+};
+
+const DealerProgressionPanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobile?: boolean }) => {
+  const navigate = useNavigate();
+  const isDealer = profile?.subscriptionTier === SubscriptionTier.ORGANIZATION;
+
+  if (isDealer) return null;
+
+  return (
+    <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
+      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Progression</Typography>
+      
+      <Card className={cn("bg-brand-primary/[0.03] border-brand-primary/10 overflow-hidden relative group transition-all duration-500 hover:border-brand-primary/30", isMobile ? "p-6" : "p-10")}>
+        <div className="absolute -right-20 -top-20 h-64 w-64 bg-brand-primary/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-brand-primary/10 transition-colors" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="space-y-4 max-w-lg">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary border border-brand-primary/20">
+                <Building2 size={20} />
+              </div>
+              <Typography variant="mono" className="text-[10px] text-brand-primary uppercase font-black tracking-[0.3em]">Operational Scaling</Typography>
+            </div>
+            
+            <div className="space-y-2">
+              <Typography variant="h2" className={cn("text-white italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-2xl" : "text-4xl")}>
+                Upgrade to Dealer
+              </Typography>
+              <Typography variant="p" className="text-slate-400 text-sm leading-relaxed">
+                Connect your entire floor to the StripeIt ecosystem. Unlock organization-wide logs, manager governance, and real-time dealer performance telemetry.
+              </Typography>
+            </div>
+          </div>
+
+          <Button 
+            onClick={() => navigate('/dealer/request')}
+            className={cn(
+              "bg-white/5 hover:bg-brand-primary hover:text-bg-deep text-white font-black uppercase tracking-widest italic border border-white/10 transition-all rounded-2xl group",
+              isMobile ? "w-full h-14 text-xs" : "px-12 h-16 text-sm"
+            )}
+          >
+            Request Access
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 };
 

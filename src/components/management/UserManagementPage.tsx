@@ -36,6 +36,16 @@ export const UserManagementPage: React.FC = () => {
             Control platform access and subscription tiers
           </Typography>
         </div>
+
+        <div className="ml-auto flex items-center gap-3">
+           <Button 
+              variant="outline"
+              onClick={() => navigate('/admin/dealer-requests')}
+              className="border-white/10 hover:bg-white/5"
+           >
+              Dealer Requests
+           </Button>
+        </div>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ export const DealerDashboard: React.FC = () => {
 
   const header = (
     <DealerPageHeader
-      title="Executive Dashboard"
+      title="Dealer Dashboard"
       subtitle={`${profile?.orgName || 'StripeIt Dealership'} • Total Operational Oversight`}
       icon={LayoutGrid}
     >

@@ -39,11 +39,11 @@ service cloud.firestore {
 
     function isAnyAdmin() {
       let user = getUserSafe(request.auth.uid);
-      return isBootstrapAdmin() || (user != null && isNotFrozen() && (user.role.lower() in ['gm', 'admin'] || user.get('isAdmin', false) == true));
+      return isBootstrapAdmin() || (user != null && isNotFrozen() && (user.role.lower() in ['gm', 'admin', 'dealer_owner'] || user.get('isAdmin', false) == true));
     }
 
     function isAnyManager() {
-      return isAnyAdmin() || getRole() == 'manager';
+      return isAnyAdmin() || getRole() in ['manager', 'dealer_owner'];
     }
 
     function isOrgMember(orgId) {
@@ -279,6 +279,21 @@ service cloud.firestore {
       allow get, list: if isSignedIn() && (resource == null || isOwner(resource.data.userId) || isOrgMember(resource.data.orgId));
       allow create: if isSignedIn() && isValidGoal(incoming());
       allow update, delete: if isSignedIn() && (isOwner(existing().userId) || isAnyManager());
+    }
+
+    // Dealer Requests Collection
+    match /dealerRequests/{requestId} {
+      // Users can see their own requests (including via query), admins can see all
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAnyAdmin());
+      
+      // Any signed in user can create a request for themselves
+      allow create: if isSignedIn() && 
+                      incoming().userId == request.auth.uid && 
+                      incoming().status == 'pending_review';
+      
+      // Only admins can update the status (approve/reject)
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
     }
   }
 }

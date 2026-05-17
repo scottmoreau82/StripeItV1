@@ -56,6 +56,8 @@ import { DealerSalesLogView } from './components/dealer/DealerSalesLogView';
 import { DealerSettingsView } from './components/dealer/DealerSettingsView';
 import { DealerUserManagementView } from './components/dealer/DealerUserManagementView';
 import { DealerLogBuilderView } from './components/dealer/DealerLogBuilderView';
+import { DealerAccessRequestFlow } from './components/dealer/DealerAccessRequestFlow';
+import { DealerRequestsAdminView } from './components/management/DealerRequestsAdminView';
 
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 
@@ -346,6 +348,10 @@ function MainAppFlow() {
               } 
             />
             <Route 
+              path="/dealer/request" 
+              element={<DealerAccessRequestFlow />} 
+            />
+            <Route 
               path="/settings" 
               element={
                 <SettingsView 
@@ -376,6 +382,14 @@ function MainAppFlow() {
               element={
                 isAdmin 
                   ? <UserManagementPage /> 
+                  : <Navigate to="/" />
+              } 
+            />
+            <Route 
+              path="/admin/dealer-requests" 
+              element={
+                isAdmin 
+                  ? <DealerRequestsAdminView /> 
                   : <Navigate to="/" />
               } 
             />

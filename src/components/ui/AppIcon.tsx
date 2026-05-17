@@ -164,6 +164,7 @@ export type IconName =
   | 'userPlus'
   | 'target'
   | 'logBuilder'
+  | 'building'
   | 'car';
 
 /**
@@ -248,6 +249,7 @@ const themedRegistry: Record<IconTheme, Partial<Record<IconName, any>>> = {
     userPlus: UserPlus,
     target: Target,
     logBuilder: Layout,
+    building: Building2,
     car: Car
   },
   [IconTheme.PHOSPHOR]: {
@@ -327,6 +329,7 @@ const themedRegistry: Record<IconTheme, Partial<Record<IconName, any>>> = {
     pointer: Phosphor.CursorClick,
     userPlus: Phosphor.UserPlus,
     target: Phosphor.Target,
+    building: Phosphor.Buildings,
     car: Phosphor.Car
   },
   [IconTheme.TABLER]: {
@@ -406,6 +409,7 @@ const themedRegistry: Record<IconTheme, Partial<Record<IconName, any>>> = {
     pointer: Tabler.IconPointer,
     userPlus: Tabler.IconUserPlus,
     target: Tabler.IconTarget,
+    building: Tabler.IconBuildingSkyscraper,
     car: Tabler.IconCar
   },
   [IconTheme.HEROICONS]: {
@@ -485,6 +489,7 @@ const themedRegistry: Record<IconTheme, Partial<Record<IconName, any>>> = {
     pointer: HeroIcons.CursorArrowRaysIcon,
     userPlus: HeroIcons.UserPlusIcon,
     target: HeroIcons.SignalIcon,
+    building: HeroIcons.BuildingOffice2Icon,
     car: HeroIcons.TruckIcon
   }
 };

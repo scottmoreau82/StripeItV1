@@ -6,7 +6,8 @@ export enum UserRole {
   SALES = 'sales',
   MANAGER = 'manager',
   GENERAL_MANAGER = 'gm',
-  ADMIN = 'admin'
+  ADMIN = 'admin',
+  DEALER_OWNER = 'dealer_owner'
 }
 
 export enum SubscriptionTier {
@@ -558,6 +559,31 @@ export enum InviteStatus {
   ACCEPTED = 'accepted',
   EXPIRED = 'expired',
   CANCELLED = 'cancelled'
+}
+
+export enum DealerRequestStatus {
+  PENDING = 'pending_review',
+  APPROVED = 'approved',
+  REJECTED = 'rejected'
+}
+
+export interface DealerAccessRequest {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  dealershipName: string;
+  workEmail: string;
+  roleTitle: string;
+  website: string;
+  phoneNumber: string;
+  notes?: string;
+  status: DealerRequestStatus;
+  adminNotes?: string;
+  createdAt: number;
+  updatedAt: number;
+  reviewedAt?: number;
+  reviewedBy?: string;
 }
 
 export interface Invite {

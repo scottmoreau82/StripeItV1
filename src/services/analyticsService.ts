@@ -257,14 +257,18 @@ const isThisMonth = (dateStr: string) => {
 
 export const calculateDashboardMetrics = (deals: Deal[], payPlan: PayPlan | null, monthlySpiffs: MonthlySpiff[] = []) => {
   const mtdDeals = deals.filter(d => isThisMonth(d.date));
+  const mtdSpiffs = monthlySpiffs.filter(s => isThisMonth(s.date || s.month));
+  
   const unitCount = mtdDeals.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
   const frontEnd = mtdDeals.reduce((sum, d) => sum + (d.frontEndGross || 0), 0);
   const backEnd = mtdDeals.reduce((sum, d) => sum + (d.backEndGross || 0), 0);
   const gross = frontEnd + backEnd;
   
-  const earnings = payPlan ? calculatePeriodEarnings(mtdDeals, payPlan, monthlySpiffs) : null;
+  const earnings = payPlan ? calculatePeriodEarnings(mtdDeals, payPlan, mtdSpiffs) : null;
   const commission = earnings ? earnings.totalPayout + earnings.totalTierBonuses : 0;
-  const spiffsMTD = earnings ? earnings.totalMonthlySpiffs || 0 : 0;
+  
+  // Sum ALL MTD spiffs for display to ensure the Est. Payout card accurately reflects total spiffs found in the vault
+  const spiffsMTD = mtdSpiffs.reduce((sum, s) => sum + (s.amount || 0), 0);
 
   const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
   const dayOfMonth = new Date().getDate();

@@ -246,16 +246,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Account & Footer Area (Pinned Footer) */}
-      <div className="shrink-0 border-t border-border-subtle bg-bg-deep/80 backdrop-blur-sm z-10 py-6">
-        {/* Commission Architect Setup Warning */}
+      {/* Commission Architect Setup Warning & Analytics (Utility Layer - Anchored but separate) */}
+      <div className="shrink-0 px-2 space-y-2 mb-2">
         {!isCommissionConfigured && !isAdmin && onConfigPayPlan && (
           <CommissionWarningCard onConfigure={onConfigPayPlan} isCollapsed={!!isCollapsed} />
         )}
-
-        {/* StripeItAnalyticsSystem - Admin Tracker */}
         {profile?.isAdmin && <AdminAnalyticsCard isCollapsed={isCollapsed} />}
-        
+      </div>
+
+      {/* Account & Footer Area (Pinned Footer) */}
+      <div className="shrink-0 border-t border-border-subtle bg-bg-deep/80 backdrop-blur-sm z-10 py-6">
         {/* User Account Hub */}
         <div className={cn("px-4 mb-2 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
           <div className="bg-bg-card/40 border border-border-subtle rounded-2xl p-4 shadow-glow glow-primary/5 transition-all hover:bg-bg-card/60 relative overflow-hidden group/user">

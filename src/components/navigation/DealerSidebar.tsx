@@ -238,12 +238,14 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
         </nav>
       </div>
 
-      {/* Admin / Developer Tools */}
-      {profile?.isAdmin && (
-        <AdminAnalyticsCard isCollapsed={isCollapsed} />
-      )}
+      {/* Admin / Developer Tools (Utility Layer - Anchored but separate) */}
+      <div className="shrink-0 px-2 mb-2">
+        {profile?.isAdmin && (
+          <AdminAnalyticsCard isCollapsed={isCollapsed} />
+        )}
+      </div>
 
-      {/* Footer / Account */}
+      {/* Footer / Account (Pinned Footer) */}
       <div className="shrink-0 border-t border-white/5 bg-black/40 backdrop-blur-md z-10 py-6">
         <div className={cn("px-4 mb-4 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
           <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 shadow-glow glow-primary/5 transition-all hover:bg-white/[0.04] relative overflow-hidden group/user">
@@ -289,7 +291,7 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               <AppIcon name="logout" className="h-5 w-5 text-slate-600 group-hover:text-rose-500 transition-colors drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]" />
             </div>
             {!isCollapsed && (
-              <span className="text-[10px] font-black text-slate-500 group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all">Sign Out</span>
+              <span className="text-[10px] font-black text-slate-500 group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all">Exit Session</span>
             )}
           </button>
         </div>

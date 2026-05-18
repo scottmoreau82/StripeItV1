@@ -258,7 +258,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                     className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-xs font-black text-slate-500 hover:text-white transition-all text-left uppercase tracking-[0.2em] group"
                   >
                     <AppIcon name="logout" className="h-5 w-5 text-slate-600 group-hover:text-brand-primary transition-colors" />
-                    Sign Out
+                    Exit Session
                   </button>
                 </div>
               </div>

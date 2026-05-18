@@ -200,14 +200,10 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                       );
                     })}
                   </nav>
-                  <div className="h-4 shrink-0" />
-                </div>
 
-                {/* Footer Section (Pinned) */}
-                <div className="p-6 space-y-4 border-t border-border-subtle bg-bg-deep/80 backdrop-blur-md z-10">
-                  {/* Commission Architect Setup Warning */}
+                  {/* Commission Architect Setup Warning (Mobile Utility - Part of Scrollable) */}
                   {!isCommissionConfigured && onConfigPayPlan && (
-                    <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 mb-2 shadow-glow glow-rose/5">
+                    <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 mb-8 shadow-glow glow-rose/5 shrink-0">
                       <div className="flex items-center gap-3 mb-2">
                         <AppIcon name="trending" className="h-4 w-4 text-rose-500" />
                         <Typography variant="mono" className="text-[9px] text-rose-500 font-black uppercase tracking-widest leading-none">
@@ -230,6 +226,11 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                     </div>
                   )}
 
+                  <div className="h-4 shrink-0" />
+                </div>
+
+                {/* Footer Section (Pinned Footer) */}
+                <div className="p-6 space-y-4 border-t border-border-subtle bg-bg-deep/80 backdrop-blur-md z-10 shrink-0">
                   {/* User Account Hub (Mobile Drawer) */}
                   <div className="relative bg-bg-card/40 border border-border-subtle rounded-3xl p-5 flex items-center gap-4 overflow-hidden group/user shadow-lg">
                     {/* Background Accent */}
@@ -264,7 +265,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                     className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-xs font-black text-slate-500 hover:text-white transition-all text-left uppercase tracking-[0.2em] group"
                   >
                     <AppIcon name="logout" className="h-5 w-5 text-slate-600 group-hover:text-brand-primary transition-colors" />
-                    Exit Vault
+                    Exit Session
                   </button>
                 </div>
               </div>

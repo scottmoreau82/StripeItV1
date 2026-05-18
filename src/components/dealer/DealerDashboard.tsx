@@ -132,7 +132,7 @@ export const DealerDashboard: React.FC = () => {
         </div>
         <div className="space-y-0.5">
           <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-xl md:text-2xl leading-none">
-            Operational Oversight
+            Dealer Dashboard
           </Typography>
           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-[0.2em] block">
             {profile?.orgName || 'StripeIt Dealership'} • Global Telemetry

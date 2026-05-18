@@ -10,9 +10,8 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { cn } from '@/src/lib/utils';
 import { AppIcon } from '../ui/AppIcon';
 import { motion, AnimatePresence } from 'motion/react';
-import { DealerInviteManagerModal } from './DealerInviteManagerModal';
 import { getFriendlyErrorMessage } from '@/src/lib/firebase';
-import { AlertCircle, Search, Printer, UserPlus, ClipboardList } from 'lucide-react';
+import { AlertCircle, Search, Printer, ClipboardList } from 'lucide-react';
 import { DEFAULT_LOG_FIELDS } from '@/src/constants';
 import { PageHeader } from '../ui/PageHeader';
 
@@ -32,7 +31,6 @@ export const DealerSalesLogView: React.FC = () => {
   const [fields, setFields] = useState<LogField[]>(DEFAULT_LOG_FIELDS);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   useEffect(() => {
     const fetchConfigAndData = async () => {
@@ -220,14 +218,6 @@ export const DealerSalesLogView: React.FC = () => {
             ) : null}
           </AnimatePresence>
 
-          <Button 
-            variant="ghost" 
-            className="h-10 text-slate-500 hover:text-brand-primary uppercase font-black text-[9px] tracking-widest gap-2"
-            onClick={() => setIsInviteOpen(true)}
-          >
-             <UserPlus size={12} />
-             Invite
-          </Button>
 
           <Button 
             variant="ghost" 
@@ -392,11 +382,6 @@ export const DealerSalesLogView: React.FC = () => {
         <Typography variant="h3">Desk Observations</Typography>
         <Typography variant="h3">Inventory Trends</Typography>
       </div>
-
-      <DealerInviteManagerModal 
-        isOpen={isInviteOpen}
-        onClose={() => setIsInviteOpen(false)}
-      />
 
       <style>{`
         @media print {

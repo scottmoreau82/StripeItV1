@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { Input } from '../ui/Input';
+import { PageHeader } from '../ui/PageHeader';
 
 /**
  * DealerRequestsAdminView
@@ -100,21 +101,11 @@ export const DealerRequestsAdminView: React.FC = () => {
   return (
     <div className="space-y-8 h-full">
       {/* Header & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-brand-primary flex items-center justify-center shadow-glow glow-primary">
-            <Building2 className="h-6 w-6 text-bg-deep" />
-          </div>
-          <div>
-            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter leading-none">
-              Dealer Triage
-            </Typography>
-            <Typography variant="p" className="text-slate-500 font-bold mt-1 uppercase text-[10px] tracking-widest opacity-60">
-              Review and Authorize Organizational Promotion
-            </Typography>
-          </div>
-        </div>
-
+      <PageHeader
+        title="Dealer Triage"
+        subtitle="Review and Authorize Organizational Promotion"
+        icon={Building2}
+      >
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -136,7 +127,7 @@ export const DealerRequestsAdminView: React.FC = () => {
             <option value={DealerRequestStatus.REJECTED}>Rejected</option>
           </select>
         </div>
-      </div>
+      </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* List of Requests */}

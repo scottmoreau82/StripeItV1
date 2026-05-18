@@ -15,6 +15,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { reportService, ReportFilter } from '@/src/services/reportService';
 import { exportService } from '@/src/services/exportService';
+import { PageHeader } from '../ui/PageHeader';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -99,39 +100,27 @@ export const ReportView: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
-            <PieChart className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
-          </div>
-          <div className="space-y-1">
-            <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
-              Reports & Export
-            </Typography>
-            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
-              Performance summaries • data portability
-            </Typography>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            onClick={() => setHasGenerated(false)} 
-            className="text-[10px] uppercase font-black tracking-widest text-slate-500"
-          >
-            Clear All
-          </Button>
-          <Button 
-            onClick={handleGenerateReport} 
-            isLoading={isGenerating}
-            className="h-12 px-6 bg-brand-primary text-bg-deep font-black uppercase tracking-widest shadow-glow glow-primary"
-          >
-            <PieChart className="mr-2 h-5 w-5" />
-            Generate Report
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Reports & Export"
+        subtitle="Performance summaries • data portability"
+        icon={PieChart}
+      >
+        <Button 
+          variant="outline" 
+          onClick={() => setHasGenerated(false)} 
+          className="text-[10px] uppercase font-black tracking-widest text-slate-500"
+        >
+          Clear All
+        </Button>
+        <Button 
+          onClick={handleGenerateReport} 
+          isLoading={isGenerating}
+          className="h-12 px-6 bg-brand-primary text-bg-deep font-black uppercase tracking-widest shadow-glow glow-primary"
+        >
+          <PieChart className="mr-2 h-5 w-5" />
+          Generate Report
+        </Button>
+      </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Filters Panel */}

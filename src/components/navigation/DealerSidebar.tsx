@@ -5,6 +5,7 @@ import { Typography } from '../ui/Typography';
 import { Link, useLocation } from 'react-router-dom';
 import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
 import { TierBadge } from './TierBadge';
 
 import { AdminAnalyticsCard } from './AdminAnalyticsCard';
@@ -85,13 +86,13 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               {isDashboardActive && !isCollapsed && (
                 <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
               )}
-              <AppIcon name="dashboard" className={cn("h-5 w-5 shrink-0 transition-all", isDashboardActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+              <AppIcon name="dashboard" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", isDashboardActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
             </div>
             <div className={cn(
               "flex-1 overflow-hidden transition-all duration-300 pr-6",
               isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
             )}>
-              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", isDashboardActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Dashboard</span>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, isDashboardActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Dashboard</span>
             </div>
           </Link>
 
@@ -111,13 +112,13 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               {isSalesReportActive && !isCollapsed && (
                 <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
               )}
-              <AppIcon name="salesLog" className={cn("h-5 w-5 shrink-0 transition-all", isSalesReportActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+              <AppIcon name="salesLog" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", isSalesReportActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
             </div>
             <div className={cn(
               "flex-1 overflow-hidden transition-all duration-300 pr-6",
               isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
             )}>
-              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", isSalesReportActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Sales Report</span>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, isSalesReportActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Sales Report</span>
             </div>
           </Link>
 
@@ -132,13 +133,13 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               {location.pathname === '/activity' && !isCollapsed && (
                 <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
               )}
-              <AppIcon name="activity" className={cn("h-5 w-5 shrink-0 transition-all", location.pathname === '/activity' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+              <AppIcon name="activity" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", location.pathname === '/activity' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
             </div>
             <div className={cn(
               "flex-1 overflow-hidden transition-all duration-300 pr-6",
               isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
             )}>
-              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", location.pathname === '/activity' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Activity Feed</span>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, location.pathname === '/activity' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Activity Feed</span>
             </div>
           </Link>
 
@@ -158,13 +159,13 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               {location.pathname === '/dealer/users' && !location.search && !isCollapsed && (
                 <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
               )}
-              <AppIcon name="users" className={cn("h-5 w-5 shrink-0 transition-all", location.pathname === '/dealer/users' && !location.search ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+              <AppIcon name="users" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", location.pathname === '/dealer/users' && !location.search ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
             </div>
             <div className={cn(
               "flex-1 overflow-hidden transition-all duration-300 pr-6",
               isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
             )}>
-              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", location.pathname === '/dealer/users' && !location.search ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Managers</span>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, location.pathname === '/dealer/users' && !location.search ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Managers</span>
             </div>
           </Link>
 
@@ -179,13 +180,13 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               {location.search === '?tab=permissions' && !isCollapsed && (
                 <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
               )}
-              <AppIcon name="lock" className={cn("h-5 w-5 shrink-0 transition-all", location.search === '?tab=permissions' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+              <AppIcon name="lock" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", location.search === '?tab=permissions' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
             </div>
             <div className={cn(
               "flex-1 overflow-hidden transition-all duration-300 pr-6",
               isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
             )}>
-              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", location.search === '?tab=permissions' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Permissions</span>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, location.search === '?tab=permissions' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Permissions</span>
             </div>
           </Link>
 
@@ -200,13 +201,13 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               {location.search === '?tab=invites' && !isCollapsed && (
                 <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
               )}
-              <AppIcon name="mail" className={cn("h-5 w-5 shrink-0 transition-all", location.search === '?tab=invites' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+              <AppIcon name="mail" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", location.search === '?tab=invites' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
             </div>
             <div className={cn(
               "flex-1 overflow-hidden transition-all duration-300 pr-6",
               isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
             )}>
-              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", location.search === '?tab=invites' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Invites</span>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, location.search === '?tab=invites' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Invites</span>
             </div>
           </Link>
 
@@ -226,13 +227,13 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               {isSettingsActive && !isCollapsed && (
                 <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
               )}
-              <AppIcon name="settings" className={cn("h-5 w-5 shrink-0 transition-all", isSettingsActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+              <AppIcon name="settings" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", isSettingsActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
             </div>
             <div className={cn(
               "flex-1 overflow-hidden transition-all duration-300 pr-6",
               isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
             )}>
-              <span className={cn("font-bold text-[10px] uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", isSettingsActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Settings</span>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, isSettingsActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Settings</span>
             </div>
           </Link>
         </nav>
@@ -288,10 +289,10 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
             )}
           >
             <div className={cn("shrink-0 flex items-center justify-center", isCollapsed ? "w-full" : "w-6")}>
-              <AppIcon name="logout" className="h-5 w-5 text-slate-600 group-hover:text-rose-500 transition-colors drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]" />
+              <AppIcon name="logout" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "text-slate-600 group-hover:text-rose-500 transition-colors drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]")} />
             </div>
             {!isCollapsed && (
-              <span className="text-[10px] font-black text-slate-500 group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all">Exit Session</span>
+              <span className={cn("font-black text-slate-500 group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY)}>Exit Session</span>
             )}
           </button>
         </div>

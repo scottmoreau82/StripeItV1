@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
 import { DashboardLayout } from '../layout/DashboardLayout';
+import { PageHeader } from '../ui/PageHeader';
 import { TeamMetricsOverview } from './TeamMetricsOverview';
 import { DealOversightList } from './DealOversightList';
 import { Deal, PayPlan, UserProfile, UserRole } from '@/src/types';
@@ -43,22 +44,13 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
 
   const header = (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
-            <LayoutDashboard className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
-          </div>
-          <div className="space-y-1">
-            <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-xl md:text-2xl leading-none">
-              Management Feed
-            </Typography>
-            <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-[0.2em] block">
-              Direct oversight • {teamMetrics.length} salespeople at {profile?.orgName || 'Highline Motors'}
-            </Typography>
-          </div>
-        </div>
-
-        <div className="flex bg-white/[0.03] border border-white/5 rounded-full p-1 self-start lg:self-auto">
+      <PageHeader
+        title="Management Feed"
+        subtitle={`Direct oversight • ${teamMetrics.length} salespeople at ${profile?.orgName || 'Highline Motors'}`}
+        icon={LayoutDashboard}
+      />
+      
+      <div className="flex bg-white/[0.03] border border-white/5 rounded-full p-1 self-start lg:self-auto">
           <button
             onClick={() => setActiveView('team_performance')}
             className={cn(
@@ -81,8 +73,7 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
           </button>
         </div>
       </div>
-    </div>
-  );
+    );
 
   return (
     <DashboardLayout

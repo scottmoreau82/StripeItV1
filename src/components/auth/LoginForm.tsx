@@ -243,7 +243,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
         
           <div className="mt-10 text-center">
           <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-600">
-            Powered by StripeIt Deal Tracker • Professional Car Deal Foundation
+            Powered by StripeIt Deal Tracker • VisionForged Ventures
           </Typography>
         </div>
       </motion.div>

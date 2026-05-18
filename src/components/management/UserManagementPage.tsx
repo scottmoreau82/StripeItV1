@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../layout/DashboardLayout';
+import { PageHeader } from '../ui/PageHeader';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { ArrowLeft, Users } from 'lucide-react';
@@ -24,29 +25,19 @@ export const UserManagementPage: React.FC = () => {
           Settings
         </Button>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20">
-          <Users className="h-6 w-6 text-brand-primary" />
-        </div>
-        <div>
-          <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter leading-none">
-            User Management
-          </Typography>
-          <Typography variant="p" className="text-slate-500 font-bold mt-1">
-            Control platform access and subscription tiers
-          </Typography>
-        </div>
-
-        <div className="ml-auto flex items-center gap-3">
-           <Button 
-              variant="outline"
-              onClick={() => navigate('/admin/dealer-requests')}
-              className="border-white/10 hover:bg-white/5"
-           >
-              Dealer Requests
-           </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="User Management"
+        subtitle="Control platform access and subscription tiers"
+        icon={Users}
+      >
+        <Button 
+          variant="outline"
+          onClick={() => navigate('/admin/dealer-requests')}
+          className="border-white/10 hover:bg-white/5"
+        >
+          Dealer Requests
+        </Button>
+      </PageHeader>
     </div>
   );
 

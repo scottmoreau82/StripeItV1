@@ -35,11 +35,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         )}>
           <Icon className={cn("h-6 w-6", iconColor === "bg-brand-primary" ? "text-bg-deep" : "text-white")} />
         </div>
-        <div className="space-y-1">
-          <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-3xl leading-none">
+        <div className="space-y-0.5">
+          <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-xl md:text-2xl leading-none">
             {title}
           </Typography>
-          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
+          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-[0.2em] block">
             {subtitle}
           </Typography>
         </div>

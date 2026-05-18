@@ -11,6 +11,7 @@ import { Modal } from '../ui/Modal';
 import { Lock, Zap, CheckCircle2, ArrowUpRight, Star } from 'lucide-react';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { navigationConfig } from './NavigationItems';
+import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
 import { TierBadge } from './TierBadge';
 import { useResponsive } from '@/src/hooks/useResponsive';
 import { SubscriptionTier } from '@/src/types';
@@ -86,24 +87,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation & Action Area (Scrollable Navigation) */}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar overflow-x-hidden">
-        <nav className="flex flex-col gap-1 py-4">
+        <nav className="flex flex-col gap-1 py-6">
           {visibleNavItems.map((item) => {
             const isActive = location.pathname === item.path;
             
             const content = (
               <div className="flex items-center w-full group">
-                <div className="w-20 shrink-0 flex items-center justify-center relative">
+                <div className="w-16 shrink-0 flex items-center justify-center relative">
                   {/* Active Indicator Bar - Fixed to Left edge of sidebar */}
                   {isActive && !isCollapsed && (
                     <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
                   )}
-                  <AppIcon name={item.icon as any} className={cn("h-6 w-6 shrink-0 transition-all", isActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]" : "text-slate-600 group-hover:text-slate-400")} />
+                  <AppIcon name={item.icon as any} className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", isActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]" : "text-slate-600 group-hover:text-slate-400")} />
                 </div>
                 <div className={cn(
                   "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
                   isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
                 )}>
-                  <span className={cn("font-bold text-[11px] uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all", isActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>{item.label}</span>
+                  <span className={cn("font-bold uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, isActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>{item.label}</span>
                   {item.featureId && <ComingSoonIndicator featureId={item.featureId} size="sm" />}
                 </div>
               </div>
@@ -137,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 
                 {/* StripeItSettingsSubmenuSystem - Render nested submenu if on settings and expanded */}
                 {isActive && item.id === 'settings' && !isCollapsed && (
-                  <div className="mt-1 ml-20 flex flex-col gap-1 border-l border-white/10 pl-4 mb-2">
+                  <div className="mt-1 ml-16 flex flex-col gap-1 border-l border-white/10 pl-4 mb-2">
                     {navigationConfig.settingsSubmenu
                       .filter(sub => {
                         if (sub.adminOnly && !profile?.isAdmin) return false;
@@ -154,7 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               el.scrollIntoView({ behavior: 'smooth' });
                             }
                           }}
-                          className="py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 hover:text-brand-primary transition-colors text-left"
+                          className={cn("py-1.5 font-black uppercase tracking-[0.2em] text-slate-600 hover:text-brand-primary transition-colors text-left", SIDEBAR_NAV_TYPOGRAPHY)}
                         >
                           {sub.label}
                         </button>
@@ -179,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 : "h-14 w-full rounded-xl px-4"
             )}
           >
-            <AppIcon name="plus" className="h-6 w-6 shrink-0 stroke-[3px] group-hover:scale-110 transition-transform" />
+            <AppIcon name="plus" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 stroke-[3px] group-hover:scale-110 transition-transform")} />
             <span className={cn(
               "tracking-widest uppercase truncate whitespace-nowrap transition-all duration-300",
               isCollapsed ? "opacity-0 w-0 ml-0 invisible" : "opacity-100 w-auto ml-2 visible"
@@ -299,10 +300,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           >
             <div className={cn("shrink-0 flex items-center justify-center", isCollapsed ? "w-full" : "w-6")}>
-              <AppIcon name="logout" className="h-5 w-5 text-slate-600 group-hover:text-rose-500 transition-colors" />
+              <AppIcon name="logout" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "text-slate-600 group-hover:text-rose-500 transition-colors")} />
             </div>
             {!isCollapsed && (
-              <span className="text-[10px] font-black text-slate-500 group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all">Exit Session</span>
+              <span className={cn("font-black text-slate-500 group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY)}>Exit Session</span>
             )}
           </button>
         </div>

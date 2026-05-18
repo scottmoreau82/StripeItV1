@@ -125,28 +125,18 @@ export const DealerDashboard: React.FC = () => {
   }
 
   const header = (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div className="flex items-center gap-4">
-        <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary border border-brand-primary/20 shadow-glow shadow-brand-primary/5">
-          <LayoutGrid size={18} />
-        </div>
-        <div className="space-y-0.5">
-          <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter text-xl md:text-2xl leading-none">
-            Dealer Dashboard
-          </Typography>
-          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-[0.2em] block">
-            {profile?.orgName || 'StripeIt Dealership'} • Global Telemetry
-          </Typography>
-        </div>
-      </div>
-
+    <PageHeader
+      title="Dealer Dashboard"
+      subtitle={`${profile?.orgName || 'StripeIt Dealership'} • Global Telemetry`}
+      icon={LayoutGrid}
+    >
       <Link to="/dealer/sales-log">
         <Button variant="outline" className="h-9 border-white/10 bg-white/5 hover:bg-white/10 transition-all text-[9px] font-black uppercase tracking-widest px-5 gap-2">
           <ClipboardList size={12} />
           Full Sales Log
         </Button>
       </Link>
-    </div>
+    </PageHeader>
   );
 
   const mainContent = (

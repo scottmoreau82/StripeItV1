@@ -8,6 +8,7 @@ import { Search, Bug, Lightbulb, ExternalLink, User, Smartphone, Globe, Trash2, 
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 import { cn } from '@/src/lib/utils';
+import { PageHeader } from '../ui/PageHeader';
 import { Button } from '../ui/Button';
 
 /**
@@ -95,15 +96,11 @@ export const FeedbackReviewPage: React.FC = () => {
 
   return (
     <div className="space-y-8 pb-20 px-6">
-      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-2 w-2 rounded-full bg-brand-primary animate-pulse shadow-glow glow-primary" />
-            <Typography variant="mono" className="text-[10px] text-brand-primary uppercase font-black tracking-[0.2em]">Feedback Control Center</Typography>
-          </div>
-          <Typography variant="h2" className="text-white font-black uppercase tracking-tight italic">Technical Review</Typography>
-        </div>
-
+      <PageHeader
+        title="Technical Review"
+        subtitle="Feedback Control Center • User Signals"
+        icon={Bug}
+      >
         <div className="flex flex-wrap items-center gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-3xl shadow-2xl">
            <div className="flex bg-bg-deep p-1 rounded-2xl border border-white/5">
              <button 
@@ -170,7 +167,7 @@ export const FeedbackReviewPage: React.FC = () => {
               />
            </div>
         </div>
-      </div>
+      </PageHeader>
 
       <AnimatePresence mode="wait">
         {isLoading ? (

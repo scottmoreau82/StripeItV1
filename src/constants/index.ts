@@ -47,3 +47,16 @@ export const ROUTES = {
   INVENTORY: '/inventory',
   SETTINGS: '/settings',
 };
+
+/**
+ * Standardized Sidebar Typography
+ * Source of truth for all sidebar/mobile nav labels (10px / 15px line-height)
+ */
+export const SIDEBAR_NAV_TYPOGRAPHY = "text-[10px] leading-[15px]";
+
+/**
+ * Standardized Sidebar Icon Sizing
+ * Source of truth for all sidebar/mobile nav icons (Dealer tier canonical sizing)
+ */
+export const SIDEBAR_NAV_ICON_SIZE_CLASS = "h-5 w-5";
+export const SIDEBAR_NAV_ICON_SIZE = 20; // Equivalent to h-5 (1.25rem)

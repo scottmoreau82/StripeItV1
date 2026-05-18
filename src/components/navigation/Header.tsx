@@ -12,7 +12,7 @@ import { auth } from '@/src/lib/firebase';
 import { SubscriptionTier } from '@/src/types';
 import { Feature, featureAccessService } from '@/src/services/featureAccessService';
 import { TierBadge } from './TierBadge';
-import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
+import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE, STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
 
@@ -140,11 +140,12 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                               window.dispatchEvent(new CustomEvent('stripeit:open-feedback'));
                             }}
                             className={cn(
-                              "flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
+                              "flex items-center gap-3 rounded-xl px-4 py-3.5 font-bold uppercase tracking-wider transition-all text-left",
+                              SIDEBAR_NAV_TYPOGRAPHY,
                               "text-slate-500 hover:bg-white/5 hover:text-white"
                             )}
                           >
-                            <AppIcon name={item.icon as any} size={20} />
+                            <AppIcon name={item.icon as any} size={SIDEBAR_NAV_ICON_SIZE} />
                             {item.label}
                           </button>
                         );
@@ -156,7 +157,8 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                             to={item.path}
                             onClick={closeDrawer}
                             className={cn(
-                              "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-bold uppercase tracking-wider transition-all text-left",
+                              "relative flex items-center gap-3 rounded-xl px-4 py-3.5 font-bold uppercase tracking-wider transition-all text-left",
+                              SIDEBAR_NAV_TYPOGRAPHY,
                               isActive 
                                 ? "bg-white/[0.03] text-brand-primary" 
                                 : "text-slate-500 hover:bg-white/5 hover:text-white"
@@ -165,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                             {isActive && (
                               <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
                             )}
-                            <AppIcon name={item.icon as any} size={20} className={cn(isActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
+                            <AppIcon name={item.icon as any} size={SIDEBAR_NAV_ICON_SIZE} className={cn(isActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]")} />
                             {item.label}
                           </Link>
 
@@ -188,7 +190,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                                         el.scrollIntoView({ behavior: 'smooth' });
                                       }
                                     }}
-                                    className="py-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-brand-primary transition-colors text-left"
+                                    className={cn("py-2.5 font-black uppercase tracking-[0.2em] text-slate-500 hover:text-brand-primary transition-colors text-left", SIDEBAR_NAV_TYPOGRAPHY)}
                                   >
                                     {sub.label}
                                   </button>
@@ -262,9 +264,9 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                   {/* Logout Button */}
                   <button 
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-xs font-black text-slate-500 hover:text-white transition-all text-left uppercase tracking-[0.2em] group"
+                    className={cn("flex w-full items-center gap-3 rounded-xl px-4 py-3 font-black text-slate-500 hover:text-white transition-all text-left uppercase tracking-[0.2em] group", SIDEBAR_NAV_TYPOGRAPHY)}
                   >
-                    <AppIcon name="logout" className="h-5 w-5 text-slate-600 group-hover:text-brand-primary transition-colors" />
+                    <AppIcon name="logout" size={SIDEBAR_NAV_ICON_SIZE} className="text-slate-600 group-hover:text-brand-primary transition-colors" />
                     Exit Session
                   </button>
                 </div>

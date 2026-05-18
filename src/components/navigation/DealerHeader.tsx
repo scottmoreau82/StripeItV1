@@ -6,6 +6,7 @@ import { cn } from '@/src/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { auth } from '@/src/lib/firebase';
+import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE } from '@/src/constants';
 import { TierBadge } from './TierBadge';
 
 /**
@@ -99,7 +100,8 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       to="/"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3.5 font-black uppercase tracking-[0.2em] transition-all text-left",
+                        SIDEBAR_NAV_TYPOGRAPHY,
                         isDashboardActive 
                           ? "bg-brand-primary/[0.03] text-brand-primary shadow-glow glow-primary/5" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
@@ -108,7 +110,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       {isDashboardActive && (
                         <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="dashboard" size={18} className={cn(isDashboardActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      <AppIcon name="dashboard" size={SIDEBAR_NAV_ICON_SIZE} className={cn(isDashboardActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Dashboard
                     </Link>
 
@@ -121,7 +123,8 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       to="/dealer/sales-log"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 font-black uppercase tracking-[0.2em] transition-all text-left",
+                        SIDEBAR_NAV_TYPOGRAPHY,
                         isSalesReportActive 
                           ? "bg-brand-primary/[0.03] text-brand-primary" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
@@ -130,7 +133,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       {isSalesReportActive && (
                         <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="salesLog" size={18} className={cn(isSalesReportActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      <AppIcon name="salesLog" size={SIDEBAR_NAV_ICON_SIZE} className={cn(isSalesReportActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Sales Report
                     </Link>
 
@@ -138,7 +141,8 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       to="/activity"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 font-black uppercase tracking-[0.2em] transition-all text-left",
+                        SIDEBAR_NAV_TYPOGRAPHY,
                         location.pathname === '/activity' 
                           ? "bg-brand-primary/[0.03] text-brand-primary" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
@@ -147,7 +151,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       {location.pathname === '/activity' && (
                         <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="activity" size={18} className={cn(location.pathname === '/activity' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      <AppIcon name="activity" size={SIDEBAR_NAV_ICON_SIZE} className={cn(location.pathname === '/activity' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Activity Feed
                     </Link>
 
@@ -160,7 +164,8 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       to="/dealer/users"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 font-black uppercase tracking-[0.2em] transition-all text-left",
+                        SIDEBAR_NAV_TYPOGRAPHY,
                         location.pathname === '/dealer/users' && !location.search
                           ? "bg-brand-primary/[0.03] text-brand-primary" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
@@ -169,7 +174,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       {location.pathname === '/dealer/users' && !location.search && (
                         <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="users" size={18} className={cn(location.pathname === '/dealer/users' && !location.search && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      <AppIcon name="users" size={SIDEBAR_NAV_ICON_SIZE} className={cn(location.pathname === '/dealer/users' && !location.search && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Managers
                     </Link>
 
@@ -177,7 +182,8 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       to="/dealer/users?tab=permissions"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 font-black uppercase tracking-[0.2em] transition-all text-left",
+                        SIDEBAR_NAV_TYPOGRAPHY,
                         location.search === '?tab=permissions' 
                           ? "bg-brand-primary/[0.03] text-brand-primary" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
@@ -186,7 +192,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       {location.search === '?tab=permissions' && (
                         <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="lock" size={18} className={cn(location.search === '?tab=permissions' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      <AppIcon name="lock" size={SIDEBAR_NAV_ICON_SIZE} className={cn(location.search === '?tab=permissions' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Permissions
                     </Link>
 
@@ -194,7 +200,8 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       to="/dealer/users?tab=invites"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 font-black uppercase tracking-[0.2em] transition-all text-left",
+                        SIDEBAR_NAV_TYPOGRAPHY,
                         location.search === '?tab=invites' 
                           ? "bg-brand-primary/[0.03] text-brand-primary" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
@@ -203,7 +210,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       {location.search === '?tab=invites' && (
                         <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="mail" size={18} className={cn(location.search === '?tab=invites' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      <AppIcon name="mail" size={SIDEBAR_NAV_ICON_SIZE} className={cn(location.search === '?tab=invites' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Invites
                     </Link>
 
@@ -216,7 +223,8 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       to="/dealer/settings"
                       onClick={closeDrawer}
                       className={cn(
-                        "relative flex items-center gap-3 rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all text-left",
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 font-black uppercase tracking-[0.2em] transition-all text-left",
+                        SIDEBAR_NAV_TYPOGRAPHY,
                         isSettingsActive 
                           ? "bg-brand-primary/[0.03] text-brand-primary" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
@@ -225,7 +233,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                       {isSettingsActive && (
                         <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="settings" size={18} className={cn(isSettingsActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      <AppIcon name="settings" size={SIDEBAR_NAV_ICON_SIZE} className={cn(isSettingsActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Settings
                     </Link>
                   </nav>
@@ -255,9 +263,9 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
 
                   <button 
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-xs font-black text-slate-500 hover:text-white transition-all text-left uppercase tracking-[0.2em] group"
+                    className={cn("flex w-full items-center gap-3 rounded-xl px-4 py-3 font-black text-slate-500 hover:text-white transition-all text-left uppercase tracking-[0.2em] group", SIDEBAR_NAV_TYPOGRAPHY)}
                   >
-                    <AppIcon name="logout" className="h-5 w-5 text-slate-600 group-hover:text-brand-primary transition-colors" />
+                    <AppIcon name="logout" size={SIDEBAR_NAV_ICON_SIZE} className="text-slate-600 group-hover:text-brand-primary transition-colors" />
                     Exit Session
                   </button>
                 </div>

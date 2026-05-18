@@ -16,6 +16,7 @@ import {
   History,
   Download
 } from 'lucide-react';
+import { PageHeader } from '../ui/PageHeader';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { DealerInviteManagerModal } from '../dealer/DealerInviteManagerModal';
@@ -89,47 +90,42 @@ export const AdminAnalyticsDashboard: React.FC = () => {
   return (
     <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <Link to="/" className="inline-flex items-center text-slate-500 hover:text-brand-primary transition-colors text-xs font-black uppercase tracking-widest mb-4 group">
-            <ArrowLeft size={14} className="mr-2 group-hover:-translate-x-1 transition-transform" />
-            Back to Dashboard
-          </Link>
+      <div className="flex flex-col gap-6">
+        <Link to="/" className="inline-flex items-center text-slate-500 hover:text-brand-primary transition-colors text-xs font-black uppercase tracking-widest group">
+          <ArrowLeft size={14} className="mr-2 group-hover:-translate-x-1 transition-transform" />
+          Back to Dashboard
+        </Link>
+        <PageHeader
+          title="Platform Analytics"
+          subtitle="System-wide performance telemetry • Global Oversight"
+          icon={Activity}
+        >
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shadow-glow glow-primary">
-              <Activity className="h-6 w-6 text-brand-primary" />
-            </div>
-            <Typography variant="h1" className="italic text-4xl uppercase tracking-tighter">
-              Platform Analytics
-            </Typography>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="border-white/10 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-brand-primary/10 hover:border-brand-primary/20 transition-all"
-            onClick={() => setIsInviteModalOpen(true)}
-          >
-            <UserPlus size={14} className="mr-2 text-brand-primary" />
-            Invite Global Manager
-          </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-white/10 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-brand-primary/10 hover:border-brand-primary/20 transition-all"
+              onClick={() => setIsInviteModalOpen(true)}
+            >
+              <UserPlus size={14} className="mr-2 text-brand-primary" />
+              Invite Global Manager
+            </Button>
 
-          <div className="flex items-center gap-2 bg-white/[0.03] p-1.5 rounded-2xl border border-white/5">
-            {[7, 14, 30].map((days) => (
-              <button
-                key={days}
-                onClick={() => setPeriodDays(days)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                  periodDays === days ? "bg-brand-primary text-bg-deep shadow-glow" : "text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                {days}D
-              </button>
-            ))}
+            <div className="flex items-center gap-2 bg-white/[0.03] p-1.5 rounded-2xl border border-white/5">
+              {[7, 14, 30].map((days) => (
+                <button
+                  key={days}
+                  onClick={() => setPeriodDays(days)}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    periodDays === days ? "bg-brand-primary text-bg-deep shadow-glow" : "text-slate-500 hover:text-slate-300"
+                  }`}
+                >
+                  {days}D
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </PageHeader>
       </div>
 
       {/* Main Stats Grid */}

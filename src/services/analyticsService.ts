@@ -12,6 +12,7 @@ import {
   getDocs, 
   orderBy, 
   limit,
+  arrayUnion,
   onSnapshot
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
@@ -158,7 +159,7 @@ class AnalyticsService {
       const sessionDoc = doc(db, COLLECTIONS.SESSIONS, this.sessionId);
       if (type === AnalyticsEventType.PAGE_VIEW) {
         await updateDoc(sessionDoc, {
-          pagesViewed: increment(1) as any
+          pagesViewed: arrayUnion(typeof window !== 'undefined' ? window.location.pathname : '/')
         });
       } else if (type === AnalyticsEventType.BUTTON_CLICK) {
         await updateDoc(sessionDoc, {

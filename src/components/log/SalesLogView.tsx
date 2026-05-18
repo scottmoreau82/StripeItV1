@@ -9,6 +9,7 @@ import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppIcon } from '../ui/AppIcon';
+import { PageHeader } from '../ui/PageHeader';
 import { Eye } from 'lucide-react';
 import { cn, formatDateSafe, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { calculateDealCommission } from '@/src/lib/commissionLogic';
@@ -192,33 +193,21 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   };
 
   const header = (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-      <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
-          <AppIcon name="salesLog" className="h-6 w-6 text-bg-deep" />
-        </div>
-        <div className="space-y-1">
-          <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
-            Sales Log
-          </Typography>
-          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
-            {currentMonthDeals.length} deals / {currentMonthSpiffs.length} spiffs this month
-          </Typography>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-3">
-        <button 
-          onClick={onConfigPayPlan}
-          className="h-11 px-6 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5 flex items-center gap-2 text-[10px] uppercase font-black tracking-widest"
-          title="Est. Payout Engine"
-          aria-label="Est. Payout Engine"
-        >
-          <AppIcon name="calculator" size={16} />
-          Payout Engine
-        </button>
-      </div>
-    </div>
+    <PageHeader
+      title="Sales Log"
+      subtitle={`${currentMonthDeals.length} deals / ${currentMonthSpiffs.length} spiffs this month`}
+      icon={() => <AppIcon name="salesLog" className="h-6 w-6 text-bg-deep" />}
+    >
+      <button 
+        onClick={onConfigPayPlan}
+        className="h-11 px-6 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5 flex items-center gap-2 text-[10px] uppercase font-black tracking-widest"
+        title="Est. Payout Engine"
+        aria-label="Est. Payout Engine"
+      >
+        <AppIcon name="calculator" size={16} />
+        Payout Engine
+      </button>
+    </PageHeader>
   );
 
   const mainContent = (

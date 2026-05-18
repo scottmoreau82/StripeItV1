@@ -152,15 +152,13 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
                 variant="h1" 
                 className={isMobile ? "text-5xl text-white italic font-black uppercase leading-[0.85] tracking-tighter" : "text-7xl text-white italic font-black uppercase leading-[0.85] tracking-tighter"}
               >
-                Track. <br />
-                Analyze. <br />
-                <span className="text-brand-primary">Close More.</span>
+                Own. <br />
+                Your. <br />
+                <span className="text-brand-primary">Deals.</span>
               </Typography>
               
               <Typography variant="p" className="text-slate-400 text-lg max-w-lg leading-relaxed font-medium">
-                The elite dealership performance toolkit. Secure deal logging, 
-                real-time commission tracking, and professional sales intelligence 
-                built for high-performance automotive sales teams.
+                Professional performance tracking for modern salespeople. Real-time production visibility without spreadsheets, guesswork, or scattered notes.
               </Typography>
             </motion.div>
 
@@ -415,7 +413,7 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
            </div>
            
            <Typography variant="mono" className="text-[9px] uppercase tracking-[0.2em] text-slate-600 block">
-              © 2024 StripeIt Tech • Unified Dealership Intelligence Systems
+              © 2026 VisionForged Ventures
            </Typography>
         </div>
       </main>

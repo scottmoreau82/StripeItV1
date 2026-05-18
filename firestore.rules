@@ -154,6 +154,25 @@ service cloud.firestore {
              data.timestamp is number;
     }
 
+    function isValidAnalyticsSession(data) {
+      return data.visitorId is string &&
+             (data.get('userId', '') is string) &&
+             data.startTime is number &&
+             data.clickCount is number &&
+             data.pagesViewed is list &&
+             data.deviceInfo is map;
+    }
+
+    function isValidAnalyticsDailyAggregate(data) {
+      return data.date is string &&
+             data.timestamp is number &&
+             (data.get('visits', 0) is number) &&
+             (data.get('signups', 0) is number) &&
+             (data.get('pageViews', 0) is number) &&
+             (data.get('clicks', 0) is number) &&
+             (data.get('activeSessions', 0) is number);
+    }
+
     function isValidOrganization(data) {
       return data.get('name', 'Personal Workspace') is string &&
              data.get('ownerId', '') is string &&
@@ -184,7 +203,7 @@ service cloud.firestore {
 
     // --- COLLECTION RULES ---
 
-    // Analytics Collections (Admin Only)
+    // Analytics Collections (Admin Only for Reading, User sessions for Writing)
     match /analyticsEvents/{eventId} {
       allow read: if isAnyAdmin();
       allow create: if isValidAnalyticsEvent(incoming());
@@ -193,13 +212,15 @@ service cloud.firestore {
 
     match /analyticsSessions/{sessionId} {
       allow read: if isAnyAdmin();
-      allow create, update: if true;
+      allow get: if true; // Knowledge of session ID serves as primary key
+      allow create: if isValidAnalyticsSession(incoming());
+      allow update: if isValidAnalyticsSession(incoming()) || isAnyAdmin();
       allow delete: if false;
     }
 
     match /analyticsDailyAggregates/{dateId} {
       allow read: if isAnyAdmin();
-      allow create, update: if true;
+      allow create, update: if isValidAnalyticsDailyAggregate(incoming());
       allow delete: if false;
     }
 

@@ -407,7 +407,7 @@ const CommissionWarningCard: React.FC<{ onConfigure: () => void; isCollapsed: bo
         </div>
         <div className="flex-1 min-w-0">
           <Typography variant="mono" className="text-[10px] text-rose-500 font-black uppercase tracking-widest mb-1 leading-none">
-            Setup Required
+            Setup Required <b />
           </Typography>
           <Typography variant="label" className="text-white text-xs font-black uppercase tracking-tight">
             Payout Engine

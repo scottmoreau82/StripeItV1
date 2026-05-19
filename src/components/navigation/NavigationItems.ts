@@ -26,7 +26,7 @@ export const navigationConfig = {
   settingsSubmenu: [
     { id: 'profile', label: 'PROFILE', path: '#profile' },
     { id: 'theme', label: 'THEME', path: '#theme' },
-    { id: 'progression', label: 'UPGRADE TO DEALER', path: '#dealer-progression' },
+    { id: 'progression', label: 'UPGRADE TO DEALER', path: '#organization-access' },
     { id: 'organization', label: 'ORGANIZATION', path: '#organization', roles: [UserRole.MANAGER, UserRole.GENERAL_MANAGER, UserRole.ADMIN, UserRole.DEALER_OWNER] },
     { id: 'dealer-reviews', label: 'DEALER REQUESTS', path: '/admin/dealer-requests', adminOnly: true },
     { id: 'admin', label: 'ADMIN', path: '#admin', adminOnly: true },

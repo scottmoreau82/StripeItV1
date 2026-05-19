@@ -15,26 +15,29 @@ interface DealerLayoutProps {
 
 export const DealerLayout: React.FC<DealerLayoutProps> = ({ children }) => {
   const [isLogDealOpen, setIsLogDealOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('stripeit_dealer_sidebar_collapsed') === 'true';
+    }
+    return false;
+  });
 
   const handleLogDeal = () => {
     setIsLogDealOpen(true);
   };
 
   React.useEffect(() => {
-    localStorage.setItem('stripeit_dealer_sidebar_collapsed', 'true');
-  }, []);
+    localStorage.setItem('stripeit_dealer_sidebar_collapsed', String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row bg-bg-deep select-none overflow-x-hidden">
-      {/* Dealer Desktop Sidebar Wrapper - Prevents Layout Shifting */}
-      <div className="hidden lg:block w-20 shrink-0 relative z-40">
-        <DealerSidebar 
-          isCollapsed={true} // Force collapsed layout state
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          onLogDeal={handleLogDeal}
-        />
-      </div>
+    <div className="flex min-h-screen flex-col lg:flex-row bg-bg-deep select-none">
+      {/* Dealer Desktop Sidebar */}
+      <DealerSidebar 
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        onLogDeal={handleLogDeal}
+      />
       
       <div className="flex flex-1 flex-col min-w-0">
         {/* Dealer Mobile Header */}

@@ -8,7 +8,6 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
 import { TierBadge } from './TierBadge';
 
-import { useResponsive } from '@/src/hooks/useResponsive';
 import { AdminAnalyticsCard } from './AdminAnalyticsCard';
 
 /**
@@ -22,17 +21,12 @@ interface DealerSidebarProps {
 }
 
 export const DealerSidebar: React.FC<DealerSidebarProps> = ({ 
-  isCollapsed: propIsCollapsed, 
+  isCollapsed, 
   onToggleCollapse,
   onLogDeal
 }) => {
   const { profile, isAdmin, isDeveloper } = useAuth();
-  const { isDesktop } = useResponsive();
   const location = useLocation();
-  const [isHovered, setIsHovered] = React.useState(false);
-
-  // StripeItHoverSystem - Effective collapsed state derived from hover on desktop
-  const isCollapsed = isDesktop ? !isHovered : propIsCollapsed;
 
   const handleLogout = async () => {
     try {
@@ -49,14 +43,10 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
   const isSettingsActive = location.pathname === '/dealer/settings';
 
   return (
-    <aside 
-      onMouseEnter={() => isDesktop && setIsHovered(true)}
-      onMouseLeave={() => isDesktop && setIsHovered(false)}
-      className={cn(
-        "hidden h-screen flex-col border-r border-border-subtle bg-bg-deep lg:flex absolute top-0 left-0 transition-all duration-200 ease-in-out z-40 overflow-hidden shadow-2xl",
-        isCollapsed ? "w-20" : "w-72"
-      )}
-    >
+    <aside className={cn(
+      "hidden h-screen flex-col border-r border-border-subtle bg-bg-deep lg:flex sticky top-0 shrink-0 transition-all duration-300 ease-in-out z-30 overflow-hidden",
+      isCollapsed ? "w-20" : "w-72"
+    )}>
       {/* Brand Identity */}
       <div className="flex flex-col h-20 shrink-0 justify-center">
         <div className="flex items-center w-full">

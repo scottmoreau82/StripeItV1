@@ -20,20 +20,16 @@ interface RootLayoutProps {
 
 export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onLogSpiff, onConfigPayPlan }) => {
   const { profile } = useAuth();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('stripeit_sidebar_collapsed') === 'true';
+    }
+    return false;
+  });
 
   React.useEffect(() => {
-    // Sync with localStorage if present, but default to true as per request
-    const stored = localStorage.getItem('stripeit_sidebar_collapsed');
-    if (stored === 'false') {
-      // We respect previous manual state if it exists, or should we force true?
-      // "DEFAULT STATE - Sidebar is collapsed"
-      // I will force true on first load, then let them toggle if they really want, 
-      // but the request implies it should default to collapsed.
-      // Actually, I'll just force true initially and let the hover take over.
-    }
-    localStorage.setItem('stripeit_sidebar_collapsed', 'true');
-  }, []);
+    localStorage.setItem('stripeit_sidebar_collapsed', String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
 
   // StripeItLayoutTierSwitch - Direct Dealer users to their dedicated layout shell
   // We must have a profile to determine which shell to mount
@@ -46,17 +42,15 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onL
   }
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row bg-bg-deep select-none overflow-x-hidden">
-      {/* Desktop Sidebar System Wrapper - Prevents Layout Shifting */}
-      <div className="hidden lg:block w-20 shrink-0 relative z-40">
-        <Sidebar 
-          onLogDeal={onLogDeal} 
-          onLogSpiff={onLogSpiff}
-          onConfigPayPlan={onConfigPayPlan}
-          isCollapsed={true} // Force collapsed layout state for desktop
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        />
-      </div>
+    <div className="flex min-h-screen flex-col lg:flex-row bg-bg-deep select-none">
+      {/* Desktop Sidebar System */}
+      <Sidebar 
+        onLogDeal={onLogDeal} 
+        onLogSpiff={onLogSpiff}
+        onConfigPayPlan={onConfigPayPlan}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
       
       <div className="flex flex-1 flex-col min-w-0">
         {/* Mobile Header System */}

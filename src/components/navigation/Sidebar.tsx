@@ -34,18 +34,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogDeal, 
   onLogSpiff, 
   onConfigPayPlan, 
-  isCollapsed: propIsCollapsed, 
+  isCollapsed, 
   onToggleCollapse 
 }) => {
   const { profile, user, isAdmin, tierOverride, setTierOverride, isEditMode, setIsEditMode } = useAuth();
   const { isCommissionConfigured } = useAppData();
-  const { isDesktop } = useResponsive();
   const location = useLocation();
   const [isSpiffModalOpen, setIsSpiffModalOpen] = React.useState(false);
-  const [isHovered, setIsHovered] = React.useState(false);
 
-  // StripeItHoverSystem - Effective collapsed state derived from hover on desktop
-  const isCollapsed = isDesktop ? !isHovered : propIsCollapsed;
+  const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
 
   const handleLogout = async () => {
     try {
@@ -59,14 +56,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const visibleNavItems = navigationConfig.getVisibleItems(profile);
 
   return (
-    <aside 
-      onMouseEnter={() => isDesktop && setIsHovered(true)}
-      onMouseLeave={() => isDesktop && setIsHovered(false)}
-      className={cn(
-        "hidden h-screen flex-col border-r border-border-subtle bg-bg-deep lg:flex absolute top-0 left-0 transition-all duration-200 ease-in-out z-40 overflow-hidden shadow-2xl",
-        isCollapsed ? "w-20" : "w-72"
-      )}
-    >
+    <aside className={cn(
+      "hidden h-screen flex-col border-r border-border-subtle bg-bg-deep lg:flex sticky top-0 shrink-0 transition-all duration-300 ease-in-out z-30 overflow-hidden",
+      isCollapsed ? "w-20" : "w-72"
+    )}>
       {/* Brand Identity / Top Area (Pinned) */}
       <div className="flex flex-col h-20 shrink-0 justify-center">
         <div className="flex items-center w-full">

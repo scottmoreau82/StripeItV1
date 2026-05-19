@@ -330,13 +330,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <div className="text-center">
             <Typography variant="mono" className="text-emerald-500 uppercase tracking-[0.3em] font-black italic text-[10px] mb-2">
-              Basic+ Exclusive Feature
+              Pro & Dealer Exclusive Feature
             </Typography>
             <Typography variant="h2" className="text-white font-black italic uppercase tracking-tighter mb-4 text-3xl">
               Professional SPIFF Tracking
             </Typography>
             <Typography variant="small" className="text-slate-400 leading-relaxed max-w-md mx-auto">
-              Track one-time bonuses, incentive fund payouts, and auxiliary adjustments independently from your deal matrix. Complete with performance visualization and historical logs.
+              Track one-time bonuses, incentive fund payouts, and auxiliary adjustments independently from your deal matrix.
             </Typography>
           </div>
 
@@ -370,7 +370,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
             </Button>
             <Typography variant="mono" className="text-[9px] text-slate-600 uppercase tracking-widest font-bold text-center">
-              Available on Basic, Pro & Dealer Plans
+              Available on Pro & Dealer Plans(Coming Soon!)
             </Typography>
           </div>
         </div>
@@ -410,13 +410,13 @@ const CommissionWarningCard: React.FC<{ onConfigure: () => void; isCollapsed: bo
             Setup Required
           </Typography>
           <Typography variant="label" className="text-white text-xs font-black uppercase tracking-tight">
-            Est. Payout Engine
+            Payout Engine
           </Typography>
         </div>
       </div>
 
       <Typography variant="small" className="text-slate-400 text-[11px] leading-relaxed mb-4 block font-medium">
-        Configure your pay plan first to ensure commissions and payouts calculate accurately.
+        Configure your pay plan to ensure commissions and payouts calculate accurately.
       </Typography>
 
       <Button 

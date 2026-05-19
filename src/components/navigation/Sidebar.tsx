@@ -13,6 +13,7 @@ import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { navigationConfig } from './NavigationItems';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
 import { TierBadge } from './TierBadge';
+import { useTheme } from '@/src/contexts/ThemeContext';
 import { useResponsive } from '@/src/hooks/useResponsive';
 import { SubscriptionTier } from '@/src/types';
 import { AdminAnalyticsCard } from './AdminAnalyticsCard';
@@ -38,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse 
 }) => {
   const { profile, user, isAdmin, tierOverride, setTierOverride, isEditMode, setIsEditMode } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { isCommissionConfigured } = useAppData();
   const location = useLocation();
   const [isSpiffModalOpen, setIsSpiffModalOpen] = React.useState(false);
@@ -77,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
           )}>
             <Link to="/">
-              <Typography variant="h3" className="font-display font-black italic text-white tracking-tighter uppercase whitespace-nowrap overflow-hidden hover:text-brand-primary transition-colors">
+              <Typography variant="h3" className="font-display font-black italic text-[var(--color-text-primary)] tracking-tighter uppercase whitespace-nowrap overflow-hidden hover:text-brand-primary transition-colors">
                 StripeIt
               </Typography>
             </Link>
@@ -166,6 +168,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </React.Fragment>
             );
           })}
+
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className={cn(
+              "flex items-center w-full py-3.5 transition-all group relative hover:bg-white/[0.02] text-left",
+            )}
+            title={isCollapsed ? "Toggle Appearance" : undefined}
+          >
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              <AppIcon 
+                name={theme === 'dark' ? 'moon' : 'sun'} 
+                className={cn(
+                  SIDEBAR_NAV_ICON_SIZE_CLASS, 
+                  "shrink-0 transition-all text-brand-primary drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]"
+                )} 
+              />
+            </div>
+            <div className={cn(
+              "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all text-slate-500 group-hover:text-slate-300", SIDEBAR_NAV_TYPOGRAPHY)}>
+                Theme
+              </span>
+            </div>
+          </button>
         </nav>
 
         {/* Action Area within Scrollable */}
@@ -256,10 +285,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Account & Footer Area (Pinned Footer) */}
-      <div className="shrink-0 border-t border-border-subtle bg-bg-deep/80 backdrop-blur-sm z-10 py-6">
+      <div className="shrink-0 border-t border-border-subtle bg-[var(--color-bg-surface)] backdrop-blur-sm z-10 py-6">
         {/* User Account Hub */}
         <div className={cn("px-4 mb-2 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
-          <div className="bg-bg-card/40 border border-border-subtle rounded-2xl p-4 shadow-glow glow-primary/5 transition-all hover:bg-bg-card/60 relative overflow-hidden group/user">
+          <div className="bg-[var(--color-bg-surface)] border-transparent rounded-2xl p-4 transition-all hover:opacity-90 relative overflow-hidden group/user">
             {/* Background Accent */}
             <div className="absolute -right-6 -bottom-6 h-20 w-20 bg-brand-primary/5 rounded-full blur-2xl group-hover/user:bg-brand-primary/10 transition-all" />
             
@@ -272,12 +301,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 )}
               </div>
               <div className="flex-1 min-w-0 pr-4">
-                <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 text-[11px] group-hover/user:text-brand-primary transition-colors">
+                <Typography variant="label" className="text-[var(--color-text-primary)] block font-black truncate uppercase tracking-tight mb-1 text-[11px] group-hover/user:text-brand-primary transition-colors">
                   {profile?.displayName || 'Operator'}
                 </Typography>
                 <div className="flex items-center gap-2 opacity-80 overflow-hidden">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_#22C55E] shrink-0 pulse" />
-                  <Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-black tracking-[0.15em] truncate">
+                  <Typography variant="mono" className="text-[8px] text-[var(--color-text-secondary)] uppercase font-black tracking-[0.15em] truncate">
                     {profile?.role || 'Sales'}
                   </Typography>
                 </div>
@@ -303,7 +332,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <AppIcon name="logout" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "text-slate-600 group-hover:text-rose-500 transition-colors")} />
             </div>
             {!isCollapsed && (
-              <span className={cn("font-black text-slate-500 group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY)}>Exit Session</span>
+              <span className={cn("font-black text-[var(--color-text-secondary)] group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY)}>Exit Session</span>
             )}
           </button>
         </div>

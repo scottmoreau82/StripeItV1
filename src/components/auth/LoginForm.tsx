@@ -112,16 +112,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
             <DollarSign className="text-white h-8 w-8" />
           </motion.div>
           <div className="space-y-1">
-            <Typography variant="h2" className="text-white">
+            <Typography variant="h2" className="text-[var(--color-text-primary)]">
               Access Stripe It
             </Typography>
-            <Typography variant="p" className="text-slate-400">
+            <Typography variant="p" className="text-[var(--color-text-secondary)]">
               Sign in or create your account to start tracking deals, commissions, goals, and performance.
             </Typography>
           </div>
         </div>
 
-        <Card className="p-8 md:p-10 relative overflow-hidden">
+        <Card className="p-8 md:p-10 relative overflow-hidden bg-[var(--color-bg-card)]">
           {connectionError && (
             <div className="mb-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center gap-3">
               <AlertTriangle className="h-5 w-5 text-orange-400 shrink-0" />
@@ -162,7 +162,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-white/5 border-white/10"
+              className="bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
               disabled={loading || !!inviteRole}
             />
             
@@ -174,7 +174,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-white/5 border-white/10"
+                className="bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                 disabled={loading}
               />
             )}
@@ -226,14 +226,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
             </Button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-white/5 flex flex-col items-center gap-4">
-            <Typography variant="small" className="text-slate-500">
+          <div className="mt-8 pt-8 border-t border-[var(--color-border)] flex flex-col items-center gap-4">
+            <Typography variant="small" className="text-[var(--color-text-secondary)]">
               {mode === 'signin' ? "Don't have an account?" : "Already have an account?"}
             </Typography>
             <Button 
               variant="outline" 
               onClick={toggleMode}
-              className="w-full border-white/10 hover:bg-white/5"
+              className="w-full border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)]"
               disabled={loading}
             >
               {mode === 'signin' ? 'Create Free Account' : 'Sign In'}

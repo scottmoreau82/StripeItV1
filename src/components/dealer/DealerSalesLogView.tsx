@@ -177,7 +177,7 @@ export const DealerSalesLogView: React.FC = () => {
                       setTimeframe('custom');
                     }
                   }}
-                  className="bg-bg-card/40 border-border-subtle text-white w-44 h-10 uppercase font-mono text-[10px] tracking-widest pl-9"
+                  className="bg-[var(--color-bg-card)] border-[var(--color-border)] text-[var(--color-text-primary)] w-44 h-10 uppercase font-mono text-[10px] tracking-widest pl-9"
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                   <AppIcon name="calendar" size={14} className="text-brand-primary/60" />
@@ -196,7 +196,7 @@ export const DealerSalesLogView: React.FC = () => {
                     type="date" 
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-bg-card/40 border-border-subtle text-white w-36 h-10 uppercase font-mono text-[10px] tracking-widest pl-8"
+                    className="bg-[var(--color-bg-card)] border-[var(--color-border)] text-[var(--color-text-primary)] w-36 h-10 uppercase font-mono text-[10px] tracking-widest pl-8"
                   />
                   <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <span className="text-[9px] font-black text-brand-primary/40">FR</span>
@@ -208,7 +208,7 @@ export const DealerSalesLogView: React.FC = () => {
                     type="date" 
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-bg-card/40 border-border-subtle text-white w-36 h-10 uppercase font-mono text-[10px] tracking-widest pl-8"
+                    className="bg-[var(--color-bg-card)] border-[var(--color-border)] text-[var(--color-text-primary)] w-36 h-10 uppercase font-mono text-[10px] tracking-widest pl-8"
                   />
                   <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <span className="text-[9px] font-black text-brand-primary/40">TO</span>
@@ -234,30 +234,30 @@ export const DealerSalesLogView: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 print:grid-cols-4">
         <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden group print:bg-white print:border-black print:text-black">
           <div className="absolute top-0 left-0 w-1 h-full bg-brand-primary/30 shadow-glow glow-primary print:hidden" />
-          <Typography variant="mono" className="text-slate-500 uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
+          <Typography variant="mono" className="text-[var(--color-text-secondary)] uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
             Front Gross
           </Typography>
-          <Typography variant="h2" className="text-white font-black tracking-tighter italic text-2xl print:text-black">
+          <Typography variant="h2" className="text-[var(--color-text-primary)] font-black tracking-tighter italic text-2xl print:text-black">
             ${totals.front.toLocaleString()}
           </Typography>
         </Card>
 
         <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden group print:bg-white print:border-black print:text-black">
           <div className="absolute top-0 left-0 w-1 h-full bg-brand-deep/30 shadow-glow glow-brand-deep print:hidden" />
-          <Typography variant="mono" className="text-slate-500 uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
+          <Typography variant="mono" className="text-[var(--color-text-secondary)] uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
             Back Gross
           </Typography>
-          <Typography variant="h2" className="text-white font-black tracking-tighter italic text-2xl print:text-black">
+          <Typography variant="h2" className="text-[var(--color-text-primary)] font-black tracking-tighter italic text-2xl print:text-black">
             ${totals.back.toLocaleString()}
           </Typography>
         </Card>
 
         <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden print:bg-white print:border-black print:text-black">
-          <Typography variant="mono" className="text-slate-500 uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
+          <Typography variant="mono" className="text-[var(--color-text-secondary)] uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
             Units (N/U)
           </Typography>
           <div className="flex items-baseline gap-2">
-            <Typography variant="h2" className="text-white font-black tracking-tighter italic mr-2 text-2xl print:text-black">
+            <Typography variant="h2" className="text-[var(--color-text-primary)] font-black tracking-tighter italic mr-2 text-2xl print:text-black">
               {deals.length}
             </Typography>
             <Typography variant="mono" className="text-brand-primary text-[10px] font-bold print:text-black">
@@ -268,7 +268,7 @@ export const DealerSalesLogView: React.FC = () => {
 
         <Card className="bg-bg-card/30 border-border-subtle p-5 relative overflow-hidden print:bg-white print:border-black print:text-black">
           <div className="absolute inset-0 bg-brand-primary/5 opacity-0 group-hover:opacity-100 transition-opacity print:hidden" />
-          <Typography variant="mono" className="text-slate-500 uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
+          <Typography variant="mono" className="text-[var(--color-text-secondary)] uppercase text-[8px] font-black tracking-widest mb-1 print:text-black">
             Combined Total
           </Typography>
           <Typography variant="h2" className="text-brand-primary font-black tracking-tighter italic text-2xl shadow-glow print:text-black">

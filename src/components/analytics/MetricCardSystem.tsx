@@ -58,13 +58,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       <Card 
         onClick={onUnlock}
         className={cn(
-          "bg-[#050505] border-white/[0.03] hover:border-purple-500/30 transition-all group relative overflow-hidden flex flex-col justify-center",
+          "bg-bg-card border-white/[0.03] hover:border-purple-500/30 transition-all group relative overflow-hidden flex flex-col justify-center",
           onUnlock && "cursor-pointer hover:shadow-purple-glow active:scale-[0.98]",
           isTelemetry ? "p-3 min-h-[75px]" : isHorizontal ? "p-3.5 min-h-[90px]" : "p-4 min-h-[140px]"
         )}
       >
         {/* Cinematic Locked Decor */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.08)_0%,transparent_70%)] opacity-70 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.08)_0%,transparent_70%)] opacity-0 dark:opacity-70 dark:group-hover:opacity-100 transition-opacity" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100%_3px] pointer-events-none opacity-20" />
         
         <div className="relative z-10 flex items-center justify-between gap-4 px-2">
@@ -72,7 +72,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             <Typography variant="label" className={cn("text-slate-600 font-black tracking-[0.25em] block uppercase mb-0.5 opacity-80", isTelemetry ? "text-[6px]" : "text-[8px]")}>
               {label}
             </Typography>
-            <Typography variant="h2" className={cn("text-white/20 font-black italic uppercase tracking-tighter group-hover:text-white/40 transition-colors", isTelemetry ? "text-lg" : "text-2xl")}>
+            <Typography variant="h2" className={cn("text-text-primary/20 font-black italic uppercase tracking-tighter group-hover:text-text-primary/40 transition-colors", isTelemetry ? "text-lg" : "text-2xl")}>
               Restricted
             </Typography>
           </div>
@@ -112,7 +112,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             
             <div className="flex flex-col">
               <div className="flex items-baseline gap-3">
-                <Typography variant="h1" className="text-white text-2xl sm:text-4xl tracking-tighter font-black italic leading-none shrink-0">
+                <Typography variant="h1" className="text-text-primary text-2xl sm:text-4xl tracking-tighter font-black italic leading-none shrink-0">
                   {loading ? '...' : value}
                 </Typography>
                 
@@ -175,7 +175,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             {label}
           </Typography>
           
-          <Typography variant="h1" className={cn("text-white tracking-tighter font-black italic leading-none", isTelemetry ? "text-2xl" : "text-2xl sm:text-3xl lg:text-4xl")}>
+          <Typography variant="h1" className={cn("text-text-primary tracking-tighter font-black italic leading-none", isTelemetry ? "text-2xl" : "text-2xl sm:text-3xl lg:text-4xl")}>
             {loading ? '...' : value}
           </Typography>
 

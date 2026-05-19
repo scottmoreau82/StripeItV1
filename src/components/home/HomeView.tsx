@@ -388,7 +388,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                  </div>
                  <div className="flex flex-col items-center sm:items-start">
                     <Typography variant="mono" className="text-[9px] text-slate-500">AVG FRONT / UNIT</Typography>
-                    <Typography variant="h3" className="text-white text-lg">${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}</Typography>
+                    <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}</Typography>
                  </div>
               </div>
               <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 pt-4 border-t border-white/5">
@@ -397,7 +397,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                  </div>
                  <div className="flex flex-col items-center sm:items-start">
                     <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest">Avg Est. Payout / Unit</Typography>
-                    <Typography variant="h3" className="text-white text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
+                    <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
                  </div>
               </div>
             </Card>

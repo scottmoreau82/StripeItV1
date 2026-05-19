@@ -3,7 +3,6 @@ import { Deal, DealStatus, PayPlan, UserProfile, SubscriptionTier, MonthlySpiff 
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { DealSearch } from './DealSearch';
-import { DealFilters } from './DealFilters';
 import { DealDetailView } from './DealDetailView';
 import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
@@ -66,7 +65,6 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   }), [monthlySpiffs, currentMonth, currentYear]);
 
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [selectedSpiff, setSelectedSpiff] = useState<MonthlySpiff | null>(null);
@@ -125,9 +123,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         )
       );
       
-      const typeMatch = typeFilter === 'all' || (isDeal && item.newOrUsed === typeFilter);
-
-      return searchMatch && typeMatch;
+      return searchMatch;
     });
 
     // 2. Wrap for sorting to handle calculated payouts efficiently
@@ -176,10 +172,10 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       return sortConfig.direction === 'asc' ? result : -result;
     }).map(s => s.item);
 
-  }, [deals, monthlySpiffs, search, typeFilter, sortConfig, isBasicPlus, payPlan]);
+  }, [deals, monthlySpiffs, search, sortConfig, isBasicPlus, payPlan]);
 
   const clearFilters = () => {
-    setTypeFilter('all');
+    setSearch('');
   };
 
   const handleDealInteraction = (deal: Deal) => {
@@ -212,22 +208,15 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   const mainContent = (
     <div className="space-y-8 pb-32">
-      {/* Search & Filters Group */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
-        <div className={cn("lg:col-span-2", isMobile ? "col-span-1" : "")}>
+      {/* Search Group */}
+      <div className="flex flex-col gap-3 md:gap-6">
+        <div className="w-full">
           <DealSearch 
             value={search} 
             onChange={setSearch} 
             placeholder={isMobile ? "Search customer, stock, or condition..." : undefined}
           />
         </div>
-        {!isMobile && (
-          <DealFilters 
-            type={typeFilter}
-            onTypeChange={setTypeFilter}
-            onClear={clearFilters}
-          />
-        )}
       </div>
 
       {isMobile && isBasicPlus && (
@@ -470,7 +459,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           </td>
                           <td className="py-5 px-4">
                             <div className="flex flex-col min-w-0">
-                              <Typography variant="label" className="text-white text-sm font-black truncate">
+                              <Typography variant="label" className="text-[var(--color-text-primary)] text-sm font-black truncate">
                                 {deal.customerName}
                               </Typography>
                               <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
@@ -638,7 +627,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                              <AppIcon name="user" className={cn("h-5 w-5", isExpanded ? "text-white" : "text-slate-600")} />
                           </div>
                           <div className="min-w-0">
-                            <Typography variant="label" className="text-white text-xs font-black uppercase truncate block">
+                            <Typography variant="label" className="text-[var(--color-text-primary)] text-xs font-black uppercase truncate block">
                               {deal.customerName}
                             </Typography>
                             <div className="flex items-center gap-1.5 overflow-hidden">

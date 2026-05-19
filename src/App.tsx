@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoginForm } from './components/auth/LoginForm';
 import { RootLayout } from './layouts/RootLayout';
@@ -62,6 +63,8 @@ import { DealerRequestsAdminView } from './components/management/DealerRequestsA
 
 import { AuthHydrationFallback } from './components/auth/AuthHydrationFallback';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
+import { PageHeader } from './components/ui/PageHeader';
+import { ScrollToTop } from './components/utils/ScrollToTop';
 
 function MainAppFlow() {
   const [isNewDealOpen, setIsNewDealOpen] = useState(false);
@@ -226,7 +229,7 @@ function MainAppFlow() {
       onLogSpiff={() => { setEditingSpiff(null); setIsNewSpiffOpen(true); }}
       onConfigPayPlan={() => setIsPayPlanOpen(true)}
     >
-      <LoadingOverlay isLoading={isLoading} />
+      <LoadingOverlay isLoading={isLoading && !!profile} />
       <OnboardingFlow />
       
       <AnimatePresence mode="wait">
@@ -281,19 +284,11 @@ function MainAppFlow() {
                   ? (
                     <DashboardLayout
                       header={
-                        <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
-                            <TrendingUp className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
-                          </div>
-                          <div className="space-y-1">
-                            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
-                              Market Analytics
-                            </Typography>
-                            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
-                              Performance telemetry • historical trends
-                            </Typography>
-                          </div>
-                        </div>
+                        <PageHeader
+                          title="Market Analytics"
+                          subtitle="Performance telemetry • historical trends"
+                          icon={TrendingUp}
+                        />
                       }
                       main={<div className="py-20 text-center text-slate-500 italic uppercase tracking-[0.2em] text-xs">Analytics Module Loading...</div>}
                     />
@@ -309,19 +304,11 @@ function MainAppFlow() {
                   ? (
                     <DashboardLayout
                       header={
-                        <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
-                            <ArrowUpRight className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
-                          </div>
-                          <div className="space-y-1">
-                            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
-                              Career Goals
-                            </Typography>
-                            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
-                              Pacing • targets • ambition
-                            </Typography>
-                          </div>
-                        </div>
+                        <PageHeader
+                          title="Career Goals"
+                          subtitle="Pacing • targets • ambition"
+                          icon={ArrowUpRight}
+                        />
                       }
                       main={<div className="py-20 text-center text-slate-500 italic uppercase tracking-[0.2em] text-xs">Goal Management System Offline</div>}
                     />
@@ -346,19 +333,11 @@ function MainAppFlow() {
                   ? (
                     <DashboardLayout
                       header={
-                        <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-[1.25rem] bg-brand-primary glow-primary flex items-center justify-center shadow-glow shadow-brand-primary/10">
-                            <Car className="h-6 w-6 text-bg-deep" strokeWidth={2.5} />
-                          </div>
-                          <div className="space-y-1">
-                            <Typography variant="h1" className="text-white italic font-black uppercase tracking-tighter text-2xl md:text-[42px] leading-none">
-                              Inventory Log
-                            </Typography>
-                            <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] block mt-1">
-                              Lot status • vehicle telemetry
-                            </Typography>
-                          </div>
-                        </div>
+                        <PageHeader
+                          title="Inventory Log"
+                          subtitle="Lot status • vehicle telemetry"
+                          icon={Car}
+                        />
                       }
                       main={<div className="py-20 text-center text-slate-500 italic uppercase tracking-[0.2em] text-xs">Inventory Access Restricted</div>}
                     />
@@ -379,7 +358,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/sales-log" 
               element={
-                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) 
+                featureAccessService.hasAccess(profile, Feature.ORG_SETTINGS) 
                   ? <DealerSalesLogView /> 
                   : <Navigate to="/" />
               } 
@@ -387,7 +366,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/settings" 
               element={
-                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) 
+                featureAccessService.hasAccess(profile, Feature.ORG_SETTINGS) 
                   ? <DealerSettingsView /> 
                   : <Navigate to="/" />
               } 
@@ -395,7 +374,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/users" 
               element={
-                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) 
+                featureAccessService.hasAccess(profile, Feature.ORG_SETTINGS) 
                   ? <DealerUserManagementView /> 
                   : <Navigate to="/" />
               } 
@@ -403,7 +382,7 @@ function MainAppFlow() {
             <Route 
               path="/dealer/log-builder" 
               element={
-                (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) 
+                featureAccessService.hasAccess(profile, Feature.ORG_SETTINGS) 
                   ? <DealerLogBuilderView /> 
                   : <Navigate to="/" />
               } 
@@ -418,7 +397,6 @@ function MainAppFlow() {
                 <SettingsView 
                   profile={profile}
                   onLogout={logout}
-                  isMobile={isMobile}
                 />
               } 
             />
@@ -740,9 +718,12 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <AppContent />
+        </BrowserRouter>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

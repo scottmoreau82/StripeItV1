@@ -5,6 +5,7 @@ import { Typography } from '../ui/Typography';
 import { Link, useLocation } from 'react-router-dom';
 import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useTheme } from '@/src/contexts/ThemeContext';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
 import { TierBadge } from './TierBadge';
 
@@ -26,6 +27,7 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
   onLogDeal
 }) => {
   const { profile, isAdmin, isDeveloper } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
   const handleLogout = async () => {
@@ -63,7 +65,7 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
             isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
           )}>
             <Link to="/">
-              <Typography variant="h3" className="font-display font-black italic text-white tracking-tighter uppercase whitespace-nowrap overflow-hidden">
+              <Typography variant="h3" className="font-display font-black italic text-[var(--color-text-primary)] tracking-tighter uppercase whitespace-nowrap overflow-hidden">
                 StripeIt <span className="text-[10px] ml-1 opacity-50 not-italic">DEALER</span>
               </Typography>
             </Link>
@@ -236,6 +238,33 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, isSettingsActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Settings</span>
             </div>
           </Link>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className={cn(
+              "flex items-center w-full py-3.5 transition-all group relative hover:bg-white/[0.02] text-left"
+            )}
+            title={isCollapsed ? "Toggle Appearance" : undefined}
+          >
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              <AppIcon 
+                name={theme === 'dark' ? 'moon' : 'sun'} 
+                className={cn(
+                  SIDEBAR_NAV_ICON_SIZE_CLASS, 
+                  "shrink-0 transition-all text-brand-primary drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]"
+                )} 
+              />
+            </div>
+            <div className={cn(
+              "flex-1 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, "text-slate-500 group-hover:text-slate-300")}>
+                Theme
+              </span>
+            </div>
+          </button>
         </nav>
       </div>
 
@@ -247,9 +276,9 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
       </div>
 
       {/* Footer / Account (Pinned Footer) */}
-      <div className="shrink-0 border-t border-white/5 bg-black/40 backdrop-blur-md z-10 py-6">
+      <div className="shrink-0 border-t border-white/5 bg-[var(--color-bg-surface)] backdrop-blur-md z-10 py-6">
         <div className={cn("px-4 mb-4 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
-          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 shadow-glow glow-primary/5 transition-all hover:bg-white/[0.04] relative overflow-hidden group/user">
+          <div className="bg-[var(--color-bg-surface)] border-transparent rounded-2xl p-4 transition-all hover:opacity-90 relative overflow-hidden group/user">
             <div className="flex items-center gap-3 relative z-10">
               <div className="h-10 w-10 rounded-xl bg-slate-800 flex items-center justify-center border border-white/10 text-white font-bold uppercase overflow-hidden shrink-0 shadow-lg">
                 {profile?.photoURL ? (
@@ -259,12 +288,12 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
                 )}
               </div>
               <div className="flex-1 min-w-0 pr-4">
-                <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 text-[11px] group-hover/user:text-brand-primary transition-colors italic leading-none">
+                <Typography variant="label" className="text-[var(--color-text-primary)] block font-black truncate uppercase tracking-tight mb-1 text-[11px] group-hover/user:text-brand-primary transition-colors italic leading-none">
                   {profile?.displayName || 'Dealer Operator'}
                 </Typography>
                 <div className="flex items-center gap-2 opacity-80 overflow-hidden">
                   <div className="h-1.5 w-1.5 rounded-full bg-brand-primary shadow-glow glow-primary animate-pulse shrink-0" />
-                  <Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-black tracking-[0.15em] truncate">
+                  <Typography variant="mono" className="text-[8px] text-[var(--color-text-secondary)] uppercase font-black tracking-[0.15em] truncate">
                     Authorized Representative
                   </Typography>
                 </div>
@@ -292,7 +321,7 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               <AppIcon name="logout" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "text-slate-600 group-hover:text-rose-500 transition-colors drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]")} />
             </div>
             {!isCollapsed && (
-              <span className={cn("font-black text-slate-500 group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY)}>Exit Session</span>
+              <span className={cn("font-black text-[var(--color-text-secondary)] group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY)}>Exit Session</span>
             )}
           </button>
         </div>

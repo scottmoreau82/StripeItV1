@@ -1,21 +1,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-:root {
-  /* Default Matrix Theme Tokens */
-  --accent-primary: #00F2FF;
-  --accent-secondary: #A855F7;
-  --bg-deep: #04060A;
-  --bg-main: #080B12;
-  --bg-card: #11161F;
-  --bg-elevated: #1A202C;
-  --border-subtle: rgba(255, 255, 255, 0.03);
-  --border-card: rgba(255, 255, 255, 0.06);
-  --radius-card: 2rem;
-  --shadow-glow: 0 0 30px -5px rgba(0, 242, 255, 0.2);
+:root, [data-theme="dark"] {
+  --color-bg-deep: #0A0E1A;
+  --color-bg-surface: #0F1623;
+  --color-bg-card: #141B2D;
+  --color-bg-elevated: #1A2235;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #475569;
+  --color-brand-primary: #00D4FF;
+  --color-brand-secondary: #7C3AED;
+
+  /* Legacy compatibility for existing UI components that might use these directly */
+  --accent-primary: var(--color-brand-primary);
+  --accent-secondary: var(--color-brand-secondary);
+  --bg-deep: var(--color-bg-deep);
+  --bg-main: var(--color-bg-surface);
+  --bg-card: var(--color-bg-card);
+  --bg-elevated: var(--color-bg-elevated);
+  --border-subtle: var(--color-border);
+  --border-card: var(--color-border);
+  --radius-card: 1.25rem;
+  --shadow-glow: 0 0 25px -5px rgba(0, 212, 255, 0.35);
 }
 
-/* Matrix Theme specific typography hacks */
+[data-theme="light"] {
+  --color-bg-deep: #E8ECF0;
+  --color-bg-surface: #DDE2E8;
+  --color-bg-card: #F0F3F7;
+  --color-bg-elevated: #FFFFFF;
+  --color-border: rgba(0,0,0,0.10);
+  --color-text-primary: #0F1923;
+  --color-text-secondary: #2D3748;
+  --color-text-muted: #64748B;
+  --color-brand-primary: #00D4FF;
+  --color-brand-secondary: #7C3AED;
+
+  /* Legacy compatibility overrides */
+  --accent-primary: var(--color-brand-primary);
+  --accent-secondary: var(--color-brand-secondary);
+  --bg-deep: var(--color-bg-deep);
+  --bg-main: var(--color-bg-surface);
+  --bg-card: var(--color-bg-card);
+  --bg-elevated: var(--color-bg-elevated);
+  --border-subtle: var(--color-border);
+  --border-card: var(--color-border);
+  --radius-card: 1.25rem;
+  --shadow-glow: 0 0 25px -5px rgba(0, 212, 255, 0.15);
+}
+
+/* Matrix Theme specific typography hacks - kept for preservation */
 [data-visual-theme="matrix"] h1,
 [data-visual-theme="matrix"] h2,
 [data-visual-theme="matrix"] h3 {
@@ -41,26 +77,31 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   /* Brand Colors */
-  --color-brand-primary: var(--accent-primary);
-  --color-brand-secondary: var(--accent-secondary);
-  --color-brand-glow: rgba(0, 242, 255, 0.4);
-  --color-brand-deep: #0099FF;
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-secondary: var(--color-brand-secondary);
+  --color-brand-glow: rgba(0, 212, 255, 0.4);
   
   /* Status Colors */
   --color-status-success: #22C55E;
   --color-status-warning: #F59E0B;
   --color-status-error: #EF4444;
-  --color-status-info: #00F2FF;
+  --color-status-info: #00D4FF;
 
   /* Backgrounds mapped to theme variables */
-  --color-bg-deep: var(--bg-deep);
-  --color-bg-main: var(--bg-main);
-  --color-bg-card: var(--bg-card);
-  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-deep: var(--color-bg-deep);
+  --color-bg-surface: var(--color-bg-surface);
+  --color-bg-main: var(--color-bg-surface);
+  --color-bg-card: var(--color-bg-card);
+  --color-bg-elevated: var(--color-bg-elevated);
 
   /* Surfaces */
-  --color-border-subtle: var(--border-subtle);
-  --color-border-card: var(--border-card);
+  --color-border-subtle: var(--color-border);
+  --color-border-card: var(--color-border);
+  
+  /* Text */
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
   
   /* Radii */
   --radius-deal-card: var(--radius-card);
@@ -79,7 +120,7 @@
     @apply border-border-subtle;
   }
   body {
-    @apply bg-bg-deep text-slate-300 font-sans antialiased;
+    @apply bg-bg-deep text-text-primary font-sans antialiased;
   }
 
   /* Reset date input appearances to match Stripe It design */

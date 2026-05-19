@@ -28,7 +28,7 @@ export const DealSearch: React.FC<DealSearchProps> = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-12 pl-12 pr-4 bg-slate-900 border border-white/5 rounded-2xl text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-brand-primary/50 transition-all text-sm"
+        className="w-full h-12 pl-12 pr-4 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-2xl text-[var(--color-text-primary)] placeholder:text-slate-600 focus:outline-none focus:border-brand-primary/50 transition-all text-sm"
       />
     </div>
   );

@@ -36,12 +36,12 @@ export const GoalProgress: React.FC<GoalProgressProps> = ({
             <Target className="h-5 w-5 text-brand-primary" />
           </div>
           <div>
-            <Typography variant="label" className="text-white font-black block tracking-tight uppercase">{label}</Typography>
+            <Typography variant="label" className="text-text-primary font-black block tracking-tight uppercase">{label}</Typography>
             <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Monthly Target</Typography>
           </div>
         </div>
         <div className="text-center sm:text-right">
-          <Typography variant="h3" className="text-white leading-none mb-1">
+          <Typography variant="h3" className="text-text-primary leading-none mb-1">
             {percentage}%
           </Typography>
           <Typography variant="mono" className="text-[9px] text-brand-primary uppercase font-black">
@@ -52,7 +52,7 @@ export const GoalProgress: React.FC<GoalProgressProps> = ({
 
       <div className="space-y-4">
         {/* Progress Bar Container */}
-        <div className="relative h-4 w-full bg-slate-900 rounded-full border border-white/5 overflow-hidden">
+        <div className="relative h-4 w-full bg-bg-deep rounded-full border border-white/5 overflow-hidden">
           {/* Subtle Markers */}
           <div className="absolute inset-0 flex justify-between px-4 pointer-events-none">
             <div className="h-full w-[1px] bg-white/[0.03]" />
@@ -76,7 +76,7 @@ export const GoalProgress: React.FC<GoalProgressProps> = ({
         <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end gap-4 sm:gap-0">
           <div className="space-y-1 text-center sm:text-left">
             <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-bold block">Current</Typography>
-            <Typography variant="h4" className="text-white">{current} {unit}</Typography>
+            <Typography variant="h4" className="text-text-primary">{current} {unit}</Typography>
           </div>
           <div className="text-center sm:text-right space-y-1">
             <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-bold block">Pacing</Typography>

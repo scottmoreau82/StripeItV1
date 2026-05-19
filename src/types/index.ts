@@ -96,6 +96,7 @@ export interface UserProfile {
   suspensionAcknowledgedAt?: number;
   isDeleted?: boolean;
   lastActive?: number;
+  themePreference?: 'dark' | 'light';
 }
 
 export interface PayPlanRule {

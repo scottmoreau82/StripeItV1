@@ -60,7 +60,7 @@ export const Modal: React.FC<ModalProps> = ({
             <div className="p-8 md:p-10 pb-0 md:pb-0 flex-none flex items-center justify-between mb-8">
               {title && (
                 <div className="space-y-1">
-                  <Typography variant="h3" className="font-display font-black text-white italic uppercase tracking-tighter">
+                  <Typography variant="h3" className="font-display font-black text-text-primary italic uppercase tracking-tighter">
                     {title}
                   </Typography>
                   <div className="h-1 w-12 bg-brand-primary rounded shadow-cyan-glow" />
@@ -68,7 +68,7 @@ export const Modal: React.FC<ModalProps> = ({
               )}
               <button 
                 onClick={onClose}
-                className="rounded-xl p-2 text-slate-600 hover:bg-white/5 hover:text-white transition-all active:scale-95 border border-transparent hover:border-white/5"
+                className="rounded-xl p-2 text-text-secondary hover:bg-bg-elevated hover:text-text-primary transition-all active:scale-95 border border-transparent hover:border-border-card"
               >
                 <AppIcon name="close" className="h-6 w-6" />
               </button>

@@ -102,11 +102,11 @@ export const DealerSettingsView: React.FC = () => {
   const mainContent = (
     <div className="space-y-8 pb-32">
        {/* Organization Profile Card */}
-       <Card className="p-8 bg-bg-card/20 border-white/5 space-y-6">
+        <Card className="p-8 bg-[var(--color-bg-card)] border-white/5 space-y-6">
           <div className="flex items-center justify-between">
              <div className="space-y-1">
                 <Typography variant="label" className="text-slate-500 uppercase text-[11px] font-black tracking-widest">Dealership Identity</Typography>
-                <Typography variant="h2" className="text-white font-black italic">{profile?.orgName || 'StripeIt Organization'}</Typography>
+                <Typography variant="h2" className="text-[var(--color-text-primary)] font-black italic">{profile?.orgName || 'StripeIt Organization'}</Typography>
              </div>
              <Badge variant="outline" className="text-brand-primary border-brand-primary/20 uppercase tracking-widest font-black text-[10px]">
                 {profile?.subscriptionTier} TIER
@@ -116,11 +116,11 @@ export const DealerSettingsView: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-white/5">
              <div className="space-y-2">
                 <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Owner Email</Typography>
-                <Typography variant="p" className="text-white font-medium">{profile?.email}</Typography>
+                <Typography variant="p" className="text-[var(--color-text-secondary)] font-medium">{profile?.email}</Typography>
              </div>
              <div className="space-y-2">
                 <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Member Domains</Typography>
-                <Typography variant="p" className="text-white font-medium">@{profile?.email?.split('@')[1]}</Typography>
+                <Typography variant="p" className="text-[var(--color-text-secondary)] font-medium">@{profile?.email?.split('@')[1]}</Typography>
              </div>
           </div>
        </Card>
@@ -137,26 +137,26 @@ export const DealerSettingsView: React.FC = () => {
                        <LayoutGrid size={24} className="text-blue-400" />
                     </div>
                     <div className="space-y-1">
-                       <Typography variant="h3" className="text-white font-black italic uppercase tracking-tight">Log Builder</Typography>
-                       <Typography variant="p" className="text-slate-400 text-sm leading-relaxed">
+                       <Typography variant="h3" className="text-[var(--color-text-primary)] font-black italic uppercase tracking-tight">Log Builder</Typography>
+                       <Typography variant="p" className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
                           Define your operational dealership deal log structure. Synchronize report columns and entry forms across the organization.
                        </Typography>
                     </div>
-                    <Button variant="outline" className="border-blue-500/20 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all uppercase font-black text-[10px] tracking-widest px-6 mt-4">
+                    <Button variant="outline" className="border-blue-500/20 text-[var(--color-text-secondary)] group-hover:bg-blue-500 group-hover:text-white transition-all uppercase font-black text-[10px] tracking-widest px-6 mt-4">
                        Configure Schema
                     </Button>
                  </div>
               </Card>
            </Link>
 
-           <Card className="p-8 bg-white/[0.02] border border-white/5 rounded-3xl opacity-50 grayscale cursor-not-allowed">
+           <Card className="p-8 bg-[var(--color-bg-card)] border border-white/5 rounded-3xl opacity-50 grayscale cursor-not-allowed">
               <div className="space-y-4">
                  <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
                     <Zap size={24} className="text-slate-500" />
                  </div>
                  <div className="space-y-1">
-                    <Typography variant="h3" className="text-slate-400 font-black italic uppercase tracking-tight">Workflow Engine</Typography>
-                    <Typography variant="p" className="text-slate-600 text-sm leading-relaxed">
+                    <Typography variant="h3" className="text-[var(--color-text-primary)] font-black italic uppercase tracking-tight">Workflow Engine</Typography>
+                    <Typography variant="p" className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
                        Advanced automations and approvals based on your operational schema. Coming soon for enterprise tiers.
                     </Typography>
                  </div>
@@ -177,7 +177,7 @@ export const DealerSettingsView: React.FC = () => {
                   <Zap size={16} className="text-purple-400" />
                 </div>
                 <div>
-                  <Typography variant="h3" className="text-white font-black italic uppercase tracking-tight">Admin: Organizational Elevation</Typography>
+                  <Typography variant="h3" className="text-[var(--color-text-primary)] font-black italic uppercase tracking-tight">Admin: Organizational Elevation</Typography>
                   <Typography variant="mono" className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">Override Core Operational Parameters</Typography>
                 </div>
               </div>
@@ -186,7 +186,7 @@ export const DealerSettingsView: React.FC = () => {
                 {/* Tier Management */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Typography variant="label" className="text-slate-400 uppercase text-[11px] font-black tracking-widest">Subscription Tier</Typography>
+                    <Typography variant="label" className="text-[var(--color-text-secondary)] uppercase text-[11px] font-black tracking-widest">Subscription Tier</Typography>
                     <div className="h-px flex-1 bg-white/5" />
                   </div>
                   
@@ -214,7 +214,7 @@ export const DealerSettingsView: React.FC = () => {
                 {/* Status Management */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Typography variant="label" className="text-slate-400 uppercase text-[11px] font-black tracking-widest">Organization Status</Typography>
+                    <Typography variant="label" className="text-[var(--color-text-secondary)] uppercase text-[11px] font-black tracking-widest">Organization Status</Typography>
                     <div className="h-px flex-1 bg-white/5" />
                   </div>
                   
@@ -260,14 +260,14 @@ export const DealerSettingsView: React.FC = () => {
        )}
 
        {/* Organizational Context Panel */}
-       <Card className="p-8 bg-brand-primary/[0.02] border border-brand-primary/10 rounded-3xl relative overflow-hidden">
+       <Card className="p-8 bg-[var(--color-bg-card)] border border-brand-primary/10 rounded-3xl relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-10">
              <Shield size={120} className="text-brand-primary" />
           </div>
           <div className="relative z-10 space-y-6">
              <div className="space-y-2">
-                <Typography variant="h3" className="text-white font-black italic uppercase tracking-tight">Access Control & Security</Typography>
-                <Typography variant="p" className="text-slate-400 text-sm max-w-2xl leading-relaxed">
+                <Typography variant="h3" className="text-[var(--color-text-primary)] font-black italic uppercase tracking-tight">Access Control & Security</Typography>
+                <Typography variant="p" className="text-[var(--color-text-secondary)] text-sm max-w-2xl leading-relaxed">
                    Accounts listed here have administrative oversight of your StripeIt Dealer organization. 
                    Frozen accounts retain their history but cannot access dashboards or deal logs. 
                    Deleted accounts lose all organizational access immediately.
@@ -275,13 +275,13 @@ export const DealerSettingsView: React.FC = () => {
              </div>
              
              <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-white/5">
-                <div className="flex items-center gap-3 px-4 py-3 bg-white/[0.03] border border-white/5 rounded-2xl">
+                <div className="flex items-center gap-3 px-4 py-3 bg-[var(--color-bg-card)] border border-white/5 rounded-2xl">
                    <div className="h-2 w-2 rounded-full bg-brand-primary shadow-glow glow-primary" />
                    <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">
-                      Org Level: <span className="text-white">Enterprise Dealer Tier</span>
+                      Org Level: <span className="text-[var(--color-text-secondary)]">Enterprise Dealer Tier</span>
                    </Typography>
                 </div>
-                <div className="flex items-center gap-3 px-4 py-3 bg-white/[0.03] border border-white/5 rounded-2xl">
+                <div className="flex items-center gap-3 px-4 py-3 bg-[var(--color-bg-card)] border border-white/5 rounded-2xl">
                    <AlertCircle size={14} className="text-slate-500" />
                    <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">
                       Domain Enforcement: <span className="text-emerald-500">Active</span>

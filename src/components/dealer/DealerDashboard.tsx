@@ -158,7 +158,7 @@ export const DealerDashboard: React.FC = () => {
             <Typography variant="p" className="text-[9px] text-slate-600 italic">Sync: Active</Typography>
           </div>
 
-          <Card className="bg-bg-card/20 border-white/5 overflow-hidden">
+          <Card className="bg-[var(--color-bg-card)] border-white/5 overflow-hidden">
              <div className="overflow-x-auto">
                <table className="w-full text-left border-collapse">
                  <thead>
@@ -190,7 +190,7 @@ export const DealerDashboard: React.FC = () => {
                        >
                          <td className="px-6 py-5">
                             <div className="flex flex-col">
-                              <Typography variant="label" className="text-white font-black text-xs uppercase italic tracking-wider">#{deal.dealNumber}</Typography>
+                              <Typography variant="label" className="text-[var(--color-text-primary)] font-black text-xs uppercase italic tracking-wider">#{deal.dealNumber}</Typography>
                               <Typography variant="p" className="text-[10px] text-slate-500 mt-1 uppercase">{deal.year} {deal.model}</Typography>
                             </div>
                          </td>
@@ -219,21 +219,21 @@ export const DealerDashboard: React.FC = () => {
                  <div className="h-6 w-6 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
                   <AppIcon name="trending" size={12} />
                 </div>
-                <Typography variant="label" className="text-white font-black uppercase text-[10px] tracking-wider">Market Pacing</Typography>
+                <Typography variant="label" className="text-[var(--color-text-primary)] font-black uppercase text-[10px] tracking-wider">Market Pacing</Typography>
              </div>
-             <Typography variant="p" className="text-slate-400 text-[10px] leading-relaxed italic">
+             <Typography variant="p" className="text-[var(--color-text-secondary)] text-[10px] leading-relaxed italic">
                 Monthly pacing is calculated based on active deal velocity. Current projections indicate a stable operational month for both Retail and Internet channels.
              </Typography>
           </Card>
 
-          <Card className="p-4 bg-white/[0.02] border border-white/5 space-y-3 opacity-50 grayscale">
+          <Card className="p-4 bg-[var(--color-bg-card)] border border-white/5 space-y-3 opacity-50 grayscale">
              <div className="flex items-center gap-2">
                 <div className="h-6 w-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-500">
                   <AppIcon name="users" size={12} />
                 </div>
-                <Typography variant="label" className="text-slate-300 font-black uppercase text-[10px] tracking-wider">Team Performance</Typography>
+                <Typography variant="label" className="text-[var(--color-text-primary)] font-black uppercase text-[10px] tracking-wider">Team Performance</Typography>
              </div>
-             <Typography variant="p" className="text-slate-600 text-[9px] uppercase font-bold tracking-widest text-center py-2">
+             <Typography variant="p" className="text-[var(--color-text-muted)] text-[9px] uppercase font-bold tracking-widest text-center py-2">
                 Analysis Modules Offline
              </Typography>
           </Card>

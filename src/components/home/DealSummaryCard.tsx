@@ -55,25 +55,25 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
           {/* Vehicle Icon / Indicator */}
           <div className={cn(
             "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-all border border-white/5 group-hover:border-white/10",
-            deal.newOrUsed === 'new' ? "bg-brand-primary/10 text-brand-primary shadow-cyan-glow" : "bg-slate-900 text-slate-500"
+            deal.newOrUsed === 'new' ? "bg-brand-primary/10 text-brand-primary shadow-cyan-glow" : "bg-[var(--color-bg-elevated)] dark:bg-slate-900 text-slate-500"
           )}>
             <Car className={cn("h-7 w-7", deal.newOrUsed === 'new' && "drop-shadow-[0_0_5px_rgba(0,242,255,0.5)]")} />
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <Typography variant="label" className="text-white text-sm font-black uppercase tracking-tight truncate">
+              <Typography variant="label" className="text-[var(--color-text-primary)] text-sm font-black uppercase tracking-tight truncate">
                 {deal.customerName}
               </Typography>
               <Badge status={deal.status}>{deal.status}</Badge>
             </div>
-            <Typography variant="small" className="text-slate-500 truncate block text-xs font-bold">
+            <Typography variant="small" className="text-[var(--color-text-secondary)] truncate block text-xs font-bold">
               {deal.purchasedVehicle}
             </Typography>
             <div className="flex items-center gap-4 mt-2">
               <div className="flex items-center gap-1.5 opacity-60">
-                <Clock className="h-4 w-4 text-slate-500" />
-                <Typography variant="mono" className="text-[10px] text-slate-500 font-black">
+                <Clock className="h-4 w-4 text-[var(--color-text-secondary)]" />
+                <Typography variant="mono" className="text-[10px] text-[var(--color-text-secondary)] font-black">
                   {deal.date}
                 </Typography>
               </div>
@@ -100,12 +100,12 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
           )}
           
           {showGross && !commission && (
-            <Typography variant="h3" className="text-white font-black">
+            <Typography variant="h3" className="text-[var(--color-text-primary)] font-black">
               ${(deal.frontEndGross + deal.backEndGross).toLocaleString()}
             </Typography>
           )}
 
-          <div className="h-8 w-8 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center group-hover:border-brand-primary/30 group-hover:bg-brand-primary/5 transition-all">
+          <div className="h-8 w-8 rounded-full bg-[var(--color-bg-elevated)] dark:bg-white/[0.02] border border-white/5 flex items-center justify-center group-hover:border-brand-primary/30 group-hover:bg-brand-primary/5 transition-all">
             <ChevronRight className="h-5 w-5 text-slate-700 group-hover:text-brand-primary" />
           </div>
         </div>

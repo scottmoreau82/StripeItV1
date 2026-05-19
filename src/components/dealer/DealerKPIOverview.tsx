@@ -112,13 +112,13 @@ export const DealerKPIOverview: React.FC = () => {
     };
 
     return (
-      <Card className="bg-bg-card/20 border-white/5 overflow-hidden flex flex-col h-full">
+      <Card className="bg-[var(--color-bg-card)] border-white/5 overflow-hidden flex flex-col h-full">
         <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-brand-primary/10 flex items-center justify-center text-brand-primary">
               <Icon size={18} />
             </div>
-            <Typography variant="mono" className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
+            <Typography variant="mono" className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-text-primary)]">
               {title}
             </Typography>
           </div>
@@ -130,20 +130,20 @@ export const DealerKPIOverview: React.FC = () => {
           <div className="p-4 space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <Store size={12} className="text-slate-500" />
-              <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-slate-500">Retail</Typography>
+              <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)]">Retail</Typography>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
-                <Typography variant="mono" className="text-[8px] text-slate-600 uppercase font-bold">Daily</Typography>
-                <Typography variant="p" className="text-white font-black italic text-sm">{formatValue(retail.daily)}</Typography>
+                <Typography variant="mono" className="text-[8px] text-[var(--color-text-secondary)] uppercase font-bold">Daily</Typography>
+                <Typography variant="p" className="text-[var(--color-text-primary)] font-black italic text-sm">{formatValue(retail.daily)}</Typography>
               </div>
               <div className="space-y-1">
-                <Typography variant="mono" className="text-[8px] text-slate-600 uppercase font-bold">MTD</Typography>
+                <Typography variant="mono" className="text-[8px] text-[var(--color-text-secondary)] uppercase font-bold">MTD</Typography>
                 <Typography variant="p" className="text-brand-primary font-black italic text-sm">{formatValue(retail.mtd)}</Typography>
               </div>
               <div className="space-y-1">
-                <Typography variant="mono" className="text-[8px] text-slate-600 uppercase font-bold">Pacing</Typography>
-                <Typography variant="p" className="text-slate-400 font-black italic text-sm">{formatValue(retail.pacing)}</Typography>
+                <Typography variant="mono" className="text-[8px] text-[var(--color-text-secondary)] uppercase font-bold">Pacing</Typography>
+                <Typography variant="p" className="text-[var(--color-text-secondary)] font-black italic text-sm">{formatValue(retail.pacing)}</Typography>
               </div>
             </div>
           </div>
@@ -152,20 +152,20 @@ export const DealerKPIOverview: React.FC = () => {
           <div className="p-4 space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <MousePointer2 size={12} className="text-slate-500" />
-              <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-slate-500">Internet</Typography>
+              <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-secondary)]">Internet</Typography>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1">
-                <Typography variant="mono" className="text-[8px] text-slate-600 uppercase font-bold">Daily</Typography>
-                <Typography variant="p" className="text-white font-black italic text-sm">{formatValue(internet.daily)}</Typography>
+                <Typography variant="mono" className="text-[8px] text-[var(--color-text-secondary)] uppercase font-bold">Daily</Typography>
+                <Typography variant="p" className="text-[var(--color-text-primary)] font-black italic text-sm">{formatValue(internet.daily)}</Typography>
               </div>
               <div className="space-y-1">
-                <Typography variant="mono" className="text-[8px] text-slate-600 uppercase font-bold">MTD</Typography>
+                <Typography variant="mono" className="text-[8px] text-[var(--color-text-secondary)] uppercase font-bold">MTD</Typography>
                 <Typography variant="p" className="text-brand-primary font-black italic text-sm">{formatValue(internet.mtd)}</Typography>
               </div>
               <div className="space-y-1">
-                <Typography variant="mono" className="text-[8px] text-slate-600 uppercase font-bold">Pacing</Typography>
-                <Typography variant="p" className="text-slate-400 font-black italic text-sm">{formatValue(internet.pacing)}</Typography>
+                <Typography variant="mono" className="text-[8px] text-[var(--color-text-secondary)] uppercase font-bold">Pacing</Typography>
+                <Typography variant="p" className="text-[var(--color-text-secondary)] font-black italic text-sm">{formatValue(internet.pacing)}</Typography>
               </div>
             </div>
           </div>

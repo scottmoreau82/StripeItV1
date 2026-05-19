@@ -268,6 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 dealershipId: '',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
+                themePreference: 'dark',
                 preferences: {
                   theme: 'dark',
                   visualTheme: 'matrix',

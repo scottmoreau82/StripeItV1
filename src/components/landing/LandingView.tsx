@@ -287,7 +287,7 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
               {!isMobile && (
                 <Link 
                   to="/login"
-                  className="text-[10px] text-slate-500 hover:text-white uppercase font-black tracking-[0.2em] transition-colors"
+                  className="text-[10px] text-[var(--color-text-primary)] hover:text-brand-primary uppercase font-black tracking-[0.2em] transition-colors"
                   id="landing-login-btn-top"
                 >
                   Login
@@ -307,10 +307,10 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
 
       {/* Hero */}
       <main className="relative pt-32 lg:pt-48 pb-32 px-6 max-w-7xl mx-auto">
-        <div className={isMobile ? 'flex flex-col gap-24' : 'grid grid-cols-1 lg:grid-cols-12 gap-24 items-start'}>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-24 items-start md:items-center lg:items-start">
           
           {/* Left Column: Messaging */}
-          <div className={cn("space-y-12", !isMobile && "lg:col-span-12 xl:col-span-5")}>
+          <div className="space-y-8 md:space-y-12 flex flex-col items-center text-center md:items-start md:text-left col-span-1 md:col-span-6 xl:col-span-5">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -330,7 +330,7 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
                 <span className="text-brand-primary">Deals.</span>
               </Typography>
               
-              <Typography variant="p" className="text-slate-400 text-lg lg:text-xl max-w-lg leading-relaxed font-medium">
+              <Typography variant="p" className="text-slate-400 text-lg lg:text-xl max-w-lg leading-relaxed font-medium mx-auto md:mx-0">
                 The first platform built for complex automotive pay plans. Real-time commission visibility with retroactive tier logic and unit ladder support.
               </Typography>
             </motion.div>
@@ -339,11 +339,11 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="flex flex-col sm:flex-row gap-6"
+              className="flex flex-col sm:flex-row gap-6 w-full md:w-auto justify-center md:justify-start"
             >
               <Link to="/signup" className="contents">
                 <Button 
-                  className="h-16 px-12 text-base font-black italic uppercase tracking-tighter shadow-glow glow-primary group w-full sm:w-auto"
+                  className="h-16 px-12 text-base font-black italic uppercase tracking-tighter shadow-glow glow-primary group w-full sm:w-auto text-[var(--color-bg-deep)]"
                   id="landing-hero-signup-btn"
                 >
                   Start My Account
@@ -353,7 +353,7 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
               <Link to="/login" className="contents">
                 <Button 
                   variant="outline"
-                  className="h-16 px-12 text-base font-black italic uppercase tracking-tighter border-white/10 hover:bg-white/5 w-full sm:w-auto"
+                  className="h-16 px-12 text-base font-black italic uppercase tracking-tighter border-[var(--color-border)] hover:bg-[var(--color-bg-elevated)] w-full sm:w-auto text-[var(--color-text-primary)]"
                   id="landing-hero-login-btn"
                 >
                   Log In
@@ -368,12 +368,12 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
               initial={{ opacity: 0, scale: 0.95, x: 20 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-              className="relative lg:col-span-12 xl:col-span-7 pt-12 xl:pt-[84px]"
+              className="relative col-span-1 md:col-span-6 xl:col-span-7 pt-12 md:pt-[76px] lg:pt-[84px]"
             >
               <div className="absolute -inset-10 bg-brand-primary/10 blur-[120px] rounded-full pointer-events-none opacity-50" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[120%] w-[120%] bg-white/[0.01] rounded-full border border-white/5 pointer-events-none" />
               
-              <div className="relative z-10 scale-[1.05] xl:scale-110 origin-center">
+              <div className="relative z-10 scale-90 lg:scale-[1.05] xl:scale-110 origin-center md:origin-right lg:origin-center">
                 <CommissionArchitectSimulation />
               </div>
 
@@ -462,7 +462,7 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
            whileInView={{ opacity: 1, y: 0 }}
            viewport={{ once: true }}
            transition={{ delay: 0.4, duration: 0.8 }}
-           className="mt-32 pt-20 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative"
+           className="mt-16 md:mt-32 pt-12 md:pt-20 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative"
         >
           <div className="absolute top-0 left-0 w-32 h-px bg-gradient-to-r from-brand-primary/60 to-transparent" />
           <FeatureItem 

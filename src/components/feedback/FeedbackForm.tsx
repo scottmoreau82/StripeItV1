@@ -83,7 +83,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ type, onSuccess }) =
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-5">
-        <Typography variant="small" className="text-slate-500 block leading-relaxed bg-white/[0.02] border border-white/5 p-4 rounded-xl">
+        <Typography variant="small" className="text-text-secondary block leading-relaxed bg-bg-card/40 border border-border-card p-4 rounded-xl">
           {type === FeedbackType.BUG 
             ? "Use this when something is broken, not saving, displaying incorrectly, or behaving differently than expected."
             : "Use this when you want Stripe It to add, improve, or expand something."
@@ -99,11 +99,11 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ type, onSuccess }) =
         />
 
         <div className="flex flex-col gap-1.5">
-          <Typography variant="label" className="text-slate-400">
+          <Typography variant="label" className="text-text-secondary">
             {type === FeedbackType.BUG ? "What went wrong?" : "What would you like added?"}
           </Typography>
           <textarea 
-            className="flex min-h-[120px] w-full rounded-2xl border border-white/5 bg-slate-900/50 px-4 py-3 text-sm text-white focus-visible:outline-none focus:border-brand-primary/50 transition-all placeholder:text-slate-600 outline-none"
+            className="flex min-h-[120px] w-full rounded-2xl border border-border-card bg-bg-card/40 px-4 py-3 text-sm text-text-primary focus-visible:outline-none focus:border-brand-primary/50 transition-all placeholder:text-slate-500 outline-none"
             placeholder={type === FeedbackType.BUG ? "Describe the steps to reproduce the issue..." : "Describe the feature and how it would help you..."}
             value={description}
             onChange={(e) => setDescription(e.target.value)}

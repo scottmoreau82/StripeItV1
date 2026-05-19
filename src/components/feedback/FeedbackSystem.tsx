@@ -42,7 +42,7 @@ export const FeedbackSystem: React.FC<FeedbackSystemProps> = ({ isOpen, onClose,
       return (
         <div className="space-y-8">
           <div className="space-y-4">
-            <Typography variant="p" className="text-slate-400">
+            <Typography variant="p" className="text-text-secondary">
               Report a bug or request a feature. Include as much detail as you can so the issue or idea can be reviewed faster.
             </Typography>
           </div>
@@ -70,7 +70,7 @@ export const FeedbackSystem: React.FC<FeedbackSystemProps> = ({ isOpen, onClose,
       <div className="space-y-8">
         <button 
           onClick={() => setStep('choosing')} 
-          className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.2em]"
+          className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Selection
@@ -100,13 +100,13 @@ export const FeedbackSystem: React.FC<FeedbackSystemProps> = ({ isOpen, onClose,
                 <div className="h-10 w-10 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center">
                   <MessageSquarePlus className="h-6 w-6 text-brand-primary" />
                 </div>
-                <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic text-lg leading-none">
+                <Typography variant="h3" className="text-text-primary font-black uppercase tracking-tight italic text-lg leading-none">
                   {titleText}
                 </Typography>
               </div>
               <button 
                 onClick={onClose}
-                className="p-3 bg-white/5 rounded-2xl text-slate-400 hover:text-white active:scale-95 transition-all"
+                className="p-3 bg-bg-card/50 border border-border-card rounded-2xl text-text-secondary hover:text-text-primary active:scale-95 transition-all"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -149,7 +149,7 @@ const ChoiceCard: React.FC<ChoiceCardProps> = ({ icon: Icon, title, description,
   return (
     <button 
       onClick={onClick}
-      className="group p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all text-left space-y-6"
+      className="group p-8 rounded-[2.5rem] bg-bg-card/40 border border-border-card hover:bg-bg-card/60 hover:border-brand-primary/30 transition-all text-left space-y-6"
     >
       <div className={cn(
         "h-16 w-16 rounded-3xl border flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform",
@@ -158,8 +158,8 @@ const ChoiceCard: React.FC<ChoiceCardProps> = ({ icon: Icon, title, description,
         <Icon className="h-8 w-8" />
       </div>
       <div className="space-y-2">
-        <Typography variant="label" className="text-white block font-black uppercase tracking-[0.1em] text-xs leading-none">{title}</Typography>
-        <Typography variant="small" className="text-slate-500 block leading-relaxed text-[11px] font-medium">{description}</Typography>
+        <Typography variant="label" className="text-text-primary block font-black uppercase tracking-[0.1em] text-xs leading-none">{title}</Typography>
+        <Typography variant="small" className="text-text-secondary block leading-relaxed text-[11px] font-medium">{description}</Typography>
       </div>
     </button>
   );

@@ -16,7 +16,8 @@ import {
   MessageSquarePlus,
   Bug,
   Lightbulb,
-  ShieldCheck
+  ShieldCheck,
+  Sun
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, UserRole, SubscriptionTier, IconTheme } from '@/src/types';
@@ -26,7 +27,10 @@ import { AppIcon } from '../ui/AppIcon';
 import { PageHeader } from '../ui/PageHeader';
 import { Settings } from 'lucide-react';
 
+import { useTheme } from '@/src/contexts/ThemeContext';
 import { DashboardLayout } from '../layout/DashboardLayout';
+
+import { useResponsive } from '@/src/hooks/useResponsive';
 
 /**
  * StripeItSettingsSystem
@@ -36,11 +40,11 @@ import { DashboardLayout } from '../layout/DashboardLayout';
 interface SettingsViewProps {
   profile: UserProfile | null;
   onLogout: () => void;
-  isMobile: boolean;
 }
 
 const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobile?: boolean }) => {
   const { updateProfileData, addToast } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [isSaving, setIsSaving] = useState(false);
 
   const currentIconTheme = profile?.preferences?.iconTheme || IconTheme.LUCIDE;
@@ -107,18 +111,58 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
 
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
-      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Global Theme</Typography>
+      <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Global Theme</Typography>
       
       <Card className={cn("bg-bg-card/20 border-white/5", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
         <div className={cn("grid grid-cols-1 gap-8", !isMobile && "md:grid-cols-2")}>
           <div className="space-y-8">
+            {/* Appearance Toggle */}
+            <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0 border border-brand-primary/20">
+                    <Sun className="text-brand-primary" size={20} />
+                  </div>
+                  <div>
+                    <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">APPEARANCE</Typography>
+                    <Typography variant="small" className="text-slate-500 text-[10px]">DARK / LIGHT THEME</Typography>
+                  </div>
+                </div>
+
+                <div className="flex bg-bg-deep p-1 rounded-xl border border-white/10 shrink-0">
+                  <button
+                    onClick={() => setTheme('dark')}
+                    className={cn(
+                      "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer",
+                      theme === 'dark' 
+                        ? "bg-brand-primary text-bg-deep shadow-glow glow-primary" 
+                        : "text-slate-500 hover:text-white bg-transparent"
+                    )}
+                  >
+                    Dark
+                  </button>
+                  <button
+                    onClick={() => setTheme('light')}
+                    className={cn(
+                      "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer",
+                      theme === 'light' 
+                        ? "bg-brand-primary text-bg-deep shadow-glow glow-primary" 
+                        : "text-slate-500 hover:text-white bg-transparent"
+                    )}
+                  >
+                    Light
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
                   <AppIcon name="sparkles" className="text-brand-primary" />
                 </div>
                 <div>
-                  <Typography variant="label" className="text-white block text-sm">Icon Pack</Typography>
+                  <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Icon Pack</Typography>
                   <Typography variant="small" className="text-slate-500 text-[10px]">Choose your interface symbols</Typography>
                 </div>
               </div>
@@ -129,7 +173,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                   onChange={(e) => handleIconThemeChange(e.target.value as IconTheme)}
                   disabled={isSaving}
                   className={cn(
-                    "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer",
+                    "w-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer",
                     isFreeTier && "opacity-50 cursor-not-allowed"
                   )}
                 >
@@ -157,7 +201,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                   <Target className="text-brand-primary" size={20} />
                 </div>
                 <div>
-                  <Typography variant="label" className="text-white block text-sm">Button Geometry</Typography>
+                  <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Button Geometry</Typography>
                   <Typography variant="small" className="text-slate-500 text-[10px]">Choose your tactical silhouette</Typography>
                 </div>
               </div>
@@ -167,7 +211,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                   value={profile?.preferences?.buttonShape || 'standard'}
                   onChange={(e) => handleButtonShapeChange(e.target.value as any)}
                   disabled={isSaving}
-                  className="w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
+                  className="w-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
                 >
                   <option value="standard">Standard (Default)</option>
                   <option value="parallelogram">Parallelogram</option>
@@ -207,8 +251,9 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
 
 type SettingsSection = 'profile' | 'account' | 'organization' | 'feedback' | 'admin' | 'developer';
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout, isMobile }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout }) => {
   const { isAdmin } = useAuth();
+  const { isMobile } = useResponsive();
   const [successMsg, setSuccessMsg] = useState('');
 
   const header = (
@@ -294,7 +339,7 @@ const OrganizationAccessPanel = ({ profile, isMobile }: { profile: UserProfile |
 
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
-      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Organization Access</Typography>
+      <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Organization Access</Typography>
       
       <div className="space-y-6">
         <DealerProgressionPanel profile={profile} isMobile={isMobile} hideTitle />
@@ -324,7 +369,7 @@ const DealerProgressionPanel = ({ profile, isMobile, hideTitle }: { profile: Use
           </div>
           
           <div className="space-y-2">
-            <Typography variant="h2" className={cn("text-white italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-2xl" : "text-4xl")}>
+            <Typography variant="h2" className={cn("text-[var(--color-text-primary)] italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-2xl" : "text-4xl")}>
               Upgrade to Dealership
             </Typography>
             <Typography variant="p" className="text-slate-400 text-sm leading-relaxed">
@@ -350,7 +395,7 @@ const DealerProgressionPanel = ({ profile, isMobile, hideTitle }: { profile: Use
 
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
-      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Progression</Typography>
+      <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Progression</Typography>
       {card}
     </div>
   );
@@ -397,7 +442,7 @@ const JoinDealershipPanel = ({ profile, isMobile, hideTitle }: { profile: UserPr
           </div>
           
           <div className="space-y-2">
-            <Typography variant="h2" className={cn("text-white italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-2xl" : "text-4xl")}>
+            <Typography variant="h2" className={cn("text-[var(--color-text-primary)] italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-2xl" : "text-4xl")}>
               Join Dealership
             </Typography>
             <Typography variant="p" className="text-slate-400 text-sm leading-relaxed">
@@ -411,7 +456,7 @@ const JoinDealershipPanel = ({ profile, isMobile, hideTitle }: { profile: UserPr
             placeholder="ENTER JOIN CODE"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="bg-black/40 border-white/10 h-14 text-center font-mono font-black tracking-[0.2em] uppercase"
+            className="bg-[var(--color-bg-card)] border-[var(--color-border)] h-14 text-center font-mono font-black tracking-[0.2em] uppercase text-[var(--color-text-primary)]"
             required
           />
           <Button 
@@ -433,7 +478,7 @@ const JoinDealershipPanel = ({ profile, isMobile, hideTitle }: { profile: UserPr
 
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
-      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Onboarding</Typography>
+      <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Onboarding</Typography>
       {card}
     </div>
   );
@@ -442,7 +487,7 @@ const JoinDealershipPanel = ({ profile, isMobile, hideTitle }: { profile: UserPr
 const FeedbackPanel = () => {
   return (
     <div className="space-y-8">
-      <Typography variant="h3" className="text-white font-black uppercase tracking-tight italic">Support & Feedback</Typography>
+      <Typography variant="h3" className="text-[var(--color-text-primary)] font-black uppercase tracking-tight italic">Support & Feedback</Typography>
       <Card className="p-8 bg-bg-card/20 border-white/5 space-y-8">
         <Typography variant="p" className="text-slate-400">
           Encountered an issue or have a vision for a new tool? Use the modules below to transmit your report directly to the engineering team.
@@ -472,7 +517,7 @@ const AdminPanel = ({ isMobile }: { isMobile?: boolean }) => {
   const navigate = useNavigate();
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
-      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Admin Tools</Typography>
+      <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Admin Tools</Typography>
       
       <div className={cn("grid grid-cols-1 gap-6", !isMobile && "md:grid-cols-2")}>
         <Card className={cn("bg-brand-primary/5 border border-brand-primary/10 flex flex-col justify-between shadow-glow-sm glow-primary/5", isMobile ? "p-4 space-y-4" : "p-8 space-y-6")}>
@@ -480,7 +525,7 @@ const AdminPanel = ({ isMobile }: { isMobile?: boolean }) => {
             <div className={cn("rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0", isMobile ? "h-8 w-8" : "h-10 w-10")}>
               <MessageSquarePlus className={cn("text-brand-primary", isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </div>
-            <Typography variant="h4" className={cn("text-white", isMobile ? "text-base" : "")}>Feedback Review</Typography>
+            <Typography variant="h4" className={cn("text-[var(--color-text-primary)]", isMobile ? "text-base" : "")}>Feedback Review</Typography>
             <Typography variant="small" className={cn("text-slate-400 block pb-4", isMobile ? "text-[10px] leading-relaxed" : "")}>
               Monitor, categorize, and respond to incoming bug reports and feature requests from all users.
             </Typography>
@@ -498,7 +543,7 @@ const AdminPanel = ({ isMobile }: { isMobile?: boolean }) => {
             <div className={cn("rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0", isMobile ? "h-8 w-8" : "h-10 w-10")}>
               <User className={cn("text-brand-primary", isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </div>
-            <Typography variant="h4" className={cn("text-white", isMobile ? "text-base" : "")}>User Management</Typography>
+            <Typography variant="h4" className={cn("text-[var(--color-text-primary)]", isMobile ? "text-base" : "")}>User Management</Typography>
             <Typography variant="small" className={cn("text-slate-400 block pb-4", isMobile ? "text-[10px] leading-relaxed" : "")}>
               Manage accounts, adjust subscription tiers, and control permissions across your entire organization.
             </Typography>
@@ -527,7 +572,7 @@ const DeveloperPanel = ({ isMobile }: { isMobile?: boolean }) => {
   
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
-      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Developer Tools</Typography>
+      <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Developer Tools</Typography>
       
       <div className={cn("grid grid-cols-1 gap-6", !isMobile && "md:grid-cols-2")}>
         {/* Tier Override */}
@@ -537,7 +582,7 @@ const DeveloperPanel = ({ isMobile }: { isMobile?: boolean }) => {
               <Sparkles className={cn("text-brand-primary", isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </div>
             <div>
-              <Typography variant="h4" className={cn("text-white", isMobile ? "text-base leading-tight" : "")}>Dev Tier Override</Typography>
+              <Typography variant="h4" className={cn("text-[var(--color-text-primary)]", isMobile ? "text-base leading-tight" : "")}>Dev Tier Override</Typography>
               <Typography variant="small" className={cn("text-slate-500 block", isMobile ? "text-[10px]" : "")}>Simulate subscription tiers</Typography>
             </div>
           </div>
@@ -546,7 +591,7 @@ const DeveloperPanel = ({ isMobile }: { isMobile?: boolean }) => {
             <select
               value={tierOverride || profile?.subscriptionTier || ''}
               onChange={(e) => setTierOverride(e.target.value as SubscriptionTier || null)}
-              className="w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
+              className="w-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
             >
               <option value="">Default ({profile?.subscriptionTier === SubscriptionTier.ORGANIZATION ? 'Dealer' : profile?.subscriptionTier})</option>
               {Object.values(SubscriptionTier).map((tier) => (
@@ -558,7 +603,7 @@ const DeveloperPanel = ({ isMobile }: { isMobile?: boolean }) => {
             
             <div className={cn("bg-brand-primary/5 border border-brand-primary/10 rounded-2xl", isMobile ? "p-3" : "p-4")}>
               <Typography variant="small" className={cn("text-brand-primary/80 font-bold block leading-relaxed", isMobile ? "text-[11px]" : "")}>
-                Active Tier: <span className="text-white">{tierOverride || profile?.subscriptionTier || 'Free'}</span>
+                Active Tier: <span className="text-[var(--color-text-primary)]">{tierOverride || profile?.subscriptionTier || 'Free'}</span>
               </Typography>
               <Typography variant="small" className="text-slate-500 block mt-1 text-[10px]">
                 {isMobile ? "Session-based effect only." : "This effect is session-based and does not affect production billing."}
@@ -574,14 +619,14 @@ const DeveloperPanel = ({ isMobile }: { isMobile?: boolean }) => {
               <Target className={cn("text-indigo-400", isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </div>
             <div>
-              <Typography variant="h4" className={cn("text-white", isMobile ? "text-base leading-tight" : "")}>System Edit Mode</Typography>
+              <Typography variant="h4" className={cn("text-[var(--color-text-primary)]", isMobile ? "text-base leading-tight" : "")}>System Edit Mode</Typography>
               <Typography variant="small" className={cn("text-slate-500 block", isMobile ? "text-[10px]" : "")}>UI & testing overrides</Typography>
             </div>
           </div>
 
           <div className={cn("flex items-center justify-between bg-white/[0.02] border border-white/5 rounded-2xl", isMobile ? "p-4" : "p-6")}>
             <div className="space-y-1">
-              <Typography variant="label" className="text-white text-sm">Status</Typography>
+              <Typography variant="label" className="text-[var(--color-text-primary)] text-sm">Status</Typography>
               <Typography variant="small" className={cn(
                 "font-black uppercase tracking-widest text-[10px]",
                 isEditMode ? "text-brand-primary" : "text-slate-500"
@@ -659,7 +704,7 @@ const ProfilePanel = ({ profile, isMobile }: { profile: UserProfile | null, isMo
             </div>
           </div>
           <div className="space-y-0.5 min-w-0">
-            <Typography variant="h2" className={cn("text-white leading-none truncate", isMobile ? "text-lg" : "")}>{profile?.displayName}</Typography>
+            <Typography variant="h2" className={cn("text-[var(--color-text-primary)] leading-none truncate", isMobile ? "text-lg" : "")}>{profile?.displayName}</Typography>
             <Typography variant="p" className={cn("text-slate-500 font-bold truncate", isMobile ? "text-[11px]" : "")}>{profile?.email}</Typography>
             <div className="inline-flex mt-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/5 text-[8px] font-black uppercase tracking-widest text-brand-primary">
               {profile?.role}
@@ -674,12 +719,12 @@ const ProfilePanel = ({ profile, isMobile }: { profile: UserProfile | null, isMo
               value={displayName} 
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Enter display name..."
-              className="bg-white/[0.02] h-11" 
+              className="bg-[var(--color-bg-card)] border-[var(--color-border)] h-11 text-[var(--color-text-primary)]" 
             />
           </div>
           <div className="space-y-1.5">
             <Typography variant="label" className="text-slate-500 ml-1 text-[10px] uppercase font-black tracking-widest opacity-70">Email Address</Typography>
-            <Input defaultValue={profile?.email} disabled className="bg-white/[0.02] opacity-50 h-11 truncate" />
+            <Input defaultValue={profile?.email} disabled className="bg-[var(--color-bg-card)] border-[var(--color-border)] opacity-50 h-11 truncate text-[var(--color-text-primary)]" />
           </div>
         </div>
         
@@ -704,7 +749,7 @@ const ProfilePanel = ({ profile, isMobile }: { profile: UserProfile | null, isMo
 const AccountPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMobile?: boolean }) => {
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
-      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Account Security</Typography>
+      <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Account Security</Typography>
       
       <div className={cn("grid grid-cols-1", isMobile ? "gap-4" : "gap-6")}>
         <Card className={cn("bg-bg-card/20 border-white/5 flex items-center justify-between", isMobile ? "p-4" : "p-8")}>
@@ -713,7 +758,7 @@ const AccountPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMo
               <Shield className={cn("text-amber-500", isMobile ? "h-5 w-5" : "h-6 w-6")} />
             </div>
             <div>
-              <Typography variant="label" className="text-white block text-sm">Password</Typography>
+              <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Password</Typography>
               <Typography variant="small" className="text-slate-500 text-[10px]">Last changed 4 months ago</Typography>
             </div>
           </div>
@@ -726,7 +771,7 @@ const AccountPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMo
               <CreditCard className={cn("text-brand-primary", isMobile ? "h-5 w-5" : "h-6 w-6")} />
             </div>
             <div>
-              <Typography variant="label" className="text-white block text-sm">Subscription</Typography>
+              <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Subscription</Typography>
               <Typography variant="small" className="text-brand-primary font-bold text-[10px]">Tier: {profile?.subscriptionTier.toUpperCase()}</Typography>
             </div>
           </div>
@@ -754,7 +799,7 @@ const MembershipPanel = ({ profile, isMobile }: { profile: UserProfile | null, i
 
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
-      <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>
+      <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>
         {isFrozen || isPreviouslyFrozen ? 'Membership History' : 'Dealership / Org'}
       </Typography>
       
@@ -764,7 +809,7 @@ const MembershipPanel = ({ profile, isMobile }: { profile: UserProfile | null, i
             <Building2 className={cn("text-slate-400", isMobile ? "h-6 w-6" : "h-10 w-10")} />
           </div>
           <div className="space-y-1 min-w-0 flex-1">
-            <Typography variant="h2" className={cn("text-white leading-none truncate font-black italic uppercase", isMobile ? "text-lg" : "text-3xl")}>
+            <Typography variant="h2" className={cn("text-[var(--color-text-primary)] leading-none truncate font-black italic uppercase", isMobile ? "text-lg" : "text-3xl")}>
               {profile.orgName || (isPersonalOrg ? 'Personal Workspace' : 'Dealership Partner')}
             </Typography>
             <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -790,7 +835,7 @@ const MembershipPanel = ({ profile, isMobile }: { profile: UserProfile | null, i
           <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
             <Typography variant="label" className="text-slate-500 text-[9px] uppercase font-black tracking-widest block">System Status Note</Typography>
             <Typography variant="p" className="text-slate-400 text-xs leading-relaxed">
-              Your connection to <span className="text-white font-bold">{profile.orgName || 'your dealership'}</span> is currently <span className="text-rose-400 font-bold">inactive</span>. 
+              Your connection to <span className="text-[var(--color-text-primary)] font-bold">{profile.orgName || 'your dealership'}</span> is currently <span className="text-rose-400 font-bold">inactive</span>. 
               You have been reverted to your personal StripeIt toolkit to ensure continuous operation of your individual deal logging and commissions.
             </Typography>
           </div>
@@ -809,14 +854,14 @@ const MembershipPanel = ({ profile, isMobile }: { profile: UserProfile | null, i
               </Button>
               <Button 
                 variant="secondary" 
-                className={cn("w-full bg-white/5 border-white/10 text-white font-bold uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
+                className={cn("w-full bg-white/5 border-white/10 text-[var(--color-text-primary)] font-bold uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
                 onClick={() => navigate(isInDealerOrg ? '/dealer/settings' : '/settings')}
               >
                 Org Settings
               </Button>
               <Button 
                 variant="secondary" 
-                className={cn("w-full bg-white/5 border-white/10 text-white font-bold uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
+                className={cn("w-full bg-white/5 border-white/10 text-[var(--color-text-primary)] font-bold uppercase tracking-widest", isMobile ? "text-[10px] h-10" : "text-[11px] h-11")}
                 onClick={() => navigate(isInDealerOrg ? '/dealer/log-builder' : '/')}
               >
                 Log Builder

@@ -473,26 +473,26 @@ export const DealerUserManagementView: React.FC = () => {
           <Lock size={120} className="text-indigo-500" />
         </div>
         <div className="relative z-10 space-y-4">
-          <Typography variant="h3" className="text-white font-black italic uppercase tracking-tight">Global Permission Overrides</Typography>
-          <Typography variant="p" className="text-slate-400 text-sm max-w-2xl leading-relaxed">
+          <Typography variant="h3" className="text-[var(--color-text-primary)] font-black italic uppercase tracking-tight">Global Permission Overrides</Typography>
+          <Typography variant="p" className="text-[var(--color-text-secondary)] text-sm max-w-2xl leading-relaxed">
             Configure default access levels for organizational entities. Individual manager permissions can be overridden in the directory.
           </Typography>
           
           <div className="pt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-6 bg-white/[0.03] border border-white/10 rounded-2xl space-y-4">
-              <Typography variant="label" className="text-white uppercase text-[11px] font-black tracking-widest flex items-center gap-2">
+            <div className="p-6 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-2xl space-y-4">
+              <Typography variant="label" className="text-[var(--color-text-primary)] uppercase text-[11px] font-black tracking-widest flex items-center gap-2">
                 <Shield size={14} className="text-indigo-400" />
                 Baseline Access
               </Typography>
-              <Typography variant="p" className="text-slate-500 text-xs">Standard managers can view organization-wide reports and log deals by default.</Typography>
+              <Typography variant="p" className="text-[var(--color-text-secondary)] text-xs">Standard managers can view organization-wide reports and log deals by default.</Typography>
               <Badge variant="outline" className="text-[10px] uppercase font-black tracking-widest text-emerald-500 border-emerald-500/20">System Enforced</Badge>
             </div>
-            <div className="p-6 bg-white/[0.03] border border-white/10 rounded-2xl space-y-4 opacity-50">
-              <Typography variant="label" className="text-white uppercase text-[11px] font-black tracking-widest flex items-center gap-2">
+            <div className="p-6 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-2xl space-y-4 opacity-50">
+              <Typography variant="label" className="text-[var(--color-text-primary)] uppercase text-[11px] font-black tracking-widest flex items-center gap-2">
                 <Zap size={14} className="text-indigo-400" />
                 Advanced Controls
               </Typography>
-              <Typography variant="p" className="text-slate-500 text-xs">Custom granular permissions per route and action. Coming soon for enterprise.</Typography>
+              <Typography variant="p" className="text-[var(--color-text-secondary)] text-xs">Custom granular permissions per route and action. Coming soon for enterprise.</Typography>
               <Badge variant="outline" className="text-[10px] uppercase font-black tracking-widest text-slate-500 border-white/10">Coming Soon</Badge>
             </div>
           </div>
@@ -531,11 +531,11 @@ export const DealerUserManagementView: React.FC = () => {
                   return (
                     <tr key={code.id} className="hover:bg-white/[0.01] transition-colors group">
                       <td className="px-6 py-4 font-mono font-black text-brand-primary text-sm tracking-widest">{code.code}</td>
-                      <td className="px-6 py-4 text-white font-bold">{code.department}</td>
-                      <td className="px-6 py-4 text-slate-400">
+                      <td className="px-6 py-4 text-[var(--color-text-primary)] font-bold">{code.department}</td>
+                      <td className="px-6 py-4 text-[var(--color-text-secondary)]">
                         {code.usedCount} / {code.maxUses}
                         {code.usedBy.length > 0 && (
-                          <div className="text-[9px] text-slate-600 mt-1">
+                          <div className="text-[9px] text-[var(--color-text-secondary)] mt-1 opacity-70">
                             Redeemed by {code.usedBy.length} user{code.usedBy.length > 1 ? 's' : ''}
                           </div>
                         )}
@@ -575,8 +575,8 @@ export const DealerUserManagementView: React.FC = () => {
         </div>
       </Card>
 
-      <Card className="p-8 bg-white/[0.01] border border-dashed border-white/10 rounded-3xl">
-        <Typography variant="p" className="text-slate-500 text-xs italic text-center">
+      <Card className="p-8 bg-[var(--color-bg-card)] border border-dashed border-[var(--color-border)] rounded-3xl">
+        <Typography variant="p" className="text-[var(--color-text-secondary)] text-xs italic text-center">
           Join codes allow managers to join your organization using their own accounts. Existing email invitations are no longer supported.
         </Typography>
       </Card>
@@ -604,8 +604,8 @@ export const DealerUserManagementView: React.FC = () => {
               <Shield size={120} className="text-brand-primary" />
             </div>
             <div className="relative z-10 space-y-4">
-              <Typography variant="h3" className="text-white font-black italic uppercase tracking-tight">Access Control & Security</Typography>
-              <Typography variant="p" className="text-slate-400 text-sm max-w-2xl leading-relaxed">
+              <Typography variant="h3" className="text-[var(--color-text-primary)] font-black italic uppercase tracking-tight">Access Control & Security</Typography>
+              <Typography variant="p" className="text-[var(--color-text-secondary)] text-sm max-w-2xl leading-relaxed">
                 Accounts listed here have administrative oversight of your StripeIt Dealer organization. 
                 Frozen accounts retain their history but cannot access dashboards or deal logs. 
                 Deleted accounts lose all organizational access immediately.

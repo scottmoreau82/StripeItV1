@@ -685,6 +685,15 @@ function AppContent() {
   
   // 1. App is determining if a session exists
   if (!initialized) {
+    const isPublicLandingPath = window.location.pathname === '/' || window.location.pathname === '/dealer/request';
+    const hasAuthHint = typeof window !== 'undefined' && Object.keys(localStorage).some(key => key.includes('firebase:authUser'));
+    
+    // If we are on the landing page and don't have an auth hint, show the landing page immediately
+    if (isPublicLandingPath && !hasAuthHint) {
+      return <LandingView />;
+    }
+    
+    // Otherwise show the initialization splash (for returning users or auth-related paths)
     return <LandingView isInitializing />;
   }
 

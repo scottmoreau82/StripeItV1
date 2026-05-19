@@ -60,3 +60,12 @@ export const SIDEBAR_NAV_TYPOGRAPHY = "text-[10px] leading-[15px]";
  */
 export const SIDEBAR_NAV_ICON_SIZE_CLASS = "h-5 w-5";
 export const SIDEBAR_NAV_ICON_SIZE = 20; // Equivalent to h-5 (1.25rem)
+
+/**
+ * Button Geometry Presets
+ * Source of truth for actions buttons across the application
+ */
+export const BUTTON_SHAPES = {
+  standard: "rounded-xl",
+  parallelogram: "[clip-path:polygon(8%_0%,100%_0%,92%_100%,0%_100%)] !rounded-none"
+};

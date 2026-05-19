@@ -1,6 +1,8 @@
 import React from 'react';
 import { cn } from '@/src/lib/utils';
 import { motion } from 'motion/react';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { BUTTON_SHAPES } from '@/src/constants';
 
 /**
  * StripeItButtonSystem
@@ -20,7 +22,15 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   ...props
 }) => {
-  const baseStyles = "inline-flex items-center justify-center rounded-xl font-medium transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
+  const { profile } = useAuth();
+  const shapePreference = profile?.preferences?.buttonShape || 'standard';
+  
+  // Eligible for custom geometry: Major CTAs, actions, and primary buttons
+  // Excludes ghost, icon-only, and small utility buttons (secondary)
+  const isEligible = size !== 'icon' && (variant === 'primary' || variant === 'danger' || variant === 'outline');
+  const shapeClass = isEligible ? BUTTON_SHAPES[shapePreference] : BUTTON_SHAPES.standard;
+
+  const baseStyles = "inline-flex items-center justify-center font-medium transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
   
   const variants = {
     primary: "bg-brand-primary text-bg-deep hover:bg-brand-primary/90 shadow-glow glow-primary font-black uppercase tracking-widest",
@@ -34,14 +44,14 @@ export const Button: React.FC<ButtonProps> = ({
     sm: "h-9 px-4 text-sm",
     md: "h-11 px-6",
     lg: "h-14 px-8 text-lg",
-    icon: "h-10 w-10"
+    icon: "h-10 w-10 rounded-xl" // Icons always keep standard rounding
   };
 
   return (
     <motion.button
       whileTap={(!props.disabled && !isLoading) ? { scale: 0.97 } : undefined}
       whileHover={(!props.disabled && !isLoading) ? { y: -1 } : undefined}
-      className={cn(baseStyles, variants[variant], sizes[size], className)}
+      className={cn(baseStyles, variants[variant], sizes[size], className, shapeClass)}
       disabled={props.disabled || isLoading}
       {...props as any}
     >

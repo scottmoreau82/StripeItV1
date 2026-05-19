@@ -78,47 +78,101 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
     }
   };
 
+  const handleButtonShapeChange = async (newShape: 'standard' | 'parallelogram') => {
+    setIsSaving(true);
+    try {
+      await updateProfileData({
+        preferences: {
+          ...profile?.preferences,
+          theme: profile?.preferences?.theme || 'dark', // ensure required field
+          notifications: profile?.preferences?.notifications || {
+            dealReminders: true,
+            goalAlerts: true,
+            managerAnnouncements: true,
+            competitionNotifications: true,
+            payoutAlerts: true
+          },
+          display: profile?.preferences?.display || {
+            showMetricsByDefault: true,
+            currencySymbol: '$',
+            compactMode: false
+          },
+          buttonShape: newShape
+        }
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
       <Typography variant="h3" className={cn("text-white font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Global Theme</Typography>
       
       <Card className={cn("bg-bg-card/20 border-white/5", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
         <div className={cn("grid grid-cols-1 gap-8", !isMobile && "md:grid-cols-2")}>
-          <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
-                <AppIcon name="sparkles" className="text-brand-primary" />
+          <div className="space-y-8">
+            <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
+                  <AppIcon name="sparkles" className="text-brand-primary" />
+                </div>
+                <div>
+                  <Typography variant="label" className="text-white block text-sm">Icon Pack</Typography>
+                  <Typography variant="small" className="text-slate-500 text-[10px]">Choose your interface symbols</Typography>
+                </div>
               </div>
-              <div>
-                <Typography variant="label" className="text-white block text-sm">Icon Pack</Typography>
-                <Typography variant="small" className="text-slate-500 text-[10px]">Choose your interface symbols</Typography>
+
+              <div className="space-y-2">
+                <select
+                  value={currentIconTheme}
+                  onChange={(e) => handleIconThemeChange(e.target.value as IconTheme)}
+                  disabled={isSaving}
+                  className={cn(
+                    "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer",
+                    isFreeTier && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <option value={IconTheme.LUCIDE}>Lucide (Default)</option>
+                  <option value={IconTheme.PHOSPHOR}>Phosphor icons</option>
+                  <option value={IconTheme.TABLER}>Tabler icons</option>
+                  <option value={IconTheme.HEROICONS}>Heroicons (v2)</option>
+                </select>
+                
+                {isFreeTier && (
+                  <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
+                    <AppIcon name="lock" size={12} className="text-brand-primary" />
+                    <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
+                      PRO+ EXCLUSIVE
+                    </Typography>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <select
-                value={currentIconTheme}
-                onChange={(e) => handleIconThemeChange(e.target.value as IconTheme)}
-                disabled={isSaving}
-                className={cn(
-                  "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer",
-                  isFreeTier && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                <option value={IconTheme.LUCIDE}>Lucide (Default)</option>
-                <option value={IconTheme.PHOSPHOR}>Phosphor icons</option>
-                <option value={IconTheme.TABLER}>Tabler icons</option>
-                <option value={IconTheme.HEROICONS}>Heroicons (v2)</option>
-              </select>
-              
-              {isFreeTier && (
-                <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
-                  <AppIcon name="lock" size={12} className="text-brand-primary" />
-                  <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
-                    PRO+ EXCLUSIVE
-                  </Typography>
+            {/* Button Geometry */}
+            <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
+                  <Target className="text-brand-primary" size={20} />
                 </div>
-              )}
+                <div>
+                  <Typography variant="label" className="text-white block text-sm">Button Geometry</Typography>
+                  <Typography variant="small" className="text-slate-500 text-[10px]">Choose your tactical silhouette</Typography>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <select
+                  value={profile?.preferences?.buttonShape || 'standard'}
+                  onChange={(e) => handleButtonShapeChange(e.target.value as any)}
+                  disabled={isSaving}
+                  className="w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
+                >
+                  <option value="standard">Standard (Default)</option>
+                  <option value="parallelogram">Parallelogram</option>
+                </select>
+              </div>
             </div>
           </div>
 

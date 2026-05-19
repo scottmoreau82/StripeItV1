@@ -43,6 +43,7 @@ export interface UserPreferences {
   theme: 'dark' | 'light' | 'system';
   visualTheme?: 'matrix' | 'og';
   iconTheme?: IconTheme;
+  buttonShape?: 'standard' | 'parallelogram';
   onboarding?: OnboardingState;
   notifications: {
     dealReminders: boolean;

@@ -307,7 +307,7 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
 
       {/* Hero */}
       <main className="relative pt-32 lg:pt-48 pb-32 px-6 max-w-7xl mx-auto">
-        <div className={isMobile ? 'flex flex-col gap-24' : 'grid grid-cols-1 lg:grid-cols-12 gap-24 items-center'}>
+        <div className={isMobile ? 'flex flex-col gap-24' : 'grid grid-cols-1 lg:grid-cols-12 gap-24 items-start'}>
           
           {/* Left Column: Messaging */}
           <div className={cn("space-y-12", !isMobile && "lg:col-span-12 xl:col-span-5")}>
@@ -334,7 +334,7 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
                 The first platform built for complex automotive pay plans. Real-time commission visibility with retroactive tier logic and unit ladder support.
               </Typography>
             </motion.div>
-
+ 
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -360,45 +360,15 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
                 </Button>
               </Link>
             </motion.div>
-
-            {/* Features List */}
-            <motion.div 
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               transition={{ delay: 0.4 }}
-               className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-10 max-w-2xl pt-20 border-t border-white/5 relative"
-            >
-              <div className="absolute top-0 left-0 w-32 h-px bg-gradient-to-r from-brand-primary/60 to-transparent" />
-              <FeatureItem 
-                icon={TrendingUp} 
-                title="Exact Modeling" 
-                description="Customize your front and back-end percentages to match your actual paycheck."
-              />
-              <FeatureItem 
-                icon={Target} 
-                title="Unit Ladders" 
-                description="Set multiple volume tiers with specific bonuses and commission increases."
-              />
-              <FeatureItem 
-                icon={Zap} 
-                title="Retroactive Logic" 
-                description="Automatically recalculates previous deals when you reach new volume milestones."
-              />
-              <FeatureItem 
-                icon={BarChart3} 
-                title="Paycheck Pacing" 
-                description="Real-time projection of your monthly earnings based on current deal flow."
-              />
-            </motion.div>
           </div>
-
+ 
           {/* Right Column: Visuals */}
           {!isMobile && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95, x: 20 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-              className="relative lg:col-span-12 xl:col-span-7 pt-12 xl:pt-0"
+              className="relative lg:col-span-12 xl:col-span-7 pt-12 xl:pt-[84px]"
             >
               <div className="absolute -inset-10 bg-brand-primary/10 blur-[120px] rounded-full pointer-events-none opacity-50" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[120%] w-[120%] bg-white/[0.01] rounded-full border border-white/5 pointer-events-none" />
@@ -485,6 +455,37 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
             </motion.div>
           )}
         </div>
+
+        {/* Features Row - Single Horizontal Row Spanning Full Width */}
+        <motion.div 
+           initial={{ opacity: 0, y: 20 }}
+           whileInView={{ opacity: 1, y: 0 }}
+           viewport={{ once: true }}
+           transition={{ delay: 0.4, duration: 0.8 }}
+           className="mt-32 pt-20 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative"
+        >
+          <div className="absolute top-0 left-0 w-32 h-px bg-gradient-to-r from-brand-primary/60 to-transparent" />
+          <FeatureItem 
+            icon={TrendingUp} 
+            title="Exact Modeling" 
+            description="Customize your front and back-end percentages to match your actual paycheck."
+          />
+          <FeatureItem 
+            icon={Target} 
+            title="Unit Ladders" 
+            description="Set multiple volume tiers with specific bonuses and commission increases."
+          />
+          <FeatureItem 
+            icon={Zap} 
+            title="Retroactive Logic" 
+            description="Automatically recalculates previous deals when you reach new volume milestones."
+          />
+          <FeatureItem 
+            icon={BarChart3} 
+            title="Paycheck Pacing" 
+            description="Real-time projection of your monthly earnings based on current deal flow."
+          />
+        </motion.div>
       </main>
 
       {/* Dealer Solution Section - Moved to separate section for better vertical rhythm */}

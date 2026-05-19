@@ -77,7 +77,7 @@ function MainAppFlow() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const { isMobile } = useResponsive();
-  const { profile, user, isAdmin, isDeveloper } = useAuth();
+  const { profile, user, isAdmin, isDeveloper, logout } = useAuth();
   const location = useLocation();
 
   // StripeItAnalyticsSystem - Global Lifecycle Tracking
@@ -417,7 +417,7 @@ function MainAppFlow() {
               element={
                 <SettingsView 
                   profile={profile}
-                  onLogout={useAuth().logout}
+                  onLogout={logout}
                   isMobile={isMobile}
                 />
               } 

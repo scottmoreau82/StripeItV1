@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -17,7 +17,7 @@ import { Button } from './components/ui/Button';
 import { Input } from './components/ui/Input';
 import { Modal } from './components/ui/Modal';
 import { FullscreenMobileFlow } from './components/layout/MobileFullscreenFlow';
-import { Plus, TrendingUp, Users, DollarSign, Car, ArrowUpRight, CheckCircle2, Calculator } from 'lucide-react';
+import { Plus, TrendingUp, Users, DollarSign, Car, ArrowUpRight, CheckCircle2, Calculator, Target, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useResponsive } from './hooks/useResponsive';
 import { cn } from './lib/utils';
@@ -35,6 +35,7 @@ import { ReportView } from './components/reports/ReportView';
 import { SettingsView } from './components/settings/SettingsView';
 import { ManagerView } from './components/management/ManagerView';
 import { NoteEntryForm } from './components/notes/NoteEntryForm';
+import { DealDeskView } from './components/dealdesk/DealDeskView';
 import { SpiffEntryForm } from './components/log/SpiffEntryForm';
 import { CreateCompetitionForm } from './components/competitions/CreateCompetitionForm';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
@@ -290,7 +291,24 @@ function MainAppFlow() {
                           icon={TrendingUp}
                         />
                       }
-                      main={<div className="py-20 text-center text-slate-500 italic uppercase tracking-[0.2em] text-xs">Analytics Module Loading...</div>}
+                      main={
+                        <div className="flex items-center justify-center py-12 px-4 w-full">
+                          <Card className="w-full max-w-md bg-[var(--color-bg-card)] border-[var(--color-border)] rounded-3xl p-10 flex flex-col items-center text-center">
+                            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-cyan-500/10 text-cyan-400 mb-6 shrink-0">
+                              <TrendingUp size={24} />
+                            </div>
+                            <Typography variant="mono" className="text-brand-primary uppercase tracking-widest text-[10px] mb-2 font-black">
+                              COMING SOON
+                            </Typography>
+                            <Typography variant="h2" className="text-[var(--color-text-primary)] font-black uppercase tracking-tight italic mb-3">
+                              MARKET ANALYTICS
+                            </Typography>
+                            <Typography variant="p" className="text-slate-500 text-sm leading-relaxed text-center">
+                              Advanced performance telemetry and historical trend analysis. Available in an upcoming release.
+                            </Typography>
+                          </Card>
+                        </div>
+                      }
                     />
                   )
                   : <UpgradeAccessScreen feature={Feature.ADVANCED_ANALYTICS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
@@ -310,7 +328,24 @@ function MainAppFlow() {
                           icon={ArrowUpRight}
                         />
                       }
-                      main={<div className="py-20 text-center text-slate-500 italic uppercase tracking-[0.2em] text-xs">Goal Management System Offline</div>}
+                      main={
+                        <div className="flex items-center justify-center py-12 px-4 w-full">
+                          <Card className="w-full max-w-md bg-[var(--color-bg-card)] border-[var(--color-border)] rounded-3xl p-10 flex flex-col items-center text-center">
+                            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-purple-500/10 text-purple-400 mb-6 shrink-0">
+                              <Target size={24} />
+                            </div>
+                            <Typography variant="mono" className="text-brand-primary uppercase tracking-widest text-[10px] mb-2 font-black">
+                              COMING SOON
+                            </Typography>
+                            <Typography variant="h2" className="text-[var(--color-text-primary)] font-black uppercase tracking-tight italic mb-3">
+                              CAREER GOALS
+                            </Typography>
+                            <Typography variant="p" className="text-slate-500 text-sm leading-relaxed text-center">
+                              Unit targets, pacing indicators, and milestone tracking. Coming in the next update.
+                            </Typography>
+                          </Card>
+                        </div>
+                      }
                     />
                   )
                   : <UpgradeAccessScreen feature={Feature.GOALS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
@@ -339,7 +374,24 @@ function MainAppFlow() {
                           icon={Car}
                         />
                       }
-                      main={<div className="py-20 text-center text-slate-500 italic uppercase tracking-[0.2em] text-xs">Inventory Access Restricted</div>}
+                      main={
+                        <div className="flex items-center justify-center py-12 px-4 w-full">
+                          <Card className="w-full max-w-md bg-[var(--color-bg-card)] border-[var(--color-border)] rounded-3xl p-10 flex flex-col items-center text-center">
+                            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-amber-500/10 text-amber-400 mb-6 shrink-0">
+                              <Car size={24} />
+                            </div>
+                            <Typography variant="mono" className="text-brand-primary uppercase tracking-widest text-[10px] mb-2 font-black">
+                              COMING SOON
+                            </Typography>
+                            <Typography variant="h2" className="text-[var(--color-text-primary)] font-black uppercase tracking-tight italic mb-3">
+                              INVENTORY LOG
+                            </Typography>
+                            <Typography variant="p" className="text-slate-500 text-sm leading-relaxed text-center">
+                              Lot status monitoring and vehicle telemetry. Arriving soon.
+                            </Typography>
+                          </Card>
+                        </div>
+                      }
                     />
                   )
                   : <UpgradeAccessScreen feature={Feature.INVENTORY_MANAGEMENT} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
@@ -430,6 +482,42 @@ function MainAppFlow() {
                 profile?.isAdmin 
                   ? <DealerRequestsAdminView /> 
                   : <Navigate to="/" />
+              } 
+            />
+            <Route 
+              path="/deal-desk" 
+              element={
+                profile?.email === 'scottmoreau82@gmail.com'
+                  ? <DealDeskView />
+                  : <Navigate to="/" />
+              } 
+            />
+            <Route 
+              path="*" 
+              element={
+                <DashboardLayout
+                  header={
+                    <PageHeader
+                      title="Page Not Found"
+                      subtitle="This route doesn't exist"
+                      icon={Calculator}
+                    />
+                  }
+                  main={
+                    <div className="flex flex-col items-center justify-center py-20 gap-6">
+                      <Typography variant="mono" 
+                        className="text-slate-500 uppercase tracking-widest text-xs text-center">
+                        The page you're looking for doesn't exist or has moved.
+                      </Typography>
+                      <Button 
+                        onClick={() => window.location.href = '/'}
+                        className="bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] px-8 h-11 rounded-xl"
+                      >
+                        Return to Dashboard
+                      </Button>
+                    </div>
+                  }
+                />
               } 
             />
           </Routes>
@@ -575,7 +663,7 @@ function MainAppFlow() {
       {isMobile && (location.pathname === '/' || isDrawerOpen) && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
         <div className={cn(
           "fixed bottom-10 z-50 transition-all duration-500 ease-in-out md:hidden global-mobile-log-deal-fab",
-          isDrawerOpen ? "right-8 translate-x-0" : "left-1/2 -translate-x-1/2"
+          (isDrawerOpen || profile?.email === 'scottmoreau82@gmail.com') ? "right-6 translate-x-0" : "left-1/2 -translate-x-1/2"
         )}>
           <motion.div
             initial={{ y: 100, opacity: 0 }}
@@ -583,12 +671,12 @@ function MainAppFlow() {
             className="relative"
           >
             {/* Visual Echo/Glow */}
-            <div className="absolute inset-0 rounded-full bg-brand-primary/15 blur-lg animate-pulse" />
+            <div className="absolute inset-x-0 inset-y-0 rounded-full bg-brand-primary/15 blur-lg animate-pulse" />
             
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
-              className="relative h-12 w-12 rounded-full bg-brand-primary text-bg-deep shadow-glow glow-primary flex items-center justify-center border-2 border-bg-deep/40 transition-transform shadow-2xl"
+              className="relative h-12 w-12 rounded-full bg-brand-primary text-bg-deep shadow-glow glow-primary flex items-center justify-center border border-bg-deep/40 transition-transform shadow-2xl"
             >
               <Plus size={22} strokeWidth={3} />
             </motion.button>
@@ -596,8 +684,35 @@ function MainAppFlow() {
         </div>
       )}
 
+      {/* scottmoreau82@gmail.com MAGIC mobile center-bottom button */}
+      {isMobile && profile?.email === 'scottmoreau82@gmail.com' && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out md:hidden font-display">
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="relative"
+          >
+            {/* Visual Echo/Glow */}
+            <div className="absolute inset-x-0 inset-y-0 rounded-full bg-cyan-400/25 blur-lg animate-pulse" />
+            
+            <Link
+              to="/deal-desk"
+              className="relative h-12 px-6 rounded-full bg-cyan-400 text-bg-deep font-black shadow-glow glow-cyan flex items-center justify-center gap-2 border border-cyan-300 transition-transform shadow-2xl uppercase tracking-widest text-[10px]"
+            >
+              <Sparkles size={16} />
+              MAGIC
+            </Link>
+          </motion.div>
+        </div>
+      )}
+
       {/* FAB Clearance Zone for Mobile Scroll */}
-      {isMobile && <div className="h-20 pointer-events-none" />}
+      {isMobile && (location.pathname === '/' || isDrawerOpen) && 
+        !isNewDealOpen && !isNewSpiffOpen && 
+        !isFeedbackOpen && !isQuickNoteOpen && 
+        !isCompetitionOpen && (
+        <div className="h-20 pointer-events-none" />
+      )}
     </RootLayout>
   );
 }

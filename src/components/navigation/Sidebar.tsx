@@ -8,7 +8,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { Button } from '../ui/Button';
 import { ComingSoonIndicator } from '../ui/ComingSoonIndicator';
 import { Modal } from '../ui/Modal';
-import { Lock, Zap, CheckCircle2, ArrowUpRight, Star } from 'lucide-react';
+import { Lock, Zap, CheckCircle2, ArrowUpRight, Star, Sparkles } from 'lucide-react';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { navigationConfig } from './NavigationItems';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
@@ -168,6 +168,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </React.Fragment>
             );
           })}
+
+          {profile?.email === 'scottmoreau82@gmail.com' && (
+            <Link
+              to="/deal-desk"
+              title={isCollapsed ? "MAGIC" : undefined}
+              className={cn(
+                "flex items-center w-full py-3.5 transition-all group relative text-left",
+                location.pathname === '/deal-desk' ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
+              )}
+            >
+              <div className="w-16 shrink-0 flex items-center justify-center relative">
+                {location.pathname === '/deal-desk' && !isCollapsed && (
+                  <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                )}
+                <Sparkles 
+                  className={cn(
+                    SIDEBAR_NAV_ICON_SIZE_CLASS, 
+                    "shrink-0 transition-all text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]"
+                  )} 
+                />
+              </div>
+              <div className={cn(
+                "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
+                isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+              )}>
+                <span className={cn("font-bold uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all text-brand-primary", SIDEBAR_NAV_TYPOGRAPHY)}>
+                  MAGIC
+                </span>
+              </div>
+            </Link>
+          )}
 
           {/* Theme Toggle Button */}
           <button

@@ -15,6 +15,7 @@ import { TierBadge } from './TierBadge';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE, STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
+import { Sparkles } from 'lucide-react';
 
 /**
  * StripeItNavigationSystem - Mobile Header & Drawer
@@ -201,6 +202,25 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                         </React.Fragment>
                       );
                     })}
+                    {profile?.email === 'scottmoreau82@gmail.com' && (
+                      <Link
+                        to="/deal-desk"
+                        onClick={closeDrawer}
+                        className={cn(
+                          "relative flex items-center gap-3 rounded-xl px-4 py-3.5 font-bold uppercase tracking-wider transition-all text-left",
+                          SIDEBAR_NAV_TYPOGRAPHY,
+                          location.pathname === '/deal-desk' 
+                            ? "bg-white/[0.03] text-brand-primary" 
+                            : "text-brand-primary hover:bg-white/5"
+                        )}
+                      >
+                        {location.pathname === '/deal-desk' && (
+                          <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                        )}
+                        <Sparkles size={SIDEBAR_NAV_ICON_SIZE} className="text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)] animate-pulse" />
+                        MAGIC
+                      </Link>
+                    )}
                   </nav>
 
                   {/* Commission Architect Setup Warning (Mobile Utility - Part of Scrollable) */}

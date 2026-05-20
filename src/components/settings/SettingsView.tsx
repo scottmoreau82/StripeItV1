@@ -118,7 +118,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
           <div className="space-y-8">
             {/* Appearance Toggle */}
             <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0 border border-brand-primary/20">
                     <Sun className="text-brand-primary" size={20} />
@@ -356,7 +356,7 @@ const DealerProgressionPanel = ({ profile, isMobile, hideTitle }: { profile: Use
   if (isDealer) return null;
 
   const card = (
-    <Card className={cn("bg-brand-primary/[0.03] border-brand-primary/10 overflow-hidden relative group transition-all duration-500 hover:border-brand-primary/30", isMobile ? "p-6" : "p-10")}>
+    <Card className={cn("bg-brand-primary/[0.03] border-brand-primary/10 overflow-hidden relative group transition-all duration-500 hover:border-brand-primary/30", isMobile ? "p-4" : "p-10")}>
       <div className="absolute -right-20 -top-20 h-64 w-64 bg-brand-primary/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-brand-primary/10 transition-colors" />
       
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
@@ -369,10 +369,10 @@ const DealerProgressionPanel = ({ profile, isMobile, hideTitle }: { profile: Use
           </div>
           
           <div className="space-y-2">
-            <Typography variant="h2" className={cn("text-[var(--color-text-primary)] italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-2xl" : "text-4xl")}>
+            <Typography variant="h2" className={cn("text-[var(--color-text-primary)] italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-xl" : "text-4xl")}>
               Upgrade to Dealership
             </Typography>
-            <Typography variant="p" className="text-slate-400 text-sm leading-relaxed">
+            <Typography variant="p" className={cn("text-slate-400 leading-relaxed", isMobile ? "text-xs" : "text-sm")}>
               Connect your entire floor to the StripeIt ecosystem. Unlock dealership-wide logs, manager governance, and real-time dealer performance telemetry.
             </Typography>
           </div>
@@ -382,7 +382,7 @@ const DealerProgressionPanel = ({ profile, isMobile, hideTitle }: { profile: Use
           onClick={() => navigate('/dealer/request')}
           className={cn(
             "bg-white/5 hover:bg-brand-primary hover:text-bg-deep text-white font-black uppercase tracking-widest italic border border-white/10 transition-all rounded-2xl group",
-            isMobile ? "w-full h-14 text-xs" : "px-12 h-16 text-sm"
+            isMobile ? "w-full h-11 text-xs" : "px-12 h-16 text-sm"
           )}
         >
           Request Access
@@ -429,7 +429,7 @@ const JoinDealershipPanel = ({ profile, isMobile, hideTitle }: { profile: UserPr
   };
 
   const card = (
-    <Card className={cn("bg-indigo-500/5 border-indigo-500/10 overflow-hidden relative group transition-all duration-500 hover:border-indigo-500/30", isMobile ? "p-6" : "p-10")}>
+    <Card className={cn("bg-indigo-500/5 border-indigo-500/10 overflow-hidden relative group transition-all duration-500 hover:border-indigo-500/30", isMobile ? "p-4" : "p-10")}>
       <div className="absolute -right-20 -bottom-20 h-64 w-64 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/10 transition-colors" />
       
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
@@ -442,10 +442,10 @@ const JoinDealershipPanel = ({ profile, isMobile, hideTitle }: { profile: UserPr
           </div>
           
           <div className="space-y-2">
-            <Typography variant="h2" className={cn("text-[var(--color-text-primary)] italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-2xl" : "text-4xl")}>
+            <Typography variant="h2" className={cn("text-[var(--color-text-primary)] italic font-black uppercase tracking-tighter leading-none", isMobile ? "text-xl" : "text-4xl")}>
               Join Dealership
             </Typography>
-            <Typography variant="p" className="text-slate-400 text-sm leading-relaxed">
+            <Typography variant="p" className={cn("text-slate-400 leading-relaxed", isMobile ? "text-xs" : "text-sm")}>
               Elevate your account to Manager by entering a secure join code provided by your dealership administrator.
             </Typography>
           </div>
@@ -456,15 +456,15 @@ const JoinDealershipPanel = ({ profile, isMobile, hideTitle }: { profile: UserPr
             placeholder="ENTER JOIN CODE"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="bg-[var(--color-bg-card)] border-[var(--color-border)] h-14 text-center font-mono font-black tracking-[0.2em] uppercase text-[var(--color-text-primary)]"
+            className={cn("bg-[var(--color-bg-card)] border-[var(--color-border)] text-center font-mono font-black tracking-[0.2em] uppercase text-[var(--color-text-primary)]", isMobile ? "h-11" : "h-14")}
             required
           />
           <Button 
             type="submit"
             isLoading={isSubmitting}
             className={cn(
-              "bg-indigo-500 hover:bg-indigo-400 text-white font-black uppercase tracking-widest italic transition-all rounded-2xl h-14",
-              isMobile ? "w-full text-xs" : "text-sm"
+              "bg-indigo-500 hover:bg-indigo-400 text-white font-black uppercase tracking-widest italic transition-all rounded-2xl",
+              isMobile ? "w-full h-11 text-xs" : "h-14 text-sm"
             )}
           >
             Verify & Join

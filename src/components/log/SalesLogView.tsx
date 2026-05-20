@@ -581,8 +581,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         className={cn(
                           "rounded-xl p-3 shadow-md relative overflow-hidden border",
                           spiff.isChargeback 
-                            ? "bg-[#150A0A] border-rose-500/10 hover:bg-[#1a0e0e]" 
-                            : "bg-[#0A1512] border-emerald-500/10 hover:bg-[#0e1a17]"
+                            ? "bg-[var(--color-bg-card)] border-rose-500/10 hover:bg-[var(--color-bg-elevated)]" 
+                            : "bg-[var(--color-bg-card)] border-emerald-500/10 hover:bg-[var(--color-bg-elevated)]"
                         )}
                       >
                          <div className="flex items-center justify-between gap-3">
@@ -596,7 +596,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                <AppIcon name="billing" className={cn("h-4 w-4", spiff.isChargeback ? "text-rose-400" : "text-emerald-400")} />
                              </div>
                              <div className="min-w-0">
-                               <Typography variant="label" className="text-white text-xs font-black uppercase truncate block">
+                               <Typography variant="label" className="text-[var(--color-text-primary)] text-xs font-black uppercase truncate block">
                                  {spiff.label || (spiff.isChargeback ? 'CHARGEBACK' : 'spiff')}
                                </Typography>
                                <Typography variant="mono" className="text-[9px] text-slate-500 font-bold">
@@ -632,22 +632,22 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       className={cn(
                         "transition-all duration-300 border rounded-xl overflow-hidden shadow-lg",
                         isExpanded 
-                          ? "bg-[#0F111A] border-white/10 p-4" 
-                          : "bg-[#0A0C12] border-white/5 p-3"
+                          ? "bg-[var(--color-bg-elevated)] border-[var(--color-border)] p-4" 
+                          : "bg-[var(--color-bg-card)] border-[var(--color-border)] p-3"
                       )}
                       onClick={() => handleDealInteraction(deal)}
                     >
                       {/* Collapsed Row State */}
                       <div className={cn(
                         "flex items-center justify-between gap-3",
-                        isExpanded ? "mb-4 pb-4 border-b border-white/5" : ""
+                        isExpanded ? "mb-4 pb-4 border-b border-[var(--color-border)]" : ""
                       )}>
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={cn(
                             "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 border transition-colors",
-                            isExpanded ? "bg-white/10 border-white/20" : "bg-white/[0.03] border-white/5"
+                            isExpanded ? "bg-[var(--color-bg-elevated)] border-[var(--color-border)]" : "bg-[var(--color-bg-elevated)] border-[var(--color-border)]"
                           )}>
-                             <AppIcon name="user" className={cn("h-5 w-5", isExpanded ? "text-white" : "text-slate-600")} />
+                             <AppIcon name="user" className={cn("h-5 w-5", isExpanded ? "text-[var(--color-text-primary)]" : "text-slate-600")} />
                           </div>
                           <div className="min-w-0">
                             <Typography variant="label" className="text-[var(--color-text-primary)] text-xs font-black uppercase truncate block">
@@ -687,19 +687,19 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                <div>
                                  <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Front Gross</Typography>
-                                 <Typography variant="label" className="text-white font-black text-sm">
+                                 <Typography variant="label" className="text-[var(--color-text-primary)] font-black text-sm">
                                    ${deal.frontEndGross.toLocaleString()}
                                  </Typography>
                                </div>
                                <div>
                                  <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Back Gross</Typography>
-                                 <Typography variant="label" className="text-white font-black text-sm">
+                                 <Typography variant="label" className="text-[var(--color-text-primary)] font-black text-sm">
                                    ${deal.backEndGross.toLocaleString()}
                                  </Typography>
                                </div>
                             </div>
                             
-                            <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                            <div className="flex items-center justify-between pt-4 border-t border-[var(--color-border)]">
                                <div className="flex items-center gap-2">
                                  {commission?.explanation && (
                                    <button
@@ -718,7 +718,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                <div className="flex items-center gap-2">
                                  <button 
                                    onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
-                                   className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95"
+                                   className="p-2.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-elevated)] hover:border-[var(--color-border)] transition-all active:scale-95"
                                  >
                                    <AppIcon name="edit" size={16} />
                                  </button>

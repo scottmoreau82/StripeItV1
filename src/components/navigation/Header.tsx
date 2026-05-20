@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-deep flex items-center justify-center shadow-glow glow-primary">
             <AppIcon name="trending" className="text-white h-5 w-5" />
           </div>
-          <Typography variant="h4" className="font-display font-black italic text-white uppercase tracking-tighter">
+          <Typography variant="h4" className="font-display font-black italic text-[var(--color-text-primary)] uppercase tracking-tighter">
             StripeIt
           </Typography>
         </Link>
@@ -89,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
           <NotificationTray />
           <button 
             onClick={toggleDrawer}
-            className="text-white"
+            className="text-[var(--color-text-primary)]"
           >
             {isOpen ? <AppIcon name="close" className="h-6 w-6" /> : <AppIcon name="menu" className="h-6 w-6" />}
           </button>
@@ -112,15 +112,15 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-bg-deep flex flex-col shadow-2xl border-r border-border-subtle lg:hidden overflow-hidden"
+              className="fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-[var(--color-bg-surface)] flex flex-col shadow-2xl border-r border-border-subtle lg:hidden overflow-hidden"
             >
               <div className="flex flex-col h-full overflow-hidden">
-                <div className="p-6 border-b border-border-subtle bg-bg-deep/50 backdrop-blur-md z-10">
+                <div className="p-6 border-b border-border-subtle bg-[var(--color-bg-surface)] backdrop-blur-md z-10">
                   <div className="flex items-center gap-2">
                     <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary to-brand-deep flex items-center justify-center shadow-glow">
                       <AppIcon name="trending" className="text-white h-6 w-6" />
                     </div>
-                    <Typography variant="h3" className="font-display font-black italic text-white uppercase tracking-tighter">
+                    <Typography variant="h3" className="font-display font-black italic text-[var(--color-text-primary)] uppercase tracking-tighter">
                       StripeIt
                     </Typography>
                   </div>
@@ -232,9 +232,9 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                 </div>
 
                 {/* Footer Section (Pinned Footer) */}
-                <div className="p-6 space-y-4 border-t border-border-subtle bg-bg-deep/80 backdrop-blur-md z-10 shrink-0">
+                <div className="p-6 space-y-4 border-t border-border-subtle bg-[var(--color-bg-surface)] backdrop-blur-md z-10 shrink-0">
                   {/* User Account Hub (Mobile Drawer) */}
-                  <div className="relative bg-bg-card/40 border border-border-subtle rounded-3xl p-5 flex items-center gap-4 overflow-hidden group/user shadow-lg">
+                  <div className="relative bg-[var(--color-bg-card)] border border-border-subtle rounded-3xl p-5 flex items-center gap-4 overflow-hidden group/user shadow-lg">
                     {/* Background Accent */}
                     <div className="absolute -right-8 -bottom-8 h-24 w-24 bg-brand-primary/10 rounded-full blur-3xl pointer-events-none" />
                     
@@ -246,7 +246,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
                       )}
                     </div>
                     <div className="flex-1 min-w-0 relative z-10">
-                      <Typography variant="label" className="text-white block font-black truncate uppercase tracking-tight mb-1 text-sm">
+                      <Typography variant="label" className="text-[var(--color-text-primary)] block font-black truncate uppercase tracking-tight mb-1 text-sm">
                         {profile?.displayName || 'Operator'}
                       </Typography>
                       <div className="flex items-center gap-2 opacity-80 overflow-hidden">

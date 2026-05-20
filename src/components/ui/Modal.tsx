@@ -26,11 +26,14 @@ export const Modal: React.FC<ModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
     } else {
       document.body.style.overflow = 'unset';
+      document.body.classList.remove('modal-open');
     }
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.classList.remove('modal-open');
     };
   }, [isOpen]);
 
@@ -57,18 +60,18 @@ export const Modal: React.FC<ModalProps> = ({
               className
             )}
           >
-            <div className="p-8 md:p-10 pb-0 md:pb-0 flex-none flex items-center justify-between mb-8">
+            <div className="p-8 md:p-10 pb-0 md:pb-0 flex-none flex items-center justify-between mb-8 gap-4">
               {title && (
-                <div className="space-y-1">
-                  <Typography variant="h3" className="font-display font-black text-text-primary italic uppercase tracking-tighter">
+                <div className="space-y-1 text-center md:text-left flex-1 min-w-0">
+                  <Typography variant="h3" className="font-display font-black text-text-primary italic uppercase tracking-tighter text-center md:text-left">
                     {title}
                   </Typography>
-                  <div className="h-1 w-12 bg-brand-primary rounded shadow-cyan-glow" />
+                  <div className="h-1 w-12 bg-brand-primary rounded shadow-cyan-glow mx-auto md:mx-0" />
                 </div>
               )}
               <button 
                 onClick={onClose}
-                className="rounded-xl p-2 text-text-secondary hover:bg-bg-elevated hover:text-text-primary transition-all active:scale-95 border border-transparent hover:border-border-card"
+                className="rounded-xl p-2 text-text-secondary hover:bg-bg-elevated hover:text-text-primary transition-all active:scale-95 border border-transparent hover:border-border-card shrink-0"
               >
                 <AppIcon name="close" className="h-6 w-6" />
               </button>

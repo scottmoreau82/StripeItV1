@@ -10,6 +10,7 @@ interface EmptyStateProps {
   description: string;
   action?: React.ReactNode;
   className?: string;
+  variant?: 'default' | 'warning';
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
@@ -17,8 +18,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   title,
   description,
   action,
-  className
+  className,
+  variant = 'default'
 }) => {
+  const isWarning = variant === 'warning';
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -28,10 +31,21 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         className
       )}
     >
-      <div className="h-16 w-16 rounded-2xl bg-white/5 flex items-center justify-center mb-6 shadow-inner border border-white/5 text-slate-600">
+      <div className={cn(
+        "h-16 w-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-white/5",
+        isWarning 
+          ? "bg-rose-500/10 text-rose-400 border-rose-500/20" 
+          : "bg-white/5 text-slate-600"
+      )}>
         <AppIcon name={icon} size={32} />
       </div>
-      <Typography variant="h3" className="text-white mb-2 leading-tight">
+      <Typography 
+        variant="h3" 
+        className={cn(
+          "mb-2 leading-tight",
+          isWarning ? "text-rose-400 font-bold" : "text-white"
+        )}
+      >
         {title}
       </Typography>
       <Typography variant="p" className="text-slate-500 max-w-xs mx-auto mb-8 text-sm">

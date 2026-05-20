@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/src/lib/firebase';
+import { COLLECTIONS } from '@/src/constants';
 import { useAuth } from './AuthContext';
 
 type Theme = 'dark' | 'light';
@@ -37,8 +40,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Write to Firestore if authenticated
     if (user) {
-      // Use updateProfileData from AuthContext
-      updateProfileData({ themePreference: newTheme });
+      try {
+        const userDocRef = doc(db, COLLECTIONS.USERS, user.uid);
+        updateDoc(userDocRef, {
+          themePreference: newTheme,
+          updatedAt: serverTimestamp()
+        }).catch((err) => {
+          console.error("Failed to silently update theme in Firestore:", err);
+        });
+      } catch (err) {
+        console.error("Error setting up theme silent update in Firestore:", err);
+      }
     }
   };
 

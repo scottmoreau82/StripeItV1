@@ -729,6 +729,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           <EmptyState
             icon="history"
             title="No results found"
+            variant="warning"
             description="Try adjusting your search or options to find what you're looking for."
             action={
               <Button variant="outline" onClick={clearFilters} className="w-full">

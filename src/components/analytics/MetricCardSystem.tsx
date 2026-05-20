@@ -69,7 +69,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         
         <div className="relative z-10 flex items-center justify-between gap-4 px-2">
           <div className="flex flex-col">
-            <Typography variant="label" className={cn("text-slate-600 font-black tracking-[0.25em] block uppercase mb-0.5 opacity-80", isTelemetry ? "text-[6px]" : "text-[8px]")}>
+            <Typography variant="label" className={cn("text-slate-600 dark:text-slate-400 font-black tracking-[0.25em] block uppercase mb-0.5 opacity-80", isTelemetry ? "text-[6px]" : "text-[8px]")}>
               {label}
             </Typography>
             <Typography variant="h2" className={cn("text-text-primary/20 font-black italic uppercase tracking-tighter group-hover:text-text-primary/40 transition-colors", isTelemetry ? "text-lg" : "text-2xl")}>
@@ -106,7 +106,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           </div>
           
           <div className="flex-1 flex flex-col justify-center min-w-0">
-            <Typography variant="label" className="text-slate-600 font-black tracking-widest block uppercase text-[7px] mb-1 opacity-70">
+            <Typography variant="label" className="text-slate-400 font-black tracking-widest block uppercase text-[7px] mb-1 opacity-90">
               {label}
             </Typography>
             
@@ -119,9 +119,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                 {subValue && !loading && (
                   <div className="flex flex-col items-end shrink-0 ml-auto leading-none gap-0.5">
                     <Typography variant="mono" className="text-[12px] text-brand-primary font-black italic tracking-tighter">
-                      {subValue}<span className="text-[7px] ml-0.5 text-slate-600 font-bold uppercase not-italic">/mo</span>
+                      {subValue}<span className="text-[7px] ml-0.5 text-slate-400 font-bold uppercase not-italic">/mo</span>
                     </Typography>
-                    <Typography variant="mono" className="text-[6px] text-slate-600 uppercase font-bold tracking-[0.1em]">Pacing</Typography>
+                    <Typography variant="mono" className="text-[6px] text-slate-400 uppercase font-bold tracking-[0.1em]">Pacing</Typography>
                   </div>
                 )}
               </div>
@@ -131,7 +131,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                   <Typography variant="mono" className="text-[10px] text-emerald-400 font-bold italic tracking-tighter">
                     +{secondaryValue}
                   </Typography>
-                  <Typography variant="mono" className="text-[8px] text-slate-700 uppercase font-bold tracking-widest">
+                  <Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-bold tracking-widest">
                     {secondaryLabel}
                   </Typography>
                 </div>
@@ -171,7 +171,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         </div>
         
         <div className={cn("flex flex-col w-full", isTelemetry ? "space-y-0" : "space-y-0.5")}>
-          <Typography variant="label" className={cn("text-slate-600 font-black tracking-widest block uppercase shrink-0 opacity-70", isTelemetry ? "text-[6.5px]" : "text-[7.5px]")}>
+          <Typography variant="label" className={cn("text-slate-400 font-black tracking-widest block uppercase shrink-0 opacity-90", isTelemetry ? "text-[6.5px]" : "text-[7.5px]")}>
             {label}
           </Typography>
           
@@ -184,7 +184,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
               <Typography variant="mono" className={cn("text-emerald-400 font-bold italic tracking-tighter", isTelemetry ? "text-[11px]" : "text-[14px]")}>
                 +{secondaryValue}
               </Typography>
-              <Typography variant="mono" className={cn("text-slate-700 uppercase font-bold tracking-widest", isTelemetry ? "text-[7px]" : "text-[9px]")}>
+              <Typography variant="mono" className={cn("text-slate-500 uppercase font-bold tracking-widest", isTelemetry ? "text-[7px]" : "text-[9px]")}>
                 {secondaryLabel}
               </Typography>
             </div>
@@ -193,12 +193,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           {subValue && !loading && !isTelemetry && (
             <div className="flex items-center gap-1.5 mt-2 animate-in fade-in slide-in-from-left-2 duration-700">
                <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.1em]">Pace:</Typography>
-               <Typography variant="mono" className="text-[13px] text-brand-primary font-black italic tracking-tighter">{subValue}<span className="text-[8px] ml-0.5 text-slate-600 font-bold uppercase not-italic">/mo</span></Typography>
+               <Typography variant="mono" className="text-[13px] text-brand-primary font-black italic tracking-tighter">{subValue}<span className="text-[8px] ml-0.5 text-slate-400 font-bold uppercase not-italic">/mo</span></Typography>
             </div>
           )}
           
           {subtext && !isTelemetry && (
-            <Typography variant="mono" className="text-[9px] text-slate-600 font-bold block mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Typography variant="mono" className="text-[9px] text-slate-500 font-bold block mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
               {subtext}
             </Typography>
           )}

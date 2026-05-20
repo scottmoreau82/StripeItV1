@@ -9,9 +9,11 @@
   --color-border: rgba(255, 255, 255, 0.06);
   --color-text-primary: #FFFFFF;
   --color-text-secondary: #94A3B8;
-  --color-text-muted: #475569;
+  --color-text-muted: #64748B;
   --color-brand-primary: #00D4FF;
   --color-brand-secondary: #7C3AED;
+  --color-slate-500: #94A3B8;
+  --color-slate-600: #64748B;
 
   /* Legacy compatibility for existing UI components that might use these directly */
   --accent-primary: var(--color-brand-primary);
@@ -37,6 +39,8 @@
   --color-text-muted: #64748B;
   --color-brand-primary: #00D4FF;
   --color-brand-secondary: #7C3AED;
+  --color-slate-500: #4B5563;
+  --color-slate-600: #374151;
 
   /* Legacy compatibility overrides */
   --accent-primary: var(--color-brand-primary);

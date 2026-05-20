@@ -263,9 +263,9 @@ service cloud.firestore {
       
       allow update: if isBootstrapAdmin() || (isOwner(userId) && (
         // Standard profile updates
-        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'suspensionAcknowledgedAt']) ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'themePreference', 'suspensionAcknowledgedAt']) ||
         // Joining an organization via join code/invite (transitioning from personal or none)
-        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId', 'role', 'department', 'suspensionAcknowledgedAt']) &&
+        (incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'dashboardPreference', 'updatedAt', 'preferences', 'dealershipId', 'orgId', 'role', 'department', 'themePreference', 'suspensionAcknowledgedAt']) &&
          existing().role in ['sales', 'none', ''] &&
          incoming().role in ['manager', 'sales'] &&
          incoming().get('isAdmin', false) == false &&

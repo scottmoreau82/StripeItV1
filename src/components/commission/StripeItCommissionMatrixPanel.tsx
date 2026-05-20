@@ -484,7 +484,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 }) => {
   const { deals, triggerError } = useAppData();
   const { profile, addToast } = useAuth();
-  const isSimulationEngineEnabled = false;
+  const isSimulationEngineEnabled = true;
 
   // Import/Export States
   const [importPreview, setImportPreview] = useState<Partial<PayPlan> | null>(null);

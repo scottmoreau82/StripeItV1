@@ -289,6 +289,10 @@ export interface Deal {
   splitPercentage?: number;
   notes?: string;
   status: DealStatus;
+  lenderName?: string;
+  reserveAmount?: number;
+  tradeAllowance?: number;
+  tradeACV?: number;
   createdAt: number;
   updatedAt: number;
 }

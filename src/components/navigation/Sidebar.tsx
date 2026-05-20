@@ -184,7 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   SIDEBAR_NAV_ICON_SIZE_CLASS, 
                   "shrink-0 transition-all text-brand-primary drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]"
                 )} 
-              />
+                />
             </div>
             <div className={cn(
               "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
@@ -196,84 +196,82 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </button>
         </nav>
+      </div>
 
-        {/* Action Area within Scrollable */}
-        <div className={cn("py-8 transition-all duration-300 flex flex-col gap-3", isCollapsed ? "px-0" : "px-5 pr-6")}>
-          <Button 
-            onClick={onLogDeal}
-            title={isCollapsed ? "Log Deal" : undefined}
-            className={cn(
-              "bg-brand-primary hover:bg-brand-primary/90 text-bg-deep font-black shadow-glow glow-primary transition-all flex items-center justify-center group overflow-hidden",
-              isCollapsed 
-                ? "h-10 w-10 p-0 rounded-xl mx-auto" 
-                : "h-14 w-full rounded-xl px-4"
-            )}
-          >
-            <AppIcon name="plus" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 stroke-[3px] group-hover:scale-110 transition-transform")} />
-            <span className={cn(
-              "tracking-widest uppercase truncate whitespace-nowrap transition-all duration-300",
-              isCollapsed ? "opacity-0 w-0 ml-0 invisible" : "opacity-100 w-auto ml-2 visible"
-            )}>
-              Log Deal
-            </span>
-          </Button>
-
-          {/* New SPIFF & Utility Row */}
-          {!isCollapsed && (
-            <div className="flex gap-2 h-10">
-              {profile?.subscriptionTier === SubscriptionTier.FREE ? (
-                <button 
-                  onClick={() => setIsSpiffModalOpen(true)}
-                  className="flex-1 rounded-lg bg-white/[0.03] border border-white/10 text-slate-500 hover:bg-white/5 hover:border-brand-primary/30 transition-all flex items-center justify-center gap-2 group p-1"
-                  title="SPIFF - Basic+ Exclusive"
-                >
-                  <AppIcon name="lock" size={14} className="text-slate-600 transition-colors group-hover:text-brand-primary" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-700 transition-colors group-hover:text-slate-400">SPIFF</span>
-                </button>
-              ) : (
-                <button 
-                  onClick={onLogSpiff}
-                  className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2 group p-1"
-                  title="Log SPIFF Adjustment"
-                >
-                  <AppIcon name="billing" size={14} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-[9px] font-black uppercase tracking-widest">SPIFF</span>
-                </button>
-              )}
-              
-              <button 
-                className="flex-1 rounded-lg bg-white/5 border border-white/10 text-slate-500 hover:bg-white/10 transition-all flex items-center justify-center gap-2 group p-1 cursor-not-allowed opacity-40"
-                title="Reserved Slot"
-                disabled
-              >
-                <AppIcon name="target" size={14} className="group-hover:scale-110 transition-transform" />
-                <span className="text-[9px] font-black uppercase tracking-widest">---</span>
-              </button>
-            </div>
+      {/* Action Area (Pinned) */}
+      <div className={cn("shrink-0 py-6 transition-all duration-300 flex flex-col gap-3", isCollapsed ? "px-0" : "px-5 pr-6")}>
+        <Button 
+          onClick={onLogDeal}
+          title={isCollapsed ? "Log Deal" : undefined}
+          className={cn(
+            "bg-brand-primary hover:bg-brand-primary/90 text-bg-deep font-black shadow-glow glow-primary transition-all flex items-center justify-center group overflow-hidden",
+            isCollapsed 
+              ? "h-10 w-10 p-0 rounded-xl mx-auto" 
+              : "h-14 w-full rounded-xl px-4"
           )}
+        >
+          <AppIcon name="plus" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 stroke-[3px] group-hover:scale-110 transition-transform")} />
+          <span className={cn(
+            "tracking-widest uppercase truncate whitespace-nowrap transition-all duration-300",
+            isCollapsed ? "opacity-0 w-0 ml-0 invisible" : "opacity-100 w-auto ml-2 visible"
+          )}>
+            Log Deal
+          </span>
+        </Button>
 
-          {isCollapsed && (
-            profile?.subscriptionTier === SubscriptionTier.FREE ? (
+        {/* New SPIFF & Utility Row */}
+        {!isCollapsed && (
+          <div className="flex gap-2 h-10">
+            {profile?.subscriptionTier === SubscriptionTier.FREE ? (
               <button 
                 onClick={() => setIsSpiffModalOpen(true)}
-                className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 text-slate-600 flex items-center justify-center mx-auto hover:border-brand-primary/30 hover:text-brand-primary transition-all"
+                className="flex-1 rounded-lg bg-white/[0.03] border border-white/10 text-slate-500 hover:bg-white/5 hover:border-brand-primary/30 transition-all flex items-center justify-center gap-2 group p-1"
                 title="SPIFF - Basic+ Exclusive"
               >
-                <AppIcon name="lock" size={18} />
+                <AppIcon name="lock" size={14} className="text-slate-400 transition-colors group-hover:text-brand-primary" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 transition-colors group-hover:text-slate-400">SPIFF</span>
               </button>
             ) : (
               <button 
                 onClick={onLogSpiff}
-                className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto hover:bg-emerald-500/20 transition-all"
+                className="flex-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center justify-center gap-2 group p-1"
                 title="Log SPIFF Adjustment"
               >
-                <AppIcon name="billing" size={18} />
+                <AppIcon name="billing" size={14} className="group-hover:scale-110 transition-transform" />
+                <span className="text-[9px] font-black uppercase tracking-widest">SPIFF</span>
               </button>
-            )
-          )}
-          
-          <div className="h-12 shrink-0" />
-        </div>
+            )}
+            
+            <button 
+              className="flex-1 rounded-lg bg-white/5 border border-white/10 text-slate-500 hover:bg-white/10 transition-all flex items-center justify-center gap-2 group p-1 cursor-not-allowed opacity-60"
+              title="Reserved Slot"
+              disabled
+            >
+              <AppIcon name="target" size={14} className="group-hover:scale-110 transition-transform" />
+              <span className="text-[9px] font-black uppercase tracking-widest">---</span>
+            </button>
+          </div>
+        )}
+
+        {isCollapsed && (
+          profile?.subscriptionTier === SubscriptionTier.FREE ? (
+            <button 
+              onClick={() => setIsSpiffModalOpen(true)}
+              className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 text-slate-600 flex items-center justify-center mx-auto hover:border-brand-primary/30 hover:text-brand-primary transition-all"
+              title="SPIFF - Basic+ Exclusive"
+            >
+              <AppIcon name="lock" size={18} />
+            </button>
+          ) : (
+            <button 
+              onClick={onLogSpiff}
+              className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto hover:bg-emerald-500/20 transition-all"
+              title="Log SPIFF Adjustment"
+            >
+              <AppIcon name="billing" size={18} />
+            </button>
+          )
+        )}
       </div>
 
       {/* Commission Architect Setup Warning & Analytics (Utility Layer - Anchored but separate) */}

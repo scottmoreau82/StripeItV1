@@ -52,7 +52,7 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
   onStatusChange
 }) => {
   const { deals } = useAppData();
-  const [showGross, setShowGross] = React.useState(false);
+  const [showGross, setShowGross] = React.useState(true);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
   const [showExplanation, setShowExplanation] = React.useState(false);
@@ -108,14 +108,14 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
         className="max-w-md"
       >
         <div className="space-y-6">
-          <Typography variant="p" className="text-slate-400">
-            Are you sure you want to permanently delete the deal for <span className="text-white font-black">{deal.customerName}</span>? This action cannot be undone.
+          <Typography variant="p" className="text-[var(--color-text-secondary)]">
+            Are you sure you want to permanently delete the deal for <span className="text-[var(--color-text-primary)] font-black">{deal.customerName}</span>? This action cannot be undone.
           </Typography>
           
           <div className="flex gap-4">
             <Button 
               variant="outline" 
-              className="flex-1 rounded-2xl border-white/5"
+              className="flex-1 rounded-2xl border-[var(--color-border)]"
               onClick={() => setShowConfirm(false)}
               disabled={isDeleting}
             >
@@ -135,25 +135,51 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
       {/* Header Info */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Typography variant="h2" className="text-white mb-1">
+          <Typography variant="h2" className="text-[var(--color-text-primary)] mb-1">
             {deal.customerName}
           </Typography>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="relative group">
-              <Badge status={deal.status} className="cursor-pointer hover:opacity-80 transition-opacity">
-                {deal.status}
-              </Badge>
-              
-              {/* Status Quick Switcher (Desktop focus, simple variant) */}
-              <select 
-                className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                value={deal.status}
-                onChange={(e) => onStatusChange?.(deal, e.target.value as DealStatus)}
-              >
-                {Object.values(DealStatus).map(status => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
+            <div className="flex flex-wrap items-center gap-1.5" id="status-pills-row">
+              {Object.values(DealStatus).map((status) => {
+                const isActive = deal.status === status;
+                const isDisabled = deal.status === DealStatus.FINALIZED;
+                const label = status === DealStatus.SUBMITTED ? 'PENDING' : status.toUpperCase();
+                
+                let activeClass = '';
+                switch (status) {
+                  case DealStatus.DRAFT:
+                    activeClass = 'bg-slate-500 text-white border-transparent';
+                    break;
+                  case DealStatus.SUBMITTED:
+                    activeClass = 'bg-amber-500 text-black border-transparent font-semibold';
+                    break;
+                  case DealStatus.FINALIZED:
+                    activeClass = 'bg-emerald-500 text-white border-transparent';
+                    break;
+                  case DealStatus.CANCELLED:
+                    activeClass = 'bg-rose-500 text-white border-transparent';
+                    break;
+                }
+
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    id={`status-pill-${status.toLowerCase()}`}
+                    disabled={isDisabled}
+                    onClick={() => onStatusChange?.(deal, status)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider border transition-all duration-200",
+                      isActive 
+                        ? activeClass 
+                        : "bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-slate-500",
+                      isDisabled && (isActive ? "opacity-90" : "opacity-40 cursor-not-allowed")
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
             <div className="flex items-center gap-1.5 text-slate-500">
               <Calendar size={12} />
@@ -163,7 +189,7 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
         </div>
         <div className="text-right">
           <Typography variant="mono" className="text-[10px] text-slate-600 block mb-1">STK #</Typography>
-          <Typography variant="label" className="text-white">
+          <Typography variant="label" className="text-[var(--color-text-primary)]">
             {deal.stockNumber || '---'}
           </Typography>
         </div>
@@ -172,7 +198,7 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
       {/* Main Info Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Vehicle Info */}
-        <Card className="p-4 bg-white/[0.02] border-white/5">
+        <Card className="p-4 bg-[var(--color-bg-card)] border-[var(--color-border)]">
           <div className="flex items-center gap-2 mb-4 text-slate-500">
             <Car size={14} />
             <Typography variant="mono" className="text-[10px] uppercase tracking-wider">Vehicle Details</Typography>
@@ -180,18 +206,30 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
           <div className="space-y-3">
             <div>
               <Typography variant="small" className="text-slate-500 block">Unit</Typography>
-              <Typography variant="p" className="text-white">{deal.purchasedVehicle}</Typography>
+              <Typography variant="p" className="text-[var(--color-text-primary)]">{deal.purchasedVehicle}</Typography>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Typography variant="small" className="text-slate-500 block">Condition</Typography>
-                <Typography variant="p" className="text-white capitalize">{deal.newOrUsed}</Typography>
+                <Typography variant="p" className="text-[var(--color-text-primary)] capitalize">{deal.newOrUsed}</Typography>
               </div>
               <div>
                 <Typography variant="small" className="text-slate-500 block">Deal #</Typography>
-                <Typography variant="p" className="text-white">{deal.dealNumber || 'N/A'}</Typography>
+                <Typography variant="p" className="text-[var(--color-text-primary)]">{deal.dealNumber || 'N/A'}</Typography>
               </div>
             </div>
+            {deal.lenderName && (
+              <div>
+                <Typography variant="small" className="text-slate-500 block">Lender</Typography>
+                <Typography variant="p" className="text-[var(--color-text-primary)]">{deal.lenderName}</Typography>
+              </div>
+            )}
+            {deal.reserveAmount !== undefined && deal.reserveAmount > 0 && (
+              <div>
+                <Typography variant="small" className="text-slate-500 block">Reserve</Typography>
+                <Typography variant="p" className="text-[var(--color-text-primary)]">${deal.reserveAmount.toLocaleString()}</Typography>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -207,7 +245,7 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
             </div>
             <button 
               onClick={() => setShowGross(!showGross)}
-              className="text-slate-500 hover:text-white transition-colors"
+              className="text-slate-500 hover:text-[var(--color-text-primary)] transition-colors"
             >
               {showGross ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
@@ -239,29 +277,29 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="pt-4 border-t border-white/5 space-y-3 overflow-hidden"
+                    className="pt-4 border-t border-[var(--color-border)] space-y-3 overflow-hidden"
                   >
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Typography variant="small" className="text-slate-600 mb-0.5 block">Front Gross</Typography>
-                        <Typography variant="label" className="text-white">${deal.frontEndGross.toLocaleString()}</Typography>
+                        <Typography variant="label" className="text-[var(--color-text-primary)]">${deal.frontEndGross.toLocaleString()}</Typography>
                         <Typography variant="mono" className="text-[9px] text-slate-500 block">@ {effectiveFrontRate}%</Typography>
                       </div>
                       <div>
                         <Typography variant="small" className="text-slate-600 mb-0.5 block">Back Gross</Typography>
-                        <Typography variant="label" className="text-white">${deal.backEndGross.toLocaleString()}</Typography>
+                        <Typography variant="label" className="text-[var(--color-text-primary)]">${deal.backEndGross.toLocaleString()}</Typography>
                         <Typography variant="mono" className="text-[9px] text-slate-500 block">@ {effectiveBackRate}%</Typography>
                       </div>
                     </div>
 
-                    <div className="pt-2 space-y-2 border-t border-white/[0.03]">
+                    <div className="pt-2 space-y-2 border-t border-[var(--color-border)]">
                       <div className="flex justify-between">
                         <Typography variant="small" className="text-slate-500">Front Comm.</Typography>
-                        <Typography variant="small" className="text-slate-300">${commission.frontEndCommission.toLocaleString()}</Typography>
+                        <Typography variant="small" className="text-[var(--color-text-secondary)]">${commission.frontEndCommission.toLocaleString()}</Typography>
                       </div>
                       <div className="flex justify-between">
                         <Typography variant="small" className="text-slate-500">Back Comm.</Typography>
-                        <Typography variant="small" className="text-slate-300">${commission.backEndCommission.toLocaleString()}</Typography>
+                        <Typography variant="small" className="text-[var(--color-text-secondary)]">${commission.backEndCommission.toLocaleString()}</Typography>
                       </div>
                       {deal.isSplitDeal && (
                         <div className="flex justify-between text-amber-500/80">
@@ -287,7 +325,7 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
 
       {/* Internal Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-4 bg-slate-950 border-white/5 h-full">
+        <Card className="p-4 bg-[var(--color-bg-card)] border-[var(--color-border)] h-full">
           <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-600 mb-4 block">Salesperson Notes</Typography>
           <Typography variant="p" className="text-slate-400 text-sm italic">
             {deal.notes || "No notes provided."}
@@ -295,18 +333,18 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
         </Card>
 
         <div className="space-y-4">
-          <Card className="p-4 bg-white/[0.01] border-white/5">
+          <Card className="p-4 bg-[var(--color-bg-elevated)] border-[var(--color-border)]">
             <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-600 mb-4 block">Timeline</Typography>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Typography variant="small" className="text-slate-500">Created</Typography>
-                <Typography variant="mono" className="text-[9px] text-slate-400">
+                <Typography variant="mono" className="text-[9px] text-[var(--color-text-secondary)]">
                   {formatDateSafe(deal.createdAt, "Pp")}
                 </Typography>
               </div>
               <div className="flex items-center justify-between">
                 <Typography variant="small" className="text-slate-500">Last Updated</Typography>
-                <Typography variant="mono" className="text-[9px] text-slate-400">
+                <Typography variant="mono" className="text-[9px] text-[var(--color-text-secondary)]">
                   {formatDateSafe(deal.updatedAt, "Pp")}
                 </Typography>
               </div>
@@ -314,19 +352,40 @@ export const DealDetailView: React.FC<DealDetailViewProps> = ({
           </Card>
           
           {deal.tradedVehicle && (
-            <Card className="p-4 bg-white/[0.01] border-white/5">
+            <Card className="p-4 bg-[var(--color-bg-elevated)] border-[var(--color-border)]">
               <div className="flex items-center gap-2 mb-2 text-slate-500">
                 <Tag size={12} />
                 <Typography variant="mono" className="text-[10px] uppercase tracking-wider">Trade-In</Typography>
               </div>
-              <Typography variant="p" className="text-slate-300">{deal.tradedVehicle}</Typography>
+              <Typography variant="p" className="text-[var(--color-text-secondary)] mb-1">{deal.tradedVehicle}</Typography>
+              
+              {(deal.tradeAllowance !== undefined || deal.tradeACV !== undefined) && (
+                <div className="grid grid-cols-2 gap-4 mt-3 pt-2 border-t border-[var(--color-border)]">
+                  {deal.tradeAllowance !== undefined && (
+                    <div>
+                      <Typography variant="small" className="text-slate-500 block">Allowance</Typography>
+                      <Typography variant="p" className="text-[var(--color-text-primary)]">
+                        ${deal.tradeAllowance.toLocaleString()}
+                      </Typography>
+                    </div>
+                  )}
+                  {deal.tradeACV !== undefined && (
+                    <div>
+                      <Typography variant="small" className="text-slate-500 block">ACV</Typography>
+                      <Typography variant="p" className="text-[var(--color-text-primary)]">
+                        ${deal.tradeACV.toLocaleString()}
+                      </Typography>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           )}
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-4 pt-4 border-t border-white/5">
+      <div className="flex gap-4 pt-4 border-t border-[var(--color-border)]">
         <Button 
           variant="outline" 
           className={cn(

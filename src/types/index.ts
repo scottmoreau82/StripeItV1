@@ -124,6 +124,14 @@ export interface PayPlanTier {
   backRetroactive?: boolean;
   newMiniOverride?: number;
   usedMiniOverride?: number;
+  newFrontRate?: number;
+  newBackRate?: number;
+  usedFrontRate?: number;
+  usedBackRate?: number;
+  cpoFrontRate?: number;
+  cpoBackRate?: number;
+  usePerTypRates?: boolean;
+  usePerTypeRates?: boolean;
 }
 
 export enum VolumeBonusType {

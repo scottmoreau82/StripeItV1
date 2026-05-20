@@ -287,11 +287,51 @@ const evaluateRules = (deal: Deal, rules: PayPlanRule[], plan?: PayPlan): { bonu
 export const estimateCommission = (
   deal: Deal, 
   plan: PayPlan, 
-  overrides?: { frontRate?: number; backRate?: number; newMini?: number; usedMini?: number; totalUnitsAtMonthEnd?: number }
+  overrides?: { 
+    frontRate?: number; 
+    backRate?: number; 
+    newMini?: number; 
+    usedMini?: number; 
+    totalUnitsAtMonthEnd?: number;
+    newFrontRate?: number;
+    newBackRate?: number;
+    usedFrontRate?: number;
+    usedBackRate?: number;
+    cpoFrontRate?: number;
+    cpoBackRate?: number;
+    usePerTypeRates?: boolean;
+    usePerTypRates?: boolean;
+  }
 ): CommissionResult => {
   // 1. Calculate raw percentages
-  const frontRate = overrides?.frontRate ?? plan.frontEndPercentage;
-  const backRate = overrides?.backRate ?? plan.backEndPercentage;
+  let frontRate = overrides?.frontRate ?? plan.frontEndPercentage;
+  let backRate = overrides?.backRate ?? plan.backEndPercentage;
+
+  const usePerTypeRates = overrides?.usePerTypeRates || overrides?.usePerTypRates;
+  if (usePerTypeRates) {
+    if (deal.newOrUsed === 'new') {
+      if (overrides?.newFrontRate !== undefined && overrides?.newFrontRate !== null) {
+        frontRate = overrides.newFrontRate;
+      }
+      if (overrides?.newBackRate !== undefined && overrides?.newBackRate !== null) {
+        backRate = overrides.newBackRate;
+      }
+    } else if (deal.newOrUsed === 'used') {
+      if (overrides?.usedFrontRate !== undefined && overrides?.usedFrontRate !== null) {
+        frontRate = overrides.usedFrontRate;
+      }
+      if (overrides?.usedBackRate !== undefined && overrides?.usedBackRate !== null) {
+        backRate = overrides.usedBackRate;
+      }
+    } else if (deal.newOrUsed === 'cpo') {
+      if (overrides?.cpoFrontRate !== undefined && overrides?.cpoFrontRate !== null) {
+        frontRate = overrides.cpoFrontRate;
+      }
+      if (overrides?.cpoBackRate !== undefined && overrides?.cpoBackRate !== null) {
+        backRate = overrides.cpoBackRate;
+      }
+    }
+  }
 
   const frontComm = deal.frontEndGross * (frontRate / 100);
   const backComm = deal.backEndGross * (backRate / 100);
@@ -429,6 +469,15 @@ const resolveInheritedRate = (tierIndex: number, tiers: PayPlanTier[], field: 'f
   return defaultRate;
 };
 
+const resolveInheritedNullableRate = (tierIndex: number, tiers: PayPlanTier[], field: keyof PayPlanTier): any => {
+  if (tierIndex < 0) return undefined;
+  for (let i = tierIndex; i >= 0; i--) {
+    const val = tiers[i][field];
+    if (val !== undefined && val !== null) return val;
+  }
+  return undefined;
+};
+
 /**
  * Canonical calculation for a single deal within a monthly context.
  */
@@ -459,6 +508,18 @@ export const calculateDealCommission = (deal: Deal, plan: PayPlan, allDealsForMo
     backRate = resolveInheritedRate(highestTierReachedIndex, tiers, 'backRate', plan.backEndPercentage);
   }
 
+  const activeFrontIndex = highestTierReached?.frontRetroactive ? highestTierReachedIndex : tierAtSaleIndex;
+  const activeBackIndex = highestTierReached?.backRetroactive ? highestTierReachedIndex : tierAtSaleIndex;
+
+  const newFrontRate = resolveInheritedNullableRate(activeFrontIndex, tiers, 'newFrontRate');
+  const newBackRate = resolveInheritedNullableRate(activeBackIndex, tiers, 'newBackRate');
+  const usedFrontRate = resolveInheritedNullableRate(activeFrontIndex, tiers, 'usedFrontRate');
+  const usedBackRate = resolveInheritedNullableRate(activeBackIndex, tiers, 'usedBackRate');
+  const cpoFrontRate = resolveInheritedNullableRate(activeFrontIndex, tiers, 'cpoFrontRate');
+  const cpoBackRate = resolveInheritedNullableRate(activeBackIndex, tiers, 'cpoBackRate');
+  const usePerTypeRates = resolveInheritedNullableRate(activeFrontIndex, tiers, 'usePerTypeRates') || 
+                           resolveInheritedNullableRate(activeFrontIndex, tiers, 'usePerTypRates');
+
   // 3. Determine Mini Overrides from Mini Ladder
   let newMini = undefined;
   let usedMini = undefined;
@@ -481,7 +542,15 @@ export const calculateDealCommission = (deal: Deal, plan: PayPlan, allDealsForMo
     backRate, 
     newMini, 
     usedMini,
-    totalUnitsAtMonthEnd: totalUnits 
+    totalUnitsAtMonthEnd: totalUnits,
+    newFrontRate,
+    newBackRate,
+    usedFrontRate,
+    usedBackRate,
+    cpoFrontRate,
+    cpoBackRate,
+    usePerTypeRates: !!usePerTypeRates,
+    usePerTypRates: !!usePerTypeRates
   });
 };
 

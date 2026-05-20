@@ -482,7 +482,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   onSubmit,
   isLoading
 }) => {
-  const { deals, triggerError } = useAppData();
+  const { deals, triggerError, monthlySpiffs = [] } = useAppData();
   const { profile, addToast } = useAuth();
   const isSimulationEngineEnabled = true;
 
@@ -572,6 +572,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   });
 
   // Simulation State System
+  const [simMode, setSimMode] = useState<'live' | 'scenario'>('live');
+
   const [simulationData, setSimulationData] = useState({
     name: 'Standard Scenario',
     totalUnits: 12,
@@ -607,9 +609,47 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     setSimulationData(scenario);
   };
 
+  const currentMonthDeals = useMemo(() => {
+    const prefix = new Date().toISOString()
+      .slice(0, 7);
+    return deals.filter(d => 
+      d.date.startsWith(prefix));
+  }, [deals]);
+
+  const activeSimData = useMemo(() => {
+    if (simMode === 'live') {
+      const stats = {
+        totalUnits: 0,
+        frontGrossTotal: 0,
+        backGrossTotal: 0,
+        newUnits: 0,
+        usedUnits: 0,
+        cpoUnits: 0,
+        splitDeals: 0,
+        hoursWorked: simulationData.hoursWorked
+      };
+      currentMonthDeals.forEach(d => {
+        const pct = d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1;
+        stats.totalUnits += pct;
+        stats.frontGrossTotal += d.frontEndGross || 0;
+        stats.backGrossTotal += d.backEndGross || 0;
+        if (d.isSplitDeal) stats.splitDeals += 1;
+        if (d.newOrUsed === 'new') stats.newUnits += pct;
+        else if (d.newOrUsed === 'used') stats.usedUnits += pct;
+        else if (d.newOrUsed === 'cpo') stats.cpoUnits += pct;
+      });
+      return {
+        ...simulationData,
+        ...stats,
+        name: 'Live Data Month'
+      };
+    }
+    return simulationData;
+  }, [simMode, currentMonthDeals, simulationData]);
+
   const simulatedDeals = useMemo(() => {
     if (!isSimulationEngineEnabled) return [];
-    const deals: Deal[] = [];
+    const dealsList: Deal[] = [];
     const count = simulationData.totalUnits;
     if (count <= 0) return [];
 
@@ -624,7 +664,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 
       const isSplit = i < simulationData.splitDeals;
 
-      deals.push({
+      dealsList.push({
         id: `sim-${i}`,
         frontEndGross: avgFront,
         backEndGross: avgBack,
@@ -640,8 +680,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
         updatedAt: Date.now()
       } as Deal);
     }
-    return deals;
-  }, [simulationData]);
+    return dealsList;
+  }, [simulationData, isSimulationEngineEnabled]);
+
+  const currentMonthSpiffs = useMemo(() => {
+    const now = new Date();
+    const currentMonthStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+    return (monthlySpiffs || []).filter(s => s.month === currentMonthStr);
+  }, [monthlySpiffs]);
 
   const simEarnings = useMemo(() => {
     if (!isSimulationEngineEnabled) {
@@ -651,11 +697,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
         grandTotal: 0,
         dealResults: [],
         tierBonuses: [],
-        hourlyCompensation: null
+        hourlyCompensation: null,
+        totalMonthlySpiffs: 0
       };
     }
-    return calculatePeriodEarnings(simulatedDeals, formData as PayPlan);
-  }, [simulatedDeals, formData, isSimulationEngineEnabled]);
+    const targetDeals = simMode === 'live' ? currentMonthDeals : simulatedDeals;
+    const targetSpiffs = simMode === 'live' ? currentMonthSpiffs : [];
+    return calculatePeriodEarnings(targetDeals, formData as PayPlan, targetSpiffs);
+  }, [simulatedDeals, currentMonthDeals, currentMonthSpiffs, simMode, formData, isSimulationEngineEnabled]);
 
   const currentUnits = useMemo(() => {
     const currentMonthPrefix = new Date().toISOString().slice(0, 7);
@@ -671,6 +720,26 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   const activeMiniTier = useMemo(() => {
     return getActiveMiniTier(currentUnits, formData.miniTiers);
   }, [currentUnits, formData.miniTiers]);
+
+  const activeTierDisplay = useMemo(() => {
+    if (!activeTier) return 'BASE';
+    const idx = formData.tiers.findIndex(t => t.id === activeTier.id);
+    if (idx <= 0) return 'BASE';
+    return `${activeTier.frontRate}% front / ${activeTier.backRate}% back`;
+  }, [activeTier, formData.tiers]);
+
+  const nextTier = useMemo(() => {
+    if (!formData.tiers || formData.tiers.length === 0) return null;
+    const sorted = [...formData.tiers].sort((a, b) => Number(a.threshold ?? 0) - Number(b.threshold ?? 0));
+    return sorted.find(t => Number(t.threshold ?? 0) > currentUnits);
+  }, [formData.tiers, currentUnits]);
+
+  const progressPercent = useMemo(() => {
+    if (!nextTier) return 100;
+    const thresh = Number(nextTier.threshold ?? 0);
+    if (thresh <= 0) return 100;
+    return Math.min(100, (currentUnits / thresh) * 100);
+  }, [nextTier, currentUnits]);
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     minis_hourly: false,
@@ -1253,6 +1322,88 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           )}
         </div>
 
+        {isSimulationEngineEnabled && simMode === 'live' && (
+          <Card className="bg-emerald-500/[0.03] border border-emerald-500/10 p-6 rounded-[2rem] mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <Typography variant="mono" className="text-[10px] text-emerald-400 font-extrabold tracking-widest uppercase">
+                LIVE PAYCHECK PROJECTION
+              </Typography>
+            </div>
+
+            {/* Row 1 — Three stat cells side by side */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="flex flex-col">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Projected Pay</Typography>
+                <Typography variant="sans" className="text-3xl font-black text-emerald-400 tracking-tight">
+                  ${Math.round(simEarnings.grandTotal).toLocaleString()}
+                </Typography>
+              </div>
+              <div className="flex flex-col">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Units MTD</Typography>
+                <Typography variant="sans" className="text-3xl font-black text-white tracking-tight">
+                  {currentUnits}
+                </Typography>
+              </div>
+              <div className="flex flex-col">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Active Tier</Typography>
+                <Typography variant="sans" className="text-2xl font-black text-cyan-400 tracking-tight leading-9">
+                  {activeTierDisplay}
+                </Typography>
+              </div>
+            </div>
+
+            {/* Row 2 — Breakdown row */}
+            <div className="grid grid-cols-3 gap-6 py-4 border-t border-b border-white/5 bg-white/[0.01] px-4 rounded-xl">
+              <div className="flex flex-col">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-wider">Deal Commission</Typography>
+                <Typography variant="mono" className="text-sm text-slate-300 font-black mt-1">
+                  ${Math.round(simEarnings.totalPayout).toLocaleString()}
+                </Typography>
+              </div>
+              <div className="flex flex-col">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-wider">Volume Bonuses</Typography>
+                <Typography variant="mono" className="text-sm text-slate-300 font-black mt-1">
+                  ${Math.round(simEarnings.totalTierBonuses).toLocaleString()}
+                </Typography>
+              </div>
+              <div className="flex flex-col">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-wider">SPIFFs</Typography>
+                <Typography variant="mono" className="text-sm text-slate-300 font-black mt-1">
+                  ${Math.round(currentMonthSpiffs.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString()}
+                </Typography>
+              </div>
+            </div>
+
+            {/* Row 3 — Slim progress bar */}
+            <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
+              <div className="flex justify-between items-center">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-wider">
+                  Tier Progress
+                </Typography>
+                {nextTier ? (
+                  <Typography variant="mono" className="text-[10px] text-slate-400">
+                    {currentUnits} / {Number(nextTier.threshold ?? 0)} Units to next tier
+                  </Typography>
+                ) : (
+                  <Typography variant="mono" className="text-[10px] text-emerald-400 font-black tracking-widest uppercase">
+                    MAX TIER
+                  </Typography>
+                )}
+              </div>
+              <div className="h-1 w-full bg-white/[0.02] border border-white/5 rounded-full overflow-hidden">
+                <div 
+                  className={cn("h-full rounded-full transition-all duration-500", nextTier ? "bg-cyan-500" : "bg-emerald-500")}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* StripeItMinisAndHourlySystem - Minis & Hourly Section */}
         <MatrixSection
           id="minis_hourly"
@@ -1539,7 +1690,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       hasError ? "ring-1 ring-red-500/30 border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.05)]" : "hover:border-white/10"
                     )}
                   >
-                    <div className="flex flex-col lg:grid lg:grid-cols-[210px_1fr_1fr_48px] gap-8 items-center w-full">
+                    <div className="flex flex-col lg:grid lg:grid-cols-[210px_1fr_1fr_100px_48px] gap-8 items-center w-full">
                       {/* Units Range - Column 1 (Fixed 210px) */}
                       <div className="flex items-center gap-3 w-full justify-center lg:justify-start">
                         <div className="w-[85px] shrink-0">
@@ -1622,7 +1773,20 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                         </div>
                       </div>
 
-                      {/* Controls - Column 4 (Fixed 48px) */}
+                      {/* Per Type Toggle - Column 4 (Fixed 100px) */}
+                      <div className="flex items-center justify-center lg:justify-end w-full">
+                        <MatrixItemChip 
+                          label="PER TYPE"
+                          active={!!(tier.usePerTypeRates || tier.usePerTypRates)}
+                          onClick={() => {
+                            const nextVal = !(tier.usePerTypeRates || tier.usePerTypRates);
+                            updateTier(tier.id, { usePerTypeRates: nextVal, usePerTypRates: nextVal });
+                          }}
+                          color="amber"
+                        />
+                      </div>
+
+                      {/* Controls - Column 5 (Fixed 48px) */}
                       <div className="flex items-center justify-end w-full">
                         <button 
                           type="button" 
@@ -1634,6 +1798,155 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                         </button>
                       </div>
                     </div>
+
+                    {/* Expandable sub-grid for per-deal-type rates */}
+                    {!!(tier.usePerTypeRates || tier.usePerTypRates) && (
+                      <div className="mt-4 pt-4 border-t border-white/[0.03] space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                        {/* Row 1 — NEW */}
+                        <div className="flex flex-col lg:grid lg:grid-cols-[210px_1fr_1fr_100px_48px] gap-8 items-center w-full">
+                          <div className="flex items-center w-full justify-center lg:justify-start">
+                            <Typography variant="mono" className="text-[10px] text-amber-500 font-extrabold uppercase tracking-widest pl-2">
+                              NEW DEALS
+                            </Typography>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="w-[60px] shrink-0 text-right">
+                              <Typography variant="mono" className="text-[9px] text-cyan-500 font-black uppercase tracking-widest">Front Rate</Typography>
+                            </div>
+                            <div className="flex-1 min-w-[80px]">
+                              <MatrixInputGroup 
+                                value={tier.newFrontRate}
+                                placeholder={tier.frontRate?.toString() || formData.frontEndPercentage?.toString()}
+                                onChange={(val) => updateTier(tier.id, { newFrontRate: val === '' ? undefined : parseFloat(val) })}
+                                color="cyan"
+                                suffix="%"
+                                size="sm"
+                                className="w-full"
+                              />
+                            </div>
+                            <div className="w-[50px] shrink-0" />
+                          </div>
+
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="w-[60px] shrink-0 text-right">
+                              <Typography variant="mono" className="text-[9px] text-purple-500 font-black uppercase tracking-widest">Back Rate</Typography>
+                            </div>
+                            <div className="flex-1 min-w-[80px]">
+                              <MatrixInputGroup 
+                                value={tier.newBackRate}
+                                placeholder={tier.backRate?.toString() || formData.backEndPercentage?.toString()}
+                                onChange={(val) => updateTier(tier.id, { newBackRate: val === '' ? undefined : parseFloat(val) })}
+                                color="purple"
+                                suffix="%"
+                                size="sm"
+                                className="w-full"
+                              />
+                            </div>
+                            <div className="w-[50px] shrink-0" />
+                          </div>
+
+                          <div className="w-full" />
+                          <div />
+                        </div>
+
+                        {/* Row 2 — USED */}
+                        <div className="flex flex-col lg:grid lg:grid-cols-[210px_1fr_1fr_100px_48px] gap-8 items-center w-full">
+                          <div className="flex items-center w-full justify-center lg:justify-start">
+                            <Typography variant="mono" className="text-[10px] text-purple-400 font-extrabold uppercase tracking-widest pl-2">
+                              USED DEALS
+                            </Typography>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="w-[60px] shrink-0 text-right">
+                              <Typography variant="mono" className="text-[9px] text-cyan-500 font-black uppercase tracking-widest">Front Rate</Typography>
+                            </div>
+                            <div className="flex-1 min-w-[80px]">
+                              <MatrixInputGroup 
+                                value={tier.usedFrontRate}
+                                placeholder={tier.frontRate?.toString() || formData.frontEndPercentage?.toString()}
+                                onChange={(val) => updateTier(tier.id, { usedFrontRate: val === '' ? undefined : parseFloat(val) })}
+                                color="cyan"
+                                suffix="%"
+                                size="sm"
+                                className="w-full"
+                              />
+                            </div>
+                            <div className="w-[50px] shrink-0" />
+                          </div>
+
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="w-[60px] shrink-0 text-right">
+                              <Typography variant="mono" className="text-[9px] text-purple-500 font-black uppercase tracking-widest">Back Rate</Typography>
+                            </div>
+                            <div className="flex-1 min-w-[80px]">
+                              <MatrixInputGroup 
+                                value={tier.usedBackRate}
+                                placeholder={tier.backRate?.toString() || formData.backEndPercentage?.toString()}
+                                onChange={(val) => updateTier(tier.id, { usedBackRate: val === '' ? undefined : parseFloat(val) })}
+                                color="purple"
+                                suffix="%"
+                                size="sm"
+                                className="w-full"
+                              />
+                            </div>
+                            <div className="w-[50px] shrink-0" />
+                          </div>
+
+                          <div className="w-full" />
+                          <div />
+                        </div>
+
+                        {/* Row 3 — CPO */}
+                        <div className="flex flex-col lg:grid lg:grid-cols-[210px_1fr_1fr_100px_48px] gap-8 items-center w-full">
+                          <div className="flex items-center w-full justify-center lg:justify-start">
+                            <Typography variant="mono" className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest pl-2">
+                              CPO DEALS
+                            </Typography>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="w-[60px] shrink-0 text-right">
+                              <Typography variant="mono" className="text-[9px] text-cyan-500 font-black uppercase tracking-widest">Front Rate</Typography>
+                            </div>
+                            <div className="flex-1 min-w-[80px]">
+                              <MatrixInputGroup 
+                                value={tier.cpoFrontRate}
+                                placeholder={tier.frontRate?.toString() || formData.frontEndPercentage?.toString()}
+                                onChange={(val) => updateTier(tier.id, { cpoFrontRate: val === '' ? undefined : parseFloat(val) })}
+                                color="cyan"
+                                suffix="%"
+                                size="sm"
+                                className="w-full"
+                              />
+                            </div>
+                            <div className="w-[50px] shrink-0" />
+                          </div>
+
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="w-[60px] shrink-0 text-right">
+                              <Typography variant="mono" className="text-[9px] text-purple-500 font-black uppercase tracking-widest">Back Rate</Typography>
+                            </div>
+                            <div className="flex-1 min-w-[80px]">
+                              <MatrixInputGroup 
+                                value={tier.cpoBackRate}
+                                placeholder={tier.backRate?.toString() || formData.backEndPercentage?.toString()}
+                                onChange={(val) => updateTier(tier.id, { cpoBackRate: val === '' ? undefined : parseFloat(val) })}
+                                color="purple"
+                                suffix="%"
+                                size="sm"
+                                className="w-full"
+                              />
+                            </div>
+                            <div className="w-[50px] shrink-0" />
+                          </div>
+
+                          <div className="w-full" />
+                          <div />
+                        </div>
+                      </div>
+                    )}
 
                     {hasError && (
                       <div className="mt-3 pt-2 border-t border-red-500/10 flex items-center gap-2 text-red-400 animate-in fade-in slide-in-from-top-1 duration-300">
@@ -1984,6 +2297,33 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
             </div>
             
             <div className="flex items-center gap-3">
+               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.02] border border-white/5 h-10">
+                 <button
+                   type="button"
+                   onClick={() => setSimMode('live')}
+                   className={cn(
+                     "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border cursor-pointer",
+                     simMode === 'live'
+                       ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                       : "bg-white/[0.02] text-slate-500 border-white/5 hover:text-slate-400"
+                   )}
+                 >
+                   LIVE
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => setSimMode('scenario')}
+                   className={cn(
+                     "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border cursor-pointer",
+                     simMode === 'scenario'
+                       ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                       : "bg-white/[0.02] text-slate-500 border-white/5 hover:text-slate-400"
+                   )}
+                 >
+                   SCENARIO
+                 </button>
+               </div>
+
                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5">
                  <Typography variant="mono" className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Presets:</Typography>
                  <div className="flex items-center gap-1.5">
@@ -1991,7 +2331,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                      <button
                        key={s.id || idx}
                        type="button"
-                       onClick={() => loadScenario(s)}
+                       onClick={() => { loadScenario(s); setSimMode('scenario'); }}
                        className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[9px] font-black text-slate-400 hover:text-white transition-colors"
                      >
                        {s.name}
@@ -2008,7 +2348,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                </div>
             </div>
           </div>
-
+ 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="bg-[#0A0C12]/80 border-cyan-500/20 p-6 rounded-[2rem] border-2 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -2022,19 +2362,19 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
               <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
                 <div className="flex flex-col">
                   <Typography variant="mono" className="text-[8px] text-slate-600 uppercase">Per Unit Avg</Typography>
-                  <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.grandTotal / (simulationData.totalUnits || 1)).toLocaleString()}</Typography>
+                  <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.grandTotal / (activeSimData.totalUnits || 1)).toLocaleString()}</Typography>
                 </div>
-                {simulationData.frontGrossTotal + simulationData.backGrossTotal > 0 && (
+                {activeSimData.frontGrossTotal + activeSimData.backGrossTotal > 0 && (
                   <div className="flex flex-col items-end">
                     <Typography variant="mono" className="text-[8px] text-slate-600 uppercase">Gross %</Typography>
                     <Typography variant="mono" className="text-xs text-brand-primary font-black">
-                      {((simEarnings.grandTotal / (simulationData.frontGrossTotal + simulationData.backGrossTotal)) * 100).toFixed(1)}%
+                      {((simEarnings.grandTotal / (activeSimData.frontGrossTotal + activeSimData.backGrossTotal)) * 100).toFixed(1)}%
                     </Typography>
                   </div>
                 )}
               </div>
             </Card>
-
+ 
             <Card className="bg-[#0A0C12]/80 border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all">
               <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Deal Payouts</Typography>
               <div className="space-y-3">
@@ -2044,7 +2384,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                 </div>
                 <div className="flex items-center justify-between">
                   <Typography variant="mono" className="text-[10px] text-slate-600">Avg / Deal:</Typography>
-                  <Typography variant="mono" className="text-xs text-slate-400 font-black">${Math.round(simEarnings.totalPayout / (simulationData.totalUnits || 1)).toLocaleString()}</Typography>
+                  <Typography variant="mono" className="text-xs text-slate-400 font-black">${Math.round(simEarnings.totalPayout / (activeSimData.totalUnits || 1)).toLocaleString()}</Typography>
                 </div>
                 <div className="flex items-center justify-between pt-1 border-t border-white/[0.03]">
                   <Typography variant="mono" className="text-[10px] text-slate-600">Minis Hit:</Typography>
@@ -2052,7 +2392,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                 </div>
               </div>
             </Card>
-
+ 
             <Card className="bg-[#0A0C12]/80 border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all">
               <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Bonus Rewards</Typography>
               <div className="space-y-3">
@@ -2070,7 +2410,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                 </div>
               </div>
             </Card>
-
+ 
             <Card className="bg-[#0A0C12]/80 border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all">
               <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Hourly & Draws</Typography>
               {simEarnings.hourlyCompensation ? (
@@ -2097,7 +2437,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
               )}
             </Card>
           </div>
-
+ 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-6">
               {/* General Month Simulation Section */}
@@ -2112,10 +2452,10 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                 summary={
                   <div className="flex items-center gap-3">
                     <div className="px-3 py-1 rounded-lg bg-white/5 border border-white/10">
-                      <Typography variant="mono" className="text-[10px] text-white font-black">{simulationData.totalUnits} Units</Typography>
+                      <Typography variant="mono" className="text-[10px] text-white font-black">{activeSimData.totalUnits} Units</Typography>
                     </div>
                     <div className="px-3 py-1 rounded-lg bg-white/5 border border-white/10">
-                      <Typography variant="mono" className="text-[10px] text-white font-black">${simulationData.frontGrossTotal.toLocaleString()} FG</Typography>
+                      <Typography variant="mono" className="text-[10px] text-white font-black">${activeSimData.frontGrossTotal.toLocaleString()} FG</Typography>
                     </div>
                   </div>
                 }
@@ -2125,47 +2465,52 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     <div className="space-y-4">
                       <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Month Identity</Typography>
                       <Input 
-                        value={simulationData.name}
+                        value={activeSimData.name}
                         onChange={(e) => setSimulationData(p => ({ ...p, name: e.target.value }))}
                         className="h-12 bg-black/40 border-white/5 font-black text-lg"
                         placeholder="Scenario Name (e.g. Dream Month)"
+                        disabled={simMode === 'live'}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Total Units</Typography>
                         <MatrixInputGroup 
-                          value={simulationData.totalUnits}
+                          value={activeSimData.totalUnits}
                           onChange={(val) => setSimulationData(p => ({ ...p, totalUnits: parseInt(val) || 0 }))}
+                          disabled={simMode === 'live'}
                         />
                       </div>
                       <div className="space-y-2">
                         <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Split Ratio</Typography>
                         <MatrixInputGroup 
-                          value={simulationData.splitDeals}
+                          value={activeSimData.splitDeals}
                           onChange={(val) => setSimulationData(p => ({ ...p, splitDeals: parseInt(val) || 0 }))}
+                          disabled={simMode === 'live'}
                         />
                       </div>
                     </div>
                   </div>
-
+ 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <CurrencyInput 
                       label="Monthly Front Gross" 
-                      value={simulationData.frontGrossTotal}
+                      value={activeSimData.frontGrossTotal}
                       onChange={(e) => setSimulationData(p => ({ ...p, frontGrossTotal: normalizeCurrencyNumber(e.target.value) }))}
                       labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
                       className="h-12"
+                      disabled={simMode === 'live'}
                     />
                     <CurrencyInput 
                       label="Monthly Back Gross" 
-                      value={simulationData.backGrossTotal}
+                      value={activeSimData.backGrossTotal}
                       onChange={(e) => setSimulationData(p => ({ ...p, backGrossTotal: normalizeCurrencyNumber(e.target.value) }))}
                       labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
                       className="h-12"
+                      disabled={simMode === 'live'}
                     />
                   </div>
-
+ 
                   {/* Adaptive Unit Mix */}
                   <div className="p-8 rounded-[2rem] bg-white/[0.01] border border-white/5">
                     <div className="flex items-center justify-between mb-8">
@@ -2173,10 +2518,10 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       <div className="flex items-center gap-2">
                         <div className={cn(
                           "w-2 h-2 rounded-full",
-                          simulationData.newUnits + simulationData.usedUnits + simulationData.cpoUnits === simulationData.totalUnits ? "bg-emerald-500" : "bg-amber-500"
+                          activeSimData.newUnits + activeSimData.usedUnits + activeSimData.cpoUnits === activeSimData.totalUnits ? "bg-emerald-500" : "bg-amber-500"
                         )} />
                         <Typography variant="mono" className="text-[10px] text-white font-black">
-                          {simulationData.newUnits + simulationData.usedUnits + simulationData.cpoUnits} / {simulationData.totalUnits}
+                          {activeSimData.newUnits + activeSimData.usedUnits + activeSimData.cpoUnits} / {activeSimData.totalUnits}
                         </Typography>
                       </div>
                     </div>
@@ -2184,25 +2529,28 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       <div className="space-y-4">
                         <Typography variant="mono" className="text-[9px] text-cyan-500 font-black uppercase">New Deals</Typography>
                         <MatrixInputGroup 
-                          value={simulationData.newUnits}
+                          value={activeSimData.newUnits}
                           onChange={(val) => setSimulationData(p => ({ ...p, newUnits: parseInt(val) || 0 }))}
                           color="cyan"
+                          disabled={simMode === 'live'}
                         />
                       </div>
                       <div className="space-y-4">
                         <Typography variant="mono" className="text-[9px] text-purple-500 font-black uppercase">Used Deals</Typography>
                         <MatrixInputGroup 
-                          value={simulationData.usedUnits}
+                          value={activeSimData.usedUnits}
                           onChange={(val) => setSimulationData(p => ({ ...p, usedUnits: parseInt(val) || 0 }))}
                           color="purple"
+                          disabled={simMode === 'live'}
                         />
                       </div>
                       <div className="space-y-4">
                         <Typography variant="mono" className="text-[9px] text-emerald-500 font-black uppercase">CPO Deals</Typography>
                         <MatrixInputGroup 
-                          value={simulationData.cpoUnits}
+                          value={activeSimData.cpoUnits}
                           onChange={(val) => setSimulationData(p => ({ ...p, cpoUnits: parseInt(val) || 0 }))}
                           color="neutral"
+                          disabled={simMode === 'live'}
                         />
                       </div>
                     </div>
@@ -2222,9 +2570,9 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
                   summary={
                     <div className="flex items-center gap-2">
-                       <Typography variant="mono" className="text-[10px] text-cyan-400 font-black">Tier {formData.tiers.findIndex(t => t.id === getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.id) + 1}</Typography>
+                       <Typography variant="mono" className="text-[10px] text-cyan-400 font-black">Tier {formData.tiers.findIndex(t => t.id === getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.id) + 1}</Typography>
                        <div className="h-1 w-8 rounded-full bg-white/5 overflow-hidden">
-                         <div className="h-full bg-cyan-500" style={{ width: `${Math.min(100, (simulationData.totalUnits / (getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.maxUnits || 1)) * 100)}%` }} />
+                          <div className="h-full bg-cyan-500" style={{ width: `${Math.min(100, (activeSimData.totalUnits / (getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.maxUnits || 1)) * 100)}%` }} />
                        </div>
                     </div>
                   }
@@ -2236,22 +2584,22 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                            <div>
                              <Typography variant="mono" className="text-[10px] text-cyan-500 font-black uppercase tracking-widest mb-1 block">Active Strategy</Typography>
                              <Typography variant="h2" className="text-white font-black uppercase">
-                               TIER {formData.tiers.findIndex(t => t.id === getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.id) + 1} ARCHITECTURE
+                               TIER {formData.tiers.findIndex(t => t.id === getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.id) + 1} ARCHITECTURE
                              </Typography>
                            </div>
                            <div className="space-y-4">
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Front End Rate:</span>
-                               <span className="text-white font-bold">{getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.frontRate}%</span>
+                               <span className="text-white font-bold">{getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.frontRate}%</span>
                              </div>
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Back End Rate:</span>
-                               <span className="text-white font-bold">{getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.backRate}%</span>
+                               <span className="text-white font-bold">{getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.backRate}%</span>
                              </div>
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Retroactive Application:</span>
-                               <span className={cn("font-bold text-[10px]", getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.frontRetroactive ? "text-emerald-400" : "text-slate-600")}>
-                                 {getActiveCommissionTier(simulationData.totalUnits, formData.tiers)?.frontRetroactive ? "ENABLED" : "INACTIVE"}
+                               <span className={cn("font-bold text-[10px]", getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.frontRetroactive ? "text-emerald-400" : "text-slate-600")}>
+                                 {getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.frontRetroactive ? "ENABLED" : "INACTIVE"}
                                </span>
                              </div>
                            </div>
@@ -2280,7 +2628,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   summary={
                     <div className="flex items-center gap-2">
                        <Typography variant="mono" className="text-[10px] text-emerald-400 font-black">
-                         ${getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.newMini} / ${getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.usedMini}
+                         ${getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.newMini} / ${getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.usedMini}
                        </Typography>
                     </div>
                   }
@@ -2292,21 +2640,21 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                            <div>
                              <Typography variant="mono" className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-1 block">Mini Profile</Typography>
                              <Typography variant="h2" className="text-white font-black uppercase">
-                               RANGE {formData.miniTiers.findIndex(t => t.id === getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.id) + 1} METRICS
+                               RANGE {formData.miniTiers.findIndex(t => t.id === getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.id) + 1} METRICS
                              </Typography>
                            </div>
                            <div className="space-y-4">
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">New Deal Mini:</span>
-                               <span className="text-white font-bold">${getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.newMini}</span>
+                               <span className="text-white font-bold">${getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.newMini}</span>
                              </div>
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Used Deal Mini:</span>
-                               <span className="text-white font-bold">${getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.usedMini}</span>
+                               <span className="text-white font-bold">${getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.usedMini}</span>
                              </div>
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Unit Threshold:</span>
-                               <span className="text-white font-bold">{getActiveMiniTier(simulationData.totalUnits, formData.miniTiers)?.threshold}+ Units</span>
+                               <span className="text-white font-bold">{getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.threshold}+ Units</span>
                              </div>
                            </div>
                         </div>

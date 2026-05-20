@@ -101,7 +101,7 @@ const MatrixSection: React.FC<MatrixSectionProps> = ({
             {icon}
           </div>
           <div className="flex flex-col">
-            <Typography variant="h3" className="text-white text-xl group-hover/header:text-brand-primary transition-colors">{title}</Typography>
+            <Typography variant="h3" className="text-[var(--color-text-primary)] text-xl group-hover/header:text-brand-primary transition-colors">{title}</Typography>
             <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">{subtitle}</Typography>
           </div>
         </div>
@@ -122,7 +122,7 @@ const MatrixSection: React.FC<MatrixSectionProps> = ({
               type="button"
               onClick={onToggle}
               className={cn(
-                "p-2 rounded-xl bg-white/[0.02] border border-white/5 text-slate-500 hover:text-white transition-all shrink-0",
+                "p-2 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-slate-500 hover:text-[var(--color-text-primary)] transition-all shrink-0",
                 isExpanded && "bg-brand-primary/10 border-brand-primary/20 text-brand-primary"
               )}
             >
@@ -160,11 +160,11 @@ interface MatrixItemChipProps {
 
 const MatrixItemChip: React.FC<MatrixItemChipProps> = ({ label, active, onClick, color = 'cyan' }) => {
   const styles = {
-    cyan: active ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]" : "bg-white/[0.02] text-slate-700 border-white/5",
-    green: active ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]" : "bg-white/[0.02] text-slate-700 border-white/5",
-    purple: active ? "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]" : "bg-white/[0.02] text-slate-700 border-white/5",
-    amber: active ? "bg-amber-500/20 text-amber-400 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)]" : "bg-white/[0.02] text-slate-700 border-white/5",
-    slate: active ? "bg-slate-500/20 text-slate-300 border-slate-500/30 shadow-[0_0_15px_rgba(100,116,139,0.15)]" : "bg-white/[0.02] text-slate-700 border-white/5",
+    cyan: active ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]" : "bg-[var(--color-bg-elevated)] text-slate-700 border-[var(--color-border)]",
+    green: active ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]" : "bg-[var(--color-bg-elevated)] text-slate-700 border-[var(--color-border)]",
+    purple: active ? "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.15)]" : "bg-[var(--color-bg-elevated)] text-slate-700 border-[var(--color-border)]",
+    amber: active ? "bg-amber-500/20 text-amber-400 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)]" : "bg-[var(--color-bg-elevated)] text-slate-700 border-[var(--color-border)]",
+    slate: active ? "bg-slate-500/20 text-slate-300 border-slate-500/30 shadow-[0_0_15px_rgba(100,116,139,0.15)]" : "bg-[var(--color-bg-elevated)] text-slate-700 border-[var(--color-border)]",
   };
 
   return (
@@ -209,7 +209,7 @@ const ActiveChip: React.FC<{ active: boolean; onClick: () => void }> = ({ active
       "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-sm border",
       active 
         ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)] ring-1 ring-cyan-500/20"
-        : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-600"
+        : "bg-[var(--color-bg-elevated)] text-slate-700 border-[var(--color-border)] hover:border-[var(--color-border)] hover:text-slate-600"
     )}
   >
     ACTIVE
@@ -237,8 +237,8 @@ const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemo
 
   return (
     <div className={cn(
-      "group bg-[#0A0C12] border border-white/5 p-4 md:p-5 rounded-2xl transition-all duration-300 relative",
-      !bonus.active ? "opacity-40 grayscale-[0.5]" : "hover:border-white/10",
+      "group bg-[var(--color-bg-card)] border border-[var(--color-border)] p-4 md:p-5 rounded-2xl transition-all duration-300 relative",
+      !bonus.active ? "opacity-40 grayscale-[0.5]" : "hover:border-[var(--color-border)]",
       isInvalidOrdering && "ring-1 ring-red-500/30 border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.05)]"
     )}>
       <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
@@ -269,7 +269,7 @@ const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemo
                  value={bonus.amount}
                  onChange={(e) => onUpdate({ amount: normalizeCurrencyNumber(e.target.value) })}
                  hideLabel
-                 className="h-10 bg-black/40 border-white/5 font-black text-white"
+                 className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] font-black text-[var(--color-text-primary)]"
                />
              </div>
              {isRetro && (
@@ -288,7 +288,7 @@ const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemo
               ]}
               value={bonus.type}
               onChange={(e) => onUpdate({ type: e.target.value as VolumeBonusType })}
-              className="h-10 bg-black/40 border-white/5 w-[130px] font-black text-[10px] uppercase"
+              className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] w-[130px] font-black text-[10px] uppercase text-[var(--color-text-primary)]"
             />
 
             <Select
@@ -300,7 +300,7 @@ const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemo
               ]}
               value={bonus.filter}
               onChange={(e) => onUpdate({ filter: e.target.value as VolumeBonusFilter })}
-              className="h-10 bg-black/40 border-white/5 w-[110px] font-black text-[10px] uppercase"
+              className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] w-[110px] font-black text-[10px] uppercase text-[var(--color-text-primary)]"
             />
           </div>
 
@@ -311,7 +311,7 @@ const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemo
                  onClick={() => onUpdate({ scope: bonus.scope === VolumeBonusScope.ALL_UNITS ? VolumeBonusScope.THRESHOLD_PLUS : VolumeBonusScope.ALL_UNITS })}
                  className={cn(
                    "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
-                   bonus.scope === VolumeBonusScope.ALL_UNITS ? "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.1)]" : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-500"
+                   bonus.scope === VolumeBonusScope.ALL_UNITS ? "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.1)]" : "bg-[var(--color-bg-elevated)] text-slate-700 border-[var(--color-border)] hover:border-[var(--color-border)] hover:text-slate-500"
                  )}
                >
                  {bonus.scope === VolumeBonusScope.ALL_UNITS ? 'RETRO' : 'TIER+'}
@@ -349,7 +349,7 @@ const VolumeBonusRow: React.FC<VolumeBonusRowProps> = ({ bonus, onUpdate, onRemo
 
       {/* Optional Note Row if present */}
       {bonus.notes && (
-        <div className="mt-3 pt-3 border-t border-white/[0.03]">
+        <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
           <Typography variant="mono" className="text-[9px] text-slate-600 italic">Note: {bonus.notes}</Typography>
         </div>
       )}
@@ -392,7 +392,7 @@ const MatrixInputGroup: React.FC<MatrixInputGroupProps> = ({
   };
 
   const fieldStyles = {
-    neutral: "bg-[#050608] border-white/5 text-white focus:border-white/20",
+    neutral: "bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)] focus:border-white/20",
     cyan: "bg-cyan-500/[0.03] border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.05)] focus:border-cyan-400/60",
     purple: "bg-purple-500/[0.03] border-purple-500/30 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.05)] focus:border-purple-400/60",
     amber: "bg-amber-500/[0.03] border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.05)] focus:border-amber-400/60",
@@ -451,7 +451,7 @@ const MatrixInputGroup: React.FC<MatrixInputGroupProps> = ({
             size === 'sm' ? 'h-10 px-2' : 'h-12 px-5',
             fieldStyles[color],
             isError && "text-red-500 !border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]",
-            isInfinite && "text-slate-500 bg-white/[0.02] border-white/[0.03] cursor-default",
+            isInfinite && "text-slate-500 bg-[var(--color-bg-elevated)] border-[var(--color-border)] cursor-default",
             disabled && "opacity-50 cursor-not-allowed",
             showGhost && "opacity-30 !text-slate-500 italic"
           )}
@@ -1303,14 +1303,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   <Typography variant="mono" className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Unlock Architect CSV</Typography>
                 </div>
                 <div className="space-y-1">
-                  <Typography variant="mono" className="text-[11px] text-white font-black leading-tight border-b border-brand-primary/20 pb-1 w-fit uppercase tracking-tighter">Export & Share Plans</Typography>
+                  <Typography variant="mono" className="text-[11px] text-[var(--color-text-primary)] font-black leading-tight border-b border-brand-primary/20 pb-1 w-fit uppercase tracking-tighter">Export & Share Plans</Typography>
                   <Typography variant="small" className="text-[10px] text-slate-400 leading-relaxed font-medium">
-                    Download pay plans to share with your team or quickly transfer configurations. <span className="text-white font-bold underline decoration-brand-primary/40 underline-offset-2">Basic+ exclusive</span>.
+                    Download pay plans to share with your team or quickly transfer configurations. <span className="text-[var(--color-text-primary)] font-bold underline decoration-brand-primary/40 underline-offset-2">Basic+ exclusive</span>.
                   </Typography>
                 </div>
               </div>
               <div className="shrink-0 flex flex-col gap-2 relative z-10">
-                 <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-slate-600 transition-colors group-hover/upsell:text-brand-primary group-hover/upsell:border-brand-primary/30">
+                 <div className="h-10 w-10 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] flex items-center justify-center text-slate-600 transition-colors group-hover/upsell:text-brand-primary group-hover/upsell:border-brand-primary/30">
                     <FileDown size={20} />
                  </div>
               </div>
@@ -1323,22 +1323,22 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                 variant="ghost"
                 size="sm"
                 onClick={handleExport}
-                className="flex-1 md:flex-none h-11 px-6 rounded-xl border border-white/5 bg-white/[0.02] text-slate-300 hover:text-white"
+                className="flex-1 md:flex-none h-11 px-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-slate-300 hover:text-[var(--color-text-primary)]"
               >
                 <FileDown size={16} className="mr-2" /> Export CSV
               </Button>
               <div className="relative flex-1 md:flex-none">
                 <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleImportFile}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                   type="file"
+                   accept=".csv"
+                   onChange={handleImportFile}
+                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="w-full h-11 px-6 rounded-xl border border-white/5 bg-white/[0.02] text-slate-300 hover:text-white pointer-events-none"
+                  className="w-full h-11 px-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-slate-300 hover:text-[var(--color-text-primary)]"
                 >
                   <FileUp size={16} className="mr-2" /> Import CSV
                 </Button>
@@ -1369,7 +1369,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
               </div>
               <div className="flex flex-col">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Units MTD</Typography>
-                <Typography variant="sans" className="text-3xl font-black text-white tracking-tight">
+                <Typography variant="sans" className="text-3xl font-black text-[var(--color-text-primary)] tracking-tight">
                   {currentUnits}
                 </Typography>
               </div>
@@ -1382,22 +1382,22 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
             </div>
 
             {/* Row 2 — Breakdown row */}
-            <div className="grid grid-cols-3 gap-6 py-4 border-t border-b border-white/5 bg-white/[0.01] px-4 rounded-xl">
+            <div className="grid grid-cols-3 gap-6 py-4 border-t border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-4 rounded-xl">
               <div className="flex flex-col">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-wider">Deal Commission</Typography>
-                <Typography variant="mono" className="text-sm text-slate-300 font-black mt-1">
+                <Typography variant="mono" className="text-sm text-[var(--color-text-primary)] font-black mt-1">
                   ${Math.round(simEarnings.totalPayout).toLocaleString()}
                 </Typography>
               </div>
               <div className="flex flex-col">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-wider">Volume Bonuses</Typography>
-                <Typography variant="mono" className="text-sm text-slate-300 font-black mt-1">
+                <Typography variant="mono" className="text-sm text-[var(--color-text-primary)] font-black mt-1">
                   ${Math.round(simEarnings.totalTierBonuses).toLocaleString()}
                 </Typography>
               </div>
               <div className="flex flex-col">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-wider">SPIFFs</Typography>
-                <Typography variant="mono" className="text-sm text-slate-300 font-black mt-1">
+                <Typography variant="mono" className="text-sm text-[var(--color-text-primary)] font-black mt-1">
                   ${Math.round(currentMonthSpiffs.reduce((sum, s) => sum + (s.isChargeback ? -(s.amount || 0) : (s.amount || 0)), 0)).toLocaleString()}
                 </Typography>
               </div>
@@ -1405,7 +1405,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 
             {/* Draw Balance Row (Only shown if draw model is active) */}
             {formData.isMinisAndHourlyActive && formData.isHourlyActive && formData.hourlyConfig.model === 'draw' && (
-              <div className="mt-4 pt-4 border-t border-white/5 space-y-4 animate-in fade-in duration-300">
+              <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-4 animate-in fade-in duration-300">
                 <div className="space-y-2">
                   <Typography variant="mono" className="text-[10px] text-amber-500 font-extrabold uppercase tracking-widest block">
                     CARRY-FORWARD DRAW BALANCE
@@ -1415,7 +1415,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       value={drawBalance}
                       onChange={(e) => setDrawBalance(normalizeCurrencyNumber(e.target.value))}
                       hideLabel
-                      className="h-10 bg-black/40 border-white/5"
+                      className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1455,7 +1455,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   </Typography>
                 )}
               </div>
-              <div className="h-1 w-full bg-white/[0.02] border border-white/5 rounded-full overflow-hidden">
+              <div className="h-1 w-full bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-full overflow-hidden">
                 <div 
                   className={cn("h-full rounded-full transition-all duration-500", nextTier ? "bg-cyan-500" : "bg-emerald-500")}
                   style={{ width: `${progressPercent}%` }}
@@ -1480,24 +1480,24 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
             <div className="flex items-center gap-4">
               {formData.isMinisActive && (
                 <>
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
                     <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">New:</Typography>
-                    <Typography variant="mono" className="text-[10px] text-white font-black">
+                    <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">
                       ${activeMiniTier?.newMini ?? formData.miniTiers[0]?.newMini ?? 0}
                     </Typography>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
                     <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Used:</Typography>
-                    <Typography variant="mono" className="text-[10px] text-white font-black">
+                    <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">
                       ${activeMiniTier?.usedMini ?? formData.miniTiers[0]?.usedMini ?? 0}
                     </Typography>
                   </div>
                 </>
               )}
               {formData.isHourlyActive && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
                   <Typography variant="mono" className="text-[10px] text-slate-400 font-black uppercase">Hourly</Typography>
-                  <Typography variant="mono" className="text-[10px] text-white font-black">${formData.hourlyConfig.rate}/hr</Typography>
+                  <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">${formData.hourlyConfig.rate}/hr</Typography>
                 </div>
               )}
             </div>
@@ -1505,7 +1505,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
         >
           <div className="space-y-6 animate-in fade-in duration-500">
             {/* Mini Ladder Subsection */}
-            <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
+            <Card className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-8 rounded-[2rem]">
               <div className="flex items-center justify-between mb-8">
                 <Typography variant="mono" className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Mini Ladder System</Typography>
                 <ActiveChip 
@@ -1526,7 +1526,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                         <div 
                           key={tier.id} 
                           className={cn(
-                            "group bg-white/[0.02] border border-white/5 p-4 md:p-5 rounded-2xl transition-all duration-300",
+                            "group bg-[var(--color-bg-elevated)] border border-[var(--color-border)] p-4 md:p-5 rounded-2xl transition-all duration-300",
                             hasError && "ring-1 ring-red-500/30 border-red-500/20"
                           )}
                         >
@@ -1586,7 +1586,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                                   onClick={() => updateMiniTier(tier.id, { isRetroactive: !tier.isRetroactive })}
                                   className={cn(
                                     "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
-                                    tier.isRetroactive ? "bg-amber-500/20 text-amber-400 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]" : "bg-white/[0.02] text-slate-700 border-white/5 hover:border-white/10 hover:text-slate-500"
+                                    tier.isRetroactive ? "bg-amber-500/20 text-amber-400 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.1)]" : "bg-[var(--color-bg-elevated)] text-slate-700 border-[var(--color-border)] hover:border-[var(--color-border)] hover:text-slate-500"
                                   )}
                                 >
                                   RETRO
@@ -1629,7 +1629,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
             </Card>
 
             {/* Hourly Subsection */}
-            <Card className="bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem]">
+            <Card className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-8 rounded-[2rem]">
               <div className="flex items-center justify-between mb-8">
                 <Typography variant="mono" className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Hourly Compensation</Typography>
                 <ActiveChip 
@@ -1646,6 +1646,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       value={formData.hourlyConfig.rate}
                       onChange={(e) => handleChange('hourlyConfig', { ...formData.hourlyConfig, rate: normalizeCurrencyNumber(e.target.value) })}
                       labelClassName="text-[9px] uppercase tracking-widest text-slate-500"
+                      className="h-11 bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                     />
                     <div className="space-y-2.5">
                       <Typography variant="mono" className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Hours Worked</Typography>
@@ -1657,7 +1658,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     </div>
                     <div className="space-y-2.5">
                       <Typography variant="mono" className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Monthly Total</Typography>
-                      <div className="h-12 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center px-5 font-black text-white">
+                      <div className="h-12 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-2xl flex items-center px-5 font-black text-[var(--color-text-primary)]">
                         ${(formData.hourlyConfig.rate * formData.hourlyConfig.hoursWorked).toLocaleString()}
                       </div>
                     </div>
@@ -1678,7 +1679,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                             "flex-1 min-w-[240px] p-5 rounded-2xl border transition-all duration-300 cursor-pointer group",
                             formData.hourlyConfig.model === model.id 
                               ? "bg-brand-primary/10 border-brand-primary/30 ring-1 ring-brand-primary/20"
-                              : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]"
+                              : "bg-[var(--color-bg-elevated)] border-[var(--color-border)] hover:border-[var(--color-border)] hover:bg-[var(--color-bg-surface)]"
                           )}
                         >
                           <div className="flex items-center gap-3 mb-2">
@@ -1721,15 +1722,15 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           onToggle={() => toggleSection('commission_matrix')}
           summary={
             <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
                 <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Front:</Typography>
-                <Typography variant="mono" className="text-[10px] text-white font-black">
+                <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">
                   {activeTier?.frontRate ?? formData.tiers[0]?.frontRate ?? 0}%
                 </Typography>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
                 <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Back:</Typography>
-                <Typography variant="mono" className="text-[10px] text-white font-black">
+                <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">
                   {activeTier?.backRate ?? formData.tiers[0]?.backRate ?? 0}%
                 </Typography>
               </div>
@@ -1747,8 +1748,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   <div 
                     key={tier.id} 
                     className={cn(
-                      "group bg-[#0A0C12] border border-white/5 p-4 md:p-5 rounded-2xl transition-all duration-300 relative",
-                      hasError ? "ring-1 ring-red-500/30 border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.05)]" : "hover:border-white/10"
+                      "group bg-[var(--color-bg-card)] border border-[var(--color-border)] p-4 md:p-5 rounded-2xl transition-all duration-300 relative",
+                      hasError ? "ring-1 ring-red-500/30 border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.05)]" : "hover:border-[var(--color-border)]"
                     )}
                   >
                     <div className="flex flex-col lg:grid lg:grid-cols-[210px_1fr_1fr_100px_48px] gap-8 items-center w-full">
@@ -1862,7 +1863,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 
                     {/* Expandable sub-grid for per-deal-type rates */}
                     {!!(tier.usePerTypeRates || tier.usePerTypRates) && (
-                      <div className="mt-4 pt-4 border-t border-white/[0.03] space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                         {/* Row 1 — NEW */}
                         <div className="flex flex-col lg:grid lg:grid-cols-[210px_1fr_1fr_100px_48px] gap-8 items-center w-full">
                           <div className="flex items-center w-full justify-center lg:justify-start">
@@ -2054,9 +2055,9 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           summary={
             formData.isVolumeBonusEngineActive && (
               <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
                   <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Active:</Typography>
-                  <Typography variant="mono" className="text-[10px] text-white font-black">{(formData.volumeBonuses || []).filter(b => b.active).length}</Typography>
+                  <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">{(formData.volumeBonuses || []).filter(b => b.active).length}</Typography>
                 </div>
                 {isSimulationEngineEnabled && previewData.totalTierBonuses > 0 && (
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
@@ -2085,7 +2086,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   </div>
                 ) : (
                   <Card 
-                    className="bg-[#0A0C12]/50 border-white/5 p-12 rounded-[2rem] border-dashed border-2 flex flex-col items-center justify-center cursor-pointer hover:bg-white/[0.02] transition-colors group"
+                    className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-12 rounded-[2rem] border-dashed border-2 flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-bg-elevated)] transition-colors group"
                     onClick={addVolumeBonus}
                   >
                     <Settings2 className="h-12 w-12 text-slate-700 mb-4 group-hover:text-brand-primary transition-colors" />
@@ -2128,8 +2129,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           onToggle={() => toggleSection('rules')}
           summary={
             formData.isRulesEnabled && (
-              <div className="px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
-                <Typography variant="mono" className="text-[10px] text-white font-black">{formData.rules.length} Rules</Typography>
+              <div className="px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
+                <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">{formData.rules.length} Rules</Typography>
               </div>
             )
           }
@@ -2138,14 +2139,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
             {formData.isRulesEnabled && (
               <div className="space-y-6">
                 {/* StripeItFrontDeficitRecoverySystem - Recovery Toggle */}
-                <div className="bg-white/[0.01] border border-white/5 p-5 md:p-6 rounded-2xl transition-all duration-300">
+                <div className="bg-[var(--color-bg-elevated)] border border-[var(--color-border)] p-5 md:p-6 rounded-2xl transition-all duration-300">
                   <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500">
                         <ShieldCheck className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col">
-                        <Typography variant="h3" className="text-white text-lg font-black tracking-tight">Front Deficit Recovery</Typography>
+                        <Typography variant="h3" className="text-[var(--color-text-primary)] text-lg font-black tracking-tight">Front Deficit Recovery</Typography>
                         <Typography variant="mono" className="text-slate-600 text-[9px] uppercase tracking-widest mt-1">
                           When enabled, negative front commission deficits must be recovered before backend commission becomes payable.
                         </Typography>
@@ -2162,14 +2163,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 
                 <div className="grid grid-cols-1 gap-3">
                   {formData.rules.map((rule) => (
-                    <div key={rule.id} className="group bg-white/[0.01] border border-white/5 p-5 md:p-6 rounded-2xl transition-all duration-300">
+                    <div key={rule.id} className="group bg-[var(--color-bg-elevated)] border border-[var(--color-border)] p-5 md:p-6 rounded-2xl transition-all duration-300">
                       <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
                         <div className="flex-1 lg:max-w-md w-full">
                           <Input 
                             placeholder="Rule Name (e.g. Sales Trainee Bonus)" 
                             value={rule.name}
                             onChange={(e) => updateRule(rule.id, { name: e.target.value })}
-                            className="h-10 bg-black/40 border-white/5 font-bold"
+                            className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] font-bold text-[var(--color-text-primary)]"
                           />
                         </div>
                         
@@ -2185,7 +2186,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                                 ]}
                                 value={rule.condition}
                                 onChange={(e) => updateRule(rule.id, { condition: e.target.value as any })}
-                                className="h-10 bg-black/40 border-white/5"
+                                className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                               />
                             </div>
                           </div>
@@ -2197,7 +2198,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                                 value={rule.threshold}
                                 onChange={(e) => updateRule(rule.id, { threshold: normalizeCurrencyNumber(e.target.value) })}
                                 hideLabel
-                                className="h-10 bg-black/40 border-white/5"
+                                className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                               />
                             </div>
                           </div>
@@ -2209,7 +2210,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                                 value={rule.rewardValue}
                                 onChange={(e) => updateRule(rule.id, { rewardValue: normalizeCurrencyNumber(e.target.value) })}
                                 hideLabel
-                                className="h-10 bg-black/40 border-white/5"
+                                className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                               />
                             </div>
                           </div>
@@ -2226,7 +2227,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   ))}
 
                   {formData.rules.length === 0 && (
-                    <div className="py-12 border border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center bg-white/[0.01]">
+                    <div className="py-12 border border-dashed border-[var(--color-border)] rounded-2xl flex flex-col items-center justify-center bg-[var(--color-bg-surface)]">
                       <Zap className="h-10 w-10 text-slate-800 mb-3" />
                       <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest">No Active Exceptions</Typography>
                       <Typography variant="small" className="text-[11px] text-slate-600 mt-2">Rules can override standard ladder logic based on deal attributes.</Typography>
@@ -2262,9 +2263,9 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           summary={
             <div className="flex items-center gap-4">
               {formData.isFlatPerUnitActive && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
                   <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase">Flat:</Typography>
-                  <Typography variant="mono" className="text-[10px] text-white font-black">${formData.flatPerUnitAmount.toLocaleString()}</Typography>
+                  <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">${formData.flatPerUnitAmount.toLocaleString()}</Typography>
                 </div>
               )}
             </div>
@@ -2273,7 +2274,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           <div className="animate-in fade-in duration-500 space-y-6">
             {/* Flat Per Unit Refinement */}
             <Card className={cn(
-              "bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem] transition-all duration-300",
+              "bg-[var(--color-bg-surface)] border-[var(--color-border)] p-8 rounded-[2rem] transition-all duration-300",
               !formData.isFlatPerUnitActive && "opacity-40 grayscale-[0.5]"
             )}>
               <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-8">
@@ -2282,7 +2283,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     <Zap className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Flat Per Unit</Typography>
+                    <Typography variant="h3" className="text-[var(--color-text-primary)] text-lg font-black uppercase tracking-tight">Flat Per Unit</Typography>
                     <Typography variant="mono" className="text-slate-600 text-[9px] uppercase tracking-widest mt-1">
                       Fixed amount paid per unit sold, regardless of gross profit.
                     </Typography>
@@ -2300,14 +2301,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   value={formData.flatPerUnitAmount}
                   onChange={(e) => handleNumeric('flatPerUnitAmount', e.target.value)}
                   hideLabel
-                  className="h-12 w-full max-w-[180px]"
+                  className="h-12 w-full max-w-[180px] bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                 />
               </div>
             </Card>
 
             {/* Split Behavior Refinement */}
             <Card className={cn(
-              "bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem] transition-all duration-300",
+              "bg-[var(--color-bg-surface)] border-[var(--color-border)] p-8 rounded-[2rem] transition-all duration-300",
               !formData.isSplitBehaviorActive && "opacity-40 grayscale-[0.5]"
             )}>
               <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-8">
@@ -2316,7 +2317,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     <Filter className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Split Behavior</Typography>
+                    <Typography variant="h3" className="text-[var(--color-text-primary)] text-lg font-black uppercase tracking-tight">Split Behavior</Typography>
                     <Typography variant="mono" className="text-slate-600 text-[9px] uppercase tracking-widest mt-1">
                       How commission is split when multiple salespeople are involved.
                     </Typography>
@@ -2336,14 +2337,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   ]}
                   value={formData.splitDealBehavior}
                   onChange={(e) => handleChange('splitDealBehavior', e.target.value)}
-                  className="h-12 w-full max-w-[320px]"
+                  className="h-12 w-full max-w-[320px] bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                 />
               </div>
             </Card>
 
             {/* Pack Deduction Card */}
             <Card className={cn(
-              "bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem] transition-all duration-300",
+              "bg-[var(--color-bg-surface)] border-[var(--color-border)] p-8 rounded-[2rem] transition-all duration-300",
               !formData.isPackActive && "opacity-40 grayscale-[0.5]"
             )}>
               <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-8">
@@ -2352,7 +2353,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     <Layers className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col">
-                    <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Pack Deduction</Typography>
+                    <Typography variant="h3" className="text-[var(--color-text-primary)] text-lg font-black uppercase tracking-tight">Pack Deduction</Typography>
                     <Typography variant="mono" className="text-slate-600 text-[9px] uppercase tracking-widest mt-1">
                       Fixed cost deducted from gross before commission is calculated
                     </Typography>
@@ -2371,14 +2372,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     value={formData.frontPack}
                     onChange={(e) => handleNumeric('frontPack', e.target.value)}
                     labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
-                    className="h-12 w-full"
+                    className="h-12 w-full bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                   />
                   <CurrencyInput 
                     label="Back Pack" 
                     value={formData.backPack}
                     onChange={(e) => handleNumeric('backPack', e.target.value)}
                     labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
-                    className="h-12 w-full"
+                    className="h-12 w-full bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                   />
                 </div>
               )}
@@ -2395,13 +2396,13 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                 <Calculator className="h-6 w-6" />
               </div>
               <div className="flex flex-col">
-                <Typography variant="h3" className="text-white text-xl">Simulation Engine</Typography>
+                <Typography variant="h3" className="text-[var(--color-text-primary)] text-xl">Simulation Engine</Typography>
                 <Typography variant="mono" className="text-slate-500 uppercase tracking-widest text-[9px]">Model Monthly Payout Scenarios</Typography>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/[0.02] border border-white/5 h-10">
+               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] h-10">
                  <button
                    type="button"
                    onClick={() => setSimMode('live')}
@@ -2409,7 +2410,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                      "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border cursor-pointer",
                      simMode === 'live'
                        ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-                       : "bg-white/[0.02] text-slate-500 border-white/5 hover:text-slate-400"
+                       : "bg-[var(--color-bg-elevated)] text-slate-500 border-[var(--color-border)] hover:text-slate-400"
                    )}
                  >
                    LIVE
@@ -2421,14 +2422,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                      "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 border cursor-pointer",
                      simMode === 'scenario'
                        ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-                       : "bg-white/[0.02] text-slate-500 border-white/5 hover:text-slate-400"
+                       : "bg-[var(--color-bg-elevated)] text-slate-500 border-[var(--color-border)] hover:text-slate-400"
                    )}
                  >
                    SCENARIO
                  </button>
                </div>
 
-               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5">
+               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
                  <Typography variant="mono" className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Presets:</Typography>
                  <div className="flex items-center gap-1.5">
                    {savedScenarios.map((s, idx) => (
@@ -2436,7 +2437,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                        key={s.id || idx}
                        type="button"
                        onClick={() => { loadScenario(s); setSimMode('scenario'); }}
-                       className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[9px] font-black text-slate-400 hover:text-white transition-colors"
+                       className="px-2 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)] text-[9px] font-black text-slate-400 hover:text-[var(--color-text-primary)] transition-colors"
                      >
                        {s.name}
                      </button>
@@ -2454,19 +2455,19 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           </div>
  
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-[#0A0C12]/80 border-cyan-500/20 p-6 rounded-[2rem] border-2 relative overflow-hidden group">
+            <Card className="bg-[var(--color-bg-surface)] border-cyan-500/20 p-6 rounded-[2rem] border-2 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <TrendingUp size={48} className="text-cyan-500" />
               </div>
               <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Final Estimated Total</Typography>
               <div className="flex items-baseline gap-2">
-                <Typography variant="h1" className="text-4xl font-black text-white">${Math.round(simEarnings.grandTotal).toLocaleString()}</Typography>
+                <Typography variant="h1" className="text-4xl font-black text-[var(--color-text-primary)]">${Math.round(simEarnings.grandTotal).toLocaleString()}</Typography>
                 <Typography variant="mono" className="text-emerald-500 text-[10px] font-bold">EST</Typography>
               </div>
-              <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+              <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex items-center justify-between">
                 <div className="flex flex-col">
                   <Typography variant="mono" className="text-[8px] text-slate-600 uppercase">Per Unit Avg</Typography>
-                  <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.grandTotal / (activeSimData.totalUnits || 1)).toLocaleString()}</Typography>
+                  <Typography variant="mono" className="text-xs text-[var(--color-text-primary)] font-black">${Math.round(simEarnings.grandTotal / (activeSimData.totalUnits || 1)).toLocaleString()}</Typography>
                 </div>
                 {activeSimData.frontGrossTotal + activeSimData.backGrossTotal > 0 && (
                   <div className="flex flex-col items-end">
@@ -2479,25 +2480,25 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
               </div>
             </Card>
  
-            <Card className="bg-[#0A0C12]/80 border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all">
+            <Card className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-6 rounded-[2rem] hover:border-[var(--color-border)] transition-all">
               <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Deal Payouts</Typography>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Typography variant="mono" className="text-[10px] text-slate-600">Commission:</Typography>
-                  <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.totalPayout).toLocaleString()}</Typography>
+                  <Typography variant="mono" className="text-xs text-[var(--color-text-primary)] font-black">${Math.round(simEarnings.totalPayout).toLocaleString()}</Typography>
                 </div>
                 <div className="flex items-center justify-between">
                   <Typography variant="mono" className="text-[10px] text-slate-600">Avg / Deal:</Typography>
                   <Typography variant="mono" className="text-xs text-slate-400 font-black">${Math.round(simEarnings.totalPayout / (activeSimData.totalUnits || 1)).toLocaleString()}</Typography>
                 </div>
-                <div className="flex items-center justify-between pt-1 border-t border-white/[0.03]">
+                <div className="flex items-center justify-between pt-1 border-t border-[var(--color-border)]">
                   <Typography variant="mono" className="text-[10px] text-slate-600">Minis Hit:</Typography>
                   <Typography variant="mono" className="text-xs text-brand-primary font-black">{simEarnings.dealResults.filter(r => r.isMini).length}</Typography>
                 </div>
               </div>
             </Card>
  
-            <Card className="bg-[#0A0C12]/80 border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all">
+            <Card className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-6 rounded-[2rem] hover:border-[var(--color-border)] transition-all">
               <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Bonus Rewards</Typography>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -2508,20 +2509,20 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   <Typography variant="mono" className="text-[10px] text-slate-600">Custom Rules:</Typography>
                   <Typography variant="mono" className="text-xs text-emerald-400 font-black">+${Math.round(simEarnings.dealResults.reduce((sum, r) => sum + r.ruleBonuses, 0)).toLocaleString()}</Typography>
                 </div>
-                <div className="flex items-center justify-between pt-1 border-t border-white/[0.03]">
+                <div className="flex items-center justify-between pt-1 border-t border-[var(--color-border)]">
                   <Typography variant="mono" className="text-[10px] text-slate-600">Total Bonuses:</Typography>
-                  <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.totalTierBonuses + simEarnings.dealResults.reduce((sum, r) => sum + r.ruleBonuses, 0)).toLocaleString()}</Typography>
+                  <Typography variant="mono" className="text-xs text-[var(--color-text-primary)] font-black">${Math.round(simEarnings.totalTierBonuses + simEarnings.dealResults.reduce((sum, r) => sum + r.ruleBonuses, 0)).toLocaleString()}</Typography>
                 </div>
               </div>
             </Card>
  
-            <Card className="bg-[#0A0C12]/80 border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all">
+            <Card className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-6 rounded-[2rem] hover:border-[var(--color-border)] transition-all">
               <Typography variant="mono" className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Hourly & Draws</Typography>
               {simEarnings.hourlyCompensation ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Typography variant="mono" className="text-[10px] text-slate-600">Monthly Total:</Typography>
-                    <Typography variant="mono" className="text-xs text-white font-black">${Math.round(simEarnings.hourlyCompensation.hourlyTotal).toLocaleString()}</Typography>
+                    <Typography variant="mono" className="text-xs text-[var(--color-text-primary)] font-black">${Math.round(simEarnings.hourlyCompensation.hourlyTotal).toLocaleString()}</Typography>
                   </div>
                   <div className="flex items-center justify-between">
                     <Typography variant="mono" className="text-[10px] text-slate-600">Adjustment:</Typography>
@@ -2529,13 +2530,13 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       {simEarnings.hourlyCompensation.adjustment > 0 ? `+$${Math.round(simEarnings.hourlyCompensation.adjustment).toLocaleString()}` : '$0'}
                     </Typography>
                   </div>
-                  <div className="flex items-center justify-between pt-1 border-t border-white/[0.03]">
+                  <div className="flex items-center justify-between pt-1 border-t border-[var(--color-border)]">
                     <Typography variant="mono" className="text-[10px] text-slate-600">Model:</Typography>
                     <Typography variant="mono" className="text-[9px] text-slate-400 font-black uppercase">{simEarnings.hourlyCompensation.model}</Typography>
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center border border-dashed border-white/5 rounded-2xl opacity-40">
+                <div className="h-full flex items-center justify-center border border-dashed border-[var(--color-border)] rounded-2xl opacity-40">
                   <Typography variant="mono" className="text-[8px] text-slate-700 uppercase font-black">Inactive</Typography>
                 </div>
               )}
@@ -2552,14 +2553,14 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                 icon={<Settings2 size={24} />}
                 isExpanded={expandedSections.sim_settings}
                 onToggle={() => toggleSection('sim_settings')}
-                className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-[2rem] p-8"
                 summary={
                   <div className="flex items-center gap-3">
-                    <div className="px-3 py-1 rounded-lg bg-white/5 border border-white/10">
-                      <Typography variant="mono" className="text-[10px] text-white font-black">{activeSimData.totalUnits} Units</Typography>
+                    <div className="px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
+                      <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">{activeSimData.totalUnits} Units</Typography>
                     </div>
-                    <div className="px-3 py-1 rounded-lg bg-white/5 border border-white/10">
-                      <Typography variant="mono" className="text-[10px] text-white font-black">${activeSimData.frontGrossTotal.toLocaleString()} FG</Typography>
+                    <div className="px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
+                      <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">${activeSimData.frontGrossTotal.toLocaleString()} FG</Typography>
                     </div>
                   </div>
                 }
@@ -2571,7 +2572,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       <Input 
                         value={activeSimData.name}
                         onChange={(e) => setSimulationData(p => ({ ...p, name: e.target.value }))}
-                        className="h-12 bg-black/40 border-white/5 font-black text-lg"
+                        className="h-12 bg-[var(--color-bg-elevated)] border-[var(--color-border)] font-black text-lg text-[var(--color-text-primary)]"
                         placeholder="Scenario Name (e.g. Dream Month)"
                         disabled={simMode === 'live'}
                       />
@@ -2602,7 +2603,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       value={activeSimData.frontGrossTotal}
                       onChange={(e) => setSimulationData(p => ({ ...p, frontGrossTotal: normalizeCurrencyNumber(e.target.value) }))}
                       labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
-                      className="h-12"
+                      className="h-12 bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                       disabled={simMode === 'live'}
                     />
                     <CurrencyInput 
@@ -2610,13 +2611,13 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       value={activeSimData.backGrossTotal}
                       onChange={(e) => setSimulationData(p => ({ ...p, backGrossTotal: normalizeCurrencyNumber(e.target.value) }))}
                       labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
-                      className="h-12"
+                      className="h-12 bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                       disabled={simMode === 'live'}
                     />
                   </div>
  
                   {/* Adaptive Unit Mix */}
-                  <div className="p-8 rounded-[2rem] bg-white/[0.01] border border-white/5">
+                  <div className="p-8 rounded-[2rem] bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
                     <div className="flex items-center justify-between mb-8">
                       <Typography variant="mono" className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Deal Mix Allocation</Typography>
                       <div className="flex items-center gap-2">
@@ -2624,7 +2625,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                           "w-2 h-2 rounded-full",
                           activeSimData.newUnits + activeSimData.usedUnits + activeSimData.cpoUnits === activeSimData.totalUnits ? "bg-emerald-500" : "bg-amber-500"
                         )} />
-                        <Typography variant="mono" className="text-[10px] text-white font-black">
+                        <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-black">
                           {activeSimData.newUnits + activeSimData.usedUnits + activeSimData.cpoUnits} / {activeSimData.totalUnits}
                         </Typography>
                       </div>
@@ -2671,34 +2672,34 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   icon={<TrendingUp size={24} />}
                   isExpanded={expandedSections.sim_ladder}
                   onToggle={() => toggleSection('sim_ladder')}
-                  className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                  className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-[2rem] p-8"
                   summary={
                     <div className="flex items-center gap-2">
                        <Typography variant="mono" className="text-[10px] text-cyan-400 font-black">Tier {formData.tiers.findIndex(t => t.id === getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.id) + 1}</Typography>
-                       <div className="h-1 w-8 rounded-full bg-white/5 overflow-hidden">
+                       <div className="h-1 w-8 rounded-full bg-[var(--color-bg-elevated)] overflow-hidden">
                           <div className="h-full bg-cyan-500" style={{ width: `${Math.min(100, (activeSimData.totalUnits / (getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.maxUnits || 1)) * 100)}%` }} />
                        </div>
                     </div>
                   }
                 >
                   <div className="animate-in fade-in duration-500">
-                    <Card className="bg-black/20 border-white/5 p-8 rounded-2xl">
+                    <Card className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-8 rounded-2xl">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="space-y-6">
                            <div>
                              <Typography variant="mono" className="text-[10px] text-cyan-500 font-black uppercase tracking-widest mb-1 block">Active Strategy</Typography>
-                             <Typography variant="h2" className="text-white font-black uppercase">
+                             <Typography variant="h2" className="text-[var(--color-text-primary)] font-black uppercase">
                                TIER {formData.tiers.findIndex(t => t.id === getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.id) + 1} ARCHITECTURE
                              </Typography>
                            </div>
                            <div className="space-y-4">
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Front End Rate:</span>
-                               <span className="text-white font-bold">{getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.frontRate}%</span>
+                               <span className="text-[var(--color-text-primary)] font-bold">{getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.frontRate}%</span>
                              </div>
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Back End Rate:</span>
-                               <span className="text-white font-bold">{getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.backRate}%</span>
+                               <span className="text-[var(--color-text-primary)] font-bold">{getActiveCommissionTier(activeSimData.totalUnits, formData.tiers)?.backRate}%</span>
                              </div>
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Retroactive Application:</span>
@@ -2708,9 +2709,9 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                              </div>
                            </div>
                         </div>
-                        <div className="flex flex-col justify-center items-center md:items-end border-l border-white/5 pl-12">
+                        <div className="flex flex-col justify-center items-center md:items-end border-l border-[var(--color-border)] pl-12">
                           <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black mb-2">Simulated Payout</Typography>
-                          <Typography variant="h1" className="text-5xl font-black text-white">${Math.round(simEarnings.totalPayout).toLocaleString()}</Typography>
+                          <Typography variant="h1" className="text-5xl font-black text-[var(--color-text-primary)]">${Math.round(simEarnings.totalPayout).toLocaleString()}</Typography>
                           <Typography variant="small" className="text-slate-600 mt-2 text-right">Excluding bonuses & minis</Typography>
                         </div>
                       </div>
@@ -2728,7 +2729,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   icon={<ShieldCheck size={24} />}
                   isExpanded={expandedSections.sim_minis}
                   onToggle={() => toggleSection('sim_minis')}
-                  className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                  className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-[2rem] p-8"
                   summary={
                     <div className="flex items-center gap-2">
                        <Typography variant="mono" className="text-[10px] text-emerald-400 font-black">
@@ -2738,33 +2739,33 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   }
                 >
                   <div className="animate-in fade-in duration-500">
-                    <Card className="bg-black/20 border-white/5 p-8 rounded-2xl">
+                    <Card className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-8 rounded-2xl">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="space-y-6">
                            <div>
                              <Typography variant="mono" className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-1 block">Mini Profile</Typography>
-                             <Typography variant="h2" className="text-white font-black uppercase">
+                             <Typography variant="h2" className="text-[var(--color-text-primary)] font-black uppercase">
                                RANGE {formData.miniTiers.findIndex(t => t.id === getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.id) + 1} METRICS
                              </Typography>
                            </div>
                            <div className="space-y-4">
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">New Deal Mini:</span>
-                               <span className="text-white font-bold">${getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.newMini}</span>
+                               <span className="text-[var(--color-text-primary)] font-bold">${getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.newMini}</span>
                              </div>
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Used Deal Mini:</span>
-                               <span className="text-white font-bold">${getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.usedMini}</span>
+                               <span className="text-[var(--color-text-primary)] font-bold">${getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.usedMini}</span>
                              </div>
                              <div className="flex justify-between items-center">
                                <span className="text-slate-500 text-sm">Unit Threshold:</span>
-                               <span className="text-white font-bold">{getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.threshold}+ Units</span>
+                               <span className="text-[var(--color-text-primary)] font-bold">{getActiveMiniTier(activeSimData.totalUnits, formData.miniTiers)?.threshold}+ Units</span>
                              </div>
                            </div>
                         </div>
-                        <div className="flex flex-col justify-center items-center md:items-end border-l border-white/5 pl-12">
+                        <div className="flex flex-col justify-center items-center md:items-end border-l border-[var(--color-border)] pl-12">
                           <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black mb-2">Simulated Mini Capture</Typography>
-                          <Typography variant="h1" className="text-5xl font-black text-white">{simEarnings.dealResults.filter(r => r.isMini).length}</Typography>
+                          <Typography variant="h1" className="text-5xl font-black text-[var(--color-text-primary)]">{simEarnings.dealResults.filter(r => r.isMini).length}</Typography>
                           <Typography variant="small" className="text-slate-600 mt-2 text-right">Deals hitting mini floor</Typography>
                         </div>
                       </div>
@@ -2782,24 +2783,24 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   icon={<Zap size={24} />}
                   isExpanded={expandedSections.sim_bonus}
                   onToggle={() => toggleSection('sim_bonus')}
-                  className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                  className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-[2rem] p-8"
                   summary={
                     <div className="flex items-center gap-2">
                       <Typography variant="mono" className="text-[10px] text-emerald-400 font-black">
-                        ${Math.round(simEarnings.totalTierBonuses + simEarnings.dealResults.reduce((sum, r) => sum + r.ruleBonuses, 0)).toLocaleString()} Total
+                        ${Math.round(simEarnings.totalPayout + simEarnings.dealResults.reduce((sum, r) => sum + r.ruleBonuses, 0)).toLocaleString()} Total
                       </Typography>
                     </div>
                   }
                 >
                   <div className="space-y-6 animate-in fade-in duration-500">
                     {simEarnings.tierBonuses.map((b, i) => (
-                      <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-black/20 border border-white/5">
+                      <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
                         <div className="flex items-center gap-4">
                           <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-500">
                             <Plus size={16} />
                           </div>
                           <div>
-                            <Typography variant="mono" className="text-xs text-white font-black">{b.label}</Typography>
+                            <Typography variant="mono" className="text-xs text-[var(--color-text-primary)] font-black">{b.label}</Typography>
                             <Typography variant="mono" className="text-[8px] text-slate-500 uppercase">Volume Bonus Tier Reward</Typography>
                           </div>
                         </div>
@@ -2808,11 +2809,11 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     ))}
                     
                     {simEarnings.dealResults.some(r => r.ruleBonuses > 0) && (
-                      <div className="p-5 rounded-2xl bg-black/20 border border-white/5">
+                      <div className="p-5 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
                         <Typography variant="mono" className="text-[10px] text-amber-500 font-black uppercase mb-4 block">Rule-Based Overrides</Typography>
                         <div className="space-y-3">
                           {simEarnings.dealResults.filter(r => r.ruleBonuses > 0).slice(0, 5).map((r, i) => (
-                            <div key={i} className="flex items-center justify-between text-sm py-2 border-b border-white/[0.03] last:border-0">
+                            <div key={i} className="flex items-center justify-between text-sm py-2 border-b border-[var(--color-border)] last:border-0">
                               <span className="text-slate-400">Rule Trigger Applied: {r.appliedRules?.[0] || 'Override'}</span>
                               <span className="text-emerald-400 font-bold">+${r.ruleBonuses}</span>
                             </div>
@@ -2833,28 +2834,28 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   icon={<ShieldCheck size={24} />}
                   isExpanded={expandedSections.sim_hourly}
                   onToggle={() => toggleSection('sim_hourly')}
-                  className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8"
+                  className="bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-[2rem] p-8"
                 >
-                   <div className="p-8 rounded-[2rem] bg-black/20 border border-brand-primary/10 relative overflow-hidden">
+                   <div className="p-8 rounded-[2rem] bg-[var(--color-bg-surface)] border border-brand-primary/10 relative overflow-hidden">
                      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12">
                        <div className="space-y-6">
                          <div>
                            <Typography variant="mono" className="text-[10px] text-brand-primary font-black uppercase tracking-widest mb-1 block">Active Strategy</Typography>
-                           <Typography variant="h2" className="text-white font-black uppercase">{formData.hourlyConfig.model === 'guarantee' ? 'MINIMUM FLOOR' : formData.hourlyConfig.model === 'additive' ? 'ADDITIVE' : 'RECOVERABLE DRAW'}</Typography>
+                           <Typography variant="h2" className="text-[var(--color-text-primary)] font-black uppercase">{formData.hourlyConfig.model === 'guarantee' ? 'MINIMUM FLOOR' : formData.hourlyConfig.model === 'additive' ? 'ADDITIVE' : 'RECOVERABLE DRAW'}</Typography>
                          </div>
                          <div className="space-y-4">
                            <div className="flex justify-between items-center">
                              <span className="text-slate-500 text-sm">Hourly Yield ({simulationData.hoursWorked} hrs):</span>
-                             <span className="text-white font-bold">${Math.round(simulationData.hoursWorked * formData.hourlyConfig.rate).toLocaleString()}</span>
+                             <span className="text-[var(--color-text-primary)] font-bold">${Math.round(simulationData.hoursWorked * formData.hourlyConfig.rate).toLocaleString()}</span>
                            </div>
                            <div className="flex justify-between items-center">
                              <span className="text-slate-500 text-sm">Commission Target:</span>
-                             <span className="text-white font-bold">${Math.round(simEarnings.totalPayout + simEarnings.totalTierBonuses).toLocaleString()}</span>
+                             <span className="text-[var(--color-text-primary)] font-bold">${Math.round(simEarnings.totalPayout + simEarnings.totalTierBonuses).toLocaleString()}</span>
                            </div>
                          </div>
                        </div>
                        
-                       <div className="flex flex-col justify-center items-center md:items-end border-l border-white/5 pl-12">
+                       <div className="flex flex-col justify-center items-center md:items-end border-l border-[var(--color-border)] pl-12">
                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black mb-2">Required Adjustment</Typography>
                          <Typography variant="h1" className={cn(
                            "text-5xl font-black",
@@ -2876,7 +2877,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
             </div>
 
             <div className="lg:col-span-4 space-y-6">
-               <Card className="bg-emerald-500/[0.02] border-emerald-500/10 p-8 rounded-[2.5rem] h-full flex flex-col">
+               <Card className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-8 rounded-[2.5rem] h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-8">
                     <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-500">
                       <TrendingUp className="h-5 w-5" />
@@ -2888,11 +2889,11 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     <div className="space-y-3">
                       <div className="flex justify-between items-end">
                         <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Monthly Rentality</Typography>
-                        <Typography variant="mono" className="text-[10px] text-white font-bold">
+                        <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-bold">
                           {((simEarnings.grandTotal / (simulationData.frontGrossTotal || 1)) * 100).toFixed(1)}% Yield
                         </Typography>
                       </div>
-                      <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                      <div className="h-2 rounded-full bg-[var(--color-bg-elevated)] overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.min(100, (simEarnings.grandTotal / (simulationData.frontGrossTotal || 1)) * 100 * 4)}%` }}
@@ -2904,11 +2905,11 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     <div className="space-y-3">
                       <div className="flex justify-between items-end">
                         <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Bonus Leverage</Typography>
-                        <Typography variant="mono" className="text-[10px] text-white font-bold">
+                        <Typography variant="mono" className="text-[10px] text-[var(--color-text-primary)] font-bold">
                           {((simEarnings.totalTierBonuses / (simEarnings.grandTotal || 1)) * 100).toFixed(1)}% Multiplier
                         </Typography>
                       </div>
-                      <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                      <div className="h-2 rounded-full bg-[var(--color-bg-elevated)] overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.min(100, (simEarnings.totalTierBonuses / (simEarnings.grandTotal || 1)) * 100 * 3)}%` }}
@@ -2918,20 +2919,20 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                       <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                       <div className="p-5 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
                          <Typography variant="mono" className="text-[9px] text-slate-600 uppercase mb-2 block">Minis Driven</Typography>
-                         <Typography variant="h3" className="text-2xl text-white font-black">{simEarnings.dealResults.filter(r => r.isMini).length}</Typography>
+                         <Typography variant="h3" className="text-2xl text-[var(--color-text-primary)] font-black">{simEarnings.dealResults.filter(r => r.isMini).length}</Typography>
                        </div>
-                       <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                       <div className="p-5 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border)]">
                          <Typography variant="mono" className="text-[9px] text-slate-600 uppercase mb-2 block">Full Comm</Typography>
-                         <Typography variant="h3" className="text-2xl text-white font-black">{simEarnings.dealResults.filter(r => !r.isMini).length}</Typography>
+                         <Typography variant="h3" className="text-2xl text-[var(--color-text-primary)] font-black">{simEarnings.dealResults.filter(r => !r.isMini).length}</Typography>
                        </div>
                     </div>
 
                     <div className="p-6 rounded-[2rem] bg-brand-primary/5 border border-brand-primary/10 flex flex-col items-center justify-center text-center">
                        <Calculator className="h-8 w-8 text-brand-primary/40 mb-3" />
                        <Typography variant="mono" className="text-[10px] text-brand-primary font-black uppercase mb-1">Estimated Net Payout</Typography>
-                       <Typography variant="h1" className="text-4xl text-white font-black">${Math.round(simEarnings.grandTotal).toLocaleString()}</Typography>
+                       <Typography variant="h1" className="text-4xl text-[var(--color-text-primary)] font-black">${Math.round(simEarnings.grandTotal).toLocaleString()}</Typography>
                     </div>
                   </div>
 
@@ -2991,21 +2992,21 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           )}
 
           <div className="grid grid-cols-2 gap-4">
-             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+             <div className="p-4 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border)] space-y-1">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Plan Name</Typography>
-                <Typography variant="h4" className="text-white text-base">{importPreview?.name || 'Untitled'}</Typography>
+                <Typography variant="h4" className="text-[var(--color-text-primary)] text-base">{importPreview?.name || 'Untitled'}</Typography>
              </div>
-             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+             <div className="p-4 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border)] space-y-1">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Tiers Detected</Typography>
-                <Typography variant="h4" className="text-white text-base">{importPreview?.tiers?.length || 0} Levels</Typography>
+                <Typography variant="h4" className="text-[var(--color-text-primary)] text-base">{importPreview?.tiers?.length || 0} Levels</Typography>
              </div>
-             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+             <div className="p-4 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border)] space-y-1">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Bonuses</Typography>
-                <Typography variant="h4" className="text-white text-base">{importPreview?.volumeBonuses?.length || 0} Records</Typography>
+                <Typography variant="h4" className="text-[var(--color-text-primary)] text-base">{importPreview?.volumeBonuses?.length || 0} Records</Typography>
              </div>
-             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-1">
+             <div className="p-4 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border)] space-y-1">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Version</Typography>
-                <Typography variant="h4" className="text-white text-base">{importPreview?.schemaVersion || '1.0'}</Typography>
+                <Typography variant="h4" className="text-[var(--color-text-primary)] text-base">{importPreview?.schemaVersion || '1.0'}</Typography>
              </div>
           </div>
 

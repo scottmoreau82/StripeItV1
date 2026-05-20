@@ -360,7 +360,10 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             onClick={() => {
                               window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
                             }}
-                            className="group hover:bg-emerald-500/[0.02] cursor-pointer transition-colors"
+                            className={cn(
+                              "group cursor-pointer transition-colors",
+                              spiff.isChargeback ? "hover:bg-rose-500/[0.02] bg-rose-500/[0.01]" : "hover:bg-emerald-500/[0.02]"
+                            )}
                           >
                             <td className="py-5 px-4 whitespace-nowrap">
                               <Typography variant="mono" className="text-[11px] text-slate-400 font-black">
@@ -369,13 +372,18 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             </td>
                             <td className="py-5 px-4" colSpan={2}>
                               <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                                  <AppIcon name="billing" className="h-4 w-4 text-emerald-400" />
+                                <div className={cn(
+                                  "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                                  spiff.isChargeback 
+                                    ? "bg-rose-500/10 border border-rose-500/20 text-rose-400" 
+                                    : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                                )}>
+                                  <AppIcon name="billing" className={cn("h-4 w-4", spiff.isChargeback ? "text-rose-400" : "text-emerald-400")} />
                                 </div>
                                 <div className="flex flex-col min-w-0">
                                   <div className="flex items-center gap-2">
                                     <Typography variant="label" className="text-white text-sm font-black truncate">
-                                      {spiff.label || 'spiff adjustment'}
+                                      {spiff.label || (spiff.isChargeback ? 'chargeback adjustment' : 'spiff adjustment')}
                                     </Typography>
                                     {!spiff.includedInTotal && (
                                       <Badge variant="outline" className="text-[8px] px-1 py-0 border-blue-500/30 text-blue-400 bg-blue-500/10 font-black uppercase">
@@ -384,14 +392,19 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                     )}
                                   </div>
                                   <Typography variant="mono" className="text-[10px] text-slate-600 font-bold truncate max-w-[200px]">
-                                    {spiff.notes || 'Standalone payout adjustment'}
+                                    {spiff.notes || (spiff.isChargeback ? 'Standalone chargeback' : 'Standalone payout adjustment')}
                                   </Typography>
                                 </div>
                               </div>
                             </td>
                             <td className="py-5 px-4">
-                              <Badge variant="outline" className="text-[8px] px-1 py-0 border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-black uppercase">
-                                spiff
+                              <Badge variant="outline" className={cn(
+                                "text-[8px] px-1 py-0 font-black uppercase",
+                                spiff.isChargeback 
+                                  ? "border-rose-500/30 text-rose-400 bg-rose-500/10" 
+                                  : "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                              )}>
+                                {spiff.isChargeback ? 'chargeback' : 'spiff'}
                               </Badge>
                             </td>
                             <td className="py-5 px-4 text-right">
@@ -401,8 +414,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               <Typography variant="mono" className="text-xs text-slate-700 font-black">---</Typography>
                             </td>
                             <td className="py-5 px-4 text-right">
-                              <Typography variant="label" className="text-emerald-400 font-black text-sm">
-                                ${spiff.amount.toLocaleString()}
+                              <Typography variant="label" className={cn("font-black text-sm", spiff.isChargeback ? "text-rose-400" : "text-emerald-400")}>
+                                {spiff.isChargeback ? '-' : ''}${spiff.amount.toLocaleString()}
                               </Typography>
                             </td>
                             <td className="py-5 px-4">
@@ -565,16 +578,26 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         onClick={() => {
                           window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
                         }}
-                        className="bg-[#0A1512] border border-emerald-500/10 rounded-xl p-3 shadow-md relative overflow-hidden"
+                        className={cn(
+                          "rounded-xl p-3 shadow-md relative overflow-hidden border",
+                          spiff.isChargeback 
+                            ? "bg-[#150A0A] border-rose-500/10 hover:bg-[#1a0e0e]" 
+                            : "bg-[#0A1512] border-emerald-500/10 hover:bg-[#0e1a17]"
+                        )}
                       >
                          <div className="flex items-center justify-between gap-3">
                            <div className="flex items-center gap-3 min-w-0">
-                             <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                               <AppIcon name="billing" className="h-4 w-4 text-emerald-400" />
+                             <div className={cn(
+                               "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                               spiff.isChargeback 
+                                 ? "bg-rose-500/10 border border-rose-500/20 text-rose-400" 
+                                 : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                             )}>
+                               <AppIcon name="billing" className={cn("h-4 w-4", spiff.isChargeback ? "text-rose-400" : "text-emerald-400")} />
                              </div>
                              <div className="min-w-0">
                                <Typography variant="label" className="text-white text-xs font-black uppercase truncate block">
-                                 {spiff.label || 'spiff'}
+                                 {spiff.label || (spiff.isChargeback ? 'CHARGEBACK' : 'spiff')}
                                </Typography>
                                <Typography variant="mono" className="text-[9px] text-slate-500 font-bold">
                                  {formatDateSafe(spiff.date, 'MM/dd/yy')}
@@ -582,8 +605,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                              </div>
                            </div>
                            <div className="text-right shrink-0">
-                             <Typography variant="label" className="text-emerald-400 font-black text-sm">
-                               ${spiff.amount.toLocaleString()}
+                             <Typography variant="label" className={cn("font-black text-sm", spiff.isChargeback ? "text-rose-400" : "text-emerald-400")}>
+                               {spiff.isChargeback ? '-' : ''}${spiff.amount.toLocaleString()}
                              </Typography>
                            </div>
                          </div>

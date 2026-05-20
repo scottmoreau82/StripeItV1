@@ -226,6 +226,11 @@ export interface PayPlan {
   miniTiers?: MiniLadderTier[]; // New Mini Ladder System
   customMinis?: CustomMini[];
   hourlyConfig?: HourlyConfig;
+
+  // Pack Deduction
+  frontPack?: number;
+  backPack?: number;
+  isPackActive?: boolean;
   
   createdAt: number;
   updatedAt: number;
@@ -558,6 +563,21 @@ export interface MonthlySpiff {
   date: string; // ISO date for log sorting
   includedInTotal?: boolean;
   notes?: string;
+  isChargeback?: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Chargeback {
+  id: string;
+  userId: string;
+  orgId: string;
+  month: string; // "2024-05" format
+  amount: number; // always positive, stored as positive
+  label?: string;
+  notes?: string;
+  originalDealId?: string; // optional reference
+  date: string; // ISO date
   createdAt: number;
   updatedAt: number;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   PayPlan, 
   PayPlanRule, 
@@ -568,11 +568,33 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
       rate: 15,
       hoursWorked: 160,
       model: HourlyPayoutModel.GUARANTEE
-    } as HourlyConfig
+    } as HourlyConfig,
+
+    // Pack Deduction
+    isPackActive: initialData?.isPackActive ?? false,
+    frontPack: initialData?.frontPack ?? 0,
+    backPack: initialData?.backPack ?? 0,
   });
 
   // Simulation State System
   const [simMode, setSimMode] = useState<'live' | 'scenario'>('live');
+
+  const [drawBalance, setDrawBalance] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('stripeit_draw_balance');
+      return saved ? Number(saved) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('stripeit_draw_balance', drawBalance.toString());
+    } catch (e) {
+      console.error(e);
+    }
+  }, [drawBalance]);
 
   const [simulationData, setSimulationData] = useState({
     name: 'Standard Scenario',
@@ -765,7 +787,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   };
 
   const handleNumeric = (field: string, value: string) => {
-    const isCurrency = ['miniAmount', 'flatPerUnitAmount'].includes(field);
+    const isCurrency = ['miniAmount', 'flatPerUnitAmount', 'frontPack', 'backPack'].includes(field);
     const val = isCurrency ? normalizeCurrencyNumber(value) : normalizeMatrixNumber(value);
     handleChange(field, val);
   };
@@ -1235,7 +1257,10 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
         hoursWorked: Number(formData.hourlyConfig?.hoursWorked) || 0,
         active: formData.hourlyConfig?.active ?? false
       },
-      frontDeficitRecoveryEnabled: formData.frontDeficitRecoveryEnabled
+      frontDeficitRecoveryEnabled: formData.frontDeficitRecoveryEnabled,
+      isPackActive: formData.isPackActive ?? false,
+      frontPack: Number(formData.frontPack) || 0,
+      backPack: Number(formData.backPack) || 0
     };
 
     // Validation Check: Prevent save if any active volume bonus has invalid ordering
@@ -1373,10 +1398,46 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
               <div className="flex flex-col">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-wider">SPIFFs</Typography>
                 <Typography variant="mono" className="text-sm text-slate-300 font-black mt-1">
-                  ${Math.round(currentMonthSpiffs.reduce((sum, s) => sum + (s.amount || 0), 0)).toLocaleString()}
+                  ${Math.round(currentMonthSpiffs.reduce((sum, s) => sum + (s.isChargeback ? -(s.amount || 0) : (s.amount || 0)), 0)).toLocaleString()}
                 </Typography>
               </div>
             </div>
+
+            {/* Draw Balance Row (Only shown if draw model is active) */}
+            {formData.isMinisAndHourlyActive && formData.isHourlyActive && formData.hourlyConfig.model === 'draw' && (
+              <div className="mt-4 pt-4 border-t border-white/5 space-y-4 animate-in fade-in duration-300">
+                <div className="space-y-2">
+                  <Typography variant="mono" className="text-[10px] text-amber-500 font-extrabold uppercase tracking-widest block">
+                    CARRY-FORWARD DRAW BALANCE
+                  </Typography>
+                  <div className="w-[180px]">
+                    <CurrencyInput
+                      value={drawBalance}
+                      onChange={(e) => setDrawBalance(normalizeCurrencyNumber(e.target.value))}
+                      hideLabel
+                      className="h-10 bg-black/40 border-white/5"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest block">
+                      ADJUSTED PROJECTION
+                    </Typography>
+                    <Typography 
+                      variant="sans" 
+                      className={cn(
+                        "text-2xl font-black tracking-tight block",
+                        (simEarnings.grandTotal - drawBalance) >= 0 ? "text-emerald-400" : "text-rose-400"
+                      )}
+                    >
+                      ${Math.round(simEarnings.grandTotal - drawBalance).toLocaleString()}
+                    </Typography>
+                  </div>
+                  <Typography variant="sans" className="text-slate-500 text-[10px] leading-relaxed block">
+                    Amount owed back before new commission is payable
+                  </Typography>
+                </div>
+              </div>
+            )}
 
             {/* Row 3 — Slim progress bar */}
             <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
@@ -2278,6 +2339,49 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   className="h-12 w-full max-w-[320px]"
                 />
               </div>
+            </Card>
+
+            {/* Pack Deduction Card */}
+            <Card className={cn(
+              "bg-[#0A0C12]/50 border-white/5 p-8 rounded-[2rem] transition-all duration-300",
+              !formData.isPackActive && "opacity-40 grayscale-[0.5]"
+            )}>
+              <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-slate-500/10 flex items-center justify-center border border-slate-500/20 text-slate-500">
+                    <Layers className="h-5 w-5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <Typography variant="h3" className="text-white text-lg font-black uppercase tracking-tight">Pack Deduction</Typography>
+                    <Typography variant="mono" className="text-slate-600 text-[9px] uppercase tracking-widest mt-1">
+                      Fixed cost deducted from gross before commission is calculated
+                    </Typography>
+                  </div>
+                </div>
+                <ActiveChip 
+                  active={formData.isPackActive} 
+                  onClick={() => handleChange('isPackActive', !formData.isPackActive)} 
+                />
+              </div>
+
+              {formData.isPackActive && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in duration-300 max-w-xl">
+                  <CurrencyInput 
+                    label="Front Pack" 
+                    value={formData.frontPack}
+                    onChange={(e) => handleNumeric('frontPack', e.target.value)}
+                    labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
+                    className="h-12 w-full"
+                  />
+                  <CurrencyInput 
+                    label="Back Pack" 
+                    value={formData.backPack}
+                    onChange={(e) => handleNumeric('backPack', e.target.value)}
+                    labelClassName="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-3 block"
+                    className="h-12 w-full"
+                  />
+                </div>
+              )}
             </Card>
           </div>
         </MatrixSection>

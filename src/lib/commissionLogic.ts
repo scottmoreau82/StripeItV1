@@ -333,8 +333,16 @@ export const estimateCommission = (
     }
   }
 
-  const frontComm = deal.frontEndGross * (frontRate / 100);
-  const backComm = deal.backEndGross * (backRate / 100);
+  let frontGross = deal.frontEndGross;
+  let backGross = deal.backEndGross;
+
+  if (plan.isPackActive) {
+    frontGross = Math.max(0, deal.frontEndGross - (plan.frontPack || 0));
+    backGross = Math.max(0, deal.backEndGross - (plan.backPack || 0));
+  }
+
+  const frontComm = frontGross * (frontRate / 100);
+  const backComm = backGross * (backRate / 100);
   
   const flatComm = plan.isFlatPerUnitActive !== false ? (plan.flatPerUnitAmount || 0) : 0;
 
@@ -644,7 +652,7 @@ export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan, monthlySpi
   // Add Monthly adjustments (Spiffs)
   const totalMonthlySpiffs = monthlySpiffs
     .filter(s => s.includedInTotal !== false)
-    .reduce((sum, s) => sum + (s.amount || 0), 0);
+    .reduce((sum, s) => sum + (s.isChargeback ? -(s.amount || 0) : (s.amount || 0)), 0);
   finalGrandTotal += totalMonthlySpiffs;
 
   return {
@@ -652,7 +660,12 @@ export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan, monthlySpi
     dealResults,
     tierBonuses,
     totalTierBonuses,
-    monthlySpiffs: monthlySpiffs.map(s => ({ id: s.id, amount: s.amount, label: s.label || s.notes || 'SPIFF' })),
+    monthlySpiffs: monthlySpiffs.map(s => ({ 
+      id: s.id, 
+      amount: s.isChargeback ? -(s.amount) : s.amount, 
+      label: s.label || s.notes || (s.isChargeback ? 'CHARGEBACK' : 'SPIFF'),
+      isChargeback: s.isChargeback 
+    })),
     totalMonthlySpiffs,
     hourlyCompensation: hourlyInfo,
     grandTotal: finalGrandTotal

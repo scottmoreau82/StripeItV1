@@ -51,7 +51,7 @@ export const ActivityFeed: React.FC = () => {
             placeholder="Search activity..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 bg-white/[0.02] border-white/10 h-11"
+            className="pl-12 bg-[var(--color-bg-elevated)] border-[var(--color-border)] h-11 text-[var(--color-text-primary)]"
           />
         </div>
       </PageHeader>
@@ -63,16 +63,16 @@ export const ActivityFeed: React.FC = () => {
             <div className="space-y-8">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="flex gap-4 animate-pulse">
-                  <div className="h-10 w-10 rounded-xl bg-white/5" />
+                  <div className="h-10 w-10 rounded-xl bg-[var(--color-bg-elevated)]" />
                   <div className="flex-1 space-y-3">
-                    <div className="h-4 w-32 bg-white/5 rounded" />
-                    <div className="h-20 w-full bg-white/5 rounded-2xl" />
+                    <div className="h-4 w-32 bg-[var(--color-bg-elevated)] rounded" />
+                    <div className="h-20 w-full bg-[var(--color-bg-elevated)] rounded-2xl" />
                   </div>
                 </div>
               ))}
             </div>
           ) : filteredEvents.length === 0 ? (
-            <Card className="py-20 flex flex-col items-center justify-center text-center bg-white/[0.01] border-dashed border-white/10">
+            <Card className="py-20 flex flex-col items-center justify-center text-center bg-[var(--color-bg-elevated)] border-dashed border-[var(--color-border)]">
               <Clock className="h-12 w-12 text-slate-700 mb-4" />
               <Typography variant="label" className="text-slate-500 block mb-1">
                 No history found

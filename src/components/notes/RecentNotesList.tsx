@@ -28,7 +28,7 @@ export const RecentNotesList: React.FC<RecentNotesListProps> = ({ notes, onDelet
   return (
     <div className="space-y-3">
       {notes.slice(0, 5).map((note) => (
-        <Card key={note.id} className="p-4 bg-white/[0.01] border-white/5 hover:border-white/10 transition-all group">
+        <Card key={note.id} className="p-4 bg-[var(--color-bg-elevated)] border-[var(--color-border)] hover:border-[var(--color-border)] transition-all group">
           <div className="flex justify-between items-start gap-4">
              <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
@@ -37,7 +37,7 @@ export const RecentNotesList: React.FC<RecentNotesListProps> = ({ notes, onDelet
                       {formatDateSafe(note.createdAt, 'MMM d, h:mm a', 'Recently')}
                    </Typography>
                 </div>
-                <Typography variant="p" className="text-white text-sm leading-relaxed antialiased">
+                <Typography variant="p" className="text-[var(--color-text-primary)] text-sm leading-relaxed antialiased">
                    {note.text}
                 </Typography>
                 {(note.customerName || note.stockNumber) && (

@@ -67,8 +67,8 @@ const getEventTheme = (type: ActivityEventType) => {
       return {
         icon: <MessageSquare className="h-4 w-4" />,
         color: "text-slate-400",
-        bg: "bg-white/5",
-        border: "border-white/10"
+        bg: "bg-[var(--color-bg-elevated)]",
+        border: "border-[var(--color-border)]"
       };
   }
 };
@@ -80,7 +80,7 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ event, isFirst, isLa
     <div className="relative pl-10 pb-8 last:pb-0">
       {/* Timeline Line */}
       {!isLast && (
-        <div className="absolute left-[19px] top-[32px] bottom-0 w-[2px] bg-gradient-to-b from-white/10 to-transparent" />
+        <div className="absolute left-[19px] top-[32px] bottom-0 w-[2px] bg-gradient-to-b from-[var(--color-border)] to-transparent" />
       )}
 
       {/* Timeline Node */}
@@ -96,7 +96,7 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ event, isFirst, isLa
       {/* Content */}
       <div className="space-y-2 pt-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <Typography variant="label" className="text-white font-black uppercase text-xs tracking-tight">
+          <Typography variant="label" className="text-[var(--color-text-primary)] font-black uppercase text-xs tracking-tight">
             {event.userName}
           </Typography>
           <Circle className="h-1 w-1 fill-slate-700 text-slate-700" />
@@ -105,8 +105,8 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ event, isFirst, isLa
           </Typography>
         </div>
 
-        <div className="relative p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-          <Typography variant="p" className="text-slate-300 text-sm leading-relaxed antialiased">
+        <div className="relative p-4 rounded-2xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] hover:border-slate-500/30 transition-colors">
+          <Typography variant="p" className="text-[var(--color-text-secondary)] text-sm leading-relaxed antialiased">
             {event.message}
           </Typography>
           

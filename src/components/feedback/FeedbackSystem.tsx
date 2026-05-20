@@ -95,18 +95,16 @@ export const FeedbackSystem: React.FC<FeedbackSystemProps> = ({ isOpen, onClose,
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-0 z-[100] bg-bg-deep overflow-y-auto flex flex-col"
           >
-            <div className="sticky top-0 z-10 bg-bg-deep/80 backdrop-blur-xl border-b border-white/5 p-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center">
-                  <MessageSquarePlus className="h-6 w-6 text-brand-primary" />
-                </div>
-                <Typography variant="h3" className="text-text-primary font-black uppercase tracking-tight italic text-lg leading-none">
-                  {titleText}
-                </Typography>
+            <div className="sticky top-0 z-10 bg-bg-deep/80 backdrop-blur-xl border-b border-white/5 p-6 relative flex flex-col items-center text-center gap-3">
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center">
+                <MessageSquarePlus className="h-6 w-6 text-brand-primary" />
               </div>
+              <Typography variant="h3" className="text-text-primary font-black uppercase tracking-tight italic text-lg leading-snug max-w-[80%]">
+                {titleText}
+              </Typography>
               <button 
                 onClick={onClose}
-                className="p-3 bg-bg-card/50 border border-border-card rounded-2xl text-text-secondary hover:text-text-primary active:scale-95 transition-all"
+                className="absolute top-4 right-4 p-3 bg-bg-card/50 border border-border-card rounded-2xl text-text-secondary hover:text-text-primary active:scale-95 transition-all"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -149,15 +147,18 @@ const ChoiceCard: React.FC<ChoiceCardProps> = ({ icon: Icon, title, description,
   return (
     <button 
       onClick={onClick}
-      className="group p-8 rounded-[2.5rem] bg-bg-card/40 border border-border-card hover:bg-bg-card/60 hover:border-brand-primary/30 transition-all text-left space-y-6"
+      className={cn(
+        "group p-5 rounded-[2.5rem] bg-bg-card/40 border border-border-card hover:bg-bg-card/60 hover:border-brand-primary/30 transition-all text-left flex items-center gap-4",
+        color === 'rose' ? "flex-row" : "flex-row-reverse"
+      )}
     >
       <div className={cn(
-        "h-16 w-16 rounded-3xl border flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform",
+        "h-12 w-12 shrink-0 rounded-3xl border flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform",
         colorClasses
       )}>
-        <Icon className="h-8 w-8" />
+        <Icon className="h-6 w-6" />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 flex-1">
         <Typography variant="label" className="text-text-primary block font-black uppercase tracking-[0.1em] text-xs leading-none">{title}</Typography>
         <Typography variant="small" className="text-text-secondary block leading-relaxed text-[11px] font-medium">{description}</Typography>
       </div>

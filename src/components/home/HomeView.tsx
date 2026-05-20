@@ -200,7 +200,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         icon={LayoutGrid}
       >
         <div className="flex items-center gap-3">
-          {hasCustomizationAccess && (
+          {!isMobile && hasCustomizationAccess && (
             <div className="relative group">
               <button 
                 onClick={() => setIsCustomizing(true)}
@@ -217,13 +217,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
           )}
 
-          <Button
-            onClick={onLogDeal}
-            className="h-11 px-6 bg-brand-primary text-bg-deep shadow-glow glow-primary transition-all font-black uppercase tracking-widest text-[11px] rounded-xl hover:scale-105 active:scale-95"
-          >
-            <Plus size={16} className="mr-2" />
-            New Deal
-          </Button>
+          {!isMobile && (
+            <Button
+              onClick={onLogDeal}
+              className="h-11 px-6 bg-brand-primary text-bg-deep shadow-glow glow-primary transition-all font-black uppercase tracking-widest text-[11px] rounded-xl hover:scale-105 active:scale-95"
+            >
+              <Plus size={16} className="mr-2" />
+              New Deal
+            </Button>
+          )}
         </div>
       </PageHeader>
     </div>
@@ -448,6 +450,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
           )}
         </div>
       </div>
+
+      {isMobile && hasCustomizationAccess && (
+        <div className="flex justify-center pt-8 pb-4">
+          <button
+            onClick={() => setIsCustomizing(true)}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-dashed border-brand-primary/20 text-brand-primary text-[10px] font-black uppercase tracking-widest"
+          >
+            <Settings2 size={14} />
+            Customize Dashboard
+          </button>
+        </div>
+      )}
     </div>
   );
 

@@ -572,7 +572,7 @@ function MainAppFlow() {
       </Modal>
 
       {/* Global Mobile Log Deal FAB */}
-      {isMobile && location.pathname !== '/settings' && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
+      {isMobile && (location.pathname === '/' || isDrawerOpen) && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
         <div className={cn(
           "fixed bottom-10 z-50 transition-all duration-500 ease-in-out md:hidden global-mobile-log-deal-fab",
           isDrawerOpen ? "right-8 translate-x-0" : "left-1/2 -translate-x-1/2"

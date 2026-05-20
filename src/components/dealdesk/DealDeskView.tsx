@@ -1387,253 +1387,253 @@ export const DealDeskView: React.FC = () => {
         </div>
       }
     >
-      {/* --- ROLL BACK POPUP MODAL --- */}
-      <Modal
-        isOpen={isRollBackOpen}
-        onClose={() => { setIsRollBackOpen(false); setRollBackOutputs(null); }}
-        title="Amortization Roll-Back Solver"
-        className="max-w-md z-[60]"
-      >
-        <div className="space-y-6">
-          <Typography variant="small" className="text-slate-400 leading-relaxed block text-center">
-            Solve for any parameter by targeting a desired monthly payment value based on current taxes, itemizations, and fees.
-          </Typography>
+    </DashboardLayout>
 
-          <div className="space-y-4">
-            {/* Target payment input */}
-            <div className="space-y-1.5">
-              <Typography variant="label">TARGET PATHWAY PAYMENT ($ / MO)</Typography>
-              <input
-                type="number"
-                step="10"
-                value={targetPayment}
-                onChange={(e) => setTargetPayment(parseFloat(e.target.value) || 0)}
-                className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-sm uppercase font-black w-full focus:outline-none focus:border-brand-primary"
-              />
-            </div>
+    {/* --- ROLL BACK POPUP MODAL --- */}
+    <Modal
+      isOpen={isRollBackOpen}
+      onClose={() => { setIsRollBackOpen(false); setRollBackOutputs(null); }}
+      title="Amortization Roll-Back Solver"
+      className="max-w-md z-[60]"
+    >
+      <div className="space-y-6">
+        <Typography variant="small" className="text-slate-400 leading-relaxed block text-center">
+          Solve for any parameter by targeting a desired monthly payment value based on current taxes, itemizations, and fees.
+        </Typography>
 
-            {/* Roll To parameter dropdown */}
-            <div className="space-y-1.5">
-              <Typography variant="label">PARAMETER TO FIT/ROLL</Typography>
-              <select
-                value={rollToField}
-                onChange={(e) => {
-                  setRollToField(e.target.value as any);
-                  setRollBackOutputs(null);
-                }}
-                className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-xs uppercase font-black w-full focus:outline-none focus:border-brand-primary"
-              >
-                <option value="discount">DEALER DISCOUNT</option>
-                <option value="tradeAllowance">TRADE ALLOWANCE</option>
-                <option value="msrp">VEHICLE PRICE (MSRP)</option>
-                <option value="cashDown">CASH DOWN AMOUNT</option>
-                <option value="rate">ROW INTEREST RATE (%)</option>
-              </select>
-            </div>
+        <div className="space-y-4">
+          {/* Target payment input */}
+          <div className="space-y-1.5">
+            <Typography variant="label">TARGET PATHWAY PAYMENT ($ / MO)</Typography>
+            <input
+              type="number"
+              step="10"
+              value={targetPayment}
+              onChange={(e) => setTargetPayment(parseFloat(e.target.value) || 0)}
+              className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-sm uppercase font-black w-full focus:outline-none focus:border-brand-primary"
+            />
+          </div>
 
-            {/* Which Column dropdown */}
-            <div className="space-y-1.5">
-              <Typography variant="label">TARGET GRID COLUMN (DOWN SCENARIO)</Typography>
-              <select
-                value={rollColumn}
-                onChange={(e) => {
-                  setRollColumn(parseInt(e.target.value));
-                  setRollBackOutputs(null);
-                }}
-                className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-xs uppercase font-black w-full focus:outline-none focus:border-brand-primary"
-              >
-                <option value={0}>COLUMN 1 (${cashDown1.toLocaleString()} DOWN)</option>
-                <option value={1}>COLUMN 2 (${cashDown2.toLocaleString()} DOWN)</option>
-                <option value={2}>COLUMN 3 (${cashDown3.toLocaleString()} DOWN)</option>
-              </select>
-            </div>
-
-            <Button
-              onClick={handleSolveRollBack}
-              className="w-full h-11 bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-xs rounded-xl"
+          {/* Roll To parameter dropdown */}
+          <div className="space-y-1.5">
+            <Typography variant="label">PARAMETER TO FIT/ROLL</Typography>
+            <select
+              value={rollToField}
+              onChange={(e) => {
+                setRollToField(e.target.value as any);
+                setRollBackOutputs(null);
+              }}
+              className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-xs uppercase font-black w-full focus:outline-none focus:border-brand-primary"
             >
-              RUN MATRIX SOLVER
-            </Button>
+              <option value="discount">DEALER DISCOUNT</option>
+              <option value="tradeAllowance">TRADE ALLOWANCE</option>
+              <option value="msrp">VEHICLE PRICE (MSRP)</option>
+              <option value="cashDown">CASH DOWN AMOUNT</option>
+              <option value="rate">ROW INTEREST RATE (%)</option>
+            </select>
+          </div>
 
-            {rollBackOutputs && (
-              <div className="mt-4 p-4 rounded-xl bg-brand-primary/5 border border-brand-primary/20 space-y-3 font-mono">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">FIT VALUE REQUIRED:</span>
-                  <span className="text-brand-primary font-black">
-                    {rollToField === 'rate' ? `${rollBackOutputs.newValue}%` : `$${rollBackOutputs.newValue.toLocaleString()}`}
+          {/* Which Column dropdown */}
+          <div className="space-y-1.5">
+            <Typography variant="label">TARGET GRID COLUMN (DOWN SCENARIO)</Typography>
+            <select
+              value={rollColumn}
+              onChange={(e) => {
+                setRollColumn(parseInt(e.target.value));
+                setRollBackOutputs(null);
+              }}
+              className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-xs uppercase font-black w-full focus:outline-none focus:border-brand-primary"
+            >
+              <option value={0}>COLUMN 1 (${cashDown1.toLocaleString()} DOWN)</option>
+              <option value={1}>COLUMN 2 (${cashDown2.toLocaleString()} DOWN)</option>
+              <option value={2}>COLUMN 3 (${cashDown3.toLocaleString()} DOWN)</option>
+            </select>
+          </div>
+
+          <Button
+            onClick={handleSolveRollBack}
+            className="w-full h-11 bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-xs rounded-xl"
+          >
+            RUN MATRIX SOLVER
+          </Button>
+
+          {rollBackOutputs && (
+            <div className="mt-4 p-4 rounded-xl bg-brand-primary/5 border border-brand-primary/20 space-y-3 font-mono">
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400">FIT VALUE REQUIRED:</span>
+                <span className="text-brand-primary font-black">
+                  {rollToField === 'rate' ? `${rollBackOutputs.newValue}%` : `$${rollBackOutputs.newValue.toLocaleString()}`}
+                </span>
+              </div>
+              {(rollToField === 'discount' || rollToField === 'msrp') && (
+                <div className="flex justify-between text-xs pt-1 border-t border-white/5">
+                  <span className="text-slate-400">PROJECTED TOTAL GROSS:</span>
+                  <span className={`font-black ${rollBackOutputs.newGross >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    ${rollBackOutputs.newGross.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                {(rollToField === 'discount' || rollToField === 'msrp') && (
-                  <div className="flex justify-between text-xs pt-1 border-t border-white/5">
-                    <span className="text-slate-400">PROJECTED TOTAL GROSS:</span>
-                    <span className={`font-black ${rollBackOutputs.newGross >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      ${rollBackOutputs.newGross.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                )}
-                <Button
-                  onClick={handleApplyRollBack}
-                  className="w-full h-9 bg-emerald-500 hover:bg-emerald-600 text-bg-deep font-black uppercase tracking-widest text-[9px] rounded-lg mt-2"
-                >
-                  APPLY CHANGES TO CALCULATOR
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      </Modal>
-
-      {/* --- LTV POPUP MODAL --- */}
-      <Modal
-        isOpen={isLtvOpen}
-        onClose={() => setIsLtvOpen(false)}
-        title="Grid LTV / Carry Analyst"
-        className="max-w-md z-[60]"
-      >
-        <div className="space-y-6">
-          <Typography variant="small" className="text-slate-400 leading-relaxed block text-center">
-            Analyze Loan-To-Value (LTV) limits and carries for the selected cash down scenario based on standard 115% thresholds.
-          </Typography>
-
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Typography variant="label">SELECT SCENARIO COLUMN</Typography>
-              <select
-                value={selectedLtvColumn}
-                onChange={(e) => setSelectedLtvColumn(parseInt(e.target.value))}
-                className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-xs uppercase font-black w-full focus:outline-none focus:border-brand-primary"
+              )}
+              <Button
+                onClick={handleApplyRollBack}
+                className="w-full h-9 bg-emerald-500 hover:bg-emerald-600 text-bg-deep font-black uppercase tracking-widest text-[9px] rounded-lg mt-2"
               >
-                <option value={0}>COLUMN 1 (${cashDown1.toLocaleString()} DOWN)</option>
-                <option value={1}>COLUMN 2 (${cashDown2.toLocaleString()} DOWN)</option>
-                <option value={2}>COLUMN 3 (${cashDown3.toLocaleString()} DOWN)</option>
-              </select>
+                APPLY CHANGES TO CALCULATOR
+              </Button>
             </div>
+          )}
+        </div>
+      </div>
+    </Modal>
 
-            {(() => {
-              const selectedDown = cashDowns[selectedLtvColumn];
-              const loanAmount = Math.max(0, balance - selectedDown);
-              const maxCarryAmount = parseFloat((msrp * 1.15).toFixed(2));
-              const carryPercent = msrp > 0 ? (loanAmount / msrp) * 100 : 0;
-              const overage = Math.max(0, loanAmount - maxCarryAmount);
+    {/* --- LTV POPUP MODAL --- */}
+    <Modal
+      isOpen={isLtvOpen}
+      onClose={() => setIsLtvOpen(false)}
+      title="Grid LTV / Carry Analyst"
+      className="max-w-md z-[60]"
+    >
+      <div className="space-y-6">
+        <Typography variant="small" className="text-slate-400 leading-relaxed block text-center">
+          Analyze Loan-To-Value (LTV) limits and carries for the selected cash down scenario based on standard 115% thresholds.
+        </Typography>
 
-              return (
-                <div className="space-y-3 p-5 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] font-mono text-xs text-[var(--color-text-primary)]">
-                  <div className="flex justify-between py-1.5 border-b border-[var(--color-border)]">
-                    <span className="text-[var(--color-text-secondary)]">CARRY RATIO %:</span>
-                    <span className={`font-black uppercase py-0.5 px-2 rounded-md ${carryPercent > 115 ? 'text-rose-400 bg-rose-500/10' : carryPercent >= 100 ? 'text-amber-400 bg-amber-500/10' : 'text-emerald-400 bg-emerald-500/10'}`}>
-                      {carryPercent.toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-1.5 border-b border-[var(--color-border)]">
-                    <span className="text-[var(--color-text-secondary)]">LOAN PRINCIPAL (L):</span>
-                    <span className="font-semibold text-[var(--color-text-primary)]">${loanAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  <div className="flex justify-between py-1.5 border-b border-[var(--color-border)]">
-                    <span className="text-[var(--color-text-secondary)]">BASE VALUE (MSRP):</span>
-                    <span className="font-semibold text-[var(--color-text-primary)]">${msrp.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  <div className="flex justify-between py-1.5 border-b border-[var(--color-border)]">
-                    <span className="text-[var(--color-text-secondary)]">MAX ROAD LTV $ (115%):</span>
-                    <span className="font-semibold text-purple-400">${maxCarryAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                  </div>
-                  <div className="flex justify-between py-1.5 pt-3">
-                    <span className="text-[var(--color-text-secondary)] font-bold">OVERAGE EXCESS:</span>
-                    <span className={`font-black ${overage > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                      {overage > 0 ? `$${overage.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '$0.00'}
-                    </span>
-                  </div>
-                </div>
-              );
-            })()}
-
-            <Button
-              onClick={() => setIsLtvOpen(false)}
-              className="w-full h-11 bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-xs rounded-xl"
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Typography variant="label">SELECT SCENARIO COLUMN</Typography>
+            <select
+              value={selectedLtvColumn}
+              onChange={(e) => setSelectedLtvColumn(parseInt(e.target.value))}
+              className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-xs uppercase font-black w-full focus:outline-none focus:border-brand-primary"
             >
-              CLOSE REPORT
+              <option value={0}>COLUMN 1 (${cashDown1.toLocaleString()} DOWN)</option>
+              <option value={1}>COLUMN 2 (${cashDown2.toLocaleString()} DOWN)</option>
+              <option value={2}>COLUMN 3 (${cashDown3.toLocaleString()} DOWN)</option>
+            </select>
+          </div>
+
+          {(() => {
+            const selectedDown = cashDowns[selectedLtvColumn];
+            const loanAmount = Math.max(0, balance - selectedDown);
+            const maxCarryAmount = parseFloat((msrp * 1.15).toFixed(2));
+            const carryPercent = msrp > 0 ? (loanAmount / msrp) * 100 : 0;
+            const overage = Math.max(0, loanAmount - maxCarryAmount);
+
+            return (
+              <div className="space-y-3 p-5 rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] font-mono text-xs text-[var(--color-text-primary)]">
+                <div className="flex justify-between py-1.5 border-b border-[var(--color-border)]">
+                  <span className="text-[var(--color-text-secondary)]">CARRY RATIO %:</span>
+                  <span className={`font-black uppercase py-0.5 px-2 rounded-md ${carryPercent > 115 ? 'text-rose-400 bg-rose-500/10' : carryPercent >= 100 ? 'text-amber-400 bg-amber-500/10' : 'text-emerald-400 bg-emerald-500/10'}`}>
+                    {carryPercent.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="flex justify-between py-1.5 border-b border-[var(--color-border)]">
+                  <span className="text-[var(--color-text-secondary)]">LOAN PRINCIPAL (L):</span>
+                  <span className="font-semibold text-[var(--color-text-primary)]">${loanAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between py-1.5 border-b border-[var(--color-border)]">
+                  <span className="text-[var(--color-text-secondary)]">BASE VALUE (MSRP):</span>
+                  <span className="font-semibold text-[var(--color-text-primary)]">${msrp.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between py-1.5 border-b border-[var(--color-border)]">
+                  <span className="text-[var(--color-text-secondary)]">MAX ROAD LTV $ (115%):</span>
+                  <span className="font-semibold text-purple-400">${maxCarryAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between py-1.5 pt-3">
+                  <span className="text-[var(--color-text-secondary)] font-bold">OVERAGE EXCESS:</span>
+                  <span className={`font-black ${overage > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {overage > 0 ? `$${overage.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '$0.00'}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
+
+          <Button
+            onClick={() => setIsLtvOpen(false)}
+            className="w-full h-11 bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-xs rounded-xl"
+          >
+            CLOSE REPORT
+          </Button>
+        </div>
+      </div>
+    </Modal>
+
+    {/* --- TAX RATES POPUP MODAL --- */}
+    <Modal
+      isOpen={isTaxRatesModalOpen}
+      onClose={() => setIsTaxRatesModalOpen(false)}
+      title="TAX RATES"
+      className="max-w-sm z-[60]"
+    >
+      <div className="space-y-6">
+        <Typography variant="small" className="text-slate-400 leading-relaxed block text-center">
+          Modify tax rates below. Standard rules apply. Changes will save to dealership settings.
+        </Typography>
+
+        <div className="space-y-4">
+          {/* STATE RATE INPUT */}
+          <div className="space-y-1.5">
+            <Typography variant="label" className="text-[var(--color-text-secondary)] uppercase">STATE RATE (%)</Typography>
+            <input
+              type="number"
+              step="0.01"
+              value={tempTaxRateState}
+              onChange={(e) => setTempTaxRateState(parseFloat(e.target.value) || 0)}
+              className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-sm uppercase font-black w-full focus:outline-none focus:border-brand-primary"
+            />
+          </div>
+
+          {/* COUNTY RATE INPUT */}
+          <div className="space-y-1.5">
+            <Typography variant="label" className="text-[var(--color-text-secondary)] uppercase">COUNTY RATE (%)</Typography>
+            <input
+              type="number"
+              step="0.01"
+              value={tempTaxRateCounty}
+              onChange={(e) => setTempTaxRateCounty(parseFloat(e.target.value) || 0)}
+              className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-sm uppercase font-black w-full focus:outline-none focus:border-brand-primary"
+            />
+          </div>
+
+          {/* CITY RATE INPUT */}
+          <div className="space-y-1.5">
+            <Typography variant="label" className="text-[var(--color-text-secondary)] uppercase">CITY RATE (%)</Typography>
+            <input
+              type="number"
+              step="0.01"
+              value={tempTaxRateCity}
+              onChange={(e) => setTempTaxRateCity(parseFloat(e.target.value) || 0)}
+              className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-sm uppercase font-black w-full focus:outline-none focus:border-brand-primary"
+            />
+          </div>
+
+          {/* COMBINED TAX RATE (READ-ONLY, CYAN HIGHLIGHT) */}
+          <div className="p-4 rounded-xl border border-brand-primary/20 bg-brand-primary/5 flex items-center justify-between select-none">
+            <span className="text-[10px] font-black uppercase text-brand-primary tracking-widest font-mono">COMBINED RATE</span>
+            <span className="font-mono text-base font-black text-brand-primary drop-shadow-[0_0_12px_rgba(0,242,255,0.4)]">
+              {parseFloat((tempTaxRateState + tempTaxRateCounty + tempTaxRateCity).toFixed(3))}%
+            </span>
+          </div>
+
+          {/* ACTION BUTTONS */}
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsTaxRatesModalOpen(false)}
+              className="h-11 border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] rounded-xl"
+            >
+              CANCEL
+            </Button>
+            <Button
+              onClick={handleSaveTaxRates}
+              className="h-11 bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] rounded-xl"
+            >
+              SAVE RATES
             </Button>
           </div>
         </div>
-      </Modal>
-
-      {/* --- TAX RATES POPUP MODAL --- */}
-      <Modal
-        isOpen={isTaxRatesModalOpen}
-        onClose={() => setIsTaxRatesModalOpen(false)}
-        title="TAX RATES"
-        className="max-w-sm z-[60]"
-      >
-        <div className="space-y-6">
-          <Typography variant="small" className="text-slate-400 leading-relaxed block text-center">
-            Modify tax rates below. Standard rules apply. Changes will save to dealership settings.
-          </Typography>
-
-          <div className="space-y-4">
-            {/* STATE RATE INPUT */}
-            <div className="space-y-1.5">
-              <Typography variant="label" className="text-[var(--color-text-secondary)] uppercase">STATE RATE (%)</Typography>
-              <input
-                type="number"
-                step="0.01"
-                value={tempTaxRateState}
-                onChange={(e) => setTempTaxRateState(parseFloat(e.target.value) || 0)}
-                className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-sm uppercase font-black w-full focus:outline-none focus:border-brand-primary"
-              />
-            </div>
-
-            {/* COUNTY RATE INPUT */}
-            <div className="space-y-1.5">
-              <Typography variant="label" className="text-[var(--color-text-secondary)] uppercase">COUNTY RATE (%)</Typography>
-              <input
-                type="number"
-                step="0.01"
-                value={tempTaxRateCounty}
-                onChange={(e) => setTempTaxRateCounty(parseFloat(e.target.value) || 0)}
-                className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-sm uppercase font-black w-full focus:outline-none focus:border-brand-primary"
-              />
-            </div>
-
-            {/* CITY RATE INPUT */}
-            <div className="space-y-1.5">
-              <Typography variant="label" className="text-[var(--color-text-secondary)] uppercase">CITY RATE (%)</Typography>
-              <input
-                type="number"
-                step="0.01"
-                value={tempTaxRateCity}
-                onChange={(e) => setTempTaxRateCity(parseFloat(e.target.value) || 0)}
-                className="h-10 px-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-sm uppercase font-black w-full focus:outline-none focus:border-brand-primary"
-              />
-            </div>
-
-            {/* COMBINED TAX RATE (READ-ONLY, CYAN HIGHLIGHT) */}
-            <div className="p-4 rounded-xl border border-brand-primary/20 bg-brand-primary/5 flex items-center justify-between select-none">
-              <span className="text-[10px] font-black uppercase text-brand-primary tracking-widest font-mono">COMBINED RATE</span>
-              <span className="font-mono text-base font-black text-brand-primary drop-shadow-[0_0_12px_rgba(0,242,255,0.4)]">
-                {parseFloat((tempTaxRateState + tempTaxRateCounty + tempTaxRateCity).toFixed(3))}%
-              </span>
-            </div>
-
-            {/* ACTION BUTTONS */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsTaxRatesModalOpen(false)}
-                className="h-11 border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] rounded-xl"
-              >
-                CANCEL
-              </Button>
-              <Button
-                onClick={handleSaveTaxRates}
-                className="h-11 bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] rounded-xl"
-              >
-                SAVE RATES
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
-
-    </DashboardLayout>
-    </>
-  );
+      </div>
+    </Modal>
+  </>
+);
 };

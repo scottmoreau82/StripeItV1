@@ -43,7 +43,9 @@ import {
   Lock,
   Settings2,
   Plus,
-  Snowflake
+  Snowflake,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 import { AppIcon } from '../ui/AppIcon';
@@ -55,6 +57,29 @@ import { LayoutGrid } from 'lucide-react';
  * StripeItDashboardMetricSystem
  * Integrated dashboard with analytics, goals, and trends.
  */
+
+const CollapsibleHeader = ({
+  label,
+  isOpen,
+  onToggle
+}: {
+  label: string;
+  isOpen: boolean;
+  onToggle: () => void;
+}) => (
+  <button
+    onClick={onToggle}
+    className="flex items-center justify-between w-full py-2 px-1 text-left group"
+  >
+    <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest group-hover:text-slate-300 transition-colors">
+      {label}
+    </Typography>
+    {isOpen
+      ? <ChevronUp size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
+      : <ChevronDown size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
+    }
+  </button>
+);
 
 interface HomeViewProps {
   onLogDeal: () => void;
@@ -91,6 +116,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [showSuspensionDetails, setShowSuspensionDetails] = useState(false);
   const [showPaycheckBreakdown, setShowPaycheckBreakdown] = useState(false);
+
+  const [metricsOpen, setMetricsOpen] = useState(true);
+  const [dealsOpen, setDealsOpen] = useState(true);
+  const [goalOpen, setGoalOpen] = useState(true);
+  const [avgOpen, setAvgOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(true);
 
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
@@ -306,54 +337,73 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* Dynamic Metric Widgets */}
             <div className="relative group/metrics">
               {isMobile ? (
-                <div className="flex flex-col gap-3">
-                  {/* Hero Metrics - Units & Commission */}
-                  <div className="grid grid-cols-1 gap-2.5">
-                    {[WidgetType.UNITS, WidgetType.COMMISSION].map(type => {
-                      const widget = dashboardLayout.widgets.find(w => w.type === type);
-                      if (!widget || !widget.visible) return null;
-                      return (
-                        <WidgetRegistry 
-                          key={type} 
-                          type={type as WidgetType} 
-                          data={widgetData}
-                          variant="hero-horizontal"
-                          onClick={type === WidgetType.COMMISSION ? () => setShowPaycheckBreakdown(true) : undefined}
-                          onUpgrade={() => {
-                            window.location.hash = '#settings';
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Telemetry Metrics Grid */}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {[
-                      WidgetType.FRONT_END_GROSS, 
-                      WidgetType.BACK_END_GROSS, 
-                      WidgetType.TOTAL_GROSS, 
-                      WidgetType.AVERAGE_GROSS
-                    ].map(type => {
-                      const widget = dashboardLayout.widgets.find(w => w.type === type);
-                      if (!widget || !widget.visible) return null;
-                      
-                      const isWidgetLocked = isFree && widget.type !== WidgetType.UNITS;
+                <div>
+                  <CollapsibleHeader
+                    label="Performance Metrics"
+                    isOpen={metricsOpen}
+                    onToggle={() => setMetricsOpen(p => !p)}
+                  />
+                  <AnimatePresence initial={false}>
+                    {metricsOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex flex-col gap-3 pt-2">
+                          {/* Hero Metrics - Units & Commission */}
+                          <div className="grid grid-cols-1 gap-2.5">
+                            {[WidgetType.UNITS, WidgetType.COMMISSION].map(type => {
+                              const widget = dashboardLayout.widgets.find(w => w.type === type);
+                              if (!widget || !widget.visible) return null;
+                              return (
+                                <WidgetRegistry 
+                                  key={type} 
+                                  type={type as WidgetType} 
+                                  data={widgetData}
+                                  variant="hero-horizontal"
+                                  onClick={type === WidgetType.COMMISSION ? () => setShowPaycheckBreakdown(true) : undefined}
+                                  onUpgrade={() => {
+                                    window.location.hash = '#settings';
+                                  }}
+                                />
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Telemetry Metrics Grid */}
+                          <div className="grid grid-cols-2 gap-2.5">
+                            {[
+                              WidgetType.FRONT_END_GROSS, 
+                              WidgetType.BACK_END_GROSS, 
+                              WidgetType.TOTAL_GROSS, 
+                              WidgetType.AVERAGE_GROSS
+                            ].map(type => {
+                              const widget = dashboardLayout.widgets.find(w => w.type === type);
+                              if (!widget || !widget.visible) return null;
+                              
+                              const isWidgetLocked = isFree && widget.type !== WidgetType.UNITS;
 
-                      return (
-                        <div key={type} className={cn(isWidgetLocked ? "col-span-2" : "col-span-1")}>
-                          <WidgetRegistry 
-                            type={type as WidgetType} 
-                            data={widgetData}
-                            variant="telemetry"
-                            onUpgrade={() => {
-                              window.location.hash = '#settings';
-                            }}
-                          />
+                              return (
+                                <div key={type} className={cn(isWidgetLocked ? "col-span-2" : "col-span-1")}>
+                                  <WidgetRegistry 
+                                    type={type as WidgetType} 
+                                    data={widgetData}
+                                    variant="telemetry"
+                                    onUpgrade={() => {
+                                      window.location.hash = '#settings';
+                                    }}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:max-h-none overflow-y-auto lg:overflow-visible snap-y lg:snap-none snap-mandatory scrollbar-hide pr-2 pb-12 lg:pb-0">
@@ -419,53 +469,153 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-            {/* Dynamic Main Widgets */}
-            {dashboardLayout.widgets
-              .filter(w => w.visible && [WidgetType.RECENT_DEALS].includes(w.type as WidgetType))
-              .sort((a, b) => a.order - b.order)
-              .map(widget => (
-                <WidgetRegistry 
-                  key={widget.id} 
-                  type={widget.type as WidgetType} 
-                  data={widgetData}
-                  onAction={(action, payload) => {
-                    // Handle widget actions (like clicking a deal)
-                  }}
+            {isMobile ? (
+              <div>
+                <CollapsibleHeader
+                  label="Recent Deals"
+                  isOpen={dealsOpen}
+                  onToggle={() => setDealsOpen(p => !p)}
                 />
-              ))}
+                <AnimatePresence initial={false}>
+                  {dealsOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden pt-2"
+                    >
+                      {/* Dynamic Main Widgets */}
+                      {dashboardLayout.widgets
+                        .filter(w => w.visible && [WidgetType.RECENT_DEALS].includes(w.type as WidgetType))
+                        .sort((a, b) => a.order - b.order)
+                        .map(widget => (
+                          <WidgetRegistry 
+                            key={widget.id} 
+                            type={widget.type as WidgetType} 
+                            data={widgetData}
+                            onAction={(action, payload) => {
+                              // Handle widget actions (like clicking a deal)
+                            }}
+                          />
+                        ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              /* Dynamic Main Widgets */
+              dashboardLayout.widgets
+                .filter(w => w.visible && [WidgetType.RECENT_DEALS].includes(w.type as WidgetType))
+                .sort((a, b) => a.order - b.order)
+                .map(widget => (
+                  <WidgetRegistry 
+                    key={widget.id} 
+                    type={widget.type as WidgetType} 
+                    data={widgetData}
+                    onAction={(action, payload) => {
+                      // Handle widget actions (like clicking a deal)
+                    }}
+                  />
+                ))
+            )}
         </div>
         
         <div className="flex flex-col gap-6">
           {activeTab === 'overview' && (
             dashboardLayout.widgets.find(w => w.type === WidgetType.GOAL_PROGRESS && w.visible) && (
               hasGoalsAccess && !isFree ? (
-                <WidgetRegistry type={WidgetType.GOAL_PROGRESS} data={widgetData} />
+                isMobile ? (
+                  <div>
+                    <CollapsibleHeader
+                      label="Monthly Goal"
+                      isOpen={goalOpen}
+                      onToggle={() => setGoalOpen(p => !p)}
+                    />
+                    <AnimatePresence initial={false}>
+                      {goalOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden pt-2"
+                        >
+                          <WidgetRegistry type={WidgetType.GOAL_PROGRESS} data={widgetData} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <WidgetRegistry type={WidgetType.GOAL_PROGRESS} data={widgetData} />
+                )
               ) : null
             )
           )}
-
           {/* Average Performance Static Card */}
           {!isFree && (
-            <Card className="p-6 bg-bg-card/40 border-white/5 space-y-4">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
-                 <div className="h-10 w-10 rounded-full bg-brand-deep/10 flex items-center justify-center border border-brand-deep/20 shrink-0">
-                   <Activity className="h-5 w-5 text-brand-deep" />
-                 </div>
-                 <div className="flex flex-col items-center sm:items-start">
-                    <Typography variant="mono" className="text-[9px] text-slate-500">AVG FRONT / UNIT</Typography>
-                    <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}</Typography>
-                 </div>
+            isMobile ? (
+              <div>
+                <CollapsibleHeader
+                  label="Avg Performance"
+                  isOpen={avgOpen}
+                  onToggle={() => setAvgOpen(p => !p)}
+                />
+                <AnimatePresence initial={false}>
+                  {avgOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden pt-2"
+                    >
+                      <Card className="p-6 bg-bg-card/40 border-white/5 space-y-4">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
+                           <div className="h-10 w-10 rounded-full bg-brand-deep/10 flex items-center justify-center border border-brand-deep/20 shrink-0">
+                             <Activity className="h-5 w-5 text-brand-deep" />
+                           </div>
+                           <div className="flex flex-col items-center sm:items-start">
+                              <Typography variant="mono" className="text-[9px] text-slate-500">AVG FRONT / UNIT</Typography>
+                              <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}</Typography>
+                           </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 pt-4 border-t border-white/5">
+                           <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
+                             <Award className="h-5 w-5 text-emerald-500" />
+                           </div>
+                           <div className="flex flex-col items-center sm:items-start">
+                              <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest">Avg Est. Payout / Unit</Typography>
+                              <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
+                           </div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 pt-4 border-t border-white/5">
-                 <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
-                   <Award className="h-5 w-5 text-emerald-500" />
-                 </div>
-                 <div className="flex flex-col items-center sm:items-start">
-                    <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest">Avg Est. Payout / Unit</Typography>
-                    <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
-                 </div>
-              </div>
-            </Card>
+            ) : (
+              <Card className="p-6 bg-bg-card/40 border-white/5 space-y-4">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
+                   <div className="h-10 w-10 rounded-full bg-brand-deep/10 flex items-center justify-center border border-brand-deep/20 shrink-0">
+                     <Activity className="h-5 w-5 text-brand-deep" />
+                   </div>
+                   <div className="flex flex-col items-center sm:items-start">
+                      <Typography variant="mono" className="text-[9px] text-slate-500">AVG FRONT / UNIT</Typography>
+                      <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}</Typography>
+                   </div>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 pt-4 border-t border-white/5">
+                   <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
+                     <Award className="h-5 w-5 text-emerald-500" />
+                   </div>
+                   <div className="flex flex-col items-center sm:items-start">
+                      <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest">Avg Est. Payout / Unit</Typography>
+                      <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
+                   </div>
+                </div>
+              </Card>
+            )
           )}
 
           {!isMobile && !isFree && <QuickActions onQuickNote={onQuickNote} />}
@@ -479,7 +629,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               if (widget.type === WidgetType.QUICK_NOTES && !hasNotesAccess) return null; // Handled separately or with lock
               if (widget.type === WidgetType.COMPETITIONS && !hasCompetitionsAccess) return null;
               
-              return (
+              const registry = (
                 <WidgetRegistry 
                   key={widget.id} 
                   type={widget.type as WidgetType} 
@@ -490,6 +640,35 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   }}
                 />
               );
+
+              if (widget.type === WidgetType.QUICK_NOTES) {
+                return (
+                  isMobile ? (
+                    <div key={widget.id}>
+                      <CollapsibleHeader
+                        label="Recent Notes"
+                        isOpen={notesOpen}
+                        onToggle={() => setNotesOpen(p => !p)}
+                      />
+                      <AnimatePresence initial={false}>
+                        {notesOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden pt-2"
+                          >
+                            {registry}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : registry
+                );
+              }
+
+              return registry;
             })}
 
           {/* Notes Locked Placeholder if no access */}

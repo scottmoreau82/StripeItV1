@@ -707,7 +707,7 @@ function MainAppFlow() {
       )}
 
       {/* scottmoreau82@gmail.com MAGIC mobile center-bottom button */}
-      {isMobile && profile?.email === 'scottmoreau82@gmail.com' && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
+      {isMobile && profile?.email === 'scottmoreau82@gmail.com' && location.pathname === '/sales-log' && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out md:hidden font-display">
           <motion.div
             initial={{ y: 100, opacity: 0 }}

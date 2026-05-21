@@ -144,9 +144,8 @@ export const ReportView: React.FC = () => {
 
   const handleExportPDF = () => {
     if (reportData.length === 0) return;
-    const userPayPlan = payPlan;
     const exportData = exportService.prepareDealExportData(
-      reportData, userPayPlan
+      reportData, payPlan
     );
     const headers = [
       { key: 'date', label: 'Date' },
@@ -275,7 +274,7 @@ export const ReportView: React.FC = () => {
           <Button
             variant="outline"
             onClick={handleExportPDF}
-            className="w-full text-xs font-black uppercase tracking-widest hover:bg-white/5 text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5"
+            className="w-full text-xs font-black uppercase tracking-widest text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5"
           >
             <FileText className="mr-2 h-4 w-4" />
             Export PDF

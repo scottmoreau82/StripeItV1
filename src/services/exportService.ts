@@ -1,13 +1,7 @@
 import { Deal, DealStatus, PayPlan } from '../types';
 import { calculateDealCommission } from '../lib/commissionLogic';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
+import autoTable from 'jspdf-autotable';
 
 /**
  * StripeItExportSystem
@@ -88,7 +82,7 @@ export const exportService = {
       })
     );
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableHeaders],
       body: tableRows,
       startY: 28,

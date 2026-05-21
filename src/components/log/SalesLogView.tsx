@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Deal, DealStatus, PayPlan, UserProfile, SubscriptionTier, MonthlySpiff } from '@/src/types';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
@@ -9,7 +9,7 @@ import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppIcon } from '../ui/AppIcon';
 import { PageHeader } from '../ui/PageHeader';
-import { Eye } from 'lucide-react';
+import { Eye, Lock, Zap, Check } from 'lucide-react';
 import { cn, formatDateSafe, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { calculateDealCommission } from '@/src/lib/commissionLogic';
 import { Badge } from '../ui/Badge';
@@ -34,6 +34,9 @@ interface SalesLogViewProps {
   onConfigPayPlan?: () => void;
 }
 
+const randomFrom = (arr: string[]) =>
+  arr[Math.floor(Math.random() * arr.length)];
+
 export const SalesLogView: React.FC<SalesLogViewProps> = ({
   onEdit,
   onConfigPayPlan,
@@ -45,10 +48,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     isLoading, 
     handleDeleteDeal, 
     handleUpdateDealStatus,
-    handleDeleteMonthlySpiff
+    handleDeleteMonthlySpiff,
+    handleSaveDeal
   } = useAppData();
   
-  const { profile } = useAuth();
+  const { profile, addToast } = useAuth();
   const { isMobile } = useResponsive();
 
   const currentMonth = new Date().getMonth() + 1;
@@ -70,7 +74,39 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const [selectedSpiff, setSelectedSpiff] = useState<MonthlySpiff | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
 
-  const isBasicPlus = profile?.subscriptionTier !== SubscriptionTier.FREE;
+  const [devTierOverride, setDevTierOverride] = useState<SubscriptionTier | null>(null);
+
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDeleteSpiffId, setPendingDeleteSpiffId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setPendingDeleteId(null);
+      setPendingDeleteSpiffId(null);
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => {
+      window.removeEventListener('click', handleOutsideClick);
+    };
+  }, []);
+
+  const effectiveTier = devTierOverride ?? profile?.subscriptionTier;
+  const isFreeUser = effectiveTier === SubscriptionTier.FREE;
+
+  const isBasicPlus = [
+    SubscriptionTier.PRO,
+    SubscriptionTier.ORGANIZATION,
+    SubscriptionTier.TRIAL
+  ].includes(effectiveTier as any);
+
+  const FREE_DEAL_LIMIT = 8;
+  const isAtLimit = isFreeUser && currentMonthDeals.length >= FREE_DEAL_LIMIT;
+
+  useEffect(() => {
+    if (isFreeUser && currentMonthDeals.length === FREE_DEAL_LIMIT - 1) {
+      addToast?.('1 free deal remaining this month. Upgrade to Pro for unlimited access.', 'warning' as any);
+    }
+  }, [currentMonthDeals.length, isFreeUser, addToast]);
 
   // Explanation Modal State
   const [explanationData, setExplanationData] = useState<{ commission: CommissionResult, customerName: string } | null>(null);
@@ -80,6 +116,47 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     if (!selectedDeal) return null;
     return deals.find(d => d.id === selectedDeal.id) || selectedDeal;
   }, [deals, selectedDeal]);
+
+  const handleQuickDeal = async () => {
+    const quickDeal = {
+      customerName: randomFrom([
+        'John Smith', 'Jane Doe', 
+        'Mike Johnson', 'Sarah Williams',
+        'Tom Brown', 'Lisa Davis',
+        'Chris Wilson', 'Amy Martinez',
+        'David Anderson', 'Emma Taylor'
+      ]),
+      date: new Date().toISOString().split('T')[0],
+      purchasedVehicle: randomFrom([
+        '2024 Kia Telluride',
+        '2024 Kia Sportage',
+        '2025 Kia EV6',
+        '2024 Kia K5',
+        '2024 Kia Carnival'
+      ]),
+      stockNumber: 'TEST-' + Math.floor(Math.random() * 90000 + 10000),
+      dealNumber: 'QD-' + Math.floor(Math.random() * 9000 + 1000),
+      newOrUsed: randomFrom(['new', 'used', 'cpo']),
+      frontEndGross: Math.floor(Math.random() * 3000 + 500),
+      backEndGross: Math.floor(Math.random() * 2000 + 200),
+      status: 'draft',
+      notes: 'Quick test deal',
+      lenderName: 'Kia Motors Finance',
+      tradeAllowance: 0,
+      tradeACV: 0,
+      tradedVehicle: '',
+      tradePayoff: 0,
+      splitDeal: false,
+      reserveAmount: 0,
+    };
+
+    try {
+      await handleSaveDeal(quickDeal as any);
+      addToast?.('Quick deal added!', 'success');
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleSort = (key: string) => {
     if (!isBasicPlus) return;
@@ -194,6 +271,40 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       subtitle={`${currentMonthDeals.length} deals / ${currentMonthSpiffs.length} spiffs this month`}
       icon={() => <AppIcon name="salesLog" className="h-6 w-6 text-bg-deep" />}
     >
+      {profile?.email === 'scottmoreau82@gmail.com' && (
+        <>
+          <button
+            onClick={handleQuickDeal}
+            className="h-9 px-3 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all active:scale-95 hover:bg-amber-500/20 shadow-glow glow-amber-500/5"
+            title="Quick Deal"
+            type="button"
+          >
+            <Zap size={12} className="text-amber-400" />
+            QUICK DEAL
+          </button>
+          <button
+            onClick={() => {
+              if (devTierOverride === null) {
+                setDevTierOverride(SubscriptionTier.FREE);
+              } else if (devTierOverride === SubscriptionTier.FREE) {
+                setDevTierOverride(SubscriptionTier.TRIAL);
+              } else {
+                setDevTierOverride(null);
+              }
+            }}
+            className={cn(
+              "h-9 px-3 rounded-xl border bg-violet-500/10 text-violet-400 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 hover:bg-violet-500/20",
+              devTierOverride !== null 
+                ? "border-violet-500 shadow-glow glow-violet-500/10" 
+                : "border-violet-500/20"
+            )}
+            title="Toggle Dev Tier Override"
+            type="button"
+          >
+            TIER: {(devTierOverride ?? profile?.subscriptionTier ?? 'FREE').toUpperCase()}
+          </button>
+        </>
+      )}
       <button 
         onClick={onConfigPayPlan}
         className="h-11 px-6 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5 flex items-center gap-2 text-[10px] uppercase font-black tracking-widest"
@@ -254,6 +365,28 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           Showing {sortedItems.length} items
         </Typography>
       </div>
+
+      {isAtLimit && (
+        <div className="flex items-center justify-between p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-4">
+          <div className="flex items-center gap-3">
+            <Lock size={16} className="text-amber-400 shrink-0" />
+            <div>
+              <Typography variant="mono" className="text-amber-400 text-[11px] font-black uppercase tracking-widest">
+                FREE TIER LIMIT REACHED
+              </Typography>
+              <Typography variant="mono" className="text-slate-500 text-[10px] mt-0.5">
+                Upgrade to Pro for unlimited deal logging and full visibility
+              </Typography>
+            </div>
+          </div>
+          <button
+            onClick={() => {}}
+            className="h-9 px-4 bg-amber-500/20 border border-amber-500/30 text-amber-400 font-black uppercase text-[10px] tracking-widest rounded-xl shrink-0 hover:bg-amber-500/30 transition-all"
+          >
+            UPGRADE
+          </button>
+        </div>
+      )}
 
       {/* Results List */}
       <div className="space-y-4">
@@ -430,16 +563,31 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                 >
                                   <AppIcon name="edit" size={14} />
                                 </button>
-                                <button 
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    if (window.confirm('Delete this adjustment?')) handleDeleteMonthlySpiff?.(spiff.id); 
-                                  }}
-                                  className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
-                                  title="Delete Adjustment"
-                                >
-                                  <AppIcon name="delete" size={14} />
-                                </button>
+                                {pendingDeleteSpiffId === spiff.id ? (
+                                  <button 
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      handleDeleteMonthlySpiff?.(spiff.id);
+                                      setPendingDeleteSpiffId(null);
+                                    }}
+                                    className="p-1 px-2 text-[10px] uppercase font-black tracking-widest rounded-lg border border-rose-500/50 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-all active:scale-95 shadow-sm flex items-center gap-1"
+                                    title="Confirm Delete"
+                                  >
+                                    <Check size={10} className="text-rose-400 shrink-0" />
+                                    <span>Confirm?</span>
+                                  </button>
+                                ) : (
+                                  <button 
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      setPendingDeleteSpiffId(spiff.id);
+                                    }}
+                                    className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
+                                    title="Delete Adjustment"
+                                  >
+                                    <AppIcon name="delete" size={14} />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </motion.tr>
@@ -447,6 +595,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       }
 
                       const deal = item as Deal;
+                      const dealIndex = currentMonthDeals.findIndex(d => d.id === deal.id);
+                      const isOverLimit = isFreeUser && dealIndex >= FREE_DEAL_LIMIT;
+
                       const m = getCalendarMonth(deal.date);
                       const y = getCalendarYear(deal.date);
                       const monthlyDeals = deals.filter(d => {
@@ -462,8 +613,15 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.02 }}
-                          onClick={() => setSelectedDeal(deal)}
-                          className="group hover:bg-white/[0.02] cursor-pointer transition-colors"
+                          onClick={() => {
+                            if (!isOverLimit) {
+                              setSelectedDeal(deal);
+                            }
+                          }}
+                          className={cn(
+                            "group hover:bg-white/[0.02] cursor-pointer transition-colors relative",
+                            isOverLimit && "pointer-events-none"
+                          )}
                         >
                           <td className="py-5 px-4 whitespace-nowrap">
                             <Typography variant="mono" className="text-[11px] text-slate-400 font-black">
@@ -471,66 +629,87 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             </Typography>
                           </td>
                           <td className="py-5 px-4">
-                            <div className="flex flex-col min-w-0">
-                              <Typography variant="label" className="text-[var(--color-text-primary)] text-sm font-black truncate">
-                                {deal.customerName}
-                              </Typography>
-                              <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
-                                #{deal.dealNumber || '---'}
-                              </Typography>
+                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                              <div className="flex flex-col min-w-0">
+                                <Typography variant="label" className="text-[var(--color-text-primary)] text-sm font-black truncate">
+                                  {deal.customerName}
+                                </Typography>
+                                <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
+                                  #{deal.dealNumber || '---'}
+                                </Typography>
+                              </div>
                             </div>
                           </td>
                           <td className="py-5 px-4">
-                            <div className="flex flex-col min-w-0">
-                              <Typography variant="small" className="text-slate-300 truncate text-xs font-bold">
-                                {deal.purchasedVehicle}
-                              </Typography>
-                              <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
-                                {deal.stockNumber || '---'}
-                              </Typography>
+                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                              <div className="flex flex-col min-w-0">
+                                <Typography variant="small" className="text-slate-300 truncate text-xs font-bold">
+                                  {deal.purchasedVehicle}
+                                </Typography>
+                                <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
+                                  {deal.stockNumber || '---'}
+                                </Typography>
+                              </div>
                             </div>
                           </td>
                           <td className="py-5 px-4">
                             <TypeBadge type={deal.newOrUsed as any} />
                           </td>
                           <td className="py-5 px-4 text-right">
-                            <Typography variant="mono" className="text-xs text-white group-hover:text-cyan-400 transition-colors font-black">
-                              ${deal.frontEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                            </Typography>
+                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                              <Typography variant="mono" className="text-xs text-white group-hover:text-cyan-400 transition-colors font-black">
+                                ${deal.frontEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                              </Typography>
+                            </div>
                           </td>
                           <td className="py-5 px-4 text-right">
-                            <Typography variant="mono" className="text-xs text-white group-hover:text-purple-400 transition-colors font-black">
-                              ${deal.backEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                            </Typography>
+                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                              <Typography variant="mono" className="text-xs text-white group-hover:text-purple-400 transition-colors font-black">
+                                ${deal.backEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                              </Typography>
+                            </div>
                           </td>
-                          <td className="py-5 px-4 text-right">
-                            <div className="flex flex-col items-end">
-                              <div className="flex items-center gap-2">
-                                <Typography variant="label" className="text-emerald-400 font-black text-sm">
-                                  ${commission?.finalPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) || '0'}
-                                </Typography>
-                                {commission?.explanation && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setExplanationData({ commission, customerName: deal.customerName });
-                                    }}
-                                    className="p-1 px-1.5 rounded border border-emerald-400/20 bg-emerald-400/5 text-emerald-400 hover:bg-emerald-400/20 hover:border-emerald-400/40 transition-all active:scale-90 shadow-sm shadow-emerald-500/5"
-                                    title="View Calculation Breakdown"
-                                  >
-                                    <div className="flex items-center gap-1">
-                                      <AppIcon name="eye" size={10} />
-                                      <span className="text-[8px] font-black uppercase tracking-tighter">View</span>
-                                    </div>
-                                  </button>
+                          <td className="py-5 px-4 text-right relative">
+                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                              <div className="flex flex-col items-end">
+                                <div className="flex items-center gap-2">
+                                  <Typography variant="label" className="text-emerald-400 font-black text-sm">
+                                    ${commission?.finalPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) || '0'}
+                                  </Typography>
+                                  {commission?.explanation && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setExplanationData({ commission, customerName: deal.customerName });
+                                      }}
+                                      className="p-1 px-1.5 rounded border border-emerald-400/20 bg-emerald-400/5 text-emerald-400 hover:bg-emerald-400/20 hover:border-emerald-400/40 transition-all active:scale-90 shadow-sm shadow-emerald-500/5"
+                                      title="View Calculation Breakdown"
+                                    >
+                                      <div className="flex items-center gap-1">
+                                        <AppIcon name="eye" size={10} />
+                                        <span className="text-[8px] font-black uppercase tracking-tighter">View</span>
+                                      </div>
+                                    </button>
+                                  )}
+                                </div>
+                                {commission && (
+                                  <Typography variant="mono" className="text-[8px] text-slate-600 font-black uppercase">
+                                    {frontRate}% / {backRate}%
+                                  </Typography>
                                 )}
                               </div>
-                              {commission && (
-                                <Typography variant="mono" className="text-[8px] text-slate-600 font-black uppercase">
-                                  {frontRate}% / {backRate}%
-                                </Typography>
-                              )}
                             </div>
+
+                            {isOverLimit && (
+                              <div className="absolute inset-y-0 right-0 w-48 flex items-center justify-end pr-4">
+                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                  <Lock size={10} className="text-amber-400" />
+                                  <span className="text-[9px] font-black uppercase text-amber-400 tracking-widest">
+                                    Pro
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </td>
                           <td className="py-5 px-4 text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -541,16 +720,31 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               >
                                 <AppIcon name="edit" size={14} />
                               </button>
-                              <button 
-                                onClick={(e) => { 
-                                  e.stopPropagation(); 
-                                  if (window.confirm('Delete this deal record?')) handleDeleteDeal?.(deal.id); 
-                                }}
-                                className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
-                                title="Delete Deal"
-                              >
-                                <AppIcon name="delete" size={14} />
-                              </button>
+                              {pendingDeleteId === deal.id ? (
+                                <button 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    handleDeleteDeal?.(deal.id);
+                                    setPendingDeleteId(null);
+                                  }}
+                                  className="p-1 px-2 text-[10px] uppercase font-black tracking-widest rounded-lg border border-rose-500/50 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-all active:scale-95 shadow-sm flex items-center gap-1"
+                                  title="Confirm Delete"
+                                >
+                                  <Check size={10} className="text-rose-400 shrink-0" />
+                                  <span>Confirm?</span>
+                                </button>
+                              ) : (
+                                <button 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    setPendingDeleteId(deal.id);
+                                  }}
+                                  className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
+                                  title="Delete Deal"
+                                >
+                                  <AppIcon name="delete" size={14} />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </motion.tr>
@@ -615,6 +809,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                   }
 
                   const deal = item as Deal;
+                  const dealIndex = currentMonthDeals.findIndex(d => d.id === deal.id);
+                  const isOverLimit = isFreeUser && dealIndex >= FREE_DEAL_LIMIT;
+
                   const isExpanded = expandedId === deal.id;
                   const m = getCalendarMonth(deal.date);
                   const y = getCalendarYear(deal.date);
@@ -630,12 +827,15 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       animate={{ opacity: 1, y: 0 }}
                       layout
                       className={cn(
-                        "transition-all duration-300 border rounded-xl overflow-hidden shadow-lg",
+                        "transition-all duration-300 border rounded-xl overflow-hidden shadow-lg relative",
                         isExpanded 
                           ? "bg-[var(--color-bg-elevated)] border-[var(--color-border)] p-4" 
                           : "bg-[var(--color-bg-card)] border-[var(--color-border)] p-3"
                       )}
-                      onClick={() => handleDealInteraction(deal)}
+                      onClick={() => {
+                        if (isOverLimit) return;
+                        handleDealInteraction(deal);
+                      }}
                     >
                       {/* Collapsed Row State */}
                       <div className={cn(
@@ -674,6 +874,17 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           </div>
                         </div>
                       </div>
+
+                      {isOverLimit && (
+                        <div className="absolute inset-0 backdrop-blur-sm bg-black/60 rounded-xl z-10 flex items-center justify-center">
+                          <div className="flex flex-col items-center gap-2 p-4">
+                            <Lock size={20} className="text-amber-400" />
+                            <Typography variant="mono" className="text-amber-400 text-[10px] font-black uppercase tracking-widest text-center">
+                              Upgrade to view
+                            </Typography>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Expanded Section */}
                       <AnimatePresence>
@@ -722,15 +933,31 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                  >
                                    <AppIcon name="edit" size={16} />
                                  </button>
-                                 <button 
-                                   onClick={(e) => { 
-                                     e.stopPropagation(); 
-                                     if (window.confirm('Delete this deal record?')) handleDeleteDeal?.(deal.id); 
-                                   }}
-                                   className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-all active:scale-95"
-                                 >
-                                   <AppIcon name="delete" size={16} />
-                                 </button>
+                                 {pendingDeleteId === deal.id ? (
+                                   <button 
+                                     onClick={(e) => { 
+                                       e.stopPropagation(); 
+                                       handleDeleteDeal?.(deal.id);
+                                       setPendingDeleteId(null);
+                                     }}
+                                     className="p-2.5 px-3.5 text-xs font-black uppercase tracking-widest rounded-xl bg-rose-500/20 border border-rose-500 text-rose-400 hover:text-rose-300 hover:bg-rose-500/30 transition-all active:scale-95 flex items-center gap-1.5"
+                                     title="Confirm Delete"
+                                   >
+                                     <Check size={12} className="text-rose-400 shrink-0" />
+                                     <span>Confirm</span>
+                                   </button>
+                                 ) : (
+                                   <button 
+                                     onClick={(e) => { 
+                                       e.stopPropagation(); 
+                                       setPendingDeleteId(deal.id);
+                                     }}
+                                     className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-all active:scale-95"
+                                     title="Delete Deal"
+                                   >
+                                     <AppIcon name="delete" size={16} />
+                                   </button>
+                                 )}
                                </div>
                             </div>
                             

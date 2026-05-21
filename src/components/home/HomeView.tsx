@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { calculateDealCommission, calculatePeriodEarnings } from '@/src/lib/commissionLogic';
 import { Typography } from '../ui/Typography';
 import { QuickActions } from './QuickActions';
 import { RecentDealsList } from './RecentDealsList';
@@ -89,6 +90,66 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [selectedCompId, setSelectedCompId] = useState<string | null>(null);
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [showSuspensionDetails, setShowSuspensionDetails] = useState(false);
+  const [showPaycheckBreakdown, setShowPaycheckBreakdown] = useState(false);
+
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+
+  const currentMonthDeals = useMemo(() => {
+    return deals.filter(d => {
+      const dDate = new Date(d.date);
+      return dDate.getMonth() + 1 === currentMonth && dDate.getFullYear() === currentYear;
+    });
+  }, [deals, currentMonth, currentYear]);
+
+  const currentMonthSpiffs = useMemo(() => {
+    return monthlySpiffs.filter(s => {
+      const spiffMonthStr = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+      return s.month === spiffMonthStr;
+    });
+  }, [monthlySpiffs, currentMonth, currentYear]);
+
+  const dealCalculations = useMemo(() => {
+    return currentMonthDeals.map(deal => {
+      const commission = payPlan ? calculateDealCommission(deal, payPlan, currentMonthDeals) : null;
+      return {
+        deal,
+        commission,
+        frontEndGross: deal.frontEndGross,
+        backEndGross: deal.backEndGross,
+        finalPayout: commission?.finalPayout ?? 0,
+        frontRate: commission?.explanation?.frontRate ?? payPlan?.frontEndPercentage ?? 0,
+        backRate: commission?.explanation?.backRate ?? payPlan?.backEndPercentage ?? 0
+      };
+    });
+  }, [currentMonthDeals, payPlan]);
+
+  const totalFrontGrossDeals = useMemo(() => {
+    return dealCalculations.reduce((sum, item) => sum + item.frontEndGross, 0);
+  }, [dealCalculations]);
+
+  const totalBackGrossDeals = useMemo(() => {
+    return dealCalculations.reduce((sum, item) => sum + item.backEndGross, 0);
+  }, [dealCalculations]);
+
+  const totalPayoutDeals = useMemo(() => {
+    return dealCalculations.reduce((sum, item) => sum + item.finalPayout, 0);
+  }, [dealCalculations]);
+
+  const spiffsSubtotal = useMemo(() => {
+    return currentMonthSpiffs.reduce((sum, s) => {
+      const amt = s.amount || 0;
+      return sum + (s.isChargeback ? -amt : amt);
+    }, 0);
+  }, [currentMonthSpiffs]);
+
+  const periodEarnings = useMemo(() => {
+    if (!payPlan || currentMonthDeals.length === 0) 
+      return null;
+    return calculatePeriodEarnings(currentMonthDeals, payPlan);
+  }, [currentMonthDeals, payPlan, showPaycheckBreakdown]);
+
+  const grandTotal = (periodEarnings ? periodEarnings.grandTotal : totalPayoutDeals) + spiffsSubtotal;
 
   const handleAcknowledgeSuspension = async () => {
     try {
@@ -257,6 +318,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                           type={type as WidgetType} 
                           data={widgetData}
                           variant="hero-horizontal"
+                          onClick={type === WidgetType.COMMISSION ? () => setShowPaycheckBreakdown(true) : undefined}
                           onUpgrade={() => {
                             window.location.hash = '#settings';
                           }}
@@ -309,6 +371,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         <WidgetRegistry 
                           type={type as WidgetType} 
                           data={widgetData}
+                          onClick={type === WidgetType.COMMISSION ? () => setShowPaycheckBreakdown(true) : undefined}
                           onUpgrade={() => {
                             // navigate to settings/subscription tab
                             window.location.hash = '#settings';
@@ -564,6 +627,417 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </div>
              </Modal>
            )
+        )}
+
+        {showPaycheckBreakdown && (
+          isMobile ? (
+            <FullscreenMobileFlow
+              isOpen={showPaycheckBreakdown}
+              onClose={() => setShowPaycheckBreakdown(false)}
+              title="PAYCHECK BREAKDOWN"
+            >
+              <div className="p-4 space-y-6">
+                <div className="text-center mb-6">
+                  <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-0.5">
+                    PAYCHECK BREAKDOWN
+                  </Typography>
+                  <Typography variant="h2" className="text-white italic uppercase font-black tracking-tighter">
+                    {new Date().toLocaleString('default', { month: 'long' }).toUpperCase()} {new Date().getFullYear()}
+                  </Typography>
+                </div>
+
+                {/* SECTION 1 - Deal Breakdown space */}
+                <div className="space-y-3">
+                  <Typography variant="mono" className="text-[9px] text-slate-400 font-black uppercase tracking-widest block">
+                    Deals Calc ({currentMonthDeals.length})
+                  </Typography>
+
+                  <div className="rounded-xl border border-white/5 bg-white/[0.01] divide-y divide-white/5 overflow-hidden">
+                    {dealCalculations.map((item, idx) => (
+                      <div 
+                        key={item.deal.id} 
+                        className={cn(
+                          "p-4 transition-colors text-xs flex flex-col gap-3",
+                          idx % 2 === 0 ? "bg-white/[0.005]" : "bg-transparent"
+                        )}
+                      >
+                        {/* Top row: customer name (left) + total payout in emerald (right) */}
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="font-bold text-white truncate">
+                            {item.deal.customerName}
+                          </span>
+                          <span className="font-black text-emerald-400 text-sm shrink-0">
+                            ${Math.round(item.finalPayout).toLocaleString()}
+                          </span>
+                        </div>
+
+                        {/* Bottom row: two cells side by side */}
+                        <div className="grid grid-cols-2 gap-4 pt-1">
+                          {/* Left cell: FRONT label + gross amount + commission rate % below */}
+                          <div className="space-y-0.5">
+                            <span className="text-[9px] text-slate-500 uppercase font-black tracking-wider block">FRONT</span>
+                            <span className="font-black text-slate-200">
+                              ${Math.round(item.frontEndGross).toLocaleString()}
+                            </span>
+                            <span className="block text-[10px] text-slate-500 font-semibold">
+                              {item.frontRate}% rate
+                            </span>
+                          </div>
+
+                          {/* Right cell: BACK label + gross amount + commission rate % below */}
+                          <div className="space-y-0.5">
+                            <span className="text-[9px] text-slate-500 uppercase font-black tracking-wider block">BACK</span>
+                            <span className="font-black text-slate-200">
+                              ${Math.round(item.backEndGross).toLocaleString()}
+                            </span>
+                            <span className="block text-[10px] text-slate-500 font-semibold">
+                              {item.backRate}% rate
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {dealCalculations.length === 0 && (
+                      <div className="py-8 px-4 text-center text-slate-500 text-xs italic">
+                        No deals recorded for this month.
+                      </div>
+                    )}
+
+                    {/* TOTALS ROW on mobile */}
+                    {dealCalculations.length > 0 && (
+                      <div className="bg-white/[0.03] py-4 px-4 flex justify-between items-center text-xs font-black">
+                        <span className="text-slate-400 uppercase tracking-widest text-[10px]">
+                          TOTAL COMMISSION
+                        </span>
+                        <span className="text-emerald-400 text-sm font-extrabold">
+                          ${Math.round(totalPayoutDeals).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* VOLUME BONUSES SECTION */}
+                {periodEarnings && periodEarnings.totalTierBonuses > 0 && (
+                  <div className="space-y-3">
+                    <Typography variant="mono" className="text-[9px] text-slate-400 font-black uppercase tracking-widest block font-bold">
+                      VOLUME BONUSES
+                    </Typography>
+                    <div className="rounded-xl border border-white/5 bg-white/[0.01] divide-y divide-white/5 overflow-hidden">
+                      {((periodEarnings as any).tierBonusBreakdown || periodEarnings.tierBonuses) ? (
+                        ((periodEarnings as any).tierBonusBreakdown || periodEarnings.tierBonuses).map((bonus: any, index: number) => (
+                          <div 
+                            key={bonus.tierId || index} 
+                            className="flex items-center justify-between py-3 px-4 text-xs text-slate-300"
+                          >
+                            <span className="font-bold text-white capitalize">
+                              {bonus.label || bonus.tierName || "Volume Bonus"}
+                            </span>
+                            <span className="font-black text-emerald-400 text-right">
+                              ${Math.round(bonus.amount).toLocaleString()}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex items-center justify-between py-3 px-4 text-xs text-slate-300">
+                          <span className="font-bold text-white capitalize">
+                            VOLUME BONUS
+                          </span>
+                          <span className="font-black text-emerald-400 text-right">
+                            ${Math.round(periodEarnings.totalTierBonuses).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* SECTION 2 - SPIFFs & Adjustments */}
+                {currentMonthSpiffs.length > 0 && (
+                  <div className="space-y-3">
+                    <Typography variant="mono" className="text-[9px] text-slate-400 font-black uppercase tracking-widest block">
+                      SPIFFS & ADJUSTMENTS
+                    </Typography>
+                    <div className="rounded-xl border border-white/5 bg-white/[0.01] overflow-hidden">
+                      {currentMonthSpiffs.map((spiff) => (
+                        <div 
+                          key={spiff.id} 
+                          className="flex items-center justify-between py-3 px-4 border-b border-white/5 text-xs text-slate-300"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-bold text-white capitalize">{spiff.label || "Unnamed Spiff"}</span>
+                            <span className="text-[9px] text-slate-500 mt-0.5">{spiff.notes || "No notes"}</span>
+                          </div>
+                          <span className={cn(
+                            "font-black text-right",
+                            spiff.isChargeback ? "text-rose-400" : "text-emerald-400"
+                          )}>
+                            {spiff.isChargeback ? "-" : ""}${Math.round(spiff.amount || 0).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between py-3 px-4 bg-white/[0.03] text-xs font-black">
+                        <span className="text-slate-400 uppercase tracking-widest text-[10px]">Spiffs Subtotal</span>
+                        <span className={cn(
+                          "text-right",
+                          spiffsSubtotal < 0 ? "text-rose-400" : "text-emerald-400"
+                        )}>
+                          {spiffsSubtotal < 0 ? "-" : ""}${Math.round(Math.abs(spiffsSubtotal)).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SECTION 3 - Grand Total */}
+                <div className="space-y-4">
+                  <div className="p-5 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex flex-col items-center justify-center text-center">
+                    <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">
+                      PROJECTED PAYCHECK
+                    </Typography>
+                    <div className="text-3xl font-black text-emerald-400 italic uppercase tracking-tighter">
+                      ${Math.round(grandTotal).toLocaleString()}
+                    </div>
+                    <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-bold tracking-widest leading-none mt-2">
+                      Est. Payout + Net Spiffs
+                    </Typography>
+                  </div>
+
+                  {payPlan?.isMinisAndHourlyActive && payPlan?.isHourlyActive && payPlan?.hourlyConfig?.active && payPlan?.hourlyConfig?.model === "draw" && (
+                    <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl flex items-start gap-3">
+                      <Lock size={16} className="text-amber-400 mt-0.5 shrink-0" />
+                      <div className="space-y-1">
+                        <Typography variant="mono" className="text-amber-400 text-[10px] font-black uppercase tracking-widest block">
+                          Draw Model Active
+                        </Typography>
+                        <Typography variant="p" className="text-slate-400 text-[11px] leading-relaxed">
+                          This paycheck is subject to a draw debit. Total payout will validate against configured hours of {payPlan.hourlyConfig.hoursWorked} hrs @ ${payPlan.hourlyConfig.rate}/hr.
+                        </Typography>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-11 uppercase font-black tracking-widest border-white/5 hover:border-white/10 active:scale-95 text-xs text-slate-400"
+                    onClick={() => setShowPaycheckBreakdown(false)}
+                  >
+                    Close Breakdown
+                  </Button>
+                </div>
+              </div>
+            </FullscreenMobileFlow>
+          ) : (
+            <Modal
+              isOpen={showPaycheckBreakdown}
+              onClose={() => setShowPaycheckBreakdown(false)}
+              title="PAYCHECK BREAKDOWN"
+            >
+              <div className="space-y-6 py-4 px-2">
+                <div className="mb-4">
+                  <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-0.5">
+                    PAYCHECK BREAKDOWN
+                  </Typography>
+                  <Typography variant="h2" className="text-white italic uppercase font-black tracking-tighter">
+                    {new Date().toLocaleString('default', { month: 'long' }).toUpperCase()} {new Date().getFullYear()}
+                  </Typography>
+                </div>
+
+                {/* SECTION 1 - Deal Breakdown table */}
+                <div className="space-y-3">
+                  <Typography variant="mono" className="text-[9px] text-slate-400 font-black uppercase tracking-widest block">
+                    Deals Calc ({currentMonthDeals.length})
+                  </Typography>
+
+                  <div className="overflow-x-auto rounded-xl border border-white/5 bg-white/[0.01]">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/5 bg-white/[0.02] text-[9px] font-black uppercase text-slate-500 tracking-wider">
+                          <th className="py-2 px-4">Customer</th>
+                          <th className="py-2 px-4 text-right">Front Gross</th>
+                          <th className="py-2 px-4 text-right">Back Gross</th>
+                          <th className="py-2 px-4 text-right">Payout</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dealCalculations.map((item, idx) => (
+                          <tr 
+                            key={item.deal.id} 
+                            className={cn(
+                              "border-b border-white/5 text-xs transition-colors",
+                              idx % 2 === 0 ? "bg-white/[0.005]" : "bg-transparent"
+                            )}
+                          >
+                            <td className="py-3 px-4 font-bold text-white max-w-[150px] truncate">
+                              {item.deal.customerName}
+                            </td>
+                            <td className="py-3 px-4 text-right pt-2">
+                              <span className="font-black text-slate-200">
+                                ${Math.round(item.frontEndGross).toLocaleString()}
+                              </span>
+                              <span className="block text-[9px] text-slate-500 font-semibold mt-0.5">
+                                {item.frontRate}%
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right pt-2">
+                              <span className="font-black text-slate-200">
+                                ${Math.round(item.backEndGross).toLocaleString()}
+                              </span>
+                              <span className="block text-[9px] text-slate-500 font-semibold mt-0.5">
+                                {item.backRate}%
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right font-black text-emerald-400">
+                              ${Math.round(item.finalPayout).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                        {dealCalculations.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="py-8 px-4 text-center text-slate-500 text-xs italic">
+                              No deals recorded for this month.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                      {dealCalculations.length > 0 && (
+                        <tfoot>
+                          <tr className="bg-white/[0.03] text-xs font-black">
+                            <td className="py-3 px-4 text-slate-400 uppercase tracking-widest text-[10px]">
+                              TOTAL
+                            </td>
+                            <td className="py-3 px-4 text-right text-slate-200">
+                              ${Math.round(totalFrontGrossDeals).toLocaleString()}
+                            </td>
+                            <td className="py-3 px-4 text-right text-slate-200">
+                              ${Math.round(totalBackGrossDeals).toLocaleString()}
+                            </td>
+                            <td className="py-3 px-4 text-right text-emerald-400 font-extrabold">
+                              ${Math.round(totalPayoutDeals).toLocaleString()}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      )}
+                    </table>
+                  </div>
+                </div>
+
+                {/* VOLUME BONUSES SECTION */}
+                {periodEarnings && periodEarnings.totalTierBonuses > 0 && (
+                  <div className="space-y-3 border-t border-white/5 pt-4">
+                    <Typography variant="mono" className="text-[9px] text-slate-400 font-black uppercase tracking-widest block font-bold">
+                      VOLUME BONUSES
+                    </Typography>
+                    <div className="rounded-xl border border-white/5 bg-white/[0.01] divide-y divide-white/5 overflow-hidden">
+                      {((periodEarnings as any).tierBonusBreakdown || periodEarnings.tierBonuses) ? (
+                        ((periodEarnings as any).tierBonusBreakdown || periodEarnings.tierBonuses).map((bonus: any, index: number) => (
+                          <div 
+                            key={bonus.tierId || index} 
+                            className="flex items-center justify-between py-3 px-4 text-xs text-slate-300"
+                          >
+                            <span className="font-bold text-white capitalize">
+                              {bonus.label || bonus.tierName || "Volume Bonus"}
+                            </span>
+                            <span className="font-black text-emerald-400 text-right">
+                              ${Math.round(bonus.amount).toLocaleString()}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex items-center justify-between py-3 px-4 text-xs text-slate-300">
+                          <span className="font-bold text-white capitalize">
+                            VOLUME BONUS
+                          </span>
+                          <span className="font-black text-emerald-400 text-right">
+                            ${Math.round(periodEarnings.totalTierBonuses).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* SECTION 2 - SPIFFs & Adjustments */}
+                {currentMonthSpiffs.length > 0 && (
+                  <div className="space-y-3 border-t border-white/5 pt-4">
+                    <Typography variant="mono" className="text-[9px] text-slate-400 font-black uppercase tracking-widest block">
+                      SPIFFS & ADJUSTMENTS
+                    </Typography>
+                    <div className="rounded-xl border border-white/5 bg-white/[0.01] overflow-hidden">
+                      {currentMonthSpiffs.map((spiff) => (
+                        <div 
+                          key={spiff.id} 
+                          className="flex items-center justify-between py-3 px-4 border-b border-white/5 text-xs text-slate-300"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-bold text-white capitalize">{spiff.label || "Unnamed Spiff"}</span>
+                            <span className="text-[9px] text-slate-500 mt-0.5">{spiff.notes || "No notes"}</span>
+                          </div>
+                          <span className={cn(
+                            "font-black text-right",
+                            spiff.isChargeback ? "text-rose-400" : "text-emerald-400"
+                          )}>
+                            {spiff.isChargeback ? "-" : ""}${Math.round(spiff.amount || 0).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between py-3 px-4 bg-white/[0.03] text-xs font-black">
+                        <span className="text-slate-400 uppercase tracking-widest text-[10px]">Spiffs Subtotal</span>
+                        <span className={cn(
+                          "text-right",
+                          spiffsSubtotal < 0 ? "text-rose-400" : "text-emerald-400"
+                        )}>
+                          {spiffsSubtotal < 0 ? "-" : ""}${Math.round(Math.abs(spiffsSubtotal)).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SECTION 3 - Grand Total */}
+                <div className="space-y-4 border-t border-white/5 pt-4">
+                  <div className="p-5 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex flex-col items-center justify-center text-center">
+                    <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">
+                      PROJECTED PAYCHECK
+                    </Typography>
+                    <div className="text-3xl font-black text-emerald-400 italic uppercase tracking-tighter">
+                      ${Math.round(grandTotal).toLocaleString()}
+                    </div>
+                    <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-bold tracking-widest leading-none mt-2">
+                      Est. Payout + Net Spiffs
+                    </Typography>
+                  </div>
+
+                  {payPlan?.isMinisAndHourlyActive && payPlan?.isHourlyActive && payPlan?.hourlyConfig?.active && payPlan?.hourlyConfig?.model === "draw" && (
+                    <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl flex items-start gap-3">
+                      <Lock size={16} className="text-amber-400 mt-0.5 shrink-0" />
+                      <div className="space-y-1">
+                        <Typography variant="mono" className="text-amber-400 text-[10px] font-black uppercase tracking-widest block">
+                          Draw Model Active
+                        </Typography>
+                        <Typography variant="p" className="text-slate-400 text-[11px] leading-relaxed">
+                          This paycheck is subject to a draw debit. Total payout will validate against configured hours of {payPlan.hourlyConfig.hoursWorked} hrs @ ${payPlan.hourlyConfig.rate}/hr.
+                        </Typography>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-11 uppercase font-black tracking-widest border-white/5 hover:border-white/10 active:scale-95 text-xs text-slate-400"
+                    onClick={() => setShowPaycheckBreakdown(false)}
+                  >
+                    Close Breakdown
+                  </Button>
+                </div>
+              </div>
+            </Modal>
+          )
         )}
       </AnimatePresence>
     </>

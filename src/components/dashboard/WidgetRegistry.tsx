@@ -35,9 +35,10 @@ interface WidgetRegistryProps {
   onAction?: (action: string, payload?: any) => void;
   onUpgrade?: () => void;
   variant?: 'hero' | 'telemetry' | 'hero-horizontal';
+  onClick?: () => void;
 }
 
-export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAction, onUpgrade, variant }) => {
+export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAction, onUpgrade, variant, onClick }) => {
   const { deals, notes, competitions, metrics, goal, leaders, monthlySpiffs, isLoading } = data;
   const { profile } = useAuth();
   const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
@@ -56,16 +57,21 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       );
     case WidgetType.COMMISSION:
       return (
-        <MetricCard 
-          label="Est. Payout"
-          value={`$${metrics.commission.toLocaleString()}`}
-          secondaryLabel="spiffs"
-          secondaryValue={`$${metrics.spiffsMTD.toLocaleString()}`}
-          icon={Wallet}
-          loading={isLoading}
-          color="emerald"
-          variant={variant}
-        />
+        <div 
+          onClick={onClick} 
+          className={onClick ? "cursor-pointer" : ""}
+        >
+          <MetricCard 
+            label="Est. Payout"
+            value={`$${metrics.commission.toLocaleString()}`}
+            secondaryLabel="spiffs"
+            secondaryValue={`$${metrics.spiffsMTD.toLocaleString()}`}
+            icon={Wallet}
+            loading={isLoading}
+            color="emerald"
+            variant={variant}
+          />
+        </div>
       );
     case WidgetType.FRONT_END_GROSS:
       return (

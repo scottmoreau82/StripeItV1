@@ -105,10 +105,26 @@ export const ReportView: React.FC = () => {
 
   const monthKeys = Array.from(monthsSet).sort().reverse();
 
+  const reportData = selectedMonth ? deals.filter(d => {
+    try {
+      return d.date && new Date(d.date).toISOString().slice(0, 7) === selectedMonth;
+    } catch (e) {
+      return false;
+    }
+  }) : [];
+
+  const filters = {
+    startDate: selectedMonth || '',
+    endDate: selectedMonth || '',
+  };
+
   // Export and print actions
-  const handleExportCSV = (mKey: string, monthDeals: Deal[]) => {
+  const handleExportCSV = (mKey?: string, monthDeals?: Deal[]) => {
+    const activeDeals = monthDeals || reportData;
+    const activeKey = mKey || filters.startDate;
+    if (activeDeals.length === 0) return;
     if (!payPlan) return;
-    const exportData = exportService.prepareDealExportData(monthDeals, payPlan);
+    const exportData = exportService.prepareDealExportData(activeDeals, payPlan);
     const headers = [
       { key: 'date', label: 'Date' },
       { key: 'customer', label: 'Customer' },
@@ -123,7 +139,35 @@ export const ReportView: React.FC = () => {
       { key: 'isSplit', label: 'Split Deal' }
     ];
     const csvContent = exportService.generateCSV(exportData, headers);
-    exportService.downloadCSV(csvContent, `StripeIt_${mKey}`);
+    exportService.downloadCSV(csvContent, `StripeIt_${activeKey}`);
+  };
+
+  const handleExportPDF = () => {
+    if (reportData.length === 0) return;
+    const userPayPlan = payPlan;
+    const exportData = exportService.prepareDealExportData(
+      reportData, userPayPlan
+    );
+    const headers = [
+      { key: 'date', label: 'Date' },
+      { key: 'customer', label: 'Customer' },
+      { key: 'vehicle', label: 'Vehicle' },
+      { key: 'stock', label: 'Stock #' },
+      { key: 'condition', label: 'Type' },
+      { key: 'status', label: 'Status' },
+      { key: 'frontGross', label: 'Front Gross' },
+      { key: 'backGross', label: 'Back Gross' },
+      { key: 'totalGross', label: 'Total Gross' },
+      { key: 'estCommission', label: 'Est. Payout' },
+      { key: 'isSplit', label: 'Split Deal' }
+    ];
+    exportService.downloadPDF(
+      exportData,
+      headers,
+      'Performance Report',
+      `${filters.startDate} to ${filters.endDate}`,
+      `StripeIt_Report_${filters.startDate}_to_${filters.endDate}`
+    );
   };
 
   const handlePrint = () => {
@@ -218,6 +262,24 @@ export const ReportView: React.FC = () => {
         <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">
           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Front Gross</Typography>
           <Typography variant="h3" className="text-cyan-400 font-black">${selectedMonthFrontGross.toLocaleString()}</Typography>
+        </Card>
+        <Card className="p-6 bg-white/[0.03] border-white/10 flex flex-col gap-3 items-center justify-center">
+          <Button
+            variant="outline"
+            onClick={handleExportCSV}
+            className="w-full text-xs font-black uppercase tracking-widest hover:bg-white/5"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            className="w-full text-xs font-black uppercase tracking-widest hover:bg-white/5 text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Export PDF
+          </Button>
         </Card>
         <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">
           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Back Gross</Typography>

@@ -51,6 +51,7 @@ import { featureAccessService, Feature } from './services/featureAccessService';
 import { SubscriptionTier } from './types';
 import { UpgradeAccessScreen } from './components/subscription/UpgradeAccessScreen';
 import { TrialWelcomeModal } from './components/subscription/TrialWelcomeModal';
+import { WaitlistModal } from './components/subscription/WaitlistModal';
 import { FeedbackType } from './types';
 import { analyticsService } from './services/analyticsService';
 import { AnalyticsEventType } from './types';
@@ -80,6 +81,7 @@ function MainAppFlow() {
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [editingSpiff, setEditingSpiff] = useState<MonthlySpiff | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
 
   const { isMobile } = useResponsive();
   const { profile, user, isAdmin, isDeveloper, logout } = useAuth();
@@ -143,11 +145,17 @@ function MainAppFlow() {
     };
     window.addEventListener('stripeit:drawer-toggle', handleDrawer);
 
+    const handleOpenWaitlistEvent = () => {
+      setIsWaitlistOpen(true);
+    };
+    window.addEventListener('stripeit:open-waitlist', handleOpenWaitlistEvent);
+
     return () => {
       window.removeEventListener('stripeit:create-random-deal', handleRandomDealEvent);
       window.removeEventListener('stripeit:edit-spiff', handleEditSpiffEvent);
       window.removeEventListener('stripeit:open-feedback', handleFeedbackEvent);
       window.removeEventListener('stripeit:drawer-toggle', handleDrawer);
+      window.removeEventListener('stripeit:open-waitlist', handleOpenWaitlistEvent);
     };
   }, [handleCreateRandomDeal]);
 
@@ -238,8 +246,7 @@ function MainAppFlow() {
   );
 
   const onUpgradeClick = () => {
-    setLimitMessage("Unlock premium sales intelligence and advanced tracking features.");
-    setIsUpgradeOpen(true);
+    setIsWaitlistOpen(true);
   };
 
   return (
@@ -671,11 +678,17 @@ function MainAppFlow() {
           description={limitMessage}
           tierRequired="Pro"
           onUpgrade={() => {
-            // In a real app, this would trigger the checkout flow
             setIsUpgradeOpen(false);
+            setIsWaitlistOpen(true);
           }}
         />
       </Modal>
+
+      {/* Waitlist Modal */}
+      <WaitlistModal
+        isOpen={isWaitlistOpen}
+        onClose={() => setIsWaitlistOpen(false)}
+      />
 
       {/* Trial Welcome Modal */}
       <TrialWelcomeModal

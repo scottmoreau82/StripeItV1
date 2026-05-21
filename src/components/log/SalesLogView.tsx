@@ -438,7 +438,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
             </div>
           </div>
           <button
-            onClick={() => {}}
+            onClick={() => window.dispatchEvent(
+              new CustomEvent('stripeit:open-waitlist')
+            )}
             className="h-9 px-4 bg-amber-500/20 border border-amber-500/30 text-amber-400 font-black uppercase text-[10px] tracking-widest rounded-xl shrink-0 hover:bg-amber-500/30 transition-all"
           >
             UPGRADE

@@ -37,67 +37,27 @@ export const ReportView: React.FC = () => {
     if (selectedMonth) {
       const styleEl = document.createElement('style');
       styleEl.id = 'stripeit-print-styles';
-      styleEl.innerHTML = `
+      styleEl.textContent = `
         @media print {
-          @page {
-            margin: 1cm;
-          }
-          body {
+          body > * { visibility: hidden !important; }
+          #stripe-report-print-area { 
+            visibility: visible !important;
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 100% !important;
             background: white !important;
             color: black !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-          }
-          body * {
-            visibility: hidden;
-          }
-          #stripe-report-print-area,
-          #stripe-report-print-area * {
-            visibility: visible;
-          }
-          #stripe-report-print-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: white !important;
-            color: black !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            box-shadow: none !important;
+            padding: 20px !important;
+            z-index: 99999 !important;
           }
           #stripe-report-print-area * {
-            background: transparent !important;
-            background-color: transparent !important;
+            visibility: visible !important;
             color: black !important;
-            box-shadow: none !important;
-            text-shadow: none !important;
-            border-color: #e2e8f0 !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-          /* Hide badge backgrounds and colors, just show text with simple borders */
-          .badge-print-clean,
-          span[class*="bg-cyan-"],
-          span[class*="bg-amber-"],
-          span[class*="bg-purple-"],
-          span[class*="bg-orange-"],
-          span[class*="bg-slate-"] {
             background: transparent !important;
-            background-color: transparent !important;
-            border: 1px solid #000 !important;
-            color: black !important;
-            padding: 2px 6px !important;
-            border-radius: 4px !important;
+            border-color: #ccc !important;
             box-shadow: none !important;
-            text-shadow: none !important;
           }
-          /* Remove box shadows completely */
-          * {
-            box-shadow: none !important;
-            text-shadow: none !important;
-          }
+          .no-print { display: none !important; }
         }
       `;
       document.head.appendChild(styleEl);
@@ -107,11 +67,6 @@ export const ReportView: React.FC = () => {
           el.remove();
         }
       };
-    } else {
-      const el = document.getElementById('stripeit-print-styles');
-      if (el) {
-        el.remove();
-      }
     }
   }, [selectedMonth]);
 
@@ -172,7 +127,7 @@ export const ReportView: React.FC = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    setTimeout(() => window.print(), 100);
   };
 
   const handleEditDeal = (deal: Deal) => {

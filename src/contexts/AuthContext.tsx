@@ -334,6 +334,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 trialStartedAt: rawData.trialStartedAt?.toMillis?.() || rawData.trialStartedAt || null,
               } as any as UserProfile;
 
+              // Silent Trial -> Free auto-downgrade check (30-day limit)
+              if (
+                !isDeveloper &&
+                profileData.subscriptionTier === SubscriptionTier.TRIAL &&
+                profileData.trialStartedAt &&
+                (Date.now() - profileData.trialStartedAt > 30 * 24 * 60 * 60 * 1000)
+              ) {
+                updateDoc(userDocRef, {
+                  subscriptionTier: SubscriptionTier.FREE,
+                  updatedAt: serverTimestamp()
+                }).catch(e => console.error("Downgrade failed", e));
+                return;
+              }
+
               // 🛡️ FOUNDER REPAIR: Ensure founder always has valid orgId and role
               if (isDeveloper) {
                 const needsUserRepair = !profileData.orgId || profileData.role !== UserRole.DEALER_OWNER || !profileData.isAdmin;

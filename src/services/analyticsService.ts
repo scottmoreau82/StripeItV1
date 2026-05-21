@@ -310,6 +310,76 @@ export const getTrendsChartData = (deals: Deal[], payPlan: PayPlan | null) => {
   return Object.values(dailyMap);
 };
 
+export interface MonthlyDataPoint {
+  month: string;       // e.g. "Jan", "Feb"
+  monthKey: string;    // e.g. "2026-01"
+  units: number;
+  frontEnd: number;
+  backEnd: number;
+  gross: number;
+  commission: number;
+  avgGross: number;
+  newUnits: number;
+  usedUnits: number;
+  cpoUnits: number;
+}
+
+export const getMonthlyHistoricalData = (
+  deals: Deal[],
+  payPlan: PayPlan | null,
+  monthsBack: number = 6
+): MonthlyDataPoint[] => {
+  const results: MonthlyDataPoint[] = [];
+  const now = new Date();
+
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const monthLabel = d.toLocaleString('default', { month: 'short' });
+
+    const monthDeals = deals.filter(deal => {
+      const dd = new Date(deal.date);
+      return dd.getFullYear() === year && dd.getMonth() === month;
+    });
+
+    const units = monthDeals.reduce((sum, d) =>
+      sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
+    const frontEnd = monthDeals.reduce((sum, d) =>
+      sum + (d.frontEndGross || 0), 0);
+    const backEnd = monthDeals.reduce((sum, d) =>
+      sum + (d.backEndGross || 0), 0);
+    const gross = frontEnd + backEnd;
+
+    let commission = 0;
+    if (payPlan && monthDeals.length > 0) {
+      const earnings = calculatePeriodEarnings(monthDeals, payPlan, []);
+      commission = earnings.totalPayout + earnings.totalTierBonuses;
+    }
+
+    const newUnits = monthDeals.filter(d => d.newOrUsed === 'new').length;
+    const usedUnits = monthDeals.filter(d => d.newOrUsed === 'used').length;
+    const cpoUnits = monthDeals.filter(d => d.newOrUsed === 'cpo').length;
+
+    results.push({
+      month: monthLabel,
+      monthKey,
+      units,
+      frontEnd,
+      backEnd,
+      gross,
+      commission,
+      avgGross: units > 0 ? gross / units : 0,
+      newUnits,
+      usedUnits,
+      cpoUnits
+    });
+  }
+
+  return results;
+};
+
 export const calculateTeamMetrics = (deals: Deal[], users?: any[]) => {
   const salespersonMap: Record<string, SalespersonMetrics> = {};
   const mtdDeals = deals.filter(d => isThisMonth(d.date));

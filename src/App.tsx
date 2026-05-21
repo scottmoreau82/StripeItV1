@@ -33,6 +33,7 @@ import { ActivityFeed } from './components/activity/ActivityFeed';
 import { SalesLogView } from './components/log/SalesLogView';
 import { ReportView } from './components/reports/ReportView';
 import { GoalsView } from './components/goals/GoalsView';
+import { AnalyticsView } from './components/analytics/AnalyticsView';
 import { SettingsView } from './components/settings/SettingsView';
 import { ManagerView } from './components/management/ManagerView';
 import { NoteEntryForm } from './components/notes/NoteEntryForm';
@@ -310,35 +311,7 @@ function MainAppFlow() {
               path="/analytics" 
               element={
                 featureAccessService.hasAccess(profile, Feature.ADVANCED_ANALYTICS) 
-                  ? (
-                    <DashboardLayout
-                      header={
-                        <PageHeader
-                          title="Market Analytics"
-                          subtitle="Performance telemetry • historical trends"
-                          icon={TrendingUp}
-                        />
-                      }
-                      main={
-                        <div className="flex items-center justify-center py-12 px-4 w-full">
-                          <Card className="w-full max-w-md bg-[var(--color-bg-card)] border-[var(--color-border)] rounded-3xl p-10 flex flex-col items-center text-center">
-                            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-cyan-500/10 text-cyan-400 mb-6 shrink-0">
-                              <TrendingUp size={24} />
-                            </div>
-                            <Typography variant="mono" className="text-brand-primary uppercase tracking-widest text-[10px] mb-2 font-black">
-                              COMING SOON
-                            </Typography>
-                            <Typography variant="h2" className="text-[var(--color-text-primary)] font-black uppercase tracking-tight italic mb-3">
-                              MARKET ANALYTICS
-                            </Typography>
-                            <Typography variant="p" className="text-slate-500 text-sm leading-relaxed text-center">
-                              Advanced performance telemetry and historical trend analysis. Available in an upcoming release.
-                            </Typography>
-                          </Card>
-                        </div>
-                      }
-                    />
-                  )
+                  ? <AnalyticsView />
                   : <UpgradeAccessScreen feature={Feature.ADVANCED_ANALYTICS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
               } 
             />

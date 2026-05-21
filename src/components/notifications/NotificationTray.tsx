@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppIcon } from '../ui/AppIcon';
 import { motion, AnimatePresence } from 'motion/react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { notificationService } from '@/src/services/notificationService';
 import { feedbackService } from '@/src/services/feedbackService';
@@ -21,6 +21,7 @@ import { formatDistanceToNow } from 'date-fns';
 export const NotificationTray: React.FC = () => {
   const { profile, tierOverride } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [feedbackReports, setFeedbackReports] = useState<FeedbackReport[]>([]);
@@ -246,7 +247,7 @@ export const NotificationTray: React.FC = () => {
                   variant="ghost" 
                   size="sm" 
                   className="w-full text-xs text-slate-500 hover:text-white"
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => { setIsOpen(false); navigate('/activity'); }}
                 >
                   View All Activity
                 </Button>

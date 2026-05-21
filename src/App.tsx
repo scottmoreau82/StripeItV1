@@ -32,6 +32,7 @@ import { HomeView } from './components/home/HomeView';
 import { ActivityFeed } from './components/activity/ActivityFeed';
 import { SalesLogView } from './components/log/SalesLogView';
 import { ReportView } from './components/reports/ReportView';
+import { GoalsView } from './components/goals/GoalsView';
 import { SettingsView } from './components/settings/SettingsView';
 import { ManagerView } from './components/management/ManagerView';
 import { NoteEntryForm } from './components/notes/NoteEntryForm';
@@ -346,35 +347,7 @@ function MainAppFlow() {
               path="/goals" 
               element={
                 featureAccessService.hasAccess(profile, Feature.GOALS) 
-                  ? (
-                    <DashboardLayout
-                      header={
-                        <PageHeader
-                          title="Career Goals"
-                          subtitle="Pacing • targets • ambition"
-                          icon={ArrowUpRight}
-                        />
-                      }
-                      main={
-                        <div className="flex items-center justify-center py-12 px-4 w-full">
-                          <Card className="w-full max-w-md bg-[var(--color-bg-card)] border-[var(--color-border)] rounded-3xl p-10 flex flex-col items-center text-center">
-                            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-purple-500/10 text-purple-400 mb-6 shrink-0">
-                              <Target size={24} />
-                            </div>
-                            <Typography variant="mono" className="text-brand-primary uppercase tracking-widest text-[10px] mb-2 font-black">
-                              COMING SOON
-                            </Typography>
-                            <Typography variant="h2" className="text-[var(--color-text-primary)] font-black uppercase tracking-tight italic mb-3">
-                              CAREER GOALS
-                            </Typography>
-                            <Typography variant="p" className="text-slate-500 text-sm leading-relaxed text-center">
-                              Unit targets, pacing indicators, and milestone tracking. Coming in the next update.
-                            </Typography>
-                          </Card>
-                        </div>
-                      }
-                    />
-                  )
+                  ? <GoalsView />
                   : <UpgradeAccessScreen feature={Feature.GOALS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
               } 
             />
@@ -482,7 +455,7 @@ function MainAppFlow() {
             <Route 
               path="/admin/feedback" 
               element={
-                profile?.isAdmin 
+                isAdmin 
                   ? <FeedbackReviewPage /> 
                   : <Navigate to="/" />
               } 
@@ -490,7 +463,7 @@ function MainAppFlow() {
             <Route 
               path="/admin/analytics" 
               element={
-                profile?.isAdmin 
+                isAdmin 
                   ? <AdminAnalyticsDashboard /> 
                   : <Navigate to="/" />
               } 
@@ -498,7 +471,7 @@ function MainAppFlow() {
             <Route 
               path="/admin/users" 
               element={
-                profile?.isAdmin 
+                isAdmin 
                   ? <UserManagementPage /> 
                   : <Navigate to="/" />
               } 
@@ -506,7 +479,7 @@ function MainAppFlow() {
             <Route 
               path="/admin/dealer-requests" 
               element={
-                profile?.isAdmin 
+                isAdmin 
                   ? <DealerRequestsAdminView /> 
                   : <Navigate to="/" />
               } 

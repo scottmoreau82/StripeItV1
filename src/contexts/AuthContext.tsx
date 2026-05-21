@@ -234,7 +234,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const batch = writeBatch(db);
               let orgId = '';
               let role = UserRole.SALES;
-              let tier = isDeveloper ? SubscriptionTier.ORGANIZATION : SubscriptionTier.TRIAL;
+              let tier = SubscriptionTier.FREE;
 
               if (inviteData) {
                 orgId = inviteData.orgId;
@@ -255,6 +255,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (isDeveloper) {
                   tier = SubscriptionTier.ORGANIZATION;
                   role = UserRole.DEALER_OWNER;
+                } else {
+                  tier = SubscriptionTier.TRIAL;
                 }
               }
 
@@ -264,6 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 displayName: firebaseUser.displayName || (inviteData ? 'New Manager' : 'New Salesperson'),
                 role: role,
                 subscriptionTier: tier,
+                trialStartDate: serverTimestamp(),
                 orgId: orgId,
                 dealershipId: '',
                 createdAt: serverTimestamp(),

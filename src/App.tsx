@@ -82,6 +82,7 @@ function MainAppFlow() {
   const [editingSpiff, setEditingSpiff] = useState<MonthlySpiff | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
+  const [isTrialWelcomeOpen, setIsTrialWelcomeOpen] = useState(false);
 
   const { isMobile } = useResponsive();
   const { profile, user, isAdmin, isDeveloper, logout } = useAuth();
@@ -97,6 +98,18 @@ function MainAppFlow() {
   useEffect(() => {
     analyticsService.trackEvent(AnalyticsEventType.PAGE_VIEW, { path: location.pathname });
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (
+      profile?.subscriptionTier === SubscriptionTier.TRIAL
+    ) {
+      const key = `stripeit_trial_welcome_seen_${user?.uid}`;
+      if (!localStorage.getItem(key)) {
+        setIsTrialWelcomeOpen(true);
+        localStorage.setItem(key, 'true');
+      }
+    }
+  }, [profile?.subscriptionTier, user?.uid]);
   
   const { 
     deals,
@@ -161,23 +174,6 @@ function MainAppFlow() {
 
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [limitMessage, setLimitMessage] = useState('');
-
-  const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
-
-  const daysRemaining = profile?.createdAt 
-    ? Math.max(0, 30 - Math.floor((Date.now() - profile.createdAt) / (1000 * 60 * 60 * 24)))
-    : 0;
-
-  useEffect(() => {
-    if (
-      profile?.subscriptionTier === SubscriptionTier.TRIAL &&
-      localStorage.getItem('stripeit_trial_modal_dismissed') !== 'true' &&
-      sessionStorage.getItem('stripeit_trial_modal_shown') !== 'true'
-    ) {
-      setIsTrialModalOpen(true);
-      sessionStorage.setItem('stripeit_trial_modal_shown', 'true');
-    }
-  }, [profile]);
 
   const handleSubmitDeal = async (dealData: Partial<Deal>) => {
     setIsSubmitting(true);
@@ -692,22 +688,18 @@ function MainAppFlow() {
 
       {/* Trial Welcome Modal */}
       <TrialWelcomeModal
-        isOpen={isTrialModalOpen}
-        daysRemaining={daysRemaining}
-        onDismiss={() => {
-          localStorage.setItem('stripeit_trial_modal_dismissed', 'true');
-          setIsTrialModalOpen(false);
-        }}
+        isOpen={isTrialWelcomeOpen}
+        daysRemaining={30}
         onConfigPayPlan={() => {
-          sessionStorage.setItem('stripeit_trial_modal_shown', 'true');
-          setIsTrialModalOpen(false);
+          setIsTrialWelcomeOpen(false);
           setIsPayPlanOpen(true);
         }}
         onLogDeal={() => {
-          sessionStorage.setItem('stripeit_trial_modal_shown', 'true');
-          setIsTrialModalOpen(false);
+          setIsTrialWelcomeOpen(false);
+          setEditingDeal(null);
           setIsNewDealOpen(true);
         }}
+        onDismiss={() => setIsTrialWelcomeOpen(false)}
       />
 
       {/* Global Mobile Log Deal FAB */}

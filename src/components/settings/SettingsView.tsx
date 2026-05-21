@@ -17,7 +17,9 @@ import {
   Bug,
   Lightbulb,
   ShieldCheck,
-  Sun
+  Sun,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, UserRole, SubscriptionTier, IconTheme } from '@/src/types';
@@ -256,55 +258,244 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ profile, onLogout })
   const { isMobile } = useResponsive();
   const [successMsg, setSuccessMsg] = useState('');
 
+  const [profileOpen, setProfileOpen] = useState(true);
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [orgOpen, setOrgOpen] = useState(false);
+  const [membershipOpen, setMembershipOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [devOpen, setDevOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+
+  const SectionHeader = ({
+    label,
+    isOpen,
+    onToggle
+  }: {
+    label: string;
+    isOpen: boolean;
+    onToggle: () => void;
+  }) => (
+    isMobile ? (
+      <button
+        onClick={onToggle}
+        className="flex items-center justify-between w-full py-3 px-1 border-b border-white/5 text-left group mb-4"
+      >
+        <Typography variant="mono" className="text-[11px] text-slate-400 uppercase font-black tracking-widest group-hover:text-white transition-colors">
+          {label}
+        </Typography>
+        {isOpen
+          ? <ChevronUp size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
+          : <ChevronDown size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
+        }
+      </button>
+    ) : null
+  );
+
   const header = (
     <PageHeader
       title="Settings"
       subtitle="Account oversight • system preferences"
       icon={Settings}
-    >
-      <Button 
-        variant="outline" 
-        onClick={onLogout}
-        className="h-11 px-6 border-rose-500/10 bg-rose-500/5 hover:bg-rose-500 hover:text-white transition-all text-rose-500 font-black uppercase tracking-widest text-[10px] rounded-xl gap-2"
-      >
-        <LogOut size={16} />
-        Sign Out
-      </Button>
-    </PageHeader>
+    />
   );
 
   const mainContent = (
     <div className={cn("max-w-4xl mx-auto pb-44", isMobile ? "space-y-12" : "space-y-20")}>
       <section id="profile" className="scroll-mt-24">
-        <ProfilePanel profile={profile} isMobile={isMobile} />
+        <SectionHeader
+          label="Profile"
+          isOpen={profileOpen}
+          onToggle={() => setProfileOpen(p => !p)}
+        />
+        {isMobile ? (
+          <AnimatePresence initial={false}>
+            {profileOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <ProfilePanel profile={profile} isMobile={isMobile} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        ) : (
+          <ProfilePanel profile={profile} isMobile={isMobile} />
+        )}
       </section>
       
       <section id="theme" className="scroll-mt-24">
-        <ThemePanel profile={profile} isMobile={isMobile} />
+        <SectionHeader
+          label="Appearance"
+          isOpen={themeOpen}
+          onToggle={() => setThemeOpen(p => !p)}
+        />
+        {isMobile ? (
+          <AnimatePresence initial={false}>
+            {themeOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <ThemePanel profile={profile} isMobile={isMobile} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        ) : (
+          <ThemePanel profile={profile} isMobile={isMobile} />
+        )}
       </section>
 
       <section id="organization-access" className="scroll-mt-24">
-        <OrganizationAccessPanel profile={profile} isMobile={isMobile} />
+        <SectionHeader
+          label="Organization"
+          isOpen={orgOpen}
+          onToggle={() => setOrgOpen(p => !p)}
+        />
+        {isMobile ? (
+          <AnimatePresence initial={false}>
+            {orgOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <OrganizationAccessPanel profile={profile} isMobile={isMobile} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        ) : (
+          <OrganizationAccessPanel profile={profile} isMobile={isMobile} />
+        )}
       </section>
 
       <section id="membership" className="scroll-mt-24">
-        <MembershipPanel profile={profile} isMobile={isMobile} />
+        <SectionHeader
+          label="Membership"
+          isOpen={membershipOpen}
+          onToggle={() => setMembershipOpen(p => !p)}
+        />
+        {isMobile ? (
+          <AnimatePresence initial={false}>
+            {membershipOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <MembershipPanel profile={profile} isMobile={isMobile} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        ) : (
+          <MembershipPanel profile={profile} isMobile={isMobile} />
+        )}
       </section>
 
       {isAdmin && (
         <>
           <section id="admin" className="scroll-mt-24">
-            <AdminPanel isMobile={isMobile} />
+            <SectionHeader
+              label="Admin"
+              isOpen={adminOpen}
+              onToggle={() => setAdminOpen(p => !p)}
+            />
+            {isMobile ? (
+              <AnimatePresence initial={false}>
+                {adminOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <AdminPanel isMobile={isMobile} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            ) : (
+              <AdminPanel isMobile={isMobile} />
+            )}
           </section>
 
           <section id="developer" className="scroll-mt-24">
-            <DeveloperPanel isMobile={isMobile} />
+            <SectionHeader
+              label="Developer"
+              isOpen={devOpen}
+              onToggle={() => setDevOpen(p => !p)}
+            />
+            {isMobile ? (
+              <AnimatePresence initial={false}>
+                {devOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <DeveloperPanel isMobile={isMobile} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            ) : (
+              <DeveloperPanel isMobile={isMobile} />
+            )}
           </section>
         </>
       )}
 
       <section id="account" className="scroll-mt-24">
-        <AccountPanel profile={profile} isMobile={isMobile} />
+        <SectionHeader
+          label="Account"
+          isOpen={accountOpen}
+          onToggle={() => setAccountOpen(p => !p)}
+        />
+        {isMobile ? (
+          <AnimatePresence initial={false}>
+            {accountOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <AccountPanel profile={profile} isMobile={isMobile} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        ) : (
+          <AccountPanel profile={profile} isMobile={isMobile} />
+        )}
+      </section>
+
+      <section className="scroll-mt-24">
+        <div className={cn(
+          "pt-8 border-t border-white/5",
+          isMobile ? "pt-6" : "pt-8"
+        )}>
+          <button
+            onClick={onLogout}
+            className={cn(
+              "w-full flex items-center justify-center gap-3 rounded-2xl border border-rose-500/10 bg-rose-500/5 hover:bg-rose-500/10 text-rose-500 font-black uppercase tracking-widest transition-all active:scale-95",
+              isMobile ? "h-14 text-[10px]" : "h-12 text-[10px]"
+            )}
+          >
+            <LogOut size={16} />
+            Sign Out
+          </button>
+        </div>
       </section>
 
       {/* Quick Success Toast */}
@@ -568,13 +759,13 @@ const AdminPanel = ({ isMobile }: { isMobile?: boolean }) => {
 };
 
 const DeveloperPanel = ({ isMobile }: { isMobile?: boolean }) => {
-  const { profile, tierOverride, setTierOverride, isEditMode, setIsEditMode } = useAuth();
+  const { profile, tierOverride, setTierOverride } = useAuth();
   
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
       <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Developer Tools</Typography>
       
-      <div className={cn("grid grid-cols-1 gap-6", !isMobile && "md:grid-cols-2")}>
+      <div className="grid grid-cols-1 gap-6">
         {/* Tier Override */}
         <Card className={cn("bg-bg-card/40 border-white/5 flex flex-col", isMobile ? "p-4 space-y-4" : "p-8 space-y-6")}>
           <div className={cn("flex items-center gap-4 mb-2", isMobile ? "gap-3 mb-0" : "")}>
@@ -610,50 +801,6 @@ const DeveloperPanel = ({ isMobile }: { isMobile?: boolean }) => {
               </Typography>
             </div>
           </div>
-        </Card>
-
-        {/* Edit Mode */}
-        <Card className={cn("bg-bg-card/40 border-white/5 flex flex-col", isMobile ? "p-4 space-y-4" : "p-8 space-y-6")}>
-          <div className={cn("flex items-center gap-4 mb-2", isMobile ? "gap-3 mb-0" : "")}>
-            <div className={cn("rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0", isMobile ? "h-8 w-8" : "h-10 w-10")}>
-              <Target className={cn("text-indigo-400", isMobile ? "h-4 w-4" : "h-5 w-5")} />
-            </div>
-            <div>
-              <Typography variant="h4" className={cn("text-[var(--color-text-primary)]", isMobile ? "text-base leading-tight" : "")}>System Edit Mode</Typography>
-              <Typography variant="small" className={cn("text-slate-500 block", isMobile ? "text-[10px]" : "")}>UI & testing overrides</Typography>
-            </div>
-          </div>
-
-          <div className={cn("flex items-center justify-between bg-white/[0.02] border border-white/5 rounded-2xl", isMobile ? "p-4" : "p-6")}>
-            <div className="space-y-1">
-              <Typography variant="label" className="text-[var(--color-text-primary)] text-sm">Status</Typography>
-              <Typography variant="small" className={cn(
-                "font-black uppercase tracking-widest text-[10px]",
-                isEditMode ? "text-brand-primary" : "text-slate-500"
-              )}>
-                {isEditMode ? 'Enabled' : 'Disabled'}
-              </Typography>
-            </div>
-            
-            <button 
-              onClick={() => setIsEditMode(!isEditMode)}
-              className={cn(
-                "h-7 w-14 rounded-full transition-all relative p-1.5",
-                isEditMode ? "bg-brand-primary shadow-glow glow-primary" : "bg-slate-700"
-              )}
-            >
-              <div className={cn(
-                "h-4 w-4 rounded-full bg-white shadow-sm transition-all",
-                isEditMode ? "translate-x-7" : "translate-x-0"
-              )} />
-            </button>
-          </div>
-
-          {!isMobile && (
-            <Typography variant="small" className="text-slate-600 italic block text-center">
-              Edit mode allows for rapid UI prototyping and state injection.
-            </Typography>
-          )}
         </Card>
       </div>
 

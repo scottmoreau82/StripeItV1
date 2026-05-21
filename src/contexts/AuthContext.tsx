@@ -234,7 +234,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const batch = writeBatch(db);
               let orgId = '';
               let role = UserRole.SALES;
-              let tier = SubscriptionTier.FREE;
+              let tier = isDeveloper ? SubscriptionTier.ORGANIZATION : SubscriptionTier.TRIAL;
 
               if (inviteData) {
                 orgId = inviteData.orgId;
@@ -268,6 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 dealershipId: '',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
+                trialStartedAt: serverTimestamp(),
                 themePreference: 'dark',
                 preferences: {
                   theme: 'dark',
@@ -330,6 +331,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 subscriptionTier,
                 createdAt: rawData.createdAt?.toMillis?.() || rawData.createdAt || Date.now(),
                 updatedAt: rawData.updatedAt?.toMillis?.() || rawData.updatedAt || Date.now(),
+                trialStartedAt: rawData.trialStartedAt?.toMillis?.() || rawData.trialStartedAt || null,
               } as any as UserProfile;
 
               // 🛡️ FOUNDER REPAIR: Ensure founder always has valid orgId and role

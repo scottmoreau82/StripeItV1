@@ -91,6 +91,7 @@ export interface UserProfile {
   dashboardPreference?: UserDashboardPreference;
   createdAt: number;
   updatedAt: number;
+  trialStartedAt?: number;
   preferences?: UserPreferences;
   isFrozen?: boolean;
   suspensionAcknowledgedAt?: number;

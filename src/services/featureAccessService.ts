@@ -40,19 +40,19 @@ export const featureAccessService = {
     switch (feature) {
       case Feature.SALES_LOG_FILTERS:
       case Feature.QUICK_NOTES:
-        return [SubscriptionTier.FREE, SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
+        return [SubscriptionTier.FREE, SubscriptionTier.TRIAL, SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
 
       case Feature.GOALS:
       case Feature.ACTIVITY_FEED:
       case Feature.SPIFF_TRACKING:
         // Restricted for Free users
-        return [SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
+        return [SubscriptionTier.TRIAL, SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
 
       case Feature.CUSTOM_DASHBOARD:
       case Feature.ADVANCED_ANALYTICS:
       case Feature.SAVED_PREFERENCES:
       case Feature.INVENTORY_MANAGEMENT:
-        return [SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
+        return [SubscriptionTier.TRIAL, SubscriptionTier.PRO, SubscriptionTier.ORGANIZATION].includes(tier);
 
       case Feature.MANAGER_VISIBILITY:
       case Feature.TEAM_DASHBOARDS:

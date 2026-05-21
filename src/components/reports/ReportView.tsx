@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   ChevronRight, 
@@ -32,6 +32,88 @@ export const ReportView: React.FC = () => {
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (selectedMonth) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'stripeit-print-styles';
+      styleEl.innerHTML = `
+        @media print {
+          @page {
+            margin: 1cm;
+          }
+          body {
+            background: white !important;
+            color: black !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          }
+          body * {
+            visibility: hidden;
+          }
+          #stripe-report-print-area,
+          #stripe-report-print-area * {
+            visibility: visible;
+          }
+          #stripe-report-print-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: white !important;
+            color: black !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+          }
+          #stripe-report-print-area * {
+            background: transparent !important;
+            background-color: transparent !important;
+            color: black !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            border-color: #e2e8f0 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          /* Hide badge backgrounds and colors, just show text with simple borders */
+          .badge-print-clean,
+          span[class*="bg-cyan-"],
+          span[class*="bg-amber-"],
+          span[class*="bg-purple-"],
+          span[class*="bg-orange-"],
+          span[class*="bg-slate-"] {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: 1px solid #000 !important;
+            color: black !important;
+            padding: 2px 6px !important;
+            border-radius: 4px !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+          }
+          /* Remove box shadows completely */
+          * {
+            box-shadow: none !important;
+            text-shadow: none !important;
+          }
+        }
+      `;
+      document.head.appendChild(styleEl);
+      return () => {
+        const el = document.getElementById('stripeit-print-styles');
+        if (el) {
+          el.remove();
+        }
+      };
+    } else {
+      const el = document.getElementById('stripeit-print-styles');
+      if (el) {
+        el.remove();
+      }
+    }
+  }, [selectedMonth]);
 
   if (!profile || !user) return null;
 
@@ -144,18 +226,18 @@ export const ReportView: React.FC = () => {
         subtitle="Month-by-month financial statements and deal logging"
         icon={PieChart}
       >
-        <div className="flex flex-wrap items-center gap-2 print:hidden w-full md:w-auto mt-2 md:mt-0">
+        <div className="flex flex-wrap items-center gap-2 print:hidden w-full md:w-auto mt-2 md:mt-0 no-print">
           <Button
             variant="outline"
             onClick={() => setSelectedMonth(null)}
-            className="text-[10px] uppercase font-black tracking-widest text-slate-400 hover:text-white border-white/10"
+            className="text-[10px] uppercase font-black tracking-widest text-slate-400 hover:text-white border-white/10 no-print"
           >
             ← ALL MONTHS
           </Button>
           <Button
             variant="outline"
             onClick={() => handleExportCSV(selectedMonth, selectedMonthDeals)}
-            className="text-[10px] uppercase font-black tracking-widest text-cyan-400 hover:text-cyan-300 border-cyan-500/20 bg-cyan-500/5"
+            className="text-[10px] uppercase font-black tracking-widest text-cyan-400 hover:text-cyan-300 border-cyan-500/20 bg-cyan-500/5 no-print"
           >
             <Download className="mr-2 h-4 w-4" />
             EXPORT CSV
@@ -163,7 +245,7 @@ export const ReportView: React.FC = () => {
           <Button
             variant="primary"
             onClick={handlePrint}
-            className="text-[10px] uppercase font-black tracking-widest h-11 px-6 bg-brand-primary text-bg-deep rounded-xl shadow-glow glow-primary"
+            className="text-[10px] uppercase font-black tracking-widest h-11 px-6 bg-brand-primary text-bg-deep rounded-xl shadow-glow glow-primary no-print"
           >
             <Printer className="mr-2 h-4 w-4" />
             PRINT
@@ -218,10 +300,10 @@ export const ReportView: React.FC = () => {
                     <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Front</Typography></th>
                     <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Back</Typography></th>
                     <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Est. Payout</Typography></th>
-                    <th className="px-6 py-4 text-right print:hidden"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Action</Typography></th>
+                    <th className="px-6 py-4 text-right print:hidden no-print"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest no-print">Action</Typography></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-white/5 font-sans">
                   {selectedMonthDeals.map((deal) => {
                     const dealResult = selectedMonthEarnings.dealResults.find(r => r.dealId === deal.id);
                     const estPayout = dealResult ? dealResult.finalPayout : 0;
@@ -234,7 +316,7 @@ export const ReportView: React.FC = () => {
                         <td className="px-6 py-4 text-xs text-slate-300">{deal.purchasedVehicle}</td>
                         <td className="px-6 py-4 text-xs">
                           <span className={cn(
-                            "px-2 py-0.5 rounded text-[10px] font-mono tracking-widest font-black uppercase",
+                            "px-2 py-0.5 rounded text-[10px] font-mono tracking-widest font-black uppercase badge-print-clean",
                             deal.newOrUsed === 'new' ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/15" :
                             deal.newOrUsed === 'used' ? "bg-amber-500/10 text-amber-400 border border-amber-500/15" :
                             "bg-purple-500/10 text-purple-400 border border-purple-500/15"
@@ -242,7 +324,7 @@ export const ReportView: React.FC = () => {
                             {deal.newOrUsed}
                           </span>
                           {deal.isSplitDeal && (
-                            <span className="ml-1 px-1.5 py-0.5 rounded text-[8px] font-mono border border-orange-500/15 bg-orange-500/10 text-orange-400 font-black">
+                            <span className="ml-1 px-1.5 py-0.5 rounded text-[8px] font-mono border border-orange-500/15 bg-orange-500/10 text-orange-400 font-black badge-print-clean">
                               SPLIT {deal.splitPercentage || 50}%
                             </span>
                           )}
@@ -256,12 +338,12 @@ export const ReportView: React.FC = () => {
                         <td className="px-6 py-4 text-sm text-emerald-400 font-bold font-mono">
                           ${estPayout.toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 text-right print:hidden">
+                        <td className="px-6 py-4 text-right print:hidden no-print">
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditDeal(deal)}
-                            className="h-8 w-8 text-slate-400 hover:text-cyan-400 p-1 rounded-lg transition-colors inline-flex items-center justify-center border border-transparent hover:border-white/5 hover:bg-white/5"
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => handleEditDeal(deal)}
+                             className="h-8 w-8 text-slate-400 hover:text-cyan-400 p-1 rounded-lg transition-colors inline-flex items-center justify-center border border-transparent hover:border-white/5 hover:bg-white/5 no-print"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -339,11 +421,13 @@ export const ReportView: React.FC = () => {
     );
 
     return (
-      <DashboardLayout
-        header={headerComponent}
-        stats={statsComponent}
-        main={mainComponent}
-      />
+      <div id="stripe-report-print-area">
+        <DashboardLayout
+          header={headerComponent}
+          stats={statsComponent}
+          main={mainComponent}
+        />
+      </div>
     );
   }
 

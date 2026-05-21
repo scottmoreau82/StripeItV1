@@ -17,6 +17,7 @@ import { Badge } from '../ui/Badge';
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useResponsive } from '@/src/hooks/useResponsive';
+import { useMonthlyDealCount } from '@/src/hooks/useMonthlyDealCount';
 import { DashboardLayout } from '../layout/DashboardLayout';
 
 import { EmptyState } from '../ui/EmptyState';
@@ -90,6 +91,18 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     };
   }, []);
 
+  const [simulateDateStr, setSimulateDateStr] = useState<string>('');
+
+  const debugDate = useMemo(() => {
+    if (profile?.email !== 'scottmoreau82@gmail.com' || !simulateDateStr) {
+      return undefined;
+    }
+    // DEV ONLY — remove before Dealer tier launch
+    return new Date(simulateDateStr + 'T00:00:00');
+  }, [simulateDateStr, profile?.email]);
+
+  const { count: monthlyDealCount, loading: monthlyDealCountLoading } = useMonthlyDealCount(profile?.uid || '', debugDate);
+
   const effectiveTier = devTierOverride ?? profile?.subscriptionTier;
   const isFreeUser = effectiveTier === SubscriptionTier.FREE;
 
@@ -100,13 +113,14 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   ].includes(effectiveTier as any);
 
   const FREE_DEAL_LIMIT = 8;
-  const isAtLimit = isFreeUser && currentMonthDeals.length >= FREE_DEAL_LIMIT;
+  const currentCount = monthlyDealCountLoading ? 0 : monthlyDealCount;
+  const isAtLimit = isFreeUser && currentCount >= 9;
 
   useEffect(() => {
-    if (isFreeUser && currentMonthDeals.length === FREE_DEAL_LIMIT - 1) {
+    if (isFreeUser && currentCount === FREE_DEAL_LIMIT - 1) {
       addToast?.('1 free deal remaining this month. Upgrade to Pro for unlimited access.', 'warning' as any);
     }
-  }, [currentMonthDeals.length, isFreeUser, addToast]);
+  }, [currentCount, isFreeUser, addToast]);
 
   // Explanation Modal State
   const [explanationData, setExplanationData] = useState<{ commission: CommissionResult, customerName: string } | null>(null);
@@ -302,6 +316,31 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
             type="button"
           >
             TIER: {(devTierOverride ?? profile?.subscriptionTier ?? 'FREE').toUpperCase()}
+          </button>
+
+          {/* DEV ONLY — remove before Dealer tier launch */}
+          <div className="flex items-center gap-1.5 h-9 px-3 rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest">
+            <span className="whitespace-nowrap">SIMULATE MONTH:</span>
+            <input
+              type="date"
+              value={simulateDateStr}
+              onChange={(e) => setSimulateDateStr(e.target.value)}
+              className="bg-transparent border-none text-blue-400 focus:outline-none focus:ring-0 text-[10px] uppercase cursor-pointer p-0 select-none"
+            />
+          </div>
+          <button
+            onClick={() => setSimulateDateStr('')}
+            disabled={!simulateDateStr}
+            className={cn(
+              "h-9 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+              simulateDateStr 
+                ? "border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 shadow-glow glow-red-500/5 cursor-pointer"
+                : "border-slate-500/10 bg-slate-500/5 text-slate-500/40 cursor-not-allowed opacity-50"
+            )}
+            title="Clear simulate month"
+            type="button"
+          >
+            CLEAR
           </button>
         </>
       )}
@@ -594,9 +633,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         );
                       }
 
-                      const deal = item as Deal;
-                      const dealIndex = currentMonthDeals.findIndex(d => d.id === deal.id);
-                      const isOverLimit = isFreeUser && dealIndex >= FREE_DEAL_LIMIT;
+                       const deal = item as Deal;
+                       const dealIndex = currentMonthDeals.findIndex(d => d.id === deal.id);
+                       const isOverLimit = isFreeUser && currentCount >= 9 && dealIndex >= FREE_DEAL_LIMIT;
 
                       const m = getCalendarMonth(deal.date);
                       const y = getCalendarYear(deal.date);
@@ -810,7 +849,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
                   const deal = item as Deal;
                   const dealIndex = currentMonthDeals.findIndex(d => d.id === deal.id);
-                  const isOverLimit = isFreeUser && dealIndex >= FREE_DEAL_LIMIT;
+                  const isOverLimit = isFreeUser && currentCount >= 9 && dealIndex >= FREE_DEAL_LIMIT;
 
                   const isExpanded = expandedId === deal.id;
                   const m = getCalendarMonth(deal.date);

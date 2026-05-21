@@ -13,13 +13,13 @@ export const dealerService = {
     const path = `organizations/${orgId}/dealerDeals/${finalDealId}`;
     const dealRef = doc(db, 'organizations', orgId, 'dealerDeals', finalDealId);
 
-    const fullData = {
+    const fullData: any = {
       ...dealData,
       id: finalDealId,
       orgId,
       createdByUserId: userId,
-      createdAt: isNew ? Date.now() : dealData.createdAt,
-      updatedAt: Date.now(),
+      createdAt: isNew ? serverTimestamp() : (dealData.createdAt || serverTimestamp()),
+      updatedAt: serverTimestamp(),
     };
 
     try {

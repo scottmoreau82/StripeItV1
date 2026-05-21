@@ -304,7 +304,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       subtitle={`${currentMonthDeals.length} deals / ${currentMonthSpiffs.length} spiffs this month`}
       icon={() => <AppIcon name="salesLog" className="h-6 w-6 text-bg-deep" />}
     >
-      {profile?.email === 'scottmoreau82@gmail.com' && (
+      {!isMobile && profile?.email === 'scottmoreau82@gmail.com' && (
         <>
           <button
             onClick={handleQuickDeal}
@@ -363,15 +363,17 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           </button>
         </>
       )}
-      <button 
-        onClick={onConfigPayPlan}
-        className="h-11 px-6 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5 flex items-center gap-2 text-[10px] uppercase font-black tracking-widest"
-        title="Est. Payout Engine"
-        aria-label="Est. Payout Engine"
-      >
-        <AppIcon name="calculator" size={16} />
-        Payout Engine
-      </button>
+      {!isMobile && (
+        <button 
+          onClick={onConfigPayPlan}
+          className="h-11 px-6 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5 flex items-center gap-2 text-[10px] uppercase font-black tracking-widest"
+          title="Est. Payout Engine"
+          aria-label="Est. Payout Engine"
+        >
+          <AppIcon name="calculator" size={16} />
+          Payout Engine
+        </button>
+      )}
     </PageHeader>
   );
 
@@ -1050,6 +1052,19 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           />
         )}
       </div>
+
+      {isMobile && (
+        <div className="pt-2 pb-4">
+          <button
+            onClick={onConfigPayPlan}
+            className="w-full h-12 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-[10px] uppercase font-black tracking-widest"
+            title="Est. Payout Engine"
+          >
+            <AppIcon name="calculator" size={16} />
+            Payout Engine
+          </button>
+        </div>
+      )}
 
       {/* Deal Detail Modal/Flow */}
       <AnimatePresence>

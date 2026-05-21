@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowUpRight, Target, TrendingUp, DollarSign, Edit2, Check } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { ArrowUpRight, Target, TrendingUp, DollarSign, Edit2, Check, ChevronDown, ChevronUp, History } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useAppData } from '@/src/contexts/AppDataContext';
@@ -21,6 +21,10 @@ export const GoalsView: React.FC = () => {
   const [unitGoal, setUnitGoal] = useState<string>('');
   const [grossGoal, setGrossGoal] = useState<string>('');
   const [commissionGoal, setCommissionGoal] = useState<string>('');
+
+  const [historyGoals, setHistoryGoals] = useState<Goal[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   // Re-sync form state when goal changes
   useEffect(() => {
@@ -107,6 +111,19 @@ export const GoalsView: React.FC = () => {
     setCommissionGoal(goal?.commissionGoal?.toString() || '');
     setIsEditing(false);
   };
+
+  useEffect(() => {
+    if (!showHistory || !user || !profile) return;
+    setIsLoadingHistory(true);
+    goalService.getGoalsHistory(
+      user.uid,
+      profile.orgId || '',
+      6
+    ).then(data => {
+      setHistoryGoals(data);
+      setIsLoadingHistory(false);
+    }).catch(() => setIsLoadingHistory(false));
+  }, [showHistory, user, profile]);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -313,6 +330,180 @@ export const GoalsView: React.FC = () => {
           </Card>
         </div>
       )}
+
+      {/* Historical Goals Section */}
+      <div className="space-y-4">
+        <button
+          onClick={() => setShowHistory(p => !p)}
+          className="flex items-center gap-2 w-full py-3
+            px-1 border-t border-white/5 text-left group"
+        >
+          <History className="h-4 w-4 text-slate-600
+            group-hover:text-brand-primary transition-colors"
+          />
+          <Typography variant="mono" className="text-[10px]
+            text-slate-500 uppercase font-black tracking-widest
+            group-hover:text-slate-300 transition-colors flex-1">
+            Historical Goals
+          </Typography>
+          {showHistory
+            ? <ChevronUp size={14} className="text-slate-600" />
+            : <ChevronDown size={14}
+                className="text-slate-600" />
+          }
+        </button>
+
+        {showHistory && (
+          <div className="space-y-4">
+            {isLoadingHistory ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3
+                gap-6">
+                {[1,2,3].map(i => (
+                  <div key={i} className="h-48 rounded-2xl
+                    bg-white/5 animate-pulse" />
+                ))}
+              </div>
+            ) : historyGoals.length === 0 ? (
+              <div className="py-12 text-center">
+                <Typography variant="mono"
+                  className="text-slate-600 text-[10px]
+                  uppercase tracking-widest font-black">
+                  No historical goals found
+                </Typography>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3
+                gap-6">
+                {historyGoals.map((hGoal) => {
+                  const label = new Date(
+                    hGoal.month + '-02'
+                  ).toLocaleString('default', {
+                    month: 'long', year: 'numeric'
+                  });
+
+                  const hDeals = deals.filter(d =>
+                    d.date.startsWith(hGoal.month)
+                  );
+                  const hUnits = hDeals.reduce((sum, d) =>
+                    sum + (d.isSplitDeal
+                      ? (d.splitPercentage || 50) / 100
+                      : 1), 0);
+                  const hGross = hDeals.reduce((sum, d) => {
+                    const r = d.isSplitDeal
+                      ? (d.splitPercentage || 50) / 100 : 1;
+                    return sum + (d.frontEndGross +
+                      d.backEndGross) * r;
+                  }, 0);
+                  const hUnitProg = hGoal.unitGoal
+                    ? Math.min(
+                        (hUnits / hGoal.unitGoal) * 100, 100
+                      )
+                    : 0;
+                  const hGrossProg = hGoal.grossGoal
+                    ? Math.min(
+                        (hGross / hGoal.grossGoal) * 100, 100
+                      )
+                    : 0;
+                  const onTrack = hUnits >= hGoal.unitGoal;
+                  const hasNoData = hDeals.length === 0 &&
+                    !hGoal.unitGoal && !hGoal.grossGoal;
+
+                  return (
+                    <Card key={hGoal.month}
+                      className="flex flex-col gap-4
+                      bg-white/[0.02] border-white/5
+                      relative overflow-hidden opacity-80
+                      hover:opacity-100 transition-opacity">
+                      <div className="flex items-center
+                        justify-between">
+                        <Typography variant="mono"
+                          className="text-[10px] text-slate-400
+                          uppercase font-black tracking-widest">
+                          {label}
+                        </Typography>
+                        <span className={`text-[9px] font-mono
+                          font-black tracking-wider px-2 py-0.5
+                          rounded-full border
+                          ${onTrack
+                            ? 'text-brand-primary border-brand-primary/20 bg-brand-primary/5'
+                            : 'text-amber-400 border-amber-400/20 bg-amber-400/5'
+                          }`}>
+                          {onTrack ? 'HIT' : 'MISSED'}
+                        </span>
+                      </div>
+
+                      {hasNoData ? (
+                        <div className="flex items-center justify-center
+                          py-8">
+                          <Typography variant="mono" className="text-[10px]
+                            text-slate-600 uppercase tracking-widest
+                            font-black text-center">
+                            No goals were tracked<br />for this period
+                          </Typography>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div>
+                            <div className="flex justify-between
+                              mb-1">
+                              <Typography variant="mono"
+                                className="text-[9px] text-slate-500">
+                                UNITS
+                              </Typography>
+                              <Typography variant="mono"
+                                className="text-[9px]
+                                text-slate-400 font-black">
+                                {hUnits.toFixed(1)} /
+                                {hGoal.unitGoal}
+                              </Typography>
+                            </div>
+                            <div className="w-full bg-slate-800
+                              h-1.5 rounded-full overflow-hidden">
+                              <div className="bg-brand-primary
+                                h-full transition-all duration-500"
+                                style={{ width:
+                                  `${hUnitProg}%` }} />
+                            </div>
+                          </div>
+
+                          {hGoal.grossGoal ? (
+                            <div>
+                              <div className="flex justify-between
+                                mb-1">
+                                <Typography variant="mono"
+                                  className="text-[9px]
+                                  text-slate-500">
+                                  GROSS
+                                </Typography>
+                                <Typography variant="mono"
+                                  className="text-[9px]
+                                  text-slate-400 font-black">
+                                  ${Math.round(
+                                    hGross
+                                  ).toLocaleString()} /
+                                  ${hGoal.grossGoal
+                                    .toLocaleString()}
+                                </Typography>
+                              </div>
+                              <div className="w-full bg-slate-800
+                                h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-emerald-400
+                                  h-full transition-all duration-500"
+                                  style={{ width:
+                                    `${hGrossProg}%` }} />
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

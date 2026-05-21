@@ -53,5 +53,36 @@ export const goalService = {
       handleFirestoreError(error, OperationType.WRITE, `${COLLECTIONS.GOALS}/${goalId}`);
       throw error;
     }
+  },
+
+  async getGoalsHistory(
+    userId: string,
+    orgId: string,
+    monthsBack: number = 6
+  ): Promise<Goal[]> {
+    const results: Goal[] = [];
+    const now = new Date();
+
+    for (let i = 1; i <= monthsBack; i++) {
+      const d = new Date(now.getFullYear(),
+        now.getMonth() - i, 1);
+      const monthKey =
+        `${d.getFullYear()}-${String(d.getMonth() + 1)
+        .padStart(2, '0')}`;
+      const goalId = `${userId}-${monthKey}`;
+      try {
+        const docRef = doc(db, COLLECTIONS.GOALS, goalId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          results.push(docSnap.data() as Goal);
+        }
+      } catch (error) {
+        console.error(
+          `Failed to fetch goal for ${monthKey}:`, error
+        );
+      }
+    }
+
+    return results;
   }
 };

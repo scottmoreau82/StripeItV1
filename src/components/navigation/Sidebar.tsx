@@ -57,6 +57,88 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // StripeItFeatureAccessSystem - Filter items based on tier
   const visibleNavItems = navigationConfig.getVisibleItems(profile);
 
+  const mainNavItems = visibleNavItems.filter(item => item.id !== 'settings' && item.id !== 'feedback');
+  const secondaryNavItems = visibleNavItems.filter(item => item.id === 'settings' || item.id === 'feedback');
+
+  const renderNavItem = (item: typeof navigationConfig.main[0]) => {
+    const isActive = location.pathname === item.path;
+    
+    const content = (
+      <div className="flex items-center w-full group">
+        <div className="w-16 shrink-0 flex items-center justify-center relative">
+          {/* Active Indicator Bar - Fixed to Left edge of sidebar */}
+          {isActive && !isCollapsed && (
+            <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+          )}
+          <AppIcon name={item.icon as any} className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", isActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]" : "text-slate-600 group-hover:text-slate-400")} />
+        </div>
+        <div className={cn(
+          "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
+          isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+        )}>
+          <span className={cn("font-bold uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, isActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>{item.label}</span>
+          {item.featureId && <ComingSoonIndicator featureId={item.featureId} size="sm" />}
+        </div>
+      </div>
+    );
+
+    if (item.id === 'feedback') {
+      return (
+        <button
+          key={item.id}
+          onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-feedback'))}
+          title={isCollapsed ? item.label : undefined}
+          className="w-full py-3.5 hover:bg-white/[0.02] transition-all"
+        >
+          {content}
+        </button>
+      );
+    }
+
+    return (
+      <React.Fragment key={item.id}>
+        <Link
+          to={item.path}
+          title={isCollapsed ? item.label : undefined}
+          className={cn(
+            "block w-full py-3.5 transition-all text-left",
+            isActive ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
+          )}
+        >
+          {content}
+        </Link>
+        
+        {/* StripeItSettingsSubmenuSystem - Render nested submenu if on settings and expanded */}
+        {isActive && item.id === 'settings' && !isCollapsed && (
+          <div className="mt-1 ml-16 flex flex-col gap-1 border-l border-white/10 pl-4 mb-2">
+            {navigationConfig.settingsSubmenu
+              .filter(sub => {
+                if (sub.adminOnly && !profile?.isAdmin) return false;
+                if (sub.roles && profile && !sub.roles.includes(profile.role)) return false;
+                return true;
+              })
+              .map(sub => (
+                <button
+                  key={sub.id}
+                  onClick={() => {
+                    const id = sub.path.replace('#', '');
+                    const el = document.getElementById(id);
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className={cn("py-1.5 font-black uppercase tracking-[0.2em] text-slate-600 hover:text-brand-primary transition-colors text-left", SIDEBAR_NAV_TYPOGRAPHY)}
+                >
+                  {sub.label}
+                </button>
+              ))
+            }
+          </div>
+        )}
+      </React.Fragment>
+    );
+  };
+
   return (
     <aside className={cn(
       "hidden h-screen flex-col border-r border-border-subtle bg-bg-deep lg:flex sticky top-0 shrink-0 transition-all duration-300 ease-in-out z-30 overflow-hidden",
@@ -90,115 +172,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Navigation & Action Area (Scrollable Navigation) */}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar overflow-x-hidden">
         <nav className="flex flex-col gap-1 py-6">
-          {visibleNavItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            
-            const content = (
-              <div className="flex items-center w-full group">
+          {mainNavItems.map((item) => renderNavItem(item))}
+
+          {profile?.email?.toLowerCase() === 'scottmoreau82@gmail.com' && (
+            <div className="flex flex-col gap-1">
+              <div className={cn("mt-8 mb-2 px-6 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
+                 <span className="font-mono uppercase text-slate-600 text-[9px] tracking-widest">TOOLS</span>
+              </div>
+              <Link
+                to="/deal-desk"
+                title={isCollapsed ? "MAGIC" : undefined}
+                className={cn(
+                  "flex items-center w-full py-3.5 transition-all group relative text-left",
+                  location.pathname === '/deal-desk' ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
+                )}
+              >
                 <div className="w-16 shrink-0 flex items-center justify-center relative">
-                  {/* Active Indicator Bar - Fixed to Left edge of sidebar */}
-                  {isActive && !isCollapsed && (
+                  {location.pathname === '/deal-desk' && !isCollapsed && (
                     <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
                   )}
-                  <AppIcon name={item.icon as any} className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", isActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]" : "text-slate-600 group-hover:text-slate-400")} />
+                  <Sparkles 
+                    className={cn(
+                      SIDEBAR_NAV_ICON_SIZE_CLASS, 
+                      "shrink-0 transition-all text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]"
+                    )} 
+                  />
                 </div>
                 <div className={cn(
                   "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
                   isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
                 )}>
-                  <span className={cn("font-bold uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, isActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>{item.label}</span>
-                  {item.featureId && <ComingSoonIndicator featureId={item.featureId} size="sm" />}
+                  <span className={cn("font-bold uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all text-brand-primary", SIDEBAR_NAV_TYPOGRAPHY)}>
+                    MAGIC
+                  </span>
                 </div>
-              </div>
-            );
-
-            if (item.id === 'feedback') {
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-feedback'))}
-                  title={isCollapsed ? item.label : undefined}
-                  className="w-full py-3.5 hover:bg-white/[0.02] transition-all"
-                >
-                  {content}
-                </button>
-              );
-            }
-
-            return (
-              <React.Fragment key={item.id}>
-                <Link
-                  to={item.path}
-                  title={isCollapsed ? item.label : undefined}
-                  className={cn(
-                    "block w-full py-3.5 transition-all text-left",
-                    isActive ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
-                  )}
-                >
-                  {content}
-                </Link>
-                
-                {/* StripeItSettingsSubmenuSystem - Render nested submenu if on settings and expanded */}
-                {isActive && item.id === 'settings' && !isCollapsed && (
-                  <div className="mt-1 ml-16 flex flex-col gap-1 border-l border-white/10 pl-4 mb-2">
-                    {navigationConfig.settingsSubmenu
-                      .filter(sub => {
-                        if (sub.adminOnly && !profile?.isAdmin) return false;
-                        if (sub.roles && profile && !sub.roles.includes(profile.role)) return false;
-                        return true;
-                      })
-                      .map(sub => (
-                        <button
-                          key={sub.id}
-                          onClick={() => {
-                            const id = sub.path.replace('#', '');
-                            const el = document.getElementById(id);
-                            if (el) {
-                              el.scrollIntoView({ behavior: 'smooth' });
-                            }
-                          }}
-                          className={cn("py-1.5 font-black uppercase tracking-[0.2em] text-slate-600 hover:text-brand-primary transition-colors text-left", SIDEBAR_NAV_TYPOGRAPHY)}
-                        >
-                          {sub.label}
-                        </button>
-                      ))
-                    }
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
-
-          {profile?.email === 'scottmoreau82@gmail.com' && (
-            <Link
-              to="/deal-desk"
-              title={isCollapsed ? "MAGIC" : undefined}
-              className={cn(
-                "flex items-center w-full py-3.5 transition-all group relative text-left",
-                location.pathname === '/deal-desk' ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
-              )}
-            >
-              <div className="w-16 shrink-0 flex items-center justify-center relative">
-                {location.pathname === '/deal-desk' && !isCollapsed && (
-                  <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
-                )}
-                <Sparkles 
-                  className={cn(
-                    SIDEBAR_NAV_ICON_SIZE_CLASS, 
-                    "shrink-0 transition-all text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]"
-                  )} 
-                />
-              </div>
-              <div className={cn(
-                "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
-                isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
-              )}>
-                <span className={cn("font-bold uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all text-brand-primary", SIDEBAR_NAV_TYPOGRAPHY)}>
-                  MAGIC
-                </span>
-              </div>
-            </Link>
+              </Link>
+            </div>
           )}
+
+          {secondaryNavItems.map((item) => renderNavItem(item))}
 
           {/* Theme Toggle Button */}
           <button

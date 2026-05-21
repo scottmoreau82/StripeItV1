@@ -8,6 +8,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
 import { TierBadge } from './TierBadge';
+import { Sparkles } from 'lucide-react';
 
 import { AdminAnalyticsCard } from './AdminAnalyticsCard';
 
@@ -212,6 +213,42 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
               <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, location.search === '?tab=invites' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Invites</span>
             </div>
           </Link>
+          
+          {profile?.email?.toLowerCase() === 'scottmoreau82@gmail.com' && (
+            <div className="flex flex-col gap-1">
+              <div className={cn("mt-8 mb-2 px-6 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
+                <span className="font-mono uppercase text-slate-600 text-[9px] tracking-widest">TOOLS</span>
+              </div>
+              <Link
+                to="/deal-desk"
+                title={isCollapsed ? "MAGIC" : undefined}
+                className={cn(
+                  "flex items-center w-full py-3.5 transition-all group relative text-left",
+                  location.pathname === '/deal-desk' ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
+                )}
+              >
+                <div className="w-16 shrink-0 flex items-center justify-center relative">
+                  {location.pathname === '/deal-desk' && !isCollapsed && (
+                    <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                  )}
+                  <Sparkles 
+                    className={cn(
+                      SIDEBAR_NAV_ICON_SIZE_CLASS, 
+                      "shrink-0 transition-all text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.5)]"
+                    )} 
+                  />
+                </div>
+                <div className={cn(
+                  "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
+                  isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+                )}>
+                  <span className={cn("font-bold uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all text-brand-primary", SIDEBAR_NAV_TYPOGRAPHY)}>
+                    MAGIC
+                  </span>
+                </div>
+              </Link>
+            </div>
+          )}
 
           {/* CONFIGURATION SECTION */}
           <div className={cn("mt-8 mb-2 px-6 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>

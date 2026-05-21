@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react';
-import { doc, collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { COLLECTIONS } from '../constants';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 
 /**
  * useMonthlyDealCount
- * Custom hook that queries Firestore for deals belonging to the current authenticated user
- * within the current calendar month (1st to last day) and returns the live count.
+ * Custom hook that queries Firestore for the current user's deals in the current calendar month
+ * using the createdAt Timestamp field, and returns a live count.
  */
-export function useMonthlyDealCount(uid: string, debugDate?: Date) {
+export function useMonthlyDealCount(orgId: string, userId: string, debugDate?: Date) {
   const [count, setCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!uid) {
+    if (!orgId || !userId) {
       setCount(0);
       setLoading(false);
       return;
@@ -21,72 +20,41 @@ export function useMonthlyDealCount(uid: string, debugDate?: Date) {
 
     setLoading(true);
 
-    let unsubDeals: (() => void) | null = null;
-    const userDocRef = doc(db, COLLECTIONS.USERS, uid);
+    // Compute month boundaries dynamically — no hardcoded months or years
+    // DEV ONLY — debugDate param, remove before Dealer tier launch
+    const referenceDate = debugDate || new Date();
+    const startOfMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    const unsubUser = onSnapshot(userDocRef, (userSnap) => {
-      // Clean up any existing deals subscription if userData changes
-      if (unsubDeals) {
-        unsubDeals();
-        unsubDeals = null;
-      }
+    const startTimestamp = Timestamp.fromDate(startOfMonth);
+    const endTimestamp = Timestamp.fromDate(endOfMonth);
 
-      if (!userSnap.exists()) {
+    const path = `organizations/${orgId}/deals`;
+    const dealsRef = collection(db, 'organizations', orgId, 'deals');
+    const dealsQuery = query(
+      dealsRef,
+      where('userId', '==', userId),
+      where('createdAt', '>=', startTimestamp),
+      where('createdAt', '<=', endTimestamp)
+    );
+
+    const unsubscribe = onSnapshot(
+      dealsQuery,
+      (snapshot) => {
+        setCount(snapshot.size);
+        setLoading(false);
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.LIST, path);
         setCount(0);
         setLoading(false);
-        return;
       }
-
-      const userData = userSnap.data();
-      const orgId = userData?.orgId;
-
-      if (!orgId) {
-        setCount(0);
-        setLoading(false);
-        return;
-      }
-
-      // Compute month boundaries dynamically at call time using the reference date
-      // DEV ONLY — remove before Dealer tier launch
-      const referenceDate = debugDate || new Date();
-      const startOfMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1, 0, 0, 0, 0);
-      const endOfMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0, 23, 59, 59, 999);
-
-      const startTimestamp = Timestamp.fromDate(startOfMonth);
-      const endTimestamp = Timestamp.fromDate(endOfMonth);
-
-      // Query the deals collection of the organization where:
-      // - userId == uid
-      // - createdAt is within the current month boundaries
-      const dealsRef = collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.DEALS);
-      const dealsQuery = query(
-        dealsRef,
-        where('userId', '==', uid),
-        where('createdAt', '>=', startTimestamp),
-        where('createdAt', '<=', endTimestamp)
-      );
-
-      unsubDeals = onSnapshot(dealsQuery, (dealsSnap) => {
-        setCount(dealsSnap.size);
-        setLoading(false);
-      }, (error) => {
-        console.error('[useMonthlyDealCount] Error fetching deals count:', error);
-        setCount(0);
-        setLoading(false);
-      });
-    }, (error) => {
-      console.error('[useMonthlyDealCount] Error fetching user profile:', error);
-      setCount(0);
-      setLoading(false);
-    });
+    );
 
     return () => {
-      unsubUser();
-      if (unsubDeals) {
-        unsubDeals();
-      }
+      unsubscribe();
     };
-  }, [uid, debugDate ? debugDate.getTime() : null]);
+  }, [orgId, userId, debugDate ? debugDate.getTime() : null]);
 
   return { count, loading };
 }

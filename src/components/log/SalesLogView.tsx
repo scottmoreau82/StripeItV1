@@ -53,7 +53,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     handleSaveDeal
   } = useAppData();
   
-  const { profile, addToast } = useAuth();
+  const { user, profile, addToast } = useAuth();
   const { isMobile } = useResponsive();
 
   const currentMonth = new Date().getMonth() + 1;
@@ -101,7 +101,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     return new Date(simulateDateStr + 'T00:00:00');
   }, [simulateDateStr, profile?.email]);
 
-  const { count: monthlyDealCount, loading: monthlyDealCountLoading } = useMonthlyDealCount(profile?.uid || '', debugDate);
+  const { count, loading } = useMonthlyDealCount(profile?.orgId || '', user?.uid || '', debugDate);
 
   const effectiveTier = devTierOverride ?? profile?.subscriptionTier;
   const isFreeUser = effectiveTier === SubscriptionTier.FREE;
@@ -113,7 +113,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   ].includes(effectiveTier as any);
 
   const FREE_DEAL_LIMIT = 8;
-  const currentCount = monthlyDealCountLoading ? 0 : monthlyDealCount;
+  const currentCount = loading ? 0 : count;
   const isAtLimit = isFreeUser && currentCount >= 9;
 
   useEffect(() => {
@@ -264,6 +264,10 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     }).map(s => s.item);
 
   }, [deals, monthlySpiffs, search, sortConfig, isBasicPlus, payPlan]);
+
+  const sortedDeals = useMemo(() => {
+    return sortedItems.filter(item => 'customerName' in item) as Deal[];
+  }, [sortedItems]);
 
   const clearFilters = () => {
     setSearch('');
@@ -635,7 +639,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
                        const deal = item as Deal;
                        const dealIndex = currentMonthDeals.findIndex(d => d.id === deal.id);
-                       const isOverLimit = isFreeUser && currentCount >= 9 && dealIndex >= FREE_DEAL_LIMIT;
+                       const isFreeTier = effectiveTier === SubscriptionTier.FREE;
+                       const dealIndexInSorted = sortedDeals.findIndex(d => d.id === deal.id);
+                       const shouldBlur = isFreeTier && dealIndexInSorted >= FREE_DEAL_LIMIT && loading === false;
 
                       const m = getCalendarMonth(deal.date);
                       const y = getCalendarYear(deal.date);
@@ -653,13 +659,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.02 }}
                           onClick={() => {
-                            if (!isOverLimit) {
+                            if (!shouldBlur) {
                               setSelectedDeal(deal);
                             }
                           }}
                           className={cn(
                             "group hover:bg-white/[0.02] cursor-pointer transition-colors relative",
-                            isOverLimit && "pointer-events-none"
+                            shouldBlur && "pointer-events-none select-none overflow-hidden"
                           )}
                         >
                           <td className="py-5 px-4 whitespace-nowrap">
@@ -668,7 +674,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             </Typography>
                           </td>
                           <td className="py-5 px-4">
-                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                            <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
                               <div className="flex flex-col min-w-0">
                                 <Typography variant="label" className="text-[var(--color-text-primary)] text-sm font-black truncate">
                                   {deal.customerName}
@@ -680,7 +686,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             </div>
                           </td>
                           <td className="py-5 px-4">
-                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                            <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
                               <div className="flex flex-col min-w-0">
                                 <Typography variant="small" className="text-slate-300 truncate text-xs font-bold">
                                   {deal.purchasedVehicle}
@@ -695,21 +701,21 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             <TypeBadge type={deal.newOrUsed as any} />
                           </td>
                           <td className="py-5 px-4 text-right">
-                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                            <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
                               <Typography variant="mono" className="text-xs text-white group-hover:text-cyan-400 transition-colors font-black">
                                 ${deal.frontEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                               </Typography>
                             </div>
                           </td>
                           <td className="py-5 px-4 text-right">
-                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                            <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
                               <Typography variant="mono" className="text-xs text-white group-hover:text-purple-400 transition-colors font-black">
                                 ${deal.backEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                               </Typography>
                             </div>
                           </td>
                           <td className="py-5 px-4 text-right relative">
-                            <div className={isOverLimit ? "blur-sm select-none" : ""}>
+                            <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
                               <div className="flex flex-col items-end">
                                 <div className="flex items-center gap-2">
                                   <Typography variant="label" className="text-emerald-400 font-black text-sm">
@@ -739,16 +745,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               </div>
                             </div>
 
-                            {isOverLimit && (
-                              <div className="absolute inset-y-0 right-0 w-48 flex items-center justify-end pr-4">
-                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                                  <Lock size={10} className="text-amber-400" />
-                                  <span className="text-[9px] font-black uppercase text-amber-400 tracking-widest">
-                                    Pro
-                                  </span>
-                                </div>
-                              </div>
-                            )}
+
                           </td>
                           <td className="py-5 px-4 text-right">
                             <div className="flex items-center justify-end gap-2">
@@ -848,8 +845,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                   }
 
                   const deal = item as Deal;
-                  const dealIndex = currentMonthDeals.findIndex(d => d.id === deal.id);
-                  const isOverLimit = isFreeUser && currentCount >= 9 && dealIndex >= FREE_DEAL_LIMIT;
+                  const isFreeTier = effectiveTier === SubscriptionTier.FREE;
+                  const dealIndexInSorted = sortedDeals.findIndex(d => d.id === deal.id);
+                  const shouldBlur = isFreeTier && dealIndexInSorted >= FREE_DEAL_LIMIT && loading === false;
 
                   const isExpanded = expandedId === deal.id;
                   const m = getCalendarMonth(deal.date);
@@ -872,10 +870,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           : "bg-[var(--color-bg-card)] border-[var(--color-border)] p-3"
                       )}
                       onClick={() => {
-                        if (isOverLimit) return;
+                        if (shouldBlur) return;
                         handleDealInteraction(deal);
                       }}
                     >
+                      <div className={cn("w-full h-full", shouldBlur && "[filter:blur(4px)] select-none")}>
                       {/* Collapsed Row State */}
                       <div className={cn(
                         "flex items-center justify-between gap-3",
@@ -914,12 +913,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         </div>
                       </div>
 
-                      {isOverLimit && (
-                        <div className="absolute inset-0 backdrop-blur-sm bg-black/60 rounded-xl z-10 flex items-center justify-center">
+                    </div>
+
+                      {shouldBlur && (
+                        <div className="absolute inset-0 bg-slate-950/70 z-25 flex items-center justify-center pointer-events-none rounded-xl">
                           <div className="flex flex-col items-center gap-2 p-4">
-                            <Lock size={20} className="text-amber-400" />
-                            <Typography variant="mono" className="text-amber-400 text-[10px] font-black uppercase tracking-widest text-center">
-                              Upgrade to view
+                            <Typography variant="mono" className="text-white text-[10px] font-black uppercase tracking-widest text-center">
+                              PRO REQUIRED — UPGRADE TO VIEW
                             </Typography>
                           </div>
                         </div>

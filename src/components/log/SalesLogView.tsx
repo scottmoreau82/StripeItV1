@@ -97,13 +97,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   useEffect(() => {
     if (profile?.email === 'scottmoreau82@gmail.com' && simulateDateStr) {
-      setDebugDate(new Date(simulateDateStr + 'T00:00:00'));
+      setDebugDate(new Date(simulateDateStr + '-01T00:00:00'));
     } else {
       setDebugDate(undefined);
     }
   }, [simulateDateStr, profile?.email]);
 
-  const { count: monthlyDealCount, loading: countLoading } = useMonthlyDealCount(profile?.orgId || '', user?.uid || '', debugDate);
+  const { count: monthlyDealCount, loading: countLoading } = useMonthlyDealCount(user?.uid || '', debugDate);
 
   const effectiveTier = devTierOverride ?? profile?.subscriptionTier;
   const isFreeUser = effectiveTier === SubscriptionTier.FREE;
@@ -341,7 +341,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           <div className="flex items-center gap-1.5 h-9 px-3 rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest">
             <span className="whitespace-nowrap">SIMULATE MONTH:</span>
             <input
-              type="date"
+              type="month"
               value={simulateDateStr}
               onChange={(e) => setSimulateDateStr(e.target.value)}
               className="bg-transparent border-none text-blue-400 focus:outline-none focus:ring-0 text-[10px] uppercase cursor-pointer p-0 select-none"

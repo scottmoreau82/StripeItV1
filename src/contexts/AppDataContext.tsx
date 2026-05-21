@@ -272,10 +272,24 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     
     try {
       if (!editingId) {
+        const now = new Date();
+        const monthStart = new Date(
+          now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0
+        ).getTime();
+        const monthEnd = new Date(
+          now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999
+        ).getTime();
+        const currentMonthDealCount = deals.filter(d => {
+          const ts = typeof d.createdAt === 'number'
+            ? d.createdAt
+            : Date.now();
+          return ts >= monthStart && ts <= monthEnd;
+        }).length;
+
         const isLimitReached = planLimitService.isLimitReached(
           profile.subscriptionTier || SubscriptionTier.FREE, 
           LimitType.DEAL_STORAGE, 
-          deals.length
+          currentMonthDealCount
         );
 
         if (isLimitReached) {
@@ -337,7 +351,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       triggerError(getFriendlyErrorMessage(error));
       throw error;
     }
-  }, [profile, user, effectiveOrgId, deals.length, triggerSuccess, triggerError]);
+  }, [profile, user, effectiveOrgId, deals, triggerSuccess, triggerError]);
 
   const handleDeleteDeal = useCallback(async (dealId: string) => {
     if (!effectiveOrgId) return;

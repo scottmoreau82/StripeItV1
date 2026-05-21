@@ -53,7 +53,15 @@ const STEPS = [
   }
 ];
 
-export const OnboardingFlow: React.FC = () => {
+interface OnboardingFlowProps {
+  onConfigPayPlan?: () => void;
+  onLogDeal?: () => void;
+}
+
+export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
+  onConfigPayPlan,
+  onLogDeal,
+}) => {
   const { profile } = useAuth();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -131,7 +139,7 @@ export const OnboardingFlow: React.FC = () => {
               </Typography>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 font-sans">
               <Button 
                 onClick={handleNext}
                 className="w-full sm:w-auto h-12 sm:h-14 px-8 rounded-2xl text-base sm:text-lg font-black italic uppercase tracking-tighter shadow-glow glow-primary group"
@@ -139,6 +147,27 @@ export const OnboardingFlow: React.FC = () => {
                 {isLastStep ? 'Let\'s Go' : 'Continue'}
                 <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
+
+              {currentStep.id === 'payplan' && onConfigPayPlan && (
+                <Button
+                  variant="outline"
+                  onClick={onConfigPayPlan}
+                  className="w-full sm:w-auto h-12 sm:h-14 px-6 rounded-2xl border-white/10 text-white/70 hover:text-white uppercase text-[10px] font-black tracking-widest"
+                >
+                  SET UP PAY PLAN
+                </Button>
+              )}
+
+              {currentStep.id === 'log' && onLogDeal && (
+                <Button
+                  variant="outline"
+                  onClick={onLogDeal}
+                  className="w-full sm:w-auto h-12 sm:h-14 px-6 rounded-2xl border-white/10 text-white/70 hover:text-white uppercase text-[10px] font-black tracking-widest"
+                >
+                  LOG FIRST DEAL
+                </Button>
+              )}
+
               <Button 
                 variant="ghost" 
                 onClick={handleSkip}

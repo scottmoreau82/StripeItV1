@@ -252,7 +252,13 @@ function MainAppFlow() {
       onConfigPayPlan={() => setIsPayPlanOpen(true)}
     >
       <LoadingOverlay isLoading={isLoading && !!profile} />
-      <OnboardingFlow />
+      <OnboardingFlow
+        onConfigPayPlan={() => setIsPayPlanOpen(true)}
+        onLogDeal={() => {
+          setEditingDeal(null);
+          setIsNewDealOpen(true);
+        }}
+      />
       
       <AnimatePresence mode="wait">
         <motion.div

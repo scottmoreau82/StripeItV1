@@ -12,17 +12,30 @@ import { PerformanceChart } from './ChartSystem';
 import { DashboardLayout } from '../layout/DashboardLayout';
 import { getMonthlyHistoricalData, getTrendsChartData, calculateDashboardMetrics } from '@/src/services/analyticsService';
 
-const CustomBarTooltip = ({ active, payload, label, isCurrency }: any) => {
+const CustomBarTooltip = ({ active, payload, label,
+  isCurrency }: any) => {
   if (active && payload && payload.length) {
-    const value = payload[0].value;
-    const formattedValue = isCurrency ? `$${Number(value).toLocaleString()}` : Number(value).toFixed(1);
-    
     return (
-      <div className="bg-bg-elevated border border-white/10 p-3 rounded-xl shadow-2xl backdrop-blur-md">
-        <Typography variant="mono" className="text-slate-500 mb-1">{label}</Typography>
-        <Typography variant="label" className="text-white font-bold">
-          {payload[0].name === 'units' ? 'Units' : payload[0].name === 'gross' ? 'Gross' : payload[0].name}: {formattedValue}
+      <div className="bg-bg-elevated border border-white/10
+        p-3 rounded-xl shadow-2xl backdrop-blur-md
+        space-y-1">
+        <Typography variant="mono"
+          className="text-slate-500 mb-2 block">
+          {label}
         </Typography>
+        {payload.map((entry: any, i: number) => (
+          <div key={i}
+            className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full shrink-0"
+              style={{ backgroundColor: entry.fill }} />
+            <Typography variant="mono"
+              className="text-white font-bold text-[10px]">
+              {entry.name}: {isCurrency
+                ? `$${Number(entry.value).toLocaleString()}`
+                : Number(entry.value).toFixed(1)}
+            </Typography>
+          </div>
+        ))}
       </div>
     );
   }
@@ -285,8 +298,24 @@ export const AnalyticsView: React.FC = () => {
                     />
                     <Tooltip content={<CustomBarTooltip isCurrency={false} />} cursor={{ fill: 'rgba(255,255,255,0.01)' }} />
                     <Bar
-                      dataKey="units"
+                      dataKey="newUnits"
+                      name="New"
+                      stackId="units"
                       fill="#00D4FF"
+                      animationDuration={1500}
+                    />
+                    <Bar
+                      dataKey="usedUnits"
+                      name="Used"
+                      stackId="units"
+                      fill="#8B5CF6"
+                      animationDuration={1500}
+                    />
+                    <Bar
+                      dataKey="cpoUnits"
+                      name="CPO"
+                      stackId="units"
+                      fill="#10B981"
                       radius={[4, 4, 0, 0]}
                       animationDuration={1500}
                     />

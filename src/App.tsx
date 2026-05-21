@@ -679,28 +679,6 @@ function MainAppFlow() {
         </div>
       )}
 
-      {/* scottmoreau82@gmail.com MAGIC mobile center-bottom button */}
-      {isMobile && profile?.email === 'scottmoreau82@gmail.com' && location.pathname === '/sales-log' && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out md:hidden font-display">
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="relative"
-          >
-            {/* Visual Echo/Glow */}
-            <div className="absolute inset-x-0 inset-y-0 rounded-full bg-cyan-400/25 blur-lg animate-pulse" />
-            
-            <Link
-              to="/deal-desk"
-              className="relative h-12 px-6 rounded-full bg-cyan-400 text-bg-deep font-black shadow-glow glow-cyan flex items-center justify-center gap-2 border border-cyan-300 transition-transform shadow-2xl uppercase tracking-widest text-[10px]"
-            >
-              <Sparkles size={16} />
-              MAGIC
-            </Link>
-          </motion.div>
-        </div>
-      )}
-
       {/* FAB Clearance Zone for Mobile Scroll */}
       {isMobile && (location.pathname === '/' || isDrawerOpen) && 
         !isNewDealOpen && !isNewSpiffOpen && 

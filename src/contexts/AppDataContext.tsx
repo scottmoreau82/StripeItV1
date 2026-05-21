@@ -30,7 +30,6 @@ interface AppDataContextType {
   monthlySpiffs: MonthlySpiff[];
   competitions: Competition[];
   isLoading: boolean;
-  showSuccess: boolean;
   dashboardLayout: DashboardLayout;
   handleSaveDeal: (dealData: Partial<Deal>, editingId?: string) => Promise<void>;
   handleDeleteDeal: (dealId: string) => Promise<void>;
@@ -60,7 +59,6 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [monthlySpiffs, setMonthlySpiffs] = useState<MonthlySpiff[]>([]);
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   // triggerSuccess now maps to global toast
   const triggerSuccess = useCallback((message: string = 'Action successful!') => {
@@ -531,7 +529,6 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     monthlySpiffs,
     competitions,
     isLoading,
-    showSuccess,
     dashboardLayout,
     handleSaveDeal,
     handleDeleteDeal,
@@ -556,7 +553,6 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     monthlySpiffs,
     competitions,
     isLoading,
-    showSuccess,
     dashboardLayout,
     handleSaveDeal,
     handleDeleteDeal,

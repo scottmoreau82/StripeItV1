@@ -53,7 +53,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     handleSaveDeal
   } = useAppData();
   
-  const { user, profile, addToast } = useAuth();
+  const { user, profile, addToast, isDeveloper } = useAuth();
   const { isMobile } = useResponsive();
 
   const currentMonth = new Date().getMonth() + 1;
@@ -93,15 +93,17 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   const [simulateDateStr, setSimulateDateStr] = useState<string>('');
 
-  const debugDate = useMemo(() => {
-    if (profile?.email !== 'scottmoreau82@gmail.com' || !simulateDateStr) {
-      return undefined;
+  const [debugDate, setDebugDate] = useState<Date | undefined>(undefined);
+
+  useEffect(() => {
+    if (profile?.email === 'scottmoreau82@gmail.com' && simulateDateStr) {
+      setDebugDate(new Date(simulateDateStr + 'T00:00:00'));
+    } else {
+      setDebugDate(undefined);
     }
-    // DEV ONLY — remove before Dealer tier launch
-    return new Date(simulateDateStr + 'T00:00:00');
   }, [simulateDateStr, profile?.email]);
 
-  const { count, loading } = useMonthlyDealCount(profile?.orgId || '', user?.uid || '', debugDate);
+  const { count: monthlyDealCount, loading: countLoading } = useMonthlyDealCount(profile?.orgId || '', user?.uid || '', debugDate);
 
   const effectiveTier = devTierOverride ?? profile?.subscriptionTier;
   const isFreeUser = effectiveTier === SubscriptionTier.FREE;
@@ -113,7 +115,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   ].includes(effectiveTier as any);
 
   const FREE_DEAL_LIMIT = 8;
-  const currentCount = loading ? 0 : count;
+  const currentCount = countLoading ? 0 : monthlyDealCount;
   const isAtLimit = isFreeUser && currentCount >= 9;
 
   useEffect(() => {
@@ -267,6 +269,19 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   const sortedDeals = useMemo(() => {
     return sortedItems.filter(item => 'customerName' in item) as Deal[];
+  }, [sortedItems]);
+
+  const dealIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    let dealCounter = 0;
+    sortedItems.forEach((item) => {
+      const isDeal = 'customerName' in item;
+      if (isDeal) {
+        map.set(item.id, dealCounter);
+        dealCounter++;
+      }
+    });
+    return map;
   }, [sortedItems]);
 
   const clearFilters = () => {
@@ -638,10 +653,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       }
 
                        const deal = item as Deal;
-                       const dealIndex = currentMonthDeals.findIndex(d => d.id === deal.id);
-                       const isFreeTier = effectiveTier === SubscriptionTier.FREE;
-                       const dealIndexInSorted = sortedDeals.findIndex(d => d.id === deal.id);
-                       const shouldBlur = isFreeTier && dealIndexInSorted >= FREE_DEAL_LIMIT && loading === false;
+                       const dealIndex = dealIndexMap.get(deal.id) ?? 0;
+                       const isBlurred = profile?.subscriptionTier === SubscriptionTier.FREE && !countLoading && dealIndex >= FREE_DEAL_LIMIT;
+                       const shouldBlur = isBlurred;
 
                       const m = getCalendarMonth(deal.date);
                       const y = getCalendarYear(deal.date);
@@ -659,13 +673,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.02 }}
                           onClick={() => {
-                            if (!shouldBlur) {
+                            if (!isBlurred) {
                               setSelectedDeal(deal);
                             }
                           }}
                           className={cn(
                             "group hover:bg-white/[0.02] cursor-pointer transition-colors relative",
-                            shouldBlur && "pointer-events-none select-none overflow-hidden"
+                            isBlurred ? 'relative overflow-hidden pointer-events-none select-none' : ''
                           )}
                         >
                           <td className="py-5 px-4 whitespace-nowrap">
@@ -783,6 +797,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               )}
                             </div>
                           </td>
+                          {isBlurred && (
+                            <td className="absolute inset-0 backdrop-blur-sm bg-bg-deep/60 flex items-center justify-center" colSpan={8}>
+                              <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">
+                                Pro Required — Upgrade to View
+                              </Typography>
+                            </td>
+                          )}
                         </motion.tr>
                       );
                     })}
@@ -845,9 +866,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                   }
 
                   const deal = item as Deal;
-                  const isFreeTier = effectiveTier === SubscriptionTier.FREE;
-                  const dealIndexInSorted = sortedDeals.findIndex(d => d.id === deal.id);
-                  const shouldBlur = isFreeTier && dealIndexInSorted >= FREE_DEAL_LIMIT && loading === false;
+                  const dealIndex = dealIndexMap.get(deal.id) ?? 0;
+                  const isBlurred = profile?.subscriptionTier === SubscriptionTier.FREE && !countLoading && dealIndex >= FREE_DEAL_LIMIT;
+                  const shouldBlur = isBlurred;
 
                   const isExpanded = expandedId === deal.id;
                   const m = getCalendarMonth(deal.date);
@@ -867,10 +888,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         "transition-all duration-300 border rounded-xl overflow-hidden shadow-lg relative",
                         isExpanded 
                           ? "bg-[var(--color-bg-elevated)] border-[var(--color-border)] p-4" 
-                          : "bg-[var(--color-bg-card)] border-[var(--color-border)] p-3"
+                          : "bg-[var(--color-bg-card)] border-[var(--color-border)] p-3",
+                        isBlurred && "pointer-events-none select-none relative blur-sm"
                       )}
                       onClick={() => {
-                        if (shouldBlur) return;
+                        if (isBlurred) return;
                         handleDealInteraction(deal);
                       }}
                     >
@@ -915,13 +937,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
                     </div>
 
-                      {shouldBlur && (
-                        <div className="absolute inset-0 bg-slate-950/70 z-25 flex items-center justify-center pointer-events-none rounded-xl">
-                          <div className="flex flex-col items-center gap-2 p-4">
-                            <Typography variant="mono" className="text-white text-[10px] font-black uppercase tracking-widest text-center">
-                              PRO REQUIRED — UPGRADE TO VIEW
-                            </Typography>
-                          </div>
+                      {isBlurred && (
+                        <div className="absolute inset-0 bg-bg-deep/70 flex items-center justify-center rounded-xl z-20 pointer-events-none">
+                          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black text-center">
+                            Pro Required — Upgrade to View
+                          </Typography>
                         </div>
                       )}
 

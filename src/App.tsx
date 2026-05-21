@@ -50,6 +50,7 @@ import { permissionService } from './services/permissionService';
 import { featureAccessService, Feature } from './services/featureAccessService';
 import { SubscriptionTier } from './types';
 import { UpgradeAccessScreen } from './components/subscription/UpgradeAccessScreen';
+import { TrialWelcomeModal } from './components/subscription/TrialWelcomeModal';
 import { FeedbackType } from './types';
 import { analyticsService } from './services/analyticsService';
 import { AnalyticsEventType } from './types';
@@ -152,6 +153,23 @@ function MainAppFlow() {
 
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [limitMessage, setLimitMessage] = useState('');
+
+  const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
+
+  const daysRemaining = profile?.createdAt 
+    ? Math.max(0, 30 - Math.floor((Date.now() - profile.createdAt) / (1000 * 60 * 60 * 24)))
+    : 0;
+
+  useEffect(() => {
+    if (
+      profile?.subscriptionTier === SubscriptionTier.TRIAL &&
+      localStorage.getItem('stripeit_trial_modal_dismissed') !== 'true' &&
+      sessionStorage.getItem('stripeit_trial_modal_shown') !== 'true'
+    ) {
+      setIsTrialModalOpen(true);
+      sessionStorage.setItem('stripeit_trial_modal_shown', 'true');
+    }
+  }, [profile]);
 
   const handleSubmitDeal = async (dealData: Partial<Deal>) => {
     setIsSubmitting(true);
@@ -658,6 +676,26 @@ function MainAppFlow() {
           }}
         />
       </Modal>
+
+      {/* Trial Welcome Modal */}
+      <TrialWelcomeModal
+        isOpen={isTrialModalOpen}
+        daysRemaining={daysRemaining}
+        onDismiss={() => {
+          localStorage.setItem('stripeit_trial_modal_dismissed', 'true');
+          setIsTrialModalOpen(false);
+        }}
+        onConfigPayPlan={() => {
+          sessionStorage.setItem('stripeit_trial_modal_shown', 'true');
+          setIsTrialModalOpen(false);
+          setIsPayPlanOpen(true);
+        }}
+        onLogDeal={() => {
+          sessionStorage.setItem('stripeit_trial_modal_shown', 'true');
+          setIsTrialModalOpen(false);
+          setIsNewDealOpen(true);
+        }}
+      />
 
       {/* Global Mobile Log Deal FAB */}
       {isMobile && (location.pathname === '/' || isDrawerOpen) && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (

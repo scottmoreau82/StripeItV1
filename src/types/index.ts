@@ -66,6 +66,7 @@ export interface UserDashboardPreference {
 
 export interface DashboardLayout {
   widgets: WidgetConfig[];
+  animationStyle?: 'stack' | 'standard';
 }
 
 export interface WidgetConfig {

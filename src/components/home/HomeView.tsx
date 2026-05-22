@@ -10,7 +10,7 @@ import { DashboardLayout as DashboardLayoutType, Deal, PayPlan, UserProfile, Goa
 import { competitionService } from '@/src/services/competitionService';
 import { DashboardCustomizer } from '../dashboard/DashboardCustomizer';
 import { WidgetRegistry } from '../dashboard/WidgetRegistry';
-import { WidgetType } from '@/src/services/widgetService';
+import { WidgetType, WIDGET_DEFINITIONS } from '@/src/services/widgetService';
 import { DashboardLayout as DashboardLayoutComponent } from '../layout/DashboardLayout';
 import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
@@ -45,7 +45,9 @@ import {
   Plus,
   Snowflake,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 import { AppIcon } from '../ui/AppIcon';
@@ -110,7 +112,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const isDealer = profile?.subscriptionTier === SubscriptionTier.ORGANIZATION;
   const isFrozen = profile?.isFrozen && !profile?.suspensionAcknowledgedAt && !isDeveloper;
 
-  const [showMetrics, setShowMetrics] = useState(!isMobile);
   const [activeTab, setActiveTab] = useState<'overview' | 'trends'>('overview');
   const [selectedCompId, setSelectedCompId] = useState<string | null>(null);
   const [isCustomizing, setIsCustomizing] = useState(false);
@@ -235,6 +236,23 @@ export const HomeView: React.FC<HomeViewProps> = ({
         new Date(a.date).getTime());
   }, [deals]);
 
+  const isStackAnimation = useMemo(() => dashboardLayout?.animationStyle === 'stack', [dashboardLayout]);
+
+  const isCarousel = dashboardLayout?.animationStyle === 'stack';
+
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+
+  const carouselCards = useMemo(() => [
+    WidgetType.UNITS,
+    WidgetType.COMMISSION,
+    WidgetType.FRONT_END_GROSS,
+    WidgetType.BACK_END_GROSS
+  ].filter(type => {
+    const widget = dashboardLayout.widgets.find(
+      w => w.type === type);
+    return widget?.visible;
+  }), [dashboardLayout.widgets]);
+
   const hasCustomizationAccess = featureAccessService.hasAccess(profile, Feature.CUSTOM_DASHBOARD);
 
   const widgetData = {
@@ -247,6 +265,82 @@ export const HomeView: React.FC<HomeViewProps> = ({
     leaders: activeCompetitionsWithLeaders,
     isLoading
   };
+
+  const carouselContent = (
+    <div className="relative w-full">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeCardIndex}
+          initial={{ opacity: 0, x: 60 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -60 }}
+          transition={{ duration: 0.25, ease: 'easeInOut' }}
+          className="w-full"
+        >
+          {carouselCards[activeCardIndex] && (
+            <WidgetRegistry
+              type={carouselCards[activeCardIndex] as WidgetType}
+              data={widgetData}
+              variant="hero-horizontal"
+              onUpgrade={() => {
+                window.location.hash = '#settings';
+              }}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      <div className="flex items-center justify-between mt-3 px-1">
+        <button
+          onClick={() => setActiveCardIndex(i => Math.max(0, i - 1))}
+          disabled={activeCardIndex === 0}
+          className={cn(
+            "h-8 w-8 rounded-full flex items-center justify-center border transition-all",
+            activeCardIndex === 0
+              ? "border-white/5 text-slate-700 cursor-not-allowed"
+              : "border-white/10 text-slate-400 hover:border-brand-primary/40 hover:text-brand-primary active:scale-95"
+          )}
+        >
+          <ChevronLeft size={16} />
+        </button>
+
+         <div className="flex flex-col items-center gap-1.5">
+           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">
+             {carouselCards[activeCardIndex]
+               ? WIDGET_DEFINITIONS[carouselCards[activeCardIndex]]?.label || ''
+               : ''}
+           </Typography>
+           <div className="flex items-center gap-1.5">
+             {carouselCards.map((_, i) => (
+               <button
+                 key={i}
+                 onClick={() => setActiveCardIndex(i)}
+                 className={cn(
+                   "rounded-full transition-all",
+                   i === activeCardIndex
+                     ? "h-1.5 w-4 bg-brand-primary"
+                     : "h-1.5 w-1.5 bg-white/20 hover:bg-white/40"
+                 )}
+               />
+             ))}
+           </div>
+         </div>
+
+        <button
+          onClick={() => setActiveCardIndex(i => Math.min(carouselCards.length - 1, i + 1))}
+          disabled={activeCardIndex === carouselCards.length - 1}
+          className={cn(
+            "h-8 w-8 rounded-full flex items-center justify-center border transition-all",
+            activeCardIndex === carouselCards.length - 1
+              ? "border-white/5 text-slate-700 cursor-not-allowed"
+              : "border-white/10 text-slate-400 hover:border-brand-primary/40 hover:text-brand-primary active:scale-95"
+          )}
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    </div>
+  );
 
   const header = (
     <div className="space-y-10">
@@ -341,109 +435,72 @@ export const HomeView: React.FC<HomeViewProps> = ({
           >
             {/* Dynamic Metric Widgets */}
             <div className="relative group/metrics">
-              {isMobile ? (
-                <div>
-                  <CollapsibleHeader
-                    label="Performance Metrics"
-                    isOpen={metricsOpen}
-                    onToggle={() => setMetricsOpen(p => !p)}
-                  />
-                  <AnimatePresence initial={false}>
-                    {metricsOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="flex flex-col gap-3 pt-2">
-                          {/* Hero Metrics - Units & Commission */}
-                          <div className="grid grid-cols-1 gap-2.5">
-                            {[WidgetType.UNITS, WidgetType.COMMISSION].map(type => {
-                              const widget = dashboardLayout.widgets.find(w => w.type === type);
-                              if (!widget || !widget.visible) return null;
-                              return (
-                                <WidgetRegistry 
-                                  key={type} 
-                                  type={type as WidgetType} 
-                                  data={widgetData}
-                                  variant="hero-horizontal"
-                                  onClick={type === WidgetType.COMMISSION ? () => setShowPaycheckBreakdown(true) : undefined}
-                                  onUpgrade={() => {
-                                    window.location.hash = '#settings';
-                                  }}
-                                />
-                              );
-                            })}
-                          </div>
-                          
-                          {/* Telemetry Metrics Grid */}
-                          <div className="grid grid-cols-2 gap-2.5">
-                            {[
-                              WidgetType.FRONT_END_GROSS, 
-                              WidgetType.BACK_END_GROSS, 
-                              WidgetType.TOTAL_GROSS, 
-                              WidgetType.AVERAGE_GROSS
-                            ].map(type => {
-                              const widget = dashboardLayout.widgets.find(w => w.type === type);
-                              if (!widget || !widget.visible) return null;
-                              
-                              const isWidgetLocked = isFree && widget.type !== WidgetType.UNITS;
-
-                              return (
-                                <div key={type} className={cn(isWidgetLocked ? "col-span-2" : "col-span-1")}>
-                                  <WidgetRegistry 
-                                    type={type as WidgetType} 
-                                    data={widgetData}
-                                    variant="telemetry"
-                                    onClick={
-                                      type === WidgetType.FRONT_END_GROSS 
-                                        ? () => setShowFrontModal(true)
-                                        : type === WidgetType.BACK_END_GROSS
-                                        ? () => setShowBackModal(true)
-                                        : undefined
-                                    }
-                                    onUpgrade={() => {
-                                      window.location.hash = '#settings';
-                                    }}
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
+              {isCarousel ? (
+                carouselContent
+              ) : isMobile ? (
+                <div className="flex flex-col gap-3">
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {[WidgetType.UNITS, WidgetType.COMMISSION]
+                      .map(type => {
+                      const widget = dashboardLayout.widgets
+                        .find(w => w.type === type);
+                      if (!widget || !widget.visible) return null;
+                      return (
+                        <WidgetRegistry
+                          key={type}
+                          type={type as WidgetType}
+                          data={widgetData}
+                          variant="hero-horizontal"
+                          onUpgrade={() => {
+                            window.location.hash = '#settings';
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {[WidgetType.FRONT_END_GROSS,
+                      WidgetType.BACK_END_GROSS,
+                      WidgetType.TOTAL_GROSS,
+                      WidgetType.AVERAGE_GROSS]
+                      .map(type => {
+                      const widget = dashboardLayout.widgets
+                        .find(w => w.type === type);
+                      if (!widget || !widget.visible) return null;
+                      const isWidgetLocked = isFree &&
+                        widget.type !== WidgetType.UNITS;
+                      return (
+                        <div key={type} className={cn(
+                          isWidgetLocked
+                            ? "col-span-2" : "col-span-1"
+                        )}>
+                          <WidgetRegistry
+                            type={type as WidgetType}
+                            data={widgetData}
+                            variant="telemetry"
+                            onUpgrade={() => {
+                              window.location.hash = '#settings';
+                            }}
+                          />
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:max-h-none overflow-y-auto lg:overflow-visible snap-y lg:snap-none snap-mandatory scrollbar-hide pr-2 pb-12 lg:pb-0">
-                  {[
-                    WidgetType.UNITS,
-                    WidgetType.COMMISSION,
+                  {[WidgetType.UNITS, WidgetType.COMMISSION,
                     WidgetType.FRONT_END_GROSS,
-                    WidgetType.BACK_END_GROSS
-                  ].map(type => {
-                    const widget = dashboardLayout.widgets.find(w => w.type === type);
+                    WidgetType.BACK_END_GROSS].map(type => {
+                    const widget = dashboardLayout.widgets
+                      .find(w => w.type === type);
                     if (!widget || !widget.visible) return null;
-                    
                     return (
                       <div key={type} className="snap-center snap-always h-auto min-h-[160px] lg:min-h-0">
-                        <WidgetRegistry 
-                          type={type as WidgetType} 
+                        <WidgetRegistry
+                          type={type as WidgetType}
                           data={widgetData}
-                          onClick={
-                            type === WidgetType.COMMISSION 
-                              ? () => setShowPaycheckBreakdown(true) 
-                              : type === WidgetType.FRONT_END_GROSS
-                              ? () => setShowFrontModal(true)
-                              : type === WidgetType.BACK_END_GROSS
-                              ? () => setShowBackModal(true)
-                              : undefined
-                          }
                           onUpgrade={() => {
-                            // navigate to settings/subscription tab
                             window.location.hash = '#settings';
                           }}
                         />

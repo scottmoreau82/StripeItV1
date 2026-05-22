@@ -136,8 +136,8 @@ export const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
         </Typography>
         <div className="grid grid-cols-2 gap-3">
           {([
-            { value: 'standard', label: 'Standard', desc: 'Simple fade-in' },
-            { value: 'stack', label: 'Stack', desc: 'Staggered stack entrance' }
+            { value: 'standard', label: 'Standard', desc: 'All cards visible' },
+            { value: 'stack', label: 'Carousel', desc: 'One card at a time' }
           ] as const).map(opt => (
             <button
               key={opt.value}

@@ -292,13 +292,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       <div className="flex items-center justify-between mt-3 px-1">
         <button
-          onClick={() => setActiveCardIndex(i => Math.max(0, i - 1))}
-          disabled={activeCardIndex === 0}
+          onClick={() => setActiveCardIndex(i => i === 0 ? carouselCards.length - 1 : i - 1)}
           className={cn(
             "h-8 w-8 rounded-full flex items-center justify-center border transition-all",
-            activeCardIndex === 0
-              ? "border-white/5 text-slate-700 cursor-not-allowed"
-              : "border-white/10 text-slate-400 hover:border-brand-primary/40 hover:text-brand-primary active:scale-95"
+            "border-white/10 text-slate-400 hover:border-brand-primary/40 hover:text-brand-primary active:scale-95"
           )}
         >
           <ChevronLeft size={16} />
@@ -327,13 +324,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
          </div>
 
         <button
-          onClick={() => setActiveCardIndex(i => Math.min(carouselCards.length - 1, i + 1))}
-          disabled={activeCardIndex === carouselCards.length - 1}
+          onClick={() => setActiveCardIndex(i => i === carouselCards.length - 1 ? 0 : i + 1)}
           className={cn(
             "h-8 w-8 rounded-full flex items-center justify-center border transition-all",
-            activeCardIndex === carouselCards.length - 1
-              ? "border-white/5 text-slate-700 cursor-not-allowed"
-              : "border-white/10 text-slate-400 hover:border-brand-primary/40 hover:text-brand-primary active:scale-95"
+            "border-white/10 text-slate-400 hover:border-brand-primary/40 hover:text-brand-primary active:scale-95"
           )}
         >
           <ChevronRight size={16} />

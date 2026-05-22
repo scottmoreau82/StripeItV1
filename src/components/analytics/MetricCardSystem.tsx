@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Card } from '../ui/Card';
 import { Typography } from '../ui/Typography';
 import { cn } from '@/src/lib/utils';
@@ -36,6 +36,76 @@ const colorMap = {
   orange: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
 };
 
+const useCountUp = (value: string | number, duration: number = 1000) => {
+  const [display, setDisplay] = useState('0');
+  const frameRef = useRef<number>();
+  const startRef = useRef<number>();
+
+  useEffect(() => {
+    const str = String(value);
+
+    // Extract prefix ($), suffix (%), and numeric part
+    const prefix = str.startsWith('$') ? '$' : '';
+    const suffix = str.endsWith('%') ? '%' : '';
+    const cleaned = str
+      .replace(/[$%,]/g, '')
+      .trim();
+    const numeric = parseFloat(cleaned);
+
+    if (isNaN(numeric)) {
+      setDisplay(str);
+      return;
+    }
+
+    const isNegative = numeric < 0;
+    const absTarget = Math.abs(numeric);
+    const isDecimal = cleaned.includes('.');
+    const decimalPlaces = isDecimal
+      ? (cleaned.split('.')[1] || '').length : 0;
+
+    startRef.current = undefined;
+
+    const animate = (timestamp: number) => {
+      if (!startRef.current) {
+        startRef.current = timestamp;
+      }
+      const elapsed = timestamp - startRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = absTarget * eased;
+      const sign = isNegative ? '-' : '';
+
+      let formatted: string;
+      if (decimalPlaces > 0) {
+        formatted = current.toLocaleString(undefined, {
+          minimumFractionDigits: decimalPlaces,
+          maximumFractionDigits: decimalPlaces
+        });
+      } else {
+        formatted = Math.round(current).toLocaleString();
+      }
+
+      setDisplay(`${prefix}${sign}${formatted}${suffix}`);
+
+      if (progress < 1) {
+        frameRef.current =
+          requestAnimationFrame(animate);
+      }
+    };
+
+    frameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, [value, duration]);
+
+  return display;
+};
+
 export const MetricCard: React.FC<MetricCardProps> = ({
   label,
   value,
@@ -55,6 +125,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const isTelemetry = variant === 'telemetry';
   const isHorizontal = variant === 'hero-horizontal';
   const isCarousel = variant === 'carousel';
+  const animatedValue = useCountUp(loading ? '0' : value);
 
   if (isLocked) {
     return (
@@ -121,8 +192,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             
             <div className="flex flex-col">
               <div className="flex items-baseline gap-3">
-                <Typography variant="h1" className="text-text-primary text-2xl sm:text-4xl tracking-tighter font-black italic leading-none shrink-0">
-                  {loading ? '...' : value}
+                <Typography variant="h1" className="text-text-primary text-2xl sm:text-4xl tracking-tighter font-black italic leading-none min-w-0 overflow-hidden">
+                  {loading ? '...' : animatedValue}
                 </Typography>
                 
                 {subValue && !loading && (
@@ -179,8 +250,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             <Typography variant="label" className="text-slate-500 font-black tracking-widest block uppercase text-[9px] opacity-80">
               {label}
             </Typography>
-            <Typography variant="h1" className="text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-none">
-              {loading ? '...' : value}
+            <Typography variant="h1" className="text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-none w-full text-center break-all">
+              {loading ? '...' : animatedValue}
             </Typography>
             {subValue && !loading && (
               <div className="flex items-center gap-1 mt-1">
@@ -223,7 +294,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     <Card 
       onClick={onClick}
       className={cn(
-        "bg-gradient-to-br from-white/[0.04] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden flex flex-col",
+        "bg-gradient-to-br from-white/[0.04] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden flex flex-col items-center justify-center text-center",
         isTelemetry ? "p-3 h-auto min-h-[85px]" : "p-4.5 h-full min-h-[140px]",
         onClick && "cursor-pointer hover:border-white/20 transition-all"
       )}
@@ -235,18 +306,18 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         <div className={cn(
           "rounded-lg flex items-center justify-center border transition-transform group-hover:scale-105 shrink-0 shadow-sm",
           colorMap[color as keyof typeof colorMap],
-          isTelemetry ? "h-7 w-7 mb-2" : "h-9 w-9 mb-4"
+          isTelemetry ? "h-7 w-7 mb-2" : "h-9 w-9 mb-4 mx-auto"
         )}>
           <Icon className={isTelemetry ? "h-3.5 w-3.5" : "h-5 w-5"} />
         </div>
         
-        <div className={cn("flex flex-col w-full", isTelemetry ? "space-y-0" : "space-y-0.5")}>
+        <div className={cn("flex flex-col w-full items-center", isTelemetry ? "space-y-0" : "space-y-0.5")}>
           <Typography variant="label" className={cn("text-slate-400 font-black tracking-widest block uppercase shrink-0 opacity-90", isTelemetry ? "text-[6.5px]" : "text-[7.5px]")}>
             {label}
           </Typography>
           
-          <Typography variant="h1" className={cn("text-text-primary tracking-tighter font-black italic leading-none", isTelemetry ? "text-2xl" : "text-2xl sm:text-3xl lg:text-4xl")}>
-            {loading ? '...' : value}
+          <Typography variant="h1" className={cn("text-text-primary tracking-tighter font-black italic leading-none w-full text-center", isTelemetry ? "text-2xl" : "text-2xl sm:text-3xl lg:text-4xl")}>
+            {loading ? '...' : animatedValue}
           </Typography>
 
           {secondaryValue && !loading && (

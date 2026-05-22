@@ -8,13 +8,59 @@ import { DashboardLayout, WidgetConfig } from '@/src/types';
 import { WIDGET_DEFINITIONS, WidgetType } from '@/src/services/widgetService';
 import { dashboardService } from '@/src/services/dashboardService';
 import { Eye, EyeOff, GripVertical, Save, RotateCcw, X } from 'lucide-react';
-import { motion, Reorder } from 'motion/react';
+import { motion, Reorder, useDragControls } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 
 /**
  * StripeItDashboardCustomizationSystem
  * UI for reordering and toggling dashboard widgets.
  */
+
+const DraggableWidgetRow: React.FC<{
+  widget: WidgetConfig;
+  definition: any;
+  onToggle: () => void;
+}> = ({ widget, definition, onToggle }) => {
+  const dragControls = useDragControls();
+  return (
+    <Reorder.Item
+      key={widget.id}
+      value={widget}
+      dragListener={false}
+      dragControls={dragControls}
+      className={cn(
+        "bg-white/[0.02] border rounded-2xl p-4 flex items-center gap-4 group transition-colors",
+        widget.visible ? "border-white/5" : "border-white/5 opacity-50 grayscale"
+      )}
+    >
+      <div
+        onPointerDown={(e) => dragControls.start(e)}
+        className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 touch-none"
+      >
+        <GripVertical size={18} />
+      </div>
+
+      <div className="flex-1">
+        <Typography variant="label" className="text-white block font-bold">
+          {definition?.label || 'Unknown Widget'}
+        </Typography>
+        <Typography variant="mono" className="text-[9px] text-slate-500 uppercase">
+          {definition?.description || ''}
+        </Typography>
+      </div>
+
+      <button
+        onClick={onToggle}
+        className={cn(
+          "p-2 rounded-xl transition-colors",
+          widget.visible ? "text-brand-primary bg-brand-primary/10" : "text-slate-600 bg-white/5"
+        )}
+      >
+        {widget.visible ? <Eye size={18} /> : <EyeOff size={18} />}
+      </button>
+    </Reorder.Item>
+  );
+};
 
 interface DashboardCustomizerProps {
   isOpen: boolean;
@@ -87,37 +133,12 @@ export const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
           const definition = WIDGET_DEFINITIONS[widget.type as WidgetType];
           
           return (
-            <Reorder.Item 
-              key={widget.id} 
-              value={widget}
-              className={cn(
-                "bg-white/[0.02] border rounded-2xl p-4 flex items-center gap-4 group transition-colors",
-                widget.visible ? "border-white/5" : "border-white/5 opacity-50 grayscale"
-              )}
-            >
-              <div className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400">
-                <GripVertical size={18} />
-              </div>
-
-              <div className="flex-1">
-                <Typography variant="label" className="text-white block font-bold">
-                  {definition?.label || 'Unknown Widget'}
-                </Typography>
-                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase">
-                  {definition?.description || ''}
-                </Typography>
-              </div>
-
-              <button 
-                onClick={() => handleToggleVisibility(widget.id)}
-                className={cn(
-                  "p-2 rounded-xl transition-colors",
-                  widget.visible ? "text-brand-primary bg-brand-primary/10" : "text-slate-600 bg-white/5"
-                )}
-              >
-                {widget.visible ? <Eye size={18} /> : <EyeOff size={18} />}
-              </button>
-            </Reorder.Item>
+            <DraggableWidgetRow
+              key={widget.id}
+              widget={widget}
+              definition={definition}
+              onToggle={() => handleToggleVisibility(widget.id)}
+            />
           );
         })}
       </Reorder.Group>

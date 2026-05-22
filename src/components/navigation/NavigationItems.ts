@@ -10,7 +10,6 @@ export const navigationConfig = {
     { id: 'analytics', label: 'ANALYTICS', icon: 'analytics', path: '/analytics', featureId: Feature.ADVANCED_ANALYTICS },
     { id: 'goals', label: 'GOALS', icon: 'goals', path: '/goals', featureId: Feature.GOALS },
     { id: 'reports', label: 'SALES REPORT', icon: 'reports', path: '/reports', featureId: Feature.ADVANCED_ANALYTICS },
-    { id: 'inventory', label: 'INVENTORY', icon: 'inventory', path: '/inventory', featureId: Feature.INVENTORY_MANAGEMENT },
     
     // Dealer Management Tier
     { id: 'dealer-log', label: 'DEALER LOG', icon: 'car', path: '/dealer/sales-log', featureId: Feature.ORG_SETTINGS },
@@ -56,7 +55,7 @@ export const navigationConfig = {
       const isSalesperson = profile.subscriptionTier !== SubscriptionTier.ORGANIZATION;
 
       // Hide specific unfinished routes for all Salespeople (Free, Basic, Pro)
-      const unfinishedRoutes = ['inventory'];
+      const unfinishedRoutes: string[] = [];
       if (isSalesperson && unfinishedRoutes.includes(item.id)) {
         return false;
       }

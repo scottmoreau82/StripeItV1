@@ -281,7 +281,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <WidgetRegistry
               type={carouselCards[activeCardIndex] as WidgetType}
               data={widgetData}
-              variant="hero-horizontal"
+              variant={"carousel" as any}
               onUpgrade={() => {
                 window.location.hash = '#settings';
               }}

@@ -23,7 +23,7 @@ interface MetricCardProps {
   isLocked?: boolean;
   onUnlock?: () => void;
   lockMessage?: string;
-  variant?: 'hero' | 'telemetry' | 'hero-horizontal';
+  variant?: 'hero' | 'telemetry' | 'hero-horizontal' | 'carousel';
   onClick?: () => void;
 }
 
@@ -54,6 +54,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 }) => {
   const isTelemetry = variant === 'telemetry';
   const isHorizontal = variant === 'hero-horizontal';
+  const isCarousel = variant === 'carousel';
 
   if (isLocked) {
     return (
@@ -156,6 +157,63 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           color === 'amber' ? 'text-amber-500' : 
           color === 'purple' ? 'text-purple-500' :
           color === 'orange' ? 'text-orange-500' : 'text-rose-500'
+        )} />
+      </Card>
+    );
+  }
+
+  if (isCarousel) {
+    return (
+      <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden p-8 min-h-[190px] flex items-center justify-center">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-10" />
+
+        <div className="flex flex-col items-center text-center gap-4 relative z-10 w-full">
+          <div className={cn(
+            "h-12 w-12 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-105 shadow-sm",
+            colorMap[color as keyof typeof colorMap]
+          )}>
+            <Icon className="h-6 w-6" />
+          </div>
+
+          <div className="flex flex-col items-center gap-1">
+            <Typography variant="label" className="text-slate-500 font-black tracking-widest block uppercase text-[9px] opacity-80">
+              {label}
+            </Typography>
+            <Typography variant="h1" className="text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-none">
+              {loading ? '...' : value}
+            </Typography>
+            {subValue && !loading && (
+              <div className="flex items-center gap-1 mt-1">
+                <Typography variant="mono" className="text-[13px] text-brand-primary font-black italic tracking-tighter">
+                  {subValue}
+                  <span className="text-[8px] ml-0.5 text-slate-500 font-bold uppercase not-italic">/mo</span>
+                </Typography>
+                <Typography variant="mono" className="text-[8px] text-slate-600 uppercase font-bold tracking-widest">
+                  Pacing
+                </Typography>
+              </div>
+            )}
+            {secondaryValue && !loading && (
+              <div className="flex items-center gap-1 mt-1">
+                <Typography variant="mono" className="text-[11px] text-emerald-400 font-bold italic tracking-tighter">
+                  +{secondaryValue}
+                </Typography>
+                <Typography variant="mono" className="text-[9px] text-slate-600 uppercase font-bold tracking-widest">
+                  {secondaryLabel}
+                </Typography>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className={cn(
+          "absolute inset-y-0 left-0 w-[2px] bg-current opacity-40",
+          color === 'cyan' ? 'text-brand-primary' :
+          color === 'emerald' ? 'text-emerald-500' :
+          color === 'amber' ? 'text-amber-500' :
+          color === 'purple' ? 'text-purple-500' :
+          color === 'orange' ? 'text-orange-500' :
+          'text-rose-500'
         )} />
       </Card>
     );

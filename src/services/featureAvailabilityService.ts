@@ -23,10 +23,11 @@ const FEATURE_REGISTRY: Record<string, FeatureStatus> = {
   [Feature.GOALS]: FeatureStatus.COMPLETE,
   [Feature.SALES_LOG_FILTERS]: FeatureStatus.COMPLETE,
   [Feature.QUICK_NOTES]: FeatureStatus.COMPLETE,
+  [Feature.ACTIVITY_FEED]: FeatureStatus.COMPLETE,
   
   // Advanced Features (In Development for Testing)
   [Feature.CUSTOM_DASHBOARD]: FeatureStatus.IN_DEVELOPMENT,
-  [Feature.ADVANCED_ANALYTICS]: FeatureStatus.IN_DEVELOPMENT,
+  [Feature.ADVANCED_ANALYTICS]: FeatureStatus.COMPLETE,
   [Feature.SAVED_PREFERENCES]: FeatureStatus.IN_DEVELOPMENT,
   
   // Organization Features (Planned/In Development)

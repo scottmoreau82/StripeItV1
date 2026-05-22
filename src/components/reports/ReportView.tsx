@@ -234,22 +234,6 @@ export const ReportView: React.FC = () => {
           >
             ← ALL MONTHS
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => handleExportCSV(selectedMonth, selectedMonthDeals)}
-            className="text-[10px] uppercase font-black tracking-widest text-cyan-400 hover:text-cyan-300 border-cyan-500/20 bg-cyan-500/5 no-print"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            EXPORT CSV
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handlePrint}
-            className="text-[10px] uppercase font-black tracking-widest h-11 px-6 bg-brand-primary text-bg-deep rounded-xl shadow-glow glow-primary no-print"
-          >
-            <Printer className="mr-2 h-4 w-4" />
-            PRINT
-          </Button>
         </div>
       </PageHeader>
     );
@@ -284,6 +268,16 @@ export const ReportView: React.FC = () => {
           >
             <FileText className="mr-2 h-4 w-4" />
             Export PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handlePrint}
+            className="w-full text-xs font-black uppercase
+              tracking-widest text-slate-400
+              border-white/10 hover:bg-white/5 no-print"
+          >
+            <Printer className="mr-2 h-4 w-4" />
+            Print
           </Button>
         </Card>
         <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">

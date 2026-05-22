@@ -27,6 +27,8 @@ import { StripeItCommissionSetupModal } from './components/commission/StripeItCo
 import { payPlanService } from './services/payPlanService';
 import { goalService } from './services/goalService';
 import { Deal, DealStatus, Goal, PayPlan, UserRole, QuickNote, Competition, MonthlySpiff } from './types';
+import { useUpdateDetection } from './hooks/useUpdateDetection';
+import { UpdateNotificationBanner } from './components/ui/UpdateNotificationBanner';
 
 import { HomeView } from './components/home/HomeView';
 import { ActivityFeed } from './components/activity/ActivityFeed';
@@ -85,6 +87,8 @@ function MainAppFlow() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
   const [isTrialWelcomeOpen, setIsTrialWelcomeOpen] = useState(false);
+  const { updateAvailable } = useUpdateDetection();
+  const [dismissedUpdate, setDismissedUpdate] = useState(false);
 
   const { isMobile } = useResponsive();
   const { profile, user, isAdmin, isDeveloper, logout } = useAuth();
@@ -248,7 +252,12 @@ function MainAppFlow() {
   };
 
   return (
-    <RootLayout 
+    <>
+      <UpdateNotificationBanner
+        show={updateAvailable && !dismissedUpdate}
+        onDismiss={() => setDismissedUpdate(true)}
+      />
+      <RootLayout 
       onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
       onLogSpiff={() => { setEditingSpiff(null); setIsNewSpiffOpen(true); }}
       onConfigPayPlan={() => setIsPayPlanOpen(true)}
@@ -687,6 +696,7 @@ function MainAppFlow() {
         <div className="h-20 pointer-events-none" />
       )}
     </RootLayout>
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot, updateDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
@@ -10,6 +10,11 @@ import { motion, AnimatePresence } from 'motion/react';
 
 import { analyticsService } from '../services/analyticsService';
 import { AnalyticsEventType } from '../types';
+
+const INACTIVITY_TIMEOUT = 24 * 60 * 60 * 1000;
+const WARNING_BEFORE = 30 * 60 * 1000;
+const ACTIVITY_KEY = 'stripeit_last_activity';
+const CHECK_INTERVAL = 60 * 1000;
 
 /**
  * StripeItAuthSystem & StripeItSessionSystem
@@ -123,6 +128,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [retryKey, setRetryKey] = useState(0);
 
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const warningShownRef = useRef(false);
+
   const retryHydration = useCallback(() => {
     setLoading(true);
     setConnectionError(null);
@@ -180,6 +188,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Refresh user error:", error);
     }
   }, []);
+
+  const resetActivityTimer = useCallback(() => {
+    localStorage.setItem(ACTIVITY_KEY,
+      Date.now().toString());
+    warningShownRef.current = false;
+  }, []);
+
+  const checkInactivity = useCallback(() => {
+    if (!auth.currentUser) return;
+    const lastActivity = parseInt(
+      localStorage.getItem(ACTIVITY_KEY) ||
+      Date.now().toString()
+    );
+    const elapsed = Date.now() - lastActivity;
+    const remaining = INACTIVITY_TIMEOUT - elapsed;
+
+    if (remaining <= 0) {
+      addToast('Signed out due to inactivity.', 'info');
+      auth.signOut();
+      localStorage.removeItem(ACTIVITY_KEY);
+    } else if (remaining <= WARNING_BEFORE &&
+      !warningShownRef.current) {
+      warningShownRef.current = true;
+      addToast(
+        'You will be signed out in 30 minutes due to inactivity.',
+        'info'
+      );
+    }
+  }, [addToast]);
 
   useEffect(() => {
     let unsubscribeProfile: (() => void) | null = null;
@@ -562,6 +599,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const visualTheme = profile?.preferences?.visualTheme || 'matrix';
     document.documentElement.setAttribute('data-visual-theme', visualTheme);
   }, [profile?.preferences?.visualTheme]);
+
+  useEffect(() => {
+    if (!user) {
+      if (inactivityTimerRef.current) {
+        clearInterval(inactivityTimerRef.current);
+      }
+      return;
+    }
+
+    resetActivityTimer();
+
+    const events = ['mousedown', 'keydown', 'scroll',
+      'touchstart', 'click'];
+    events.forEach(e =>
+      window.addEventListener(e, resetActivityTimer,
+        { passive: true }));
+
+    inactivityTimerRef.current = setInterval(
+      checkInactivity, CHECK_INTERVAL
+    );
+
+    return () => {
+      events.forEach(e =>
+        window.removeEventListener(e,
+          resetActivityTimer));
+      if (inactivityTimerRef.current) {
+        clearInterval(inactivityTimerRef.current);
+      }
+    };
+  }, [user, resetActivityTimer, checkInactivity]);
 
   const value = useMemo(() => ({
     user,

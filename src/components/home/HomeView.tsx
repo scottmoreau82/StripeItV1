@@ -116,6 +116,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [showSuspensionDetails, setShowSuspensionDetails] = useState(false);
   const [showPaycheckBreakdown, setShowPaycheckBreakdown] = useState(false);
+  const [showFrontModal, setShowFrontModal] = useState(false);
+  const [showBackModal, setShowBackModal] = useState(false);
 
   const [metricsOpen, setMetricsOpen] = useState(true);
   const [dealsOpen, setDealsOpen] = useState(true);
@@ -224,6 +226,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const activeCompetitionsWithLeaders = useMemo(() => 
     competitionService.getCompetitionsWithLeaders(competitions, deals)
   , [competitions, deals]);
+
+  const mtdDeals = useMemo(() => {
+    const monthStr = new Date().toISOString().slice(0, 7);
+    return deals
+      .filter(d => d.date.startsWith(monthStr))
+      .sort((a, b) => new Date(b.date).getTime() -
+        new Date(a.date).getTime());
+  }, [deals]);
 
   const hasCustomizationAccess = featureAccessService.hasAccess(profile, Feature.CUSTOM_DASHBOARD);
 
@@ -392,6 +402,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
                                     type={type as WidgetType} 
                                     data={widgetData}
                                     variant="telemetry"
+                                    onClick={
+                                      type === WidgetType.FRONT_END_GROSS 
+                                        ? () => setShowFrontModal(true)
+                                        : type === WidgetType.BACK_END_GROSS
+                                        ? () => setShowBackModal(true)
+                                        : undefined
+                                    }
                                     onUpgrade={() => {
                                       window.location.hash = '#settings';
                                     }}
@@ -421,7 +438,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
                         <WidgetRegistry 
                           type={type as WidgetType} 
                           data={widgetData}
-                          onClick={type === WidgetType.COMMISSION ? () => setShowPaycheckBreakdown(true) : undefined}
+                          onClick={
+                            type === WidgetType.COMMISSION 
+                              ? () => setShowPaycheckBreakdown(true) 
+                              : type === WidgetType.FRONT_END_GROSS
+                              ? () => setShowFrontModal(true)
+                              : type === WidgetType.BACK_END_GROSS
+                              ? () => setShowBackModal(true)
+                              : undefined
+                          }
                           onUpgrade={() => {
                             // navigate to settings/subscription tab
                             window.location.hash = '#settings';
@@ -1217,6 +1242,194 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
             </Modal>
           )
+        )}
+
+        {/* Front End Gross Breakdown Modal */}
+        {showFrontModal && (
+          <Modal
+            isOpen={showFrontModal}
+            onClose={() => setShowFrontModal(false)}
+            title="Front-End Gross Breakdown"
+          >
+            <div className="space-y-4 py-2">
+              <div className="flex items-center justify-between
+                px-2 pb-3 border-b border-white/5">
+                <Typography variant="mono" className="text-[10px]
+                  text-slate-500 uppercase tracking-widest
+                  font-black">
+                  MTD DEALS
+                </Typography>
+                <Typography variant="mono" className="text-[10px]
+                  text-brand-primary uppercase tracking-widest
+                  font-black">
+                  TOTAL: ${metrics.frontEnd.toLocaleString(
+                    undefined, { minimumFractionDigits: 0,
+                      maximumFractionDigits: 2 })}
+                </Typography>
+              </div>
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                {mtdDeals.length === 0 ? (
+                  <Typography variant="mono"
+                    className="text-slate-500 text-center py-8
+                    text-[10px] uppercase tracking-widest">
+                    No deals this month
+                  </Typography>
+                ) : (
+                  mtdDeals.map(deal => {
+                    const splitRatio = deal.isSplitDeal
+                      ? (deal.splitPercentage || 50) / 100 : 1;
+                    const fullFront = deal.frontEndGross || 0;
+                    const yourFront = fullFront * splitRatio;
+                    const commission = payPlan
+                      ? calculateDealCommission(deal, payPlan, mtdDeals)
+                      : null;
+                    const frontRate = commission?.explanation?.frontRate ?? null;
+                    const frontPortion = commission
+                      ? commission.frontEndCommission * splitRatio
+                      : null;
+                    return (
+                      <div key={deal.id} className="px-3 py-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0">
+                            <Typography variant="label" className="text-white text-xs font-black truncate block">
+                              {deal.customerName}
+                            </Typography>
+                            <Typography variant="mono" className="text-[9px] text-slate-500">
+                              {deal.date} • {deal.newOrUsed?.toUpperCase()}
+                              {deal.isSplitDeal &&
+                                ` • ${deal.splitPercentage || 50}% split`}
+                            </Typography>
+                          </div>
+                          <Typography variant="mono" className={`text-xs font-black shrink-0 ml-4 ${fullFront >= 0 ? 'text-white' : 'text-rose-400'}`}>
+                            ${fullFront.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                          </Typography>
+                        </div>
+                        <div className="flex items-center justify-between pt-1.5 border-t border-white/5">
+                          <div className="flex items-center gap-3">
+                            {frontRate !== null && (
+                              <div className="flex items-center gap-1">
+                                <Typography variant="mono" className="text-[9px] text-slate-600 uppercase">Rate</Typography>
+                                <Typography variant="mono" className="text-[9px] text-cyan-400 font-black">
+                                  {frontRate}%
+                                </Typography>
+                              </div>
+                            )}
+                            {deal.isSplitDeal && (
+                              <div className="flex items-center gap-1">
+                                <Typography variant="mono" className="text-[9px] text-slate-600 uppercase">Your Share</Typography>
+                                <Typography variant="mono" className="text-[9px] text-slate-400 font-black">
+                                  ${yourFront.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                </Typography>
+                              </div>
+                            )}
+                          </div>
+                          {frontPortion !== null && (
+                            <Typography variant="mono" className="text-[9px] text-brand-primary font-black">
+                              Est. ${frontPortion.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            </Typography>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* Back End Gross Breakdown Modal */}
+        {showBackModal && (
+          <Modal
+            isOpen={showBackModal}
+            onClose={() => setShowBackModal(false)}
+            title="Back-End Gross Breakdown"
+          >
+            <div className="space-y-4 py-2">
+              <div className="flex items-center justify-between
+                px-2 pb-3 border-b border-white/5">
+                <Typography variant="mono" className="text-[10px]
+                  text-slate-500 uppercase tracking-widest
+                  font-black">
+                  MTD DEALS
+                </Typography>
+                <Typography variant="mono" className="text-[10px]
+                  text-purple-400 uppercase tracking-widest
+                  font-black">
+                  TOTAL: ${metrics.backEnd.toLocaleString(
+                    undefined, { minimumFractionDigits: 0,
+                      maximumFractionDigits: 2 })}
+                </Typography>
+              </div>
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                {mtdDeals.length === 0 ? (
+                  <Typography variant="mono"
+                    className="text-slate-500 text-center py-8
+                    text-[10px] uppercase tracking-widest">
+                    No deals this month
+                  </Typography>
+                ) : (
+                  mtdDeals.map(deal => {
+                    const splitRatio = deal.isSplitDeal
+                      ? (deal.splitPercentage || 50) / 100 : 1;
+                    const fullBack = deal.backEndGross || 0;
+                    const yourBack = fullBack * splitRatio;
+                    const commission = payPlan
+                      ? calculateDealCommission(deal, payPlan, mtdDeals)
+                      : null;
+                    const backRate = commission?.explanation?.backRate ?? null;
+                    const backPortion = commission
+                      ? commission.backEndCommission * splitRatio
+                      : null;
+                    return (
+                      <div key={deal.id} className="px-3 py-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0">
+                            <Typography variant="label" className="text-white text-xs font-black truncate block">
+                              {deal.customerName}
+                            </Typography>
+                            <Typography variant="mono" className="text-[9px] text-slate-500">
+                              {deal.date} • {deal.newOrUsed?.toUpperCase()}
+                              {deal.isSplitDeal &&
+                                ` • ${deal.splitPercentage || 50}% split`}
+                            </Typography>
+                          </div>
+                          <Typography variant="mono" className={`text-xs font-black shrink-0 ml-4 ${fullBack >= 0 ? 'text-white' : 'text-rose-400'}`}>
+                            ${fullBack.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                          </Typography>
+                        </div>
+                        <div className="flex items-center justify-between pt-1.5 border-t border-white/5">
+                          <div className="flex items-center gap-3">
+                            {backRate !== null && (
+                              <div className="flex items-center gap-1">
+                                <Typography variant="mono" className="text-[9px] text-slate-600 uppercase">Rate</Typography>
+                                <Typography variant="mono" className="text-[9px] text-purple-400 font-black">
+                                  {backRate}%
+                                </Typography>
+                              </div>
+                            )}
+                            {deal.isSplitDeal && (
+                              <div className="flex items-center gap-1">
+                                <Typography variant="mono" className="text-[9px] text-slate-600 uppercase">Your Share</Typography>
+                                <Typography variant="mono" className="text-[9px] text-slate-400 font-black">
+                                  ${yourBack.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                </Typography>
+                              </div>
+                            )}
+                          </div>
+                          {backPortion !== null && (
+                            <Typography variant="mono" className="text-[9px] text-purple-400 font-black">
+                              Est. ${backPortion.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            </Typography>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </Modal>
         )}
       </AnimatePresence>
     </>

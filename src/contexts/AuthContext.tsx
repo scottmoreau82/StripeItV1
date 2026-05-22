@@ -269,6 +269,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 trialStartDate: serverTimestamp(),
                 orgId: orgId,
                 dealershipId: '',
+                isAdmin: isDeveloper,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 trialStartedAt: serverTimestamp(),
@@ -303,6 +304,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               await batch.commit();
 
               analyticsService.trackEvent(AnalyticsEventType.SIGNUP_COMPLETED, { email: firebaseUser.email });
+
+              // 🛡️ FOUNDER REPAIR: Ensure founder always has valid orgId and role (Only during initial account creation)
+              if (isDeveloper) {
+                // Org document repair: ensure the specific founder org exists
+                const targetOrgId = orgId || 'FOUNDER-ORG-001';
+                const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, targetOrgId);
+                getDoc(orgDocRef).then(snap => {
+                  if (!snap.exists()) {
+                    console.log("[Bootstrap] Creating missing founder organization...");
+                    setDoc(orgDocRef, {
+                      id: targetOrgId,
+                      name: 'Founder Dealership',
+                      ownerId: firebaseUser.uid,
+                      subscriptionTier: SubscriptionTier.ORGANIZATION,
+                      createdAt: serverTimestamp(),
+                      updatedAt: serverTimestamp()
+                    }).catch(e => console.error("Org repair failed", e));
+                  }
+                }).catch(e => console.error("Org check failed", e));
+              }
             } catch (err) {
               console.error("Failed to auto-provision user profile:", err);
               // Fallback to onSnapshot even if provisioning failed - maybe it exists now?
@@ -349,38 +370,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   updatedAt: serverTimestamp()
                 }).catch(e => console.error("Downgrade failed", e));
                 return;
-              }
-
-              // 🛡️ FOUNDER REPAIR: Ensure founder always has valid orgId and role
-              if (isDeveloper) {
-                const needsUserRepair = !profileData.orgId || profileData.role !== UserRole.DEALER_OWNER || !profileData.isAdmin;
-                
-                if (needsUserRepair) {
-                  console.log("[Bootstrap] Repairing founder profile state...");
-                  const repairData: any = {};
-                  if (!profileData.orgId) repairData.orgId = 'FOUNDER-ORG-001';
-                  if (profileData.role !== UserRole.DEALER_OWNER) repairData.role = UserRole.DEALER_OWNER;
-                  if (!profileData.isAdmin) repairData.isAdmin = true;
-                  
-                  updateDoc(userDocRef, { ...repairData, updatedAt: serverTimestamp() }).catch(e => console.error("Repair failed", e));
-                }
-
-                // Org document repair: ensure the specific founder org exists
-                const targetOrgId = profileData.orgId || 'FOUNDER-ORG-001';
-                const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, targetOrgId);
-                getDoc(orgDocRef).then(snap => {
-                  if (!snap.exists()) {
-                    console.log("[Bootstrap] Creating missing founder organization...");
-                    setDoc(orgDocRef, {
-                      id: targetOrgId,
-                      name: 'Founder Dealership',
-                      ownerId: firebaseUser.uid,
-                      subscriptionTier: SubscriptionTier.ORGANIZATION,
-                      createdAt: serverTimestamp(),
-                      updatedAt: serverTimestamp()
-                    }).catch(e => console.error("Org repair failed", e));
-                  }
-                }).catch(e => console.error("Org check failed", e));
               }
 
               setProfile(profileData);

@@ -304,6 +304,7 @@ export interface Deal {
   splitPercentage?: number;
   notes?: string;
   status: DealStatus;
+  lockedByTier?: boolean;
   lenderName?: string;
   reserveAmount?: number;
   tradeAllowance?: number;

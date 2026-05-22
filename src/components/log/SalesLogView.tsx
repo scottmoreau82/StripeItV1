@@ -44,6 +44,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 }) => {
   const { 
     deals, 
+    lockedDealsCount,
     monthlySpiffs,
     payPlan, 
     isLoading, 
@@ -416,6 +417,32 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
               )}
             </button>
           ))}
+        </div>
+      )}
+
+      {lockedDealsCount > 0 && (
+        <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+              <AppIcon name="lock" size={16} className="text-amber-400" />
+            </div>
+            <div>
+              <Typography variant="mono" className="text-amber-400 text-[10px] font-black uppercase tracking-widest block">
+                {lockedDealsCount} Locked {lockedDealsCount === 1 ? 'Deal' : 'Deals'}
+              </Typography>
+              <Typography variant="mono" className="text-slate-500 text-[9px]">
+                Your data is safe — upgrade to Pro to unlock and include in metrics
+              </Typography>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              window.location.hash = '#settings';
+            }}
+            className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all active:scale-95 shrink-0"
+          >
+            Upgrade
+          </button>
         </div>
       )}
 

@@ -24,6 +24,7 @@ import { COLLECTIONS } from '../constants';
 
 interface AppDataContextType {
   deals: Deal[];
+  lockedDealsCount: number;
   payPlan: PayPlan | null;
   goal: Goal | null;
   notes: QuickNote[];
@@ -53,6 +54,7 @@ const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
 export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { profile, user, initialized, addToast } = useAuth();
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [lockedDealsCount, setLockedDealsCount] = useState(0);
   const [payPlan, setPayPlan] = useState<PayPlan | null>(null);
   const [goal, setGoal] = useState<Goal | null>(null);
   const [notes, setNotes] = useState<QuickNote[]>([]);
@@ -187,7 +189,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
           updatedAt: data.updatedAt?.toMillis?.() || (typeof data.updatedAt === 'number' ? data.updatedAt : Date.now())
         } as Deal;
       });
-      setDeals(dealData);
+      const activeDeals = dealData.filter(d => !d.lockedByTier);
+      setDeals(activeDeals);
+      setLockedDealsCount(dealData.filter(d => d.lockedByTier).length);
       
       setIsLoading(false);
       clearTimeout(loadTimeout);
@@ -291,7 +295,33 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         );
 
         if (isLimitReached) {
-          throw new Error(`Plan Limit Reached: Your current plan only supports ${planLimitService.getLimit(profile.subscriptionTier || SubscriptionTier.FREE, LimitType.DEAL_STORAGE)} deals.`);
+          const dealId = await dealService.createDeal(effectiveOrgId, {
+            userId: user.uid,
+            createdByUserId: user.uid,
+            assignedSalespersonId: user.uid,
+            salespersonName: profile.displayName,
+            dealershipId: profile.dealershipId,
+            customerName: dealData.customerName!,
+            purchasedVehicle: dealData.purchasedVehicle!,
+            newOrUsed: dealData.newOrUsed as 'new' | 'used' | 'cpo',
+            status: dealData.status!,
+            date: dealData.date!,
+            frontEndGross: dealData.frontEndGross || 0,
+            backEndGross: dealData.backEndGross || 0,
+            isSplitDeal: dealData.isSplitDeal || false,
+            splitSalespersonId: dealData.splitSalespersonId,
+            splitPercentage: dealData.splitPercentage,
+            tradedVehicle: dealData.tradedVehicle,
+            notes: dealData.notes,
+            dealNumber: dealData.dealNumber,
+            stockNumber: dealData.stockNumber,
+            lockedByTier: true,
+          });
+          addToast(
+            'Deal saved — upgrade to Pro to unlock it and include it in your metrics.',
+            'info'
+          );
+          return;
         }
       }
 
@@ -523,6 +553,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const value = React.useMemo(() => ({
     deals,
+    lockedDealsCount,
     payPlan,
     goal,
     notes,
@@ -547,6 +578,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     isCommissionConfigured
   }), [
     deals,
+    lockedDealsCount,
     payPlan,
     goal,
     notes,

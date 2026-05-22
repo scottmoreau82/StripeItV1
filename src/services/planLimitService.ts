@@ -21,6 +21,7 @@ export const planLimitService = {
           case SubscriptionTier.FREE: return 8;
           case SubscriptionTier.PRO: return 500;
           case SubscriptionTier.ORGANIZATION: return Infinity;
+          case SubscriptionTier.TRIAL: return 500;
           default: return 5;
         }
       case LimitType.NOTE_COUNT:

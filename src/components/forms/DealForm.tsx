@@ -6,7 +6,7 @@ import { Select } from '@/src/components/ui/Select';
 import { CurrencyInput } from '@/src/components/ui/CurrencyInput';
 import { Button } from '@/src/components/ui/Button';
 import { Typography } from '@/src/components/ui/Typography';
-import { ChevronDown, ChevronUp, UserPlus, Car, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, UserPlus, Car, AlertCircle, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -387,6 +387,20 @@ export const DealForm: React.FC<DealFormProps> = ({
           )}
         </AnimatePresence>
 
+        {formData.isSplitDeal && (
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <Info size={14} className="text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <Typography variant="mono" className="text-amber-400 text-[10px] font-black uppercase tracking-widest block">
+                Enter Full Deal Gross
+              </Typography>
+              <Typography variant="mono" className="text-amber-300/70 text-[10px]">
+                Enter the total gross for the entire deal — we calculate your {formData.splitPercentage || 50}% split automatically.
+              </Typography>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <CurrencyInput
             label="Front End Gross"
@@ -405,6 +419,31 @@ export const DealForm: React.FC<DealFormProps> = ({
             required
           />
         </div>
+
+        {formData.isSplitDeal && (
+          (Number(formData.frontEndGross) !== 0 ||
+           Number(formData.backEndGross) !== 0) && (
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-brand-primary/5 border border-brand-primary/10">
+              <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">
+                Your {formData.splitPercentage || 50}% Share
+              </Typography>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <Typography variant="mono" className="text-[9px] text-slate-600 uppercase">Front</Typography>
+                  <Typography variant="mono" className="text-brand-primary text-xs font-black">
+                    ${((Number(formData.frontEndGross) || 0) * (formData.splitPercentage || 50) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                  </Typography>
+                </div>
+                <div className="text-right">
+                  <Typography variant="mono" className="text-[9px] text-slate-600 uppercase">Back</Typography>
+                  <Typography variant="mono" className="text-brand-primary text-xs font-black">
+                    ${((Number(formData.backEndGross) || 0) * (formData.splitPercentage || 50) / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                  </Typography>
+                </div>
+              </div>
+            </div>
+          )
+        )}
       </div>
       <button
         type="button"

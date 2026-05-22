@@ -13,7 +13,6 @@ import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { navigationConfig } from './NavigationItems';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
 import { TierBadge } from './TierBadge';
-import { useTheme } from '@/src/contexts/ThemeContext';
 import { useResponsive } from '@/src/hooks/useResponsive';
 import { SubscriptionTier } from '@/src/types';
 import { AdminAnalyticsCard } from './AdminAnalyticsCard';
@@ -39,7 +38,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse 
 }) => {
   const { profile, user, isAdmin, tierOverride, setTierOverride, isEditMode, setIsEditMode } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const { isCommissionConfigured } = useAppData();
   const location = useLocation();
   const [isSpiffModalOpen, setIsSpiffModalOpen] = React.useState(false);
@@ -212,32 +210,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {secondaryNavItems.map((item) => renderNavItem(item))}
 
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            className={cn(
-              "flex items-center w-full py-3.5 transition-all group relative hover:bg-white/[0.02] text-left",
-            )}
-            title={isCollapsed ? "Toggle Appearance" : undefined}
-          >
-            <div className="w-16 shrink-0 flex items-center justify-center relative">
-              <AppIcon 
-                name={theme === 'dark' ? 'moon' : 'sun'} 
-                className={cn(
-                  SIDEBAR_NAV_ICON_SIZE_CLASS, 
-                  "shrink-0 transition-all text-brand-primary drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]"
-                )} 
-                />
-            </div>
-            <div className={cn(
-              "flex-1 flex items-center justify-between gap-2 overflow-hidden transition-all duration-300 pr-6",
-              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
-            )}>
-              <span className={cn("font-bold uppercase tracking-[0.2em] truncate whitespace-nowrap transition-all text-slate-500 group-hover:text-slate-300", SIDEBAR_NAV_TYPOGRAPHY)}>
-                Theme
-              </span>
-            </div>
-          </button>
+
         </nav>
       </div>
 

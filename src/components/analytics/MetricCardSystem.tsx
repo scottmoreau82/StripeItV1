@@ -24,6 +24,7 @@ interface MetricCardProps {
   onUnlock?: () => void;
   lockMessage?: string;
   variant?: 'hero' | 'telemetry' | 'hero-horizontal';
+  onClick?: () => void;
 }
 
 const colorMap = {
@@ -48,7 +49,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   isLocked,
   onUnlock,
   lockMessage,
-  variant = 'hero'
+  variant = 'hero',
+  onClick
 }) => {
   const isTelemetry = variant === 'telemetry';
   const isHorizontal = variant === 'hero-horizontal';
@@ -93,7 +95,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   if (isHorizontal) {
     return (
-      <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden p-3.5 min-h-[95px]">
+      <Card 
+        onClick={onClick}
+        className={cn(
+          "bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden p-3.5 min-h-[95px]",
+          onClick && "cursor-pointer hover:border-white/20 transition-all"
+        )}
+      >
         {/* Atmospheric Scanlines */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-10" />
         
@@ -154,10 +162,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   }
 
   return (
-    <Card className={cn(
-      "bg-gradient-to-br from-white/[0.04] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden flex flex-col",
-      isTelemetry ? "p-3 h-auto min-h-[85px]" : "p-4.5 h-full min-h-[140px]"
-    )}>
+    <Card 
+      onClick={onClick}
+      className={cn(
+        "bg-gradient-to-br from-white/[0.04] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden flex flex-col",
+        isTelemetry ? "p-3 h-auto min-h-[85px]" : "p-4.5 h-full min-h-[140px]",
+        onClick && "cursor-pointer hover:border-white/20 transition-all"
+      )}
+    >
       {/* Scanlines visual accent */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_8px] pointer-events-none opacity-20" />
 

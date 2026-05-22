@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   ChevronRight, 
+  ChevronDown,
   Download, 
   Printer, 
   Edit, 
@@ -32,6 +33,7 @@ export const ReportView: React.FC = () => {
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   useEffect(() => {
     if (selectedMonth) {
@@ -262,23 +264,55 @@ export const ReportView: React.FC = () => {
           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Front Gross</Typography>
           <Typography variant="h3" className="text-cyan-400 font-black">${selectedMonthFrontGross.toLocaleString()}</Typography>
         </Card>
-        <Card className="p-6 bg-white/[0.03] border-white/10 flex flex-col gap-3 items-center justify-center">
-          <Button
-            variant="outline"
-            onClick={handleExportCSV}
-            className="w-full text-xs font-black uppercase tracking-widest hover:bg-white/5"
+        <Card className="p-6 bg-white/[0.03] border-white/10
+          flex flex-col gap-3 items-center justify-center
+          relative">
+          <button
+            onClick={() => setIsExportOpen(p => !p)}
+            className="w-full flex items-center justify-center
+              gap-2 h-11 rounded-xl border border-white/10
+              bg-white/5 text-white text-xs font-black uppercase
+              tracking-widest hover:bg-white/10 transition-all"
           >
-            <Download className="mr-2 h-4 w-4" />
-            Export CSV
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleExportPDF}
-            className="w-full text-xs font-black uppercase tracking-widest text-brand-primary border-brand-primary/20 hover:bg-brand-primary/5"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Export PDF
-          </Button>
+            <Download className="h-4 w-4" />
+            Export
+            <ChevronDown className={cn(
+              "h-3 w-3 transition-transform ml-1",
+              isExportOpen && "rotate-180"
+            )} />
+          </button>
+          {isExportOpen && (
+            <div className="absolute top-full left-0 right-0
+              mt-1 z-20 bg-bg-elevated border border-white/10
+              rounded-xl overflow-hidden shadow-2xl">
+              <button
+                onClick={() => {
+                  handleExportCSV();
+                  setIsExportOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4
+                  py-3 text-xs font-black uppercase tracking-widest
+                  text-slate-300 hover:bg-white/5 hover:text-white
+                  transition-all border-b border-white/5"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </button>
+              <button
+                onClick={() => {
+                  handleExportPDF();
+                  setIsExportOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4
+                  py-3 text-xs font-black uppercase tracking-widest
+                  text-brand-primary hover:bg-brand-primary/5
+                  transition-all"
+              >
+                <FileText className="h-4 w-4" />
+                Export PDF
+              </button>
+            </div>
+          )}
         </Card>
         <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">
           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Back Gross</Typography>

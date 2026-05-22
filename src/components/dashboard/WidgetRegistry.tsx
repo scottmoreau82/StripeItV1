@@ -85,6 +85,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           lockMessage="Upgrade to unlock advanced payout telemetry."
           color="purple"
           variant={variant}
+          onClick={onClick}
         />
       );
     case WidgetType.BACK_END_GROSS:
@@ -99,6 +100,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           lockMessage="Unlock advanced performance tracking."
           color="orange"
           variant={variant}
+          onClick={onClick}
         />
       );
     case WidgetType.TOTAL_GROSS:

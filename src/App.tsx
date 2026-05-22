@@ -769,7 +769,35 @@ function AppContent() {
       return <LandingView />;
     }
     
-    // Otherwise show the initialization splash (for returning users or auth-related paths)
+    // If user has auth hint, show dark loading screen
+    // instead of landing page to prevent flash
+    if (hasAuthHint) {
+      return (
+        <div className="fixed inset-0 bg-bg-deep
+          flex items-center justify-center">
+          <div className="flex flex-col items-center
+            gap-4">
+            <div className="h-10 w-10 rounded-xl
+              bg-gradient-to-br from-brand-primary
+              to-brand-deep flex items-center
+              justify-center shadow-glow animate-pulse">
+              <svg viewBox="0 0 24 24" fill="none"
+                className="h-6 w-6 text-white"
+                stroke="currentColor" strokeWidth="2.5">
+                <polyline points="23 6 13.5 15.5 8.5
+                  10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
+              </svg>
+            </div>
+            <div className="h-1 w-24 rounded-full
+              bg-white/5 overflow-hidden">
+              <div className="h-full bg-brand-primary
+                rounded-full animate-pulse w-2/3" />
+            </div>
+          </div>
+        </div>
+      );
+    }
     return <LandingView isInitializing />;
   }
 

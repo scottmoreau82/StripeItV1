@@ -235,7 +235,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   if (isCarousel) {
     return (
-      <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden p-8 min-h-[190px] flex items-center justify-center">
+      <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative p-8 min-h-[220px] flex items-center justify-center">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-10" />
 
         <div className="flex flex-col items-center text-center gap-4 relative z-10 w-full">
@@ -250,7 +250,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             <Typography variant="label" className="text-slate-500 font-black tracking-widest block uppercase text-[9px] opacity-80">
               {label}
             </Typography>
-            <Typography variant="h1" className="text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-none w-full text-center break-all">
+            <Typography variant="h1" className="text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-none w-full text-center break-all px-2">
               {loading ? '...' : animatedValue}
             </Typography>
             {subValue && !loading && (

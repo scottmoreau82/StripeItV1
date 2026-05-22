@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { calculateDealCommission, calculatePeriodEarnings } from '@/src/lib/commissionLogic';
 import { Typography } from '../ui/Typography';
 import { QuickActions } from './QuickActions';
@@ -242,6 +242,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   const [activeCardIndex, setActiveCardIndex] = useState(0);
 
+  const swipeStartX = useRef<number | null>(null);
+  const swipeStartY = useRef<number | null>(null);
+
   const carouselCards = useMemo(() => [
     WidgetType.UNITS,
     WidgetType.COMMISSION,
@@ -266,8 +269,49 @@ export const HomeView: React.FC<HomeViewProps> = ({
     isLoading
   };
 
+  const handleSwipeStart = (clientX: number, clientY: number) => {
+    swipeStartX.current = clientX;
+    swipeStartY.current = clientY;
+  };
+
+  const handleSwipeEnd = (clientX: number, clientY: number) => {
+    if (swipeStartX.current === null) return;
+    const dx = clientX - swipeStartX.current;
+    const dy = clientY - (swipeStartY.current ?? 0);
+
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) {
+      swipeStartX.current = null;
+      return;
+    }
+
+    if (dx < 0) {
+      setActiveCardIndex(i =>
+        i === carouselCards.length - 1 ? 0 : i + 1);
+    } else {
+      setActiveCardIndex(i =>
+        i === 0 ? carouselCards.length - 1 : i - 1);
+    }
+    swipeStartX.current = null;
+  };
+
   const carouselContent = (
-    <div className="relative w-full">
+    <div
+      className="relative w-full"
+      onMouseDown={(e) =>
+        handleSwipeStart(e.clientX, e.clientY)}
+      onMouseUp={(e) =>
+        handleSwipeEnd(e.clientX, e.clientY)}
+      onTouchStart={(e) =>
+        handleSwipeStart(
+          e.touches[0].clientX,
+          e.touches[0].clientY
+        )}
+      onTouchEnd={(e) =>
+        handleSwipeEnd(
+          e.changedTouches[0].clientX,
+          e.changedTouches[0].clientY
+        )}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={activeCardIndex}

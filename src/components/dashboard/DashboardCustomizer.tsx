@@ -7,60 +7,9 @@ import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { DashboardLayout, WidgetConfig } from '@/src/types';
 import { WIDGET_DEFINITIONS, WidgetType } from '@/src/services/widgetService';
 import { dashboardService } from '@/src/services/dashboardService';
-import { Eye, EyeOff, GripVertical, Save, RotateCcw, X, Sparkles } from 'lucide-react';
-import { motion, Reorder, useDragControls } from 'motion/react';
+import { Eye, EyeOff, Save, RotateCcw } from 'lucide-react';
+import { motion } from 'motion/react';
 import { cn } from '@/src/lib/utils';
-
-/**
- * StripeItDashboardCustomizationSystem
- * UI for reordering and toggling dashboard widgets.
- */
-
-const DraggableWidgetRow: React.FC<{
-  widget: WidgetConfig;
-  definition: any;
-  onToggle: () => void;
-}> = ({ widget, definition, onToggle }) => {
-  const dragControls = useDragControls();
-  return (
-    <Reorder.Item
-      key={widget.id}
-      value={widget}
-      dragListener={false}
-      dragControls={dragControls}
-      className={cn(
-        "bg-white/[0.02] border rounded-2xl p-4 flex items-center gap-4 group transition-colors",
-        widget.visible ? "border-white/5" : "border-white/5 opacity-70"
-      )}
-    >
-      <div
-        onPointerDown={(e) => dragControls.start(e)}
-        className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 touch-none"
-      >
-        <GripVertical size={18} />
-      </div>
-
-      <div className="flex-1">
-        <Typography variant="label" className="text-white block font-bold">
-          {definition?.label || 'Unknown Widget'}
-        </Typography>
-        <Typography variant="mono" className="text-[9px] text-slate-500 uppercase">
-          {definition?.description || ''}
-        </Typography>
-      </div>
-
-      <button
-        onClick={onToggle}
-        className={cn(
-          "p-2 rounded-xl transition-colors",
-          widget.visible ? "text-brand-primary bg-brand-primary/10" : "text-slate-600 bg-white/5"
-        )}
-      >
-        {widget.visible ? <Eye size={18} /> : <EyeOff size={18} />}
-      </button>
-    </Reorder.Item>
-  );
-};
 
 interface DashboardCustomizerProps {
   isOpen: boolean;
@@ -70,18 +19,20 @@ interface DashboardCustomizerProps {
   isMobile: boolean;
 }
 
-export const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
-  isOpen,
-  onClose,
-  layout,
-  onSave,
-  isMobile
-}) => {
-  const [localWidgets, setLocalWidgets] = React.useState<WidgetConfig[]>(layout.widgets);
+export const DashboardCustomizer: React.FC<
+  DashboardCustomizerProps
+> = ({ isOpen, onClose, layout, onSave, isMobile }) => {
+  const [localWidgets, setLocalWidgets] =
+    React.useState<WidgetConfig[]>(layout.widgets);
   const [isSaving, setIsSaving] = React.useState(false);
-  const [animationStyle, setAnimationStyle] = React.useState<'stack' | 'standard'>(
-    layout.animationStyle || 'standard'
-  );
+  const [draggedId, setDraggedId] =
+    React.useState<string | null>(null);
+  const [hoveredId, setHoveredId] =
+    React.useState<string | null>(null);
+  const [animationStyle, setAnimationStyle] =
+    React.useState<'stack' | 'standard'>(
+      layout.animationStyle || 'standard'
+    );
 
   React.useEffect(() => {
     setLocalWidgets(layout.widgets);
@@ -89,15 +40,52 @@ export const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
   }, [layout.widgets, layout.animationStyle]);
 
   const handleToggleVisibility = (id: string) => {
-    setLocalWidgets(dashboardService.toggleVisibility(localWidgets, id));
+    setLocalWidgets(
+      dashboardService.toggleVisibility(localWidgets, id)
+    );
   };
 
-  const handleReorder = (newOrder: WidgetConfig[]) => {
-    setLocalWidgets(newOrder.map((w, i) => ({ ...w, order: i })));
+  const handleDragStart = (id: string) => {
+    setDraggedId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (id !== draggedId) setHoveredId(id);
+  };
+
+  const handleDrop = (targetId: string) => {
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      setHoveredId(null);
+      return;
+    }
+    const newWidgets = [...localWidgets];
+    const dragIdx = newWidgets.findIndex(w => w.id === draggedId);
+    const targetIdx = newWidgets.findIndex(w => w.id === targetId);
+    if (dragIdx === -1 || targetIdx === -1) return;
+    // Swap positions
+    const dragOrder = newWidgets[dragIdx].order;
+    newWidgets[dragIdx] = {
+      ...newWidgets[dragIdx],
+      order: newWidgets[targetIdx].order
+    };
+    newWidgets[targetIdx] = {
+      ...newWidgets[targetIdx],
+      order: dragOrder
+    };
+    setLocalWidgets(
+      [...newWidgets].sort((a, b) => a.order - b.order)
+    );
+    setDraggedId(null);
+    setHoveredId(null);
   };
 
   const handleReset = () => {
-    setLocalWidgets(dashboardService.generateDefaultLayout().widgets);
+    setLocalWidgets(
+      dashboardService.generateDefaultLayout().widgets
+    );
+    setAnimationStyle('standard');
   };
 
   const handleSave = async () => {
@@ -115,23 +103,189 @@ export const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
     }
   };
 
+  // Split widgets into grid (metric) and list (other)
+  const metricTypes = [
+    WidgetType.UNITS,
+    WidgetType.COMMISSION,
+    WidgetType.FRONT_END_GROSS,
+    WidgetType.BACK_END_GROSS,
+    WidgetType.TOTAL_GROSS,
+    WidgetType.AVERAGE_GROSS
+  ] as string[];
+
+  const gridWidgets = localWidgets
+    .filter(w => metricTypes.includes(w.type))
+    .sort((a, b) => a.order - b.order);
+
+  const listWidgets = localWidgets
+    .filter(w => !metricTypes.includes(w.type))
+    .sort((a, b) => a.order - b.order);
+
   const content = (
     <div className="space-y-6">
-      <div className="flex items-center justify-between px-2">
-        <Typography variant="p" className="text-slate-500 text-xs italic">
-          Drag to reorder. Toggle eye to show/hide.
+      {/* Helper text + Reset */}
+      <div className="flex items-center justify-between px-1">
+        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest">
+          Drag cards to swap • eye to show/hide
         </Typography>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={handleReset}
           className="h-8 text-[9px] uppercase font-black text-slate-500 hover:text-white"
         >
-          <RotateCcw size={12} className="mr-1" /> Reset
+          <RotateCcw size={12} className="mr-1" />
+          Reset
         </Button>
       </div>
 
+      {/* Metric Cards Grid */}
+      <div className="space-y-2">
+        <Typography variant="mono" className="text-[9px] text-slate-600 uppercase tracking-widest font-black px-1">
+          Metric Cards
+        </Typography>
+        <div className="grid grid-cols-2 gap-3">
+          {gridWidgets.map(widget => {
+            const definition = WIDGET_DEFINITIONS[widget.type as WidgetType];
+            const isDragging = draggedId === widget.id;
+            const isHovered = hoveredId === widget.id;
+
+            return (
+              <div
+                key={widget.id}
+                draggable
+                onDragStart={() => handleDragStart(widget.id)}
+                onDragOver={(e) => handleDragOver(e, widget.id)}
+                onDrop={() => handleDrop(widget.id)}
+                onDragEnd={() => {
+                  setDraggedId(null);
+                  setHoveredId(null);
+                }}
+                className={cn(
+                  "relative rounded-2xl p-3 border",
+                  "transition-all duration-200",
+                  "cursor-grab active:cursor-grabbing",
+                  "select-none",
+                  widget.visible
+                    ? "bg-white/[0.03] border-white/10"
+                    : "bg-white/[0.01] border-white/5",
+                  isDragging && "opacity-40 scale-95",
+                  isHovered && !isDragging && "border-brand-primary/40 bg-brand-primary/5 scale-[1.02]",
+                  !widget.visible && "opacity-70"
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <Typography variant="mono"
+                      className={cn(
+                        "text-[10px] font-black uppercase tracking-widest block truncate",
+                        widget.visible
+                          ? "text-white"
+                          : "text-slate-600"
+                      )}>
+                      {definition?.label || widget.type}
+                    </Typography>
+                    <Typography variant="mono"
+                      className="text-[8px] text-slate-600 mt-0.5 truncate">
+                      {definition?.description || ''}
+                    </Typography>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleVisibility(widget.id);
+                    }}
+                    className={cn(
+                      "p-1.5 rounded-lg transition-colors shrink-0",
+                      widget.visible
+                        ? "text-brand-primary bg-brand-primary/10"
+                        : "text-slate-600 bg-white/5"
+                    )}
+                  >
+                    {widget.visible
+                      ? <Eye size={14} />
+                      : <EyeOff size={14} />}
+                  </button>
+                </div>
+
+                {/* Drag indicator */}
+                {isHovered && !isDragging && (
+                  <div className="absolute inset-0 rounded-2xl border-2 border-brand-primary/40 pointer-events-none" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Other Widgets List */}
+      {listWidgets.length > 0 && (
+        <div className="space-y-2">
+          <Typography variant="mono" className="text-[9px] text-slate-600 uppercase tracking-widest font-black px-1">
+            Other Widgets
+          </Typography>
+          <div className="space-y-2">
+            {listWidgets.map(widget => {
+              const definition = WIDGET_DEFINITIONS[widget.type as WidgetType];
+              const isDragging = draggedId === widget.id;
+              const isHovered = hoveredId === widget.id;
+
+              return (
+                <div
+                  key={widget.id}
+                  draggable
+                  onDragStart={() => handleDragStart(widget.id)}
+                  onDragOver={(e) => handleDragOver(e, widget.id)}
+                  onDrop={() => handleDrop(widget.id)}
+                  onDragEnd={() => {
+                    setDraggedId(null);
+                    setHoveredId(null);
+                  }}
+                  className={cn(
+                    "rounded-2xl p-3 border flex items-center gap-3 transition-all duration-200 cursor-grab active:cursor-grabbing select-none",
+                    widget.visible
+                      ? "bg-white/[0.03] border-white/10"
+                      : "bg-white/[0.01] border-white/5 opacity-70",
+                    isDragging && "opacity-40 scale-95",
+                    isHovered && !isDragging && "border-brand-primary/40 bg-brand-primary/5"
+                  )}
+                >
+                  <div className="flex-1 min-w-0">
+                    <Typography variant="mono"
+                      className={cn(
+                        "text-[10px] font-black uppercase tracking-widest truncate",
+                        widget.visible
+                          ? "text-white"
+                          : "text-slate-600"
+                      )}>
+                      {definition?.label || widget.type}
+                    </Typography>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleVisibility(widget.id);
+                    }}
+                    className={cn(
+                      "p-1.5 rounded-lg transition-colors shrink-0",
+                      widget.visible
+                        ? "text-brand-primary bg-brand-primary/10"
+                        : "text-slate-600 bg-white/5"
+                    )}
+                  >
+                    {widget.visible
+                      ? <Eye size={14} />
+                      : <EyeOff size={14} />}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Animation Style Toggle */}
       <div className="space-y-3">
-        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest px-2">
+        <Typography variant="mono" className="text-[9px] text-slate-600 uppercase tracking-widest font-black px-1">
           Card Animation
         </Typography>
         <div className="grid grid-cols-2 gap-3">
@@ -152,14 +306,11 @@ export const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
               <Typography variant="mono"
                 className={cn(
                   "text-[10px] font-black uppercase tracking-widest block mb-1",
-                  animationStyle === opt.value
-                    ? "text-brand-primary"
-                    : "text-slate-400"
+                  animationStyle === opt.value ? "text-brand-primary" : "text-slate-400"
                 )}>
                 {opt.label}
               </Typography>
-              <Typography variant="mono"
-                className="text-[9px] text-slate-600">
+              <Typography variant="mono" className="text-[9px] text-slate-600">
                 {opt.desc}
               </Typography>
             </button>
@@ -167,33 +318,15 @@ export const DashboardCustomizer: React.FC<DashboardCustomizerProps> = ({
         </div>
       </div>
 
-      <Reorder.Group 
-        axis="y" 
-        values={localWidgets} 
-        onReorder={handleReorder}
-        className="space-y-2"
-      >
-        {localWidgets.map((widget) => {
-          const definition = WIDGET_DEFINITIONS[widget.type as WidgetType];
-          
-          return (
-            <DraggableWidgetRow
-              key={widget.id}
-              widget={widget}
-              definition={definition}
-              onToggle={() => handleToggleVisibility(widget.id)}
-            />
-          );
-        })}
-      </Reorder.Group>
-
-      <div className="pt-4 flex gap-3">
-        <Button 
-          onClick={handleSave} 
+      {/* Save / Cancel */}
+      <div className="pt-2 flex gap-3">
+        <Button
+          onClick={handleSave}
           className="flex-1 bg-brand-primary text-bg-deep font-black uppercase tracking-widest shadow-glow h-12"
           isLoading={isSaving}
         >
-          <Save size={16} className="mr-2" /> Save Changes
+          <Save size={16} className="mr-2" />
+          Save Changes
         </Button>
         <Button variant="ghost" onClick={onClose} className="text-slate-500">
           Cancel

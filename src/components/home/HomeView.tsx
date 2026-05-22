@@ -311,11 +311,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
               >
                 <Settings2 size={18} className="group-hover:rotate-45 transition-transform" />
               </button>
-              <ComingSoonIndicator 
-                featureId={Feature.CUSTOM_DASHBOARD} 
-                size="sm" 
-                className="absolute -top-1 -right-1 scale-75" 
-              />
             </div>
           )}
 

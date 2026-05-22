@@ -372,6 +372,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return;
               }
 
+              // 🛡️ FOUNDER REPAIR: Ensure founder always has valid orgId and role
+              if (isDeveloper) {
+                const needsUserRepair = !profileData.orgId || !profileData.isAdmin;
+                
+                if (needsUserRepair) {
+                  console.log("[Bootstrap] Repairing founder profile state...");
+                  const repairData: any = {};
+                  if (!profileData.orgId) repairData.orgId = 'FOUNDER-ORG-001';
+                  if (!profileData.isAdmin) repairData.isAdmin = true;
+                  
+                  updateDoc(userDocRef, { ...repairData, updatedAt: serverTimestamp() }).catch(e => console.error("Repair failed", e));
+                }
+
+                // Org document repair: ensure the specific founder org exists
+                const targetOrgId = profileData.orgId || 'FOUNDER-ORG-001';
+                const orgDocRef = doc(db, COLLECTIONS.ORGANIZATIONS, targetOrgId);
+                getDoc(orgDocRef).then(snap => {
+                  if (!snap.exists()) {
+                    console.log("[Bootstrap] Creating missing founder organization...");
+                    setDoc(orgDocRef, {
+                      id: targetOrgId,
+                      name: 'Founder Dealership',
+                      ownerId: firebaseUser.uid,
+                      subscriptionTier: SubscriptionTier.ORGANIZATION,
+                      createdAt: serverTimestamp(),
+                      updatedAt: serverTimestamp()
+                    }).catch(e => console.error("Org repair failed", e));
+                  }
+                }).catch(e => console.error("Org check failed", e));
+              }
+
               setProfile(profileData);
               setLoading(false);
               setInitialized(true);
@@ -508,8 +539,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (underlyingIsDeveloper) {
       return {
         ...profile,
-        role: UserRole.DEALER_OWNER,
-        subscriptionTier: SubscriptionTier.ORGANIZATION,
         isAdmin: true,
         isFrozen: false, // Founder cannot be frozen
         orgId: profile.orgId || 'FOUNDER-ORG-001'

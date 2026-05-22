@@ -261,8 +261,16 @@ export const calculateDashboardMetrics = (deals: Deal[], payPlan: PayPlan | null
   const mtdSpiffs = monthlySpiffs.filter(s => isThisMonth(s.date || s.month));
   
   const unitCount = mtdDeals.reduce((sum, d) => sum + (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1), 0);
-  const frontEnd = mtdDeals.reduce((sum, d) => sum + (d.frontEndGross || 0), 0);
-  const backEnd = mtdDeals.reduce((sum, d) => sum + (d.backEndGross || 0), 0);
+  const frontEnd = mtdDeals.reduce((sum, d) => {
+    const splitRatio = d.isSplitDeal
+      ? (d.splitPercentage || 50) / 100 : 1;
+    return sum + (d.frontEndGross || 0) * splitRatio;
+  }, 0);
+  const backEnd = mtdDeals.reduce((sum, d) => {
+    const splitRatio = d.isSplitDeal
+      ? (d.splitPercentage || 50) / 100 : 1;
+    return sum + (d.backEndGross || 0) * splitRatio;
+  }, 0);
   const gross = frontEnd + backEnd;
   
   const earnings = payPlan ? calculatePeriodEarnings(mtdDeals, payPlan, mtdSpiffs) : null;

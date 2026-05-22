@@ -56,7 +56,7 @@ export const navigationConfig = {
       const isSalesperson = profile.subscriptionTier !== SubscriptionTier.ORGANIZATION;
 
       // Hide specific unfinished routes for all Salespeople (Free, Basic, Pro)
-      const unfinishedRoutes = ['analytics', 'inventory'];
+      const unfinishedRoutes = ['inventory'];
       if (isSalesperson && unfinishedRoutes.includes(item.id)) {
         return false;
       }

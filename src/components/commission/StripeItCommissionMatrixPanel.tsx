@@ -43,6 +43,7 @@ import { calculatePeriodEarnings, getActiveCommissionTier, getActiveMiniTier } f
 import { cn } from '@/src/lib/utils';
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useResponsive } from '@/src/hooks/useResponsive';
 import { commissionCsvService } from '@/src/lib/commissionCsvService';
 import { Modal } from '../ui/Modal';
 import { SubscriptionTier } from '@/src/types';
@@ -484,6 +485,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 }) => {
   const { deals, triggerError, monthlySpiffs = [] } = useAppData();
   const { profile, addToast } = useAuth();
+  const { isMobile } = useResponsive();
   const isSimulationEngineEnabled = true;
 
   // Import/Export States
@@ -1347,7 +1349,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           )}
         </div>
 
-        {isSimulationEngineEnabled && simMode === 'live' && (
+        {!isMobile && isSimulationEngineEnabled && simMode === 'live' && (
           <Card className="bg-emerald-500/[0.03] border border-emerald-500/10 p-6 rounded-[2rem] mb-8">
             <div className="flex items-center gap-2 mb-4">
               <span className="relative flex h-2.5 w-2.5">
@@ -2388,7 +2390,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
         </MatrixSection>
 
         {/* Adaptive Simulation Engine */}
-        {isSimulationEngineEnabled && (
+        {isSimulationEngineEnabled && !isMobile && (
           <div className="space-y-4 pt-12">
           <div className="flex items-center justify-between px-2 mb-4">
             <div className="flex items-center gap-3">

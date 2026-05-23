@@ -412,6 +412,7 @@ function MainAppFlow() {
                 <SalesLogView 
                   onEdit={(deal) => { setEditingDeal(deal); setIsNewDealOpen(true); }}
                   onConfigPayPlan={() => setIsPayPlanOpen(true)}
+                  onUpgrade={handleUpgradeClick}
                 />
               } 
             />

@@ -33,6 +33,7 @@ import { CommissionResult } from '@/src/lib/commissionLogic';
 interface SalesLogViewProps {
   onEdit?: (deal: Deal) => void;
   onConfigPayPlan?: () => void;
+  onUpgrade?: () => void;
 }
 
 const randomFrom = (arr: string[]) =>
@@ -55,6 +56,7 @@ const getLastName = (fullName: string): string => {
 export const SalesLogView: React.FC<SalesLogViewProps> = ({
   onEdit,
   onConfigPayPlan,
+  onUpgrade,
 }) => {
   const { 
     deals, 
@@ -410,9 +412,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
             </div>
           </div>
           <button
-            onClick={() => {
-              window.location.hash = '#settings';
-            }}
+            onClick={onUpgrade}
             className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all active:scale-95 shrink-0"
           >
             Upgrade

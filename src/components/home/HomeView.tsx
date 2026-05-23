@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { calculateDealCommission, calculatePeriodEarnings } from '@/src/lib/commissionLogic';
+import { calculateDealCommission, calculatePeriodEarnings, CommissionResult } from '@/src/lib/commissionLogic';
 import { Typography } from '../ui/Typography';
 import { QuickActions } from './QuickActions';
 import { RecentDealsList } from './RecentDealsList';
@@ -16,7 +16,7 @@ import { Modal } from '../ui/Modal';
 import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { cn } from '@/src/lib/utils';
+import { cn, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { calculateDashboardMetrics, getTrendsChartData } from '@/src/services/analyticsService';
 import { featureAccessService, Feature } from '@/src/services/featureAccessService';
@@ -54,6 +54,7 @@ import { AppIcon } from '../ui/AppIcon';
 import { DealerDashboard } from '../dealer/DealerDashboard';
 import { PageHeader } from '../ui/PageHeader';
 import { LayoutGrid } from 'lucide-react';
+import { PayoutExplanationModal } from '../log/PayoutExplanationModal';
 
 /**
  * StripeItDashboardMetricSystem
@@ -119,6 +120,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showPaycheckBreakdown, setShowPaycheckBreakdown] = useState(false);
   const [showFrontModal, setShowFrontModal] = useState(false);
   const [showBackModal, setShowBackModal] = useState(false);
+  const [explanationData, setExplanationData] =
+    useState<{
+      commission: CommissionResult;
+      customerName: string;
+    } | null>(null);
 
   const [metricsOpen, setMetricsOpen] = useState(true);
   const [dealsOpen, setDealsOpen] = useState(true);
@@ -295,46 +301,56 @@ export const HomeView: React.FC<HomeViewProps> = ({
   };
 
   const carouselContent = (
-    <div
-      className="relative w-full"
-      onMouseDown={(e) =>
-        handleSwipeStart(e.clientX, e.clientY)}
-      onMouseUp={(e) =>
-        handleSwipeEnd(e.clientX, e.clientY)}
-      onTouchStart={(e) =>
-        handleSwipeStart(
-          e.touches[0].clientX,
-          e.touches[0].clientY
-        )}
-      onTouchEnd={(e) =>
-        handleSwipeEnd(
-          e.changedTouches[0].clientX,
-          e.changedTouches[0].clientY
-        )}
+    <Card 
+      onClick={undefined}
+      className={cn(
+        "group p-5 bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all relative overflow-hidden flex flex-col justify-between min-h-[260px]"
+      )}
     >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeCardIndex}
-          initial={{ opacity: 0, x: 60 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -60 }}
-          transition={{ duration: 0.25, ease: 'easeInOut' }}
-          className="w-full"
-        >
-          {carouselCards[activeCardIndex] && (
-            <WidgetRegistry
-              type={carouselCards[activeCardIndex] as WidgetType}
-              data={widgetData}
-              variant={"carousel" as any}
-              onUpgrade={() => {
-                window.location.hash = '#settings';
-              }}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      {/* Scanlines visual accent */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-10" />
 
-      <div className="flex items-center justify-between mt-3 px-1">
+      <div
+        className="relative w-full flex-1 flex flex-col justify-center [&_.rounded-2xl]:border-none [&_.rounded-2xl]:bg-transparent [&_.rounded-2xl]:p-0 [&_.rounded-2xl]:shadow-none [&_.rounded-2xl]:min-h-0"
+        onMouseDown={(e) =>
+          handleSwipeStart(e.clientX, e.clientY)}
+        onMouseUp={(e) =>
+          handleSwipeEnd(e.clientX, e.clientY)}
+        onTouchStart={(e) =>
+          handleSwipeStart(
+            e.touches[0].clientX,
+            e.touches[0].clientY
+          )}
+        onTouchEnd={(e) =>
+          handleSwipeEnd(
+            e.changedTouches[0].clientX,
+            e.changedTouches[0].clientY
+          )}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeCardIndex}
+            initial={{ opacity: 0, x: 60 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -60 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="w-full flex-1 flex flex-col justify-center"
+          >
+            {carouselCards[activeCardIndex] && (
+              <WidgetRegistry
+                type={carouselCards[activeCardIndex] as WidgetType}
+                data={widgetData}
+                variant={"carousel" as any}
+                onUpgrade={() => {
+                  window.location.hash = '#settings';
+                }}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="flex items-center justify-between mt-4 px-1 relative z-10 shrink-0">
         <button
           onClick={() => setActiveCardIndex(i => i === 0 ? carouselCards.length - 1 : i - 1)}
           className={cn(
@@ -345,27 +361,27 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <ChevronLeft size={16} />
         </button>
 
-         <div className="flex flex-col items-center gap-1.5">
-           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">
-             {carouselCards[activeCardIndex]
-               ? WIDGET_DEFINITIONS[carouselCards[activeCardIndex]]?.label || ''
-               : ''}
-           </Typography>
-           <div className="flex items-center gap-1.5">
-             {carouselCards.map((_, i) => (
-               <button
-                 key={i}
-                 onClick={() => setActiveCardIndex(i)}
-                 className={cn(
-                   "rounded-full transition-all",
-                   i === activeCardIndex
-                     ? "h-1.5 w-4 bg-brand-primary"
-                     : "h-1.5 w-1.5 bg-white/20 hover:bg-white/40"
-                 )}
-               />
-             ))}
-           </div>
-         </div>
+        <div className="flex flex-col items-center gap-1.5">
+          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">
+            {carouselCards[activeCardIndex]
+              ? WIDGET_DEFINITIONS[carouselCards[activeCardIndex]]?.label || ''
+              : ''}
+          </Typography>
+          <div className="flex items-center gap-1.5">
+            {carouselCards.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveCardIndex(i)}
+                className={cn(
+                  "rounded-full transition-all",
+                  i === activeCardIndex
+                    ? "h-1.5 w-4 bg-brand-primary"
+                    : "h-1.5 w-1.5 bg-white/20 hover:bg-white/40"
+                )}
+              />
+            ))}
+          </div>
+        </div>
 
         <button
           onClick={() => setActiveCardIndex(i => i === carouselCards.length - 1 ? 0 : i + 1)}
@@ -377,7 +393,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <ChevronRight size={16} />
         </button>
       </div>
-    </div>
+    </Card>
   );
 
   const header = (
@@ -582,6 +598,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
         )}
       </AnimatePresence>
 
+      {activeTab === 'overview' &&
+        hasGoalsAccess && !isFree &&
+        dashboardLayout.widgets.find(w =>
+          w.type === WidgetType.GOAL_PROGRESS &&
+          w.visible) && (
+        <WidgetRegistry
+          type={WidgetType.GOAL_PROGRESS}
+          data={widgetData}
+        />
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
             {isMobile ? (
@@ -610,7 +637,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
                             type={widget.type as WidgetType} 
                             data={widgetData}
                             onAction={(action, payload) => {
-                              // Handle widget actions (like clicking a deal)
+                              if (action === 'deal_click' && payload) {
+                                const deal = payload as Deal;
+                                const m = getCalendarMonth(deal.date);
+                                const y = getCalendarYear(deal.date);
+                                const monthlyDeals = deals.filter(d => {
+                                  return getCalendarMonth(d.date) === m &&
+                                    getCalendarYear(d.date) === y;
+                                });
+                                const commission = payPlan
+                                  ? calculateDealCommission(
+                                      deal, payPlan, monthlyDeals)
+                                  : null;
+                                if (commission) {
+                                  setExplanationData({
+                                    commission,
+                                    customerName: deal.customerName
+                                  });
+                                }
+                              }
                             }}
                           />
                         ))}
@@ -629,7 +674,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     type={widget.type as WidgetType} 
                     data={widgetData}
                     onAction={(action, payload) => {
-                      // Handle widget actions (like clicking a deal)
+                      if (action === 'deal_click' && payload) {
+                        const deal = payload as Deal;
+                        const m = getCalendarMonth(deal.date);
+                        const y = getCalendarYear(deal.date);
+                        const monthlyDeals = deals.filter(d => {
+                          return getCalendarMonth(d.date) === m &&
+                            getCalendarYear(d.date) === y;
+                        });
+                        const commission = payPlan
+                          ? calculateDealCommission(
+                              deal, payPlan, monthlyDeals)
+                          : null;
+                        if (commission) {
+                          setExplanationData({
+                            commission,
+                            customerName: deal.customerName
+                          });
+                        }
+                      }
                     }}
                   />
                 ))
@@ -637,36 +700,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
         
         <div className="flex flex-col gap-6">
-          {activeTab === 'overview' && (
-            dashboardLayout.widgets.find(w => w.type === WidgetType.GOAL_PROGRESS && w.visible) && (
-              hasGoalsAccess && !isFree ? (
-                isMobile ? (
-                  <div>
-                    <CollapsibleHeader
-                      label="Monthly Goal"
-                      isOpen={goalOpen}
-                      onToggle={() => setGoalOpen(p => !p)}
-                    />
-                    <AnimatePresence initial={false}>
-                      {goalOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden pt-2"
-                        >
-                          <WidgetRegistry type={WidgetType.GOAL_PROGRESS} data={widgetData} />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ) : (
-                  <WidgetRegistry type={WidgetType.GOAL_PROGRESS} data={widgetData} />
-                )
-              ) : null
-            )
-          )}
           {/* Average Performance Static Card */}
           {!isFree && (
             isMobile ? (
@@ -1521,6 +1554,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
           </Modal>
         )}
+        <PayoutExplanationModal
+          isOpen={!!explanationData}
+          onClose={() => setExplanationData(null)}
+          commission={explanationData?.commission || null}
+          customerName={explanationData?.customerName || ''}
+        />
       </AnimatePresence>
     </>
   );

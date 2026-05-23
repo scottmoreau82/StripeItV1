@@ -33,6 +33,7 @@ interface AppDataContextType {
   isLoading: boolean;
   dashboardLayout: DashboardLayout;
   handleSaveDeal: (dealData: Partial<Deal>, editingId?: string) => Promise<void>;
+  handleSaveGoal: (goalData: Partial<Goal>) => Promise<void>;
   handleDeleteDeal: (dealId: string) => Promise<void>;
   handleUpdateDealStatus: (dealId: string, newStatus: DealStatus) => Promise<void>;
   handleSavePayPlan: (planData: Partial<PayPlan>) => Promise<void>;
@@ -455,6 +456,32 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [profile, user, effectiveOrgId, loadStaticData, triggerSuccess, triggerError]);
 
+  const handleSaveGoal = useCallback(async (
+    goalData: Partial<Goal>
+  ) => {
+    if (!profile || !user || !effectiveOrgId) return;
+    try {
+      await goalService.saveGoal({
+        ...goalData,
+        userId: user.uid,
+        orgId: effectiveOrgId,
+        month: goalData.month ||
+          new Date().toISOString().slice(0, 7)
+      });
+      const currentMonth = new Date()
+        .toISOString().slice(0, 7);
+      const updated = await goalService
+        .getGoalForMonth(
+          user.uid, effectiveOrgId, currentMonth);
+      if (updated) setGoal(updated);
+      triggerSuccess('Goals saved.');
+    } catch (error: any) {
+      console.error("Goal Save Error:", error);
+      triggerError('Failed to save goals.');
+      throw error;
+    }
+  }, [profile, user, effectiveOrgId, triggerSuccess, triggerError]);
+
   const handleSaveMonthlySpiff = useCallback(async (data: Partial<MonthlySpiff>) => {
     if (!profile || !user || !effectiveOrgId) return;
     try {
@@ -579,6 +606,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     isLoading,
     dashboardLayout,
     handleSaveDeal,
+    handleSaveGoal,
     handleDeleteDeal,
     handleUpdateDealStatus,
     handleSavePayPlan,
@@ -604,6 +632,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     isLoading,
     dashboardLayout,
     handleSaveDeal,
+    handleSaveGoal,
     handleDeleteDeal,
     handleUpdateDealStatus,
     handleSavePayPlan,

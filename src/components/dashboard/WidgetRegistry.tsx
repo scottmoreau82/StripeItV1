@@ -1,7 +1,7 @@
 import React from 'react';
 import { WidgetType } from '@/src/services/widgetService';
 import { MetricCard } from '../analytics/MetricCardSystem';
-import { GoalProgress } from '../analytics/GoalProgressSystem';
+import { GoalProgress, MultiGoalProgress } from '../analytics/GoalProgressSystem';
 import { RecentDealsList } from '../home/RecentDealsList';
 import { RecentNotesList } from '../notes/RecentNotesList';
 import { CompetitionCard } from '../competitions/CompetitionCard';
@@ -128,10 +128,14 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       );
     case WidgetType.GOAL_PROGRESS:
       return (
-        <GoalProgress 
-          label="Monthly Goal"
-          current={metrics.units}
-          target={goal?.unitGoal || 15}
+        <MultiGoalProgress
+          metrics={{
+            units: metrics.units,
+            frontEnd: metrics.frontEnd,
+            backEnd: metrics.backEnd,
+            commission: metrics.commission
+          }}
+          goal={goal}
           loading={isLoading}
         />
       );
@@ -139,7 +143,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       return (
         <div className="space-y-4">
           <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest px-2">Recent Deals</Typography>
-          <RecentDealsList deals={deals.slice(0, 5)} onDealClick={(deal) => onAction?.('view_deal', deal)} isLoading={isLoading} />
+          <RecentDealsList deals={deals.slice(0, 5)} onDealClick={(deal) => onAction?.('deal_click', deal)} isLoading={isLoading} />
         </div>
       );
     case WidgetType.QUICK_NOTES:

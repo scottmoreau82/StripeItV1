@@ -320,8 +320,16 @@ export interface Goal {
   orgId: string;
   month: string; // e.g. "2024-05"
   unitGoal: number;
+  frontGoal?: number;
+  backGoal?: number;
   grossGoal?: number;
   commissionGoal?: number;
+  enabledGoals?: {
+    units: boolean;
+    front: boolean;
+    back: boolean;
+    payout: boolean;
+  };
   createdAt: number;
   updatedAt: number;
 }

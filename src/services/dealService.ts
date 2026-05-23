@@ -93,6 +93,35 @@ export const dealService = {
     }
   },
 
+  async unlockAllDeals(orgId: string,
+    userId: string): Promise<void> {
+    try {
+      const { getDocs, query, collection,
+        where, writeBatch, doc } =
+        await import('firebase/firestore');
+      const dealsRef = collection(db,
+        COLLECTIONS.ORGANIZATIONS, orgId,
+        COLLECTIONS.DEALS);
+      const q = query(dealsRef,
+        where('userId', '==', userId),
+        where('lockedByTier', '==', true));
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) return;
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(d => {
+        batch.update(doc(db,
+          COLLECTIONS.ORGANIZATIONS, orgId,
+          COLLECTIONS.DEALS, d.id), {
+          lockedByTier: false
+        });
+      });
+      await batch.commit();
+    } catch (error) {
+      console.error("Error unlocking deals:", error);
+      throw error;
+    }
+  },
+
   /**
    * Fetch deals for an organization with optional filters
    */

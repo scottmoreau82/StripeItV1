@@ -189,9 +189,26 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
           updatedAt: data.updatedAt?.toMillis?.() || (typeof data.updatedAt === 'number' ? data.updatedAt : Date.now())
         } as Deal;
       });
-      const activeDeals = dealData.filter(d => !d.lockedByTier);
+      const isFreeUser = profile?.subscriptionTier ===
+        SubscriptionTier.FREE;
+      
+      if (!isFreeUser && dealData.some(
+        d => d.lockedByTier)) {
+        dealService.unlockAllDeals(
+          effectiveOrgId, user.uid
+        ).catch(e => console.error(
+          'Failed to unlock deals:', e));
+      }
+
+      const activeDeals = isFreeUser
+        ? dealData.filter(d => !d.lockedByTier)
+        : dealData;
       setDeals(activeDeals);
-      setLockedDealsCount(dealData.filter(d => d.lockedByTier).length);
+      setLockedDealsCount(
+        isFreeUser
+          ? dealData.filter(d => d.lockedByTier).length
+          : 0
+      );
       
       setIsLoading(false);
       clearTimeout(loadTimeout);

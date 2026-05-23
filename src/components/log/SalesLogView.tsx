@@ -364,6 +364,18 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           </button>
         </>
       )}
+      {(isDeveloper || profile?.canCreateRandomDeals) && (
+        <button
+          onClick={() => window.dispatchEvent(
+            new CustomEvent('stripeit:create-random-deal')
+          )}
+          className="h-11 px-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 transition-all active:scale-95 flex items-center gap-2 text-[10px] uppercase font-black tracking-widest"
+          title="Generate Random Deal"
+        >
+          <Zap size={14} />
+          Quick Deal
+        </button>
+      )}
       {!isMobile && (
         <button 
           onClick={onConfigPayPlan}

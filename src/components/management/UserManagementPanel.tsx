@@ -138,6 +138,16 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
     }
   };
 
+  const handleToggleRandomDealAccess = async (userId: string, current: boolean) => {
+    try {
+      await userService.setRandomDealAccess(userId, !current);
+      setUsers(prev => prev.map(u => u.uid === userId ? { ...u, canCreateRandomDeals: !current } : u));
+      addToast(!current ? 'Random deal access enabled.' : 'Random deal access disabled.', 'success');
+    } catch (error) {
+      addToast('Failed to update access.', 'error');
+    }
+  };
+
   const filteredUsers = users.filter(u => 
     u.displayName?.toLowerCase().includes(search.toLowerCase()) || 
     u.email?.toLowerCase().includes(search.toLowerCase())
@@ -247,6 +257,16 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                           <div className="h-3 w-3 animate-spin rounded-full border-2 border-brand-primary border-t-transparent" />
                         )}
                      </div>
+                  </div>
+
+                  <div className="hidden sm:flex flex-col items-end gap-1">
+                    <Typography variant="mono" className="text-[9px] text-slate-600 uppercase tracking-widest font-black">Test Deals</Typography>
+                    <button
+                      onClick={() => handleToggleRandomDealAccess(user.uid, !!user.canCreateRandomDeals)}
+                      className={cn("relative h-5 w-9 rounded-full border transition-all duration-200", user.canCreateRandomDeals ? "bg-brand-primary/20 border-brand-primary/40" : "bg-white/5 border-white/10")}
+                    >
+                      <div className={cn("absolute top-0.5 h-4 w-4 rounded-full transition-all duration-200", user.canCreateRandomDeals ? "left-[18px] bg-brand-primary" : "left-0.5 bg-slate-600")} />
+                    </button>
                   </div>
                   
                   <div className="h-8 w-px bg-white/5 mx-2" />

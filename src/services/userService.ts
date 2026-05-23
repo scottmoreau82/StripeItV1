@@ -131,5 +131,19 @@ export const userService = {
         `${COLL_CONST.USERS}/${userId}`);
       throw error;
     }
+  },
+
+  async setRandomDealAccess(userId: string, enabled: boolean): Promise<void> {
+    try {
+      const userRef = doc(db, COLL_CONST.USERS, userId);
+      await updateDoc(userRef, {
+        canCreateRandomDeals: enabled,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Error updating random deal access:", error);
+      handleFirestoreError(error, OperationType.UPDATE, `${COLL_CONST.USERS}/${userId}`);
+      throw error;
+    }
   }
 };

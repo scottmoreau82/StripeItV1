@@ -89,7 +89,7 @@ export default {
           return new Response(JSON.stringify({ error: 'No userId found' }), { status: 400 });
         }
 
-        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0971954368/databases/(default)/documents/users/${userId}`;
+        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0971954368/databases/ai-studio-3b04b2cf-73a0-487b-8a72-3bbb905999a6/documents/users/${userId}`;
         const patchRes = await fetch(`${firestoreUrl}?updateMask.fieldPaths=subscriptionTier&updateMask.fieldPaths=updatedAt&key=AIzaSyCxalpBsHXMbJD61Bs8u4Co7lthUq6jbr4`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },

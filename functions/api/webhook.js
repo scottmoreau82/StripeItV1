@@ -52,11 +52,58 @@ async function getFirestoreToken(clientEmail, privateKey, projectId) {
   return tokenData.access_token;
 }
 
+async function verifyStripeSignature(body, sigHeader, secret) {
+  const parts = sigHeader.split(',');
+  let timestamp = '';
+  let signature = '';
+  
+  for (const part of parts) {
+    if (part.startsWith('t=')) timestamp = part.slice(2);
+    if (part.startsWith('v1=')) signature = part.slice(3);
+  }
+
+  if (!timestamp || !signature) return false;
+
+  const age = Math.floor(Date.now() / 1000) - parseInt(timestamp);
+  if (age > 300) return false;
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const signed = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(`${timestamp}.${body}`)
+  );
+
+  const computed = Array.from(new Uint8Array(signed))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  return computed === signature;
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
   try {
     const body = await request.text();
+
+    const sigHeader = request.headers.get('stripe-signature');
+    if (!sigHeader) {
+      return new Response(JSON.stringify({ error: 'Missing signature' }), { status: 400 });
+    }
+
+    const isValid = await verifyStripeSignature(body, sigHeader, env.STRIPE_WEBHOOK_SECRET);
+    if (!isValid) {
+      return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 400 });
+    }
+
     const event = JSON.parse(body);
 
     if (event.type !== 'checkout.session.completed') {

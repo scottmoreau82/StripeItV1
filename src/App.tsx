@@ -319,18 +319,24 @@ function MainAppFlow() {
             <Route 
               path="/analytics" 
               element={
-                featureAccessService.hasAccess(profile, Feature.ADVANCED_ANALYTICS) 
+                featureAccessService.hasAccess(profile, Feature.ADVANCED_ANALYTICS)
                   ? <AnalyticsView />
-                  : <UpgradeAccessScreen feature={Feature.ADVANCED_ANALYTICS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
+                  : <UpgradeAccessScreen
+                      feature={Feature.ADVANCED_ANALYTICS}
+                      tierRequired={SubscriptionTier.PRO}
+                      onUpgrade={onUpgradeClick} />
               } 
             />
     
             <Route 
               path="/goals" 
               element={
-                featureAccessService.hasAccess(profile, Feature.GOALS) 
+                featureAccessService.hasAccess(profile, Feature.GOALS)
                   ? <GoalsView />
-                  : <UpgradeAccessScreen feature={Feature.GOALS} tierRequired={SubscriptionTier.PRO} onUpgrade={onUpgradeClick} />
+                  : <UpgradeAccessScreen
+                      feature={Feature.GOALS}
+                      tierRequired={SubscriptionTier.PRO}
+                      onUpgrade={onUpgradeClick} />
               } 
             />
     

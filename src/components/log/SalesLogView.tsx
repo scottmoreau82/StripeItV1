@@ -9,7 +9,7 @@ import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppIcon } from '../ui/AppIcon';
 import { PageHeader } from '../ui/PageHeader';
-import { Eye, Lock, Zap, Check } from 'lucide-react';
+import { Eye, Lock, Zap, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn, formatDateSafe, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { calculateDealCommission } from '@/src/lib/commissionLogic';
 import { Badge } from '../ui/Badge';
@@ -37,6 +37,20 @@ interface SalesLogViewProps {
 
 const randomFrom = (arr: string[]) =>
   arr[Math.floor(Math.random() * arr.length)];
+
+const getLastName = (fullName: string): string => {
+  if (!fullName) return '';
+  const suffixes = ['jr.', 'sr.', 'ii', 'iii',
+    'iv', 'v', 'jr', 'sr'];
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  const last = parts[parts.length - 1];
+  const secondLast = parts[parts.length - 2];
+  if (suffixes.includes(last.toLowerCase())) {
+     return `${secondLast} ${last}`;
+  }
+  return last;
+};
 
 export const SalesLogView: React.FC<SalesLogViewProps> = ({
   onEdit,
@@ -77,6 +91,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
 
   const [devTierOverride, setDevTierOverride] = useState<SubscriptionTier | null>(null);
+  const [showSpiffs, setShowSpiffs] = useState(false);
 
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [pendingDeleteSpiffId, setPendingDeleteSpiffId] = useState<string | null>(null);
@@ -268,9 +283,15 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   }, [deals, monthlySpiffs, search, sortConfig, isBasicPlus, payPlan]);
 
-  const sortedDeals = useMemo(() => {
-    return sortedItems.filter(item => 'customerName' in item) as Deal[];
-  }, [sortedItems]);
+  const sortedDeals = useMemo(() =>
+    sortedItems.filter(item =>
+      'customerName' in item) as Deal[],
+    [sortedItems]);
+
+  const sortedSpiffs = useMemo(() =>
+    sortedItems.filter(item =>
+      !('customerName' in item)) as MonthlySpiff[],
+    [sortedItems]);
 
   const dealIndexMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -305,65 +326,6 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       subtitle={`${currentMonthDeals.length} deals / ${currentMonthSpiffs.length} spiffs this month`}
       icon={() => <AppIcon name="salesLog" className="h-6 w-6 text-bg-deep" />}
     >
-      {!isMobile && profile?.email === 'scottmoreau82@gmail.com' && (
-        <>
-          <button
-            onClick={handleQuickDeal}
-            className="h-9 px-3 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all active:scale-95 hover:bg-amber-500/20 shadow-glow glow-amber-500/5"
-            title="Quick Deal"
-            type="button"
-          >
-            <Zap size={12} className="text-amber-400" />
-            QUICK DEAL
-          </button>
-          <button
-            onClick={() => {
-              if (devTierOverride === null) {
-                setDevTierOverride(SubscriptionTier.FREE);
-              } else if (devTierOverride === SubscriptionTier.FREE) {
-                setDevTierOverride(SubscriptionTier.TRIAL);
-              } else {
-                setDevTierOverride(null);
-              }
-            }}
-            className={cn(
-              "h-9 px-3 rounded-xl border bg-violet-500/10 text-violet-400 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 hover:bg-violet-500/20",
-              devTierOverride !== null 
-                ? "border-violet-500 shadow-glow glow-violet-500/10" 
-                : "border-violet-500/20"
-            )}
-            title="Toggle Dev Tier Override"
-            type="button"
-          >
-            TIER: {(devTierOverride ?? profile?.subscriptionTier ?? 'FREE').toUpperCase()}
-          </button>
-
-          {/* DEV ONLY — remove before Dealer tier launch */}
-          <div className="flex items-center gap-1.5 h-9 px-3 rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest">
-            <span className="whitespace-nowrap">SIMULATE MONTH:</span>
-            <input
-              type="month"
-              value={simulateDateStr}
-              onChange={(e) => setSimulateDateStr(e.target.value)}
-              className="bg-transparent border-none text-blue-400 focus:outline-none focus:ring-0 text-[10px] uppercase cursor-pointer p-0 select-none"
-            />
-          </div>
-          <button
-            onClick={() => setSimulateDateStr('')}
-            disabled={!simulateDateStr}
-            className={cn(
-              "h-9 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
-              simulateDateStr 
-                ? "border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 shadow-glow glow-red-500/5 cursor-pointer"
-                : "border-slate-500/10 bg-slate-500/5 text-slate-500/40 cursor-not-allowed opacity-50"
-            )}
-            title="Clear simulate month"
-            type="button"
-          >
-            CLEAR
-          </button>
-        </>
-      )}
       {(isDeveloper || profile?.canCreateRandomDeals) && (
         <button
           onClick={() => window.dispatchEvent(
@@ -461,7 +423,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       {/* Results Meta */}
       <div className="flex items-center justify-between">
         <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-500">
-          Showing {sortedItems.length} items
+          Showing {sortedDeals.length} deals
+          {sortedSpiffs.length > 0 && (
+            <span className="text-slate-600">
+              {' '}• {sortedSpiffs.length} spiff
+              {sortedSpiffs.length !== 1 ? 's' : ''}
+            </span>
+          )}
         </Typography>
       </div>
 
@@ -580,122 +548,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.02]">
-                    {sortedItems.map((item, index) => {
-                      const isDeal = 'customerName' in item;
-                      
-                      if (!isDeal) {
-                        const spiff = item as MonthlySpiff;
-                        return (
-                          <motion.tr
-                            key={spiff.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.02 }}
-                            onClick={() => {
-                              window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
-                            }}
-                            className={cn(
-                              "group cursor-pointer transition-colors",
-                              spiff.isChargeback ? "hover:bg-rose-500/[0.02] bg-rose-500/[0.01]" : "hover:bg-emerald-500/[0.02]"
-                            )}
-                          >
-                            <td className="py-5 px-4 whitespace-nowrap">
-                              <Typography variant="mono" className="text-[11px] text-slate-400 font-black">
-                                {formatDateSafe(spiff.date, 'MM/dd/yy')}
-                              </Typography>
-                            </td>
-                            <td className="py-5 px-4" colSpan={2}>
-                              <div className="flex items-center gap-3">
-                                <div className={cn(
-                                  "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
-                                  spiff.isChargeback 
-                                    ? "bg-rose-500/10 border border-rose-500/20 text-rose-400" 
-                                    : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                                )}>
-                                  <AppIcon name="billing" className={cn("h-4 w-4", spiff.isChargeback ? "text-rose-400" : "text-emerald-400")} />
-                                </div>
-                                <div className="flex flex-col min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <Typography variant="label" className="text-white text-sm font-black truncate">
-                                      {spiff.label || (spiff.isChargeback ? 'chargeback adjustment' : 'spiff adjustment')}
-                                    </Typography>
-                                    {!spiff.includedInTotal && (
-                                      <Badge variant="outline" className="text-[8px] px-1 py-0 border-blue-500/30 text-blue-400 bg-blue-500/10 font-black uppercase">
-                                        Separate
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <Typography variant="mono" className="text-[10px] text-slate-600 font-bold truncate max-w-[200px]">
-                                    {spiff.notes || (spiff.isChargeback ? 'Standalone chargeback' : 'Standalone payout adjustment')}
-                                  </Typography>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-5 px-4">
-                              <Badge variant="outline" className={cn(
-                                "text-[8px] px-1 py-0 font-black uppercase",
-                                spiff.isChargeback 
-                                  ? "border-rose-500/30 text-rose-400 bg-rose-500/10" 
-                                  : "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
-                              )}>
-                                {spiff.isChargeback ? 'chargeback' : 'spiff'}
-                              </Badge>
-                            </td>
-                            <td className="py-5 px-4 text-right">
-                              <Typography variant="mono" className="text-xs text-slate-700 font-black">---</Typography>
-                            </td>
-                            <td className="py-5 px-4 text-right">
-                              <Typography variant="mono" className="text-xs text-slate-700 font-black">---</Typography>
-                            </td>
-                            <td className="py-5 px-4 text-right">
-                              <Typography variant="label" className={cn("font-black text-sm", spiff.isChargeback ? "text-rose-400" : "text-emerald-400")}>
-                                {spiff.isChargeback ? '-' : ''}${spiff.amount.toLocaleString()}
-                              </Typography>
-                            </td>
-                            <td className="py-5 px-4">
-                              <div className="flex items-center justify-end gap-2">
-                                <button 
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
-                                  }}
-                                  className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-cyan-400/10 transition-all active:scale-95 shadow-sm"
-                                  title="Edit Adjustment"
-                                >
-                                  <AppIcon name="edit" size={14} />
-                                </button>
-                                {pendingDeleteSpiffId === spiff.id ? (
-                                  <button 
-                                    onClick={(e) => { 
-                                      e.stopPropagation(); 
-                                      handleDeleteMonthlySpiff?.(spiff.id);
-                                      setPendingDeleteSpiffId(null);
-                                    }}
-                                    className="p-1 px-2 text-[10px] uppercase font-black tracking-widest rounded-lg border border-rose-500/50 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-all active:scale-95 shadow-sm flex items-center gap-1"
-                                    title="Confirm Delete"
-                                  >
-                                    <Check size={10} className="text-rose-400 shrink-0" />
-                                    <span>Confirm?</span>
-                                  </button>
-                                ) : (
-                                  <button 
-                                    onClick={(e) => { 
-                                      e.stopPropagation(); 
-                                      setPendingDeleteSpiffId(spiff.id);
-                                    }}
-                                    className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
-                                    title="Delete Adjustment"
-                                  >
-                                    <AppIcon name="delete" size={14} />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </motion.tr>
-                        );
-                      }
-
-                       const deal = item as Deal;
+                    {sortedDeals.map((deal, index) => {
                        const dealIndex = dealIndexMap.get(deal.id) ?? 0;
                        const isBlurred = profile?.subscriptionTier === SubscriptionTier.FREE && !countLoading && dealIndex >= FREE_DEAL_LIMIT;
                        const shouldBlur = isBlurred;
@@ -734,8 +587,15 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
                               <div className="flex flex-col min-w-0">
                                 <Typography variant="label" className="text-[var(--color-text-primary)] text-sm font-black truncate">
-                                  {deal.customerName}
+                                  {getLastName(deal.customerName)}
                                 </Typography>
+                                {deal.isSplitDeal && (
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                                      Split {deal.splitPercentage || 50}%
+                                    </span>
+                                  </div>
+                                )}
                                 <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
                                   #{deal.dealNumber || '---'}
                                 </Typography>
@@ -858,57 +718,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
             {/* Mobile Cards Layout */}
             {isMobile && (
               <div className="flex flex-col gap-2">
-                {sortedItems.map((item, index) => {
-                  const isDeal = 'customerName' in item;
-                  
-                  if (!isDeal) {
-                    const spiff = item as MonthlySpiff;
-                    return (
-                      <motion.div
-                        key={spiff.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.02 }}
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent('stripeit:edit-spiff', { detail: spiff }));
-                        }}
-                        className={cn(
-                          "rounded-xl p-3 shadow-md relative overflow-hidden border",
-                          spiff.isChargeback 
-                            ? "bg-[var(--color-bg-card)] border-rose-500/10 hover:bg-[var(--color-bg-elevated)]" 
-                            : "bg-[var(--color-bg-card)] border-emerald-500/10 hover:bg-[var(--color-bg-elevated)]"
-                        )}
-                      >
-                         <div className="flex items-center justify-between gap-3">
-                           <div className="flex items-center gap-3 min-w-0">
-                             <div className={cn(
-                               "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
-                               spiff.isChargeback 
-                                 ? "bg-rose-500/10 border border-rose-500/20 text-rose-400" 
-                                 : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                             )}>
-                               <AppIcon name="billing" className={cn("h-4 w-4", spiff.isChargeback ? "text-rose-400" : "text-emerald-400")} />
-                             </div>
-                             <div className="min-w-0">
-                               <Typography variant="label" className="text-[var(--color-text-primary)] text-xs font-black uppercase truncate block">
-                                 {spiff.label || (spiff.isChargeback ? 'CHARGEBACK' : 'spiff')}
-                               </Typography>
-                               <Typography variant="mono" className="text-[9px] text-slate-500 font-bold">
-                                 {formatDateSafe(spiff.date, 'MM/dd/yy')}
-                               </Typography>
-                             </div>
-                           </div>
-                           <div className="text-right shrink-0">
-                             <Typography variant="label" className={cn("font-black text-sm", spiff.isChargeback ? "text-rose-400" : "text-emerald-400")}>
-                               {spiff.isChargeback ? '-' : ''}${spiff.amount.toLocaleString()}
-                             </Typography>
-                           </div>
-                         </div>
-                      </motion.div>
-                    );
-                  }
-
-                  const deal = item as Deal;
+                {sortedDeals.map((deal, index) => {
                   const dealIndex = dealIndexMap.get(deal.id) ?? 0;
                   const isBlurred = profile?.subscriptionTier === SubscriptionTier.FREE && !countLoading && dealIndex >= FREE_DEAL_LIMIT;
                   const shouldBlur = isBlurred;
@@ -954,8 +764,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           </div>
                           <div className="min-w-0">
                             <Typography variant="label" className="text-[var(--color-text-primary)] text-xs font-black uppercase truncate block">
-                              {deal.customerName}
+                              {getLastName(deal.customerName)}
                             </Typography>
+                            {deal.isSplitDeal && (
+                              <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400 inline-block mt-0.5">
+                                Split {deal.splitPercentage || 50}%
+                              </span>
+                            )}
                             <div className="flex items-center gap-1.5 overflow-hidden">
                               <Typography variant="mono" className="text-[9px] text-slate-500 font-bold whitespace-nowrap">
                                 #{deal.dealNumber || '---'}
@@ -1074,6 +889,79 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                     </motion.div>
                   );
                 })}
+              </div>
+            )}
+
+            {sortedSpiffs.length > 0 && (
+              <div className="space-y-3 mt-6">
+                <button
+                  onClick={() => setShowSpiffs(p => !p)}
+                  className="flex items-center justify-between w-full px-2 py-3 border-t border-white/5 group border-none outline-none focus:outline-none"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                      <AppIcon name="billing" size={12} className="text-emerald-400" />
+                    </div>
+                    <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest group-hover:text-slate-300 transition-colors">
+                      Spiffs & Adjustments ({sortedSpiffs.length})
+                    </Typography>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Typography variant="mono" className="text-[10px] text-emerald-400 font-black">
+                      +${sortedSpiffs.reduce((sum, s) => sum + (s.amount || 0), 0).toLocaleString()}
+                    </Typography>
+                    {showSpiffs
+                      ? <ChevronUp size={14} className="text-slate-600" />
+                      : <ChevronDown size={14} className="text-slate-600" />
+                    }
+                  </div>
+                </button>
+
+                {showSpiffs && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {sortedSpiffs.map((spiff, index) => (
+                      <motion.div
+                        key={spiff.id}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        onClick={() => window.dispatchEvent(
+                          new CustomEvent('stripeit:edit-spiff', { detail: spiff })
+                        )}
+                        className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-500/[0.03] border border-emerald-500/10 cursor-pointer hover:bg-emerald-500/[0.06] transition-colors group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                            <AppIcon name="billing" size={12} className="text-emerald-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <Typography variant="label" className="text-white text-xs font-black truncate block">
+                              {spiff.label || 'SPIFF'}
+                            </Typography>
+                            <Typography variant="mono" className="text-[9px] text-slate-500">
+                              {formatDateSafe(spiff.date, 'MM/dd/yy')}
+                              {spiff.notes && ` • ${spiff.notes}`}
+                            </Typography>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <Typography variant="label" className="text-emerald-400 font-black text-sm">
+                            +${spiff.amount.toLocaleString()}
+                          </Typography>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMonthlySpiff?.(spiff.id);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-700 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            <AppIcon name="delete" size={12} />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </>

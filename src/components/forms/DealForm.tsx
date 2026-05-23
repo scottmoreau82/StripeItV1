@@ -53,6 +53,7 @@ export const DealForm: React.FC<DealFormProps> = ({
     notes: initialData?.notes || '',
     isSplitDeal: initialData?.isSplitDeal || false,
     splitSalespersonId: initialData?.splitSalespersonId || '',
+    splitPartnerName: initialData?.splitPartnerName || '',
     splitPercentage: initialData?.splitPercentage || 50,
     hasTrade: !!initialData?.tradedVehicle,
     ...initialData
@@ -118,6 +119,7 @@ export const DealForm: React.FC<DealFormProps> = ({
     if (!formData.isSplitDeal) {
       delete submitData.splitSalespersonId;
       delete submitData.splitPercentage;
+      delete submitData.splitPartnerName;
     }
 
     // Always clean notes if empty
@@ -376,11 +378,11 @@ export const DealForm: React.FC<DealFormProps> = ({
               className="overflow-hidden space-y-4 px-1"
             >
               <Input
-                label="Partner"
-                placeholder="2nd Salesperson"
-                value={formData.splitSalespersonId}
-                onChange={(e) => handleChange('splitSalespersonId', e.target.value)}
-                error={getError('splitSalespersonId')}
+                label="Partner Name"
+                placeholder="e.g. Jane Smith"
+                value={formData.splitPartnerName}
+                onChange={(e) => handleChange('splitPartnerName', e.target.value)}
+                error={getError('splitPartnerName')}
                 required={formData.isSplitDeal}
               />
             </motion.div>

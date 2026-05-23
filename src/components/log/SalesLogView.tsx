@@ -509,6 +509,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       <th className="py-4 px-4 text-left w-[100px]">
                         <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Type</Typography>
                       </th>
+                      <th className="py-4 px-4 text-left w-[100px]">
+                        <Typography variant="mono"
+                          className="text-[10px] text-slate-500 uppercase
+                          tracking-widest font-black">
+                          Split
+                        </Typography>
+                      </th>
                       <th 
                         className={cn("py-4 px-4 text-right w-[140px]", isBasicPlus && "cursor-pointer hover:bg-white/5 transition-colors")}
                         onClick={() => handleSort('frontEndGross')}
@@ -589,13 +596,6 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                 <Typography variant="label" className="text-[var(--color-text-primary)] text-sm font-black truncate">
                                   {getLastName(deal.customerName)}
                                 </Typography>
-                                {deal.isSplitDeal && (
-                                  <div className="flex items-center gap-1 mt-0.5">
-                                    <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400">
-                                      Split {deal.splitPercentage || 50}%
-                                    </span>
-                                  </div>
-                                )}
                                 <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
                                   #{deal.dealNumber || '---'}
                                 </Typography>
@@ -616,6 +616,20 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           </td>
                           <td className="py-5 px-4">
                             <TypeBadge type={deal.newOrUsed as any} />
+                          </td>
+                          <td className="py-5 px-4">
+                            {deal.isSplitDeal && deal.splitPartnerName ? (
+                              <Typography variant="mono"
+                                className="text-xs text-amber-400 font-black
+                                uppercase tracking-wider">
+                                {getLastName(deal.splitPartnerName)}
+                              </Typography>
+                            ) : (
+                              <Typography variant="mono"
+                                className="text-xs text-slate-700">
+                                —
+                              </Typography>
+                            )}
                           </td>
                           <td className="py-5 px-4 text-right">
                             <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>

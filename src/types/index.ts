@@ -302,6 +302,7 @@ export interface Deal {
   isSplitDeal: boolean;
   splitSalespersonId?: string;
   splitPercentage?: number;
+  splitPartnerName?: string;
   notes?: string;
   status: DealStatus;
   lockedByTier?: boolean;

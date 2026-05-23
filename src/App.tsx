@@ -249,21 +249,7 @@ function MainAppFlow() {
 
   const handleUpgradeClick = async () => {
     if (!user || !profile) return;
-    try {
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.uid, email: user.email })
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        triggerError('Could not start checkout. Please try again.');
-      }
-    } catch (err) {
-      triggerError('Could not start checkout. Please try again.');
-    }
+    window.location.href = `https://buy.stripe.com/test_fZu3cu0St7Hk7EDgXq1kA00?client_reference_id=${user.uid}&prefilled_email=${encodeURIComponent(user.email || '')}`;
   };
 
   const onUpgradeClick = () => {

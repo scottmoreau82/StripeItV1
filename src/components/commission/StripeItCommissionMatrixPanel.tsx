@@ -576,6 +576,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     backPack: initialData?.backPack ?? 0,
   });
 
+  const [isDirty, setIsDirty] = useState(false);
+
   // Simulation State System
   const [simMode, setSimMode] = useState<'live' | 'scenario'>('live');
 
@@ -784,6 +786,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setIsDirty(true);
   };
 
   const handleNumeric = (field: string, value: string) => {
@@ -1274,10 +1277,38 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     }
 
     onSubmit(cleanData);
+    setIsDirty(false);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-12">
+      <AnimatePresence>
+        {isDirty && (
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.2 }}
+            className="sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-3 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 backdrop-blur-md shadow-glow glow-primary/10 mb-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-2 rounded-full bg-brand-primary animate-pulse" />
+              <Typography variant="mono" className="text-brand-primary text-[10px] font-black uppercase tracking-widest">
+                Unsaved Changes
+              </Typography>
+            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              isLoading={isLoading}
+              className="h-9 px-5 text-[10px] font-black uppercase tracking-widest"
+            >
+              Save Changes
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="space-y-10">
         {/* Header/Info */}
         <div className="flex flex-col md:flex-row items-center md:items-start gap-5 rounded-3xl bg-brand-primary/[0.03] p-6 border border-brand-primary/10">

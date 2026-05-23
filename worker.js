@@ -103,12 +103,13 @@ export default {
         const encode = (obj) => btoa(JSON.stringify(obj)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
         const signingInput = `${encode(header)}.${encode(payload)}`;
 
-        const keyData = env.FIREBASE_PRIVATE_KEY
-          .replace(/\\n/g, '\n')
-          .replace('-----BEGIN PRIVATE KEY-----', '')
-          .replace('-----END PRIVATE KEY-----', '')
-          .replace(/\n/g, '')
-          .trim();
+        const rawKey = env.FIREBASE_PRIVATE_KEY || '';
+        const normalizedKey = rawKey.replace(/\\n/g, '\n');
+        const keyLines = normalizedKey.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        const keyBody = keyLines
+          .filter(l => !l.startsWith('-----'))
+          .join('');
+        const keyData = keyBody;
 
         const binaryKey = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
         const cryptoKey = await crypto.subtle.importKey(

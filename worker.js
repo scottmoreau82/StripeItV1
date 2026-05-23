@@ -104,6 +104,7 @@ export default {
         const signingInput = `${encode(header)}.${encode(payload)}`;
 
         const keyData = env.FIREBASE_PRIVATE_KEY
+          .replace(/\\n/g, '\n')
           .replace('-----BEGIN PRIVATE KEY-----', '')
           .replace('-----END PRIVATE KEY-----', '')
           .replace(/\n/g, '')

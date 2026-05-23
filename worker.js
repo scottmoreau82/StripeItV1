@@ -127,8 +127,20 @@ export default {
           body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt })
         });
 
-        const tokenData = await tokenRes.json();
+        const tokenText = await tokenRes.text();
+        console.log('TOKEN_EXCHANGE_STATUS', tokenRes.status);
+        console.log('TOKEN_EXCHANGE_BODY', tokenText);
+
+        if (!tokenRes.ok) {
+          return new Response(JSON.stringify({ error: 'OAuth token exchange failed', status: tokenRes.status, detail: tokenText }), { status: 500 });
+        }
+
+        const tokenData = JSON.parse(tokenText);
         const accessToken = tokenData.access_token;
+
+        if (!accessToken) {
+          return new Response(JSON.stringify({ error: 'No access_token in response', detail: tokenText }), { status: 500 });
+        }
 
         const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${userId}`;
         const patchRes = await fetch(`${firestoreUrl}?updateMask.fieldPaths=subscriptionTier&updateMask.fieldPaths=updatedAt`, {

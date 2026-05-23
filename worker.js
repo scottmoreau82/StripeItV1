@@ -105,7 +105,12 @@ export default {
 
         const keyData = env.FIREBASE_PRIVATE_KEY || '';
 
-        const binaryKey = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+        const pemKey = `-----BEGIN PRIVATE KEY-----\n${keyData}\n-----END PRIVATE KEY-----`;
+        const pemBody = pemKey
+          .replace('-----BEGIN PRIVATE KEY-----', '')
+          .replace('-----END PRIVATE KEY-----', '')
+          .replace(/\s/g, '');
+        const binaryKey = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0));
         const cryptoKey = await crypto.subtle.importKey(
           'pkcs8', binaryKey,
           { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },

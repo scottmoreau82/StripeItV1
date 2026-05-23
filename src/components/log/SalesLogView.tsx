@@ -322,6 +322,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     }
   };
 
+  const lockedDeals = deals.filter(d => d.lockedByTier === true);
+  const lockedCount = lockedDeals.length;
+
   const header = (
     <PageHeader
       title="Sales Log"
@@ -396,24 +399,24 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         </div>
       )}
 
-      {lockedDealsCount > 0 && (
-        <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+      {profile?.subscriptionTier === 'free' && lockedCount > 0 && (
+        <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-amber-500/20 bg-amber-500/5">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
               <AppIcon name="lock" size={16} className="text-amber-400" />
             </div>
             <div>
-              <Typography variant="mono" className="text-amber-400 text-[10px] font-black uppercase tracking-widest block">
-                {lockedDealsCount} Locked {lockedDealsCount === 1 ? 'Deal' : 'Deals'}
+              <Typography variant="mono" className="text-[11px] font-black uppercase tracking-widest text-amber-400">
+                {lockedCount} Locked {lockedCount === 1 ? 'Deal' : 'Deals'}
               </Typography>
-              <Typography variant="mono" className="text-slate-500 text-[9px]">
+              <Typography variant="mono" className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                 Your data is safe — upgrade to Pro to unlock and include in metrics
               </Typography>
             </div>
           </div>
           <button
             onClick={onUpgrade}
-            className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all active:scale-95 shrink-0"
+            className="px-4 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 shrink-0"
           >
             Upgrade
           </button>

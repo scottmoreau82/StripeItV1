@@ -14,7 +14,8 @@ import {
   ArrowUpRight, 
   MoreVertical,
   Check,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
@@ -34,6 +35,8 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
   const [search, setSearch] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [hasDuplicates, setHasDuplicates] = useState(false);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -116,6 +119,22 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
       addToast('Failed to update tier.', 'error');
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleWipeUser = async (userId: string) => {
+    setDeletingId(userId);
+    try {
+      await userService.wipeUser(userId);
+      setUsers(prev =>
+        prev.filter(u => u.uid !== userId));
+      addToast('User wiped — they can re-register.',
+        'success');
+      setConfirmDeleteId(null);
+    } catch (error) {
+      addToast('Failed to wipe user.', 'error');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -232,9 +251,55 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                   
                   <div className="h-8 w-px bg-white/5 mx-2" />
                   
-                  <button className="p-2 rounded-lg text-slate-600 hover:text-white hover:bg-white/5 transition-all">
-                    <MoreVertical size={16} />
-                  </button>
+                  {confirmDeleteId === user.uid ? (
+                    <div className="flex items-center gap-2">
+                      <Typography variant="mono"
+                        className="text-[9px] text-rose-400 uppercase
+                        font-black tracking-widest hidden sm:block">
+                        Wipe user?
+                      </Typography>
+                      <button
+                        onClick={() => handleWipeUser(user.uid)}
+                        disabled={deletingId === user.uid}
+                        className="p-2 rounded-lg bg-rose-500/20
+                          border border-rose-500/30 text-rose-400
+                          hover:bg-rose-500/30 transition-all
+                          active:scale-95 disabled:opacity-50"
+                      >
+                        {deletingId === user.uid
+                          ? <div className="h-4 w-4 animate-spin
+                              rounded-full border-2 border-rose-400
+                              border-t-transparent" />
+                          : <Check size={14} />
+                        }
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="p-2 rounded-lg bg-white/5
+                          border border-white/10 text-slate-400
+                          hover:text-white transition-all active:scale-95"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (user.uid === currentUser?.uid) return;
+                        setConfirmDeleteId(user.uid);
+                      }}
+                      disabled={user.uid === currentUser?.uid}
+                      className="p-2 rounded-lg text-slate-600
+                        hover:text-rose-400 hover:bg-rose-500/10
+                        transition-all disabled:opacity-20
+                        disabled:cursor-not-allowed"
+                      title={user.uid === currentUser?.uid
+                        ? "Cannot delete yourself"
+                        : "Wipe user"}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
             </Card>

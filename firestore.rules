@@ -276,6 +276,11 @@ service cloud.firestore {
         (!isTargetOwner() || getRole() == 'dealer_owner') &&
         incoming().diff(existing()).affectedKeys().hasOnly(['role', 'dealershipId', 'updatedAt', 'isAdmin', 'subscriptionTier', 'isFrozen', 'isDeleted', 'orgId', 'department'])
       );
+
+      allow delete: if isBootstrapAdmin() || (
+        isSignedIn() && isAnyManager() && isOrgMember(existing().get('orgId', 'none')) &&
+        (!isTargetOwner() || getRole() == 'dealer_owner')
+      );
       
       match /notifications/{notifId} {
         allow read, write: if isOwner(userId) || isBootstrapAdmin();

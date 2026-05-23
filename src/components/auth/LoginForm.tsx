@@ -8,7 +8,7 @@ import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
 import { Typography } from '@/src/components/ui/Typography';
 import { Card } from '@/src/components/ui/Card';
-import { DollarSign, UserPlus, LogIn, Sparkles, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { DollarSign, UserPlus, LogIn, Sparkles, AlertTriangle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 
@@ -31,6 +31,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [inviteRole, setInviteRole] = useState<UserRole | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   
   const { addToast, connectionError } = useAuth();
 
@@ -167,16 +168,30 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
             />
             
             {!showForgotPassword && (
-              <Input
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
-                disabled={loading}
-              />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                    className="w-full h-12 px-4 pr-12 rounded-xl border bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-slate-600 focus:outline-none focus:border-brand-primary/50 transition-all text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(p => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors p-1"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
             )}
             
             {mode === 'signin' && (

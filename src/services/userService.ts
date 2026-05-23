@@ -115,5 +115,21 @@ export const userService = {
       handleFirestoreError(error, OperationType.UPDATE, `${COLL_CONST.USERS}/${userId}`);
       throw error;
     }
+  },
+
+  async wipeUser(userId: string): Promise<void> {
+    try {
+      const { deleteDoc } = await import(
+        'firebase/firestore');
+      const userRef = doc(db, COLL_CONST.USERS,
+        userId);
+      await deleteDoc(userRef);
+    } catch (error) {
+      console.error("Error wiping user:", error);
+      handleFirestoreError(error,
+        OperationType.DELETE,
+        `${COLL_CONST.USERS}/${userId}`);
+      throw error;
+    }
   }
 };

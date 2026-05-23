@@ -934,45 +934,71 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                 {showSpiffs && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                     {sortedSpiffs.map((spiff, index) => (
-                      <motion.div
-                        key={spiff.id}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        onClick={() => window.dispatchEvent(
-                          new CustomEvent('stripeit:edit-spiff', { detail: spiff })
+                      <React.Fragment key={spiff.id}>
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          onClick={() => window.dispatchEvent(
+                            new CustomEvent('stripeit:edit-spiff', { detail: spiff })
+                          )}
+                          className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-500/[0.03] border border-emerald-500/10 cursor-pointer hover:bg-emerald-500/[0.06] transition-colors group"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                              <AppIcon name="billing" size={12} className="text-emerald-400" />
+                            </div>
+                            <div className="min-w-0">
+                              <Typography variant="label" className="text-white text-xs font-black truncate block">
+                                {spiff.label || 'SPIFF'}
+                              </Typography>
+                              <Typography variant="mono" className="text-[9px] text-slate-500">
+                                {formatDateSafe(spiff.date, 'MM/dd/yy')}
+                                {spiff.notes && ` • ${spiff.notes}`}
+                              </Typography>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <Typography variant="label" className="text-emerald-400 font-black text-sm">
+                              +${spiff.amount.toLocaleString()}
+                            </Typography>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingDeleteSpiffId(spiff.id);
+                              }}
+                              className="p-1.5 rounded-lg text-slate-700 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
+                            >
+                              <AppIcon name="delete" size={12} />
+                            </button>
+                          </div>
+                        </motion.div>
+
+                        {pendingDeleteSpiffId === spiff.id && (
+                          <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                            <Typography variant="mono" className="text-[10px] text-rose-400 uppercase font-black tracking-widest">
+                              Delete this spiff?
+                            </Typography>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  handleDeleteMonthlySpiff?.(spiff.id);
+                                  setPendingDeleteSpiffId(null);
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500/30 transition-all active:scale-95"
+                              >
+                                Delete
+                              </button>
+                              <button
+                                onClick={() => setPendingDeleteSpiffId(null)}
+                                className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
                         )}
-                        className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-500/[0.03] border border-emerald-500/10 cursor-pointer hover:bg-emerald-500/[0.06] transition-colors group"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                            <AppIcon name="billing" size={12} className="text-emerald-400" />
-                          </div>
-                          <div className="min-w-0">
-                            <Typography variant="label" className="text-white text-xs font-black truncate block">
-                              {spiff.label || 'SPIFF'}
-                            </Typography>
-                            <Typography variant="mono" className="text-[9px] text-slate-500">
-                              {formatDateSafe(spiff.date, 'MM/dd/yy')}
-                              {spiff.notes && ` • ${spiff.notes}`}
-                            </Typography>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <Typography variant="label" className="text-emerald-400 font-black text-sm">
-                            +${spiff.amount.toLocaleString()}
-                          </Typography>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteMonthlySpiff?.(spiff.id);
-                            }}
-                            className="p-1.5 rounded-lg text-slate-700 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
-                          >
-                            <AppIcon name="delete" size={12} />
-                          </button>
-                        </div>
-                      </motion.div>
+                      </React.Fragment>
                     ))}
                   </div>
                 )}

@@ -89,63 +89,10 @@ export default {
           return new Response(JSON.stringify({ error: 'No userId found' }), { status: 400 });
         }
 
-        const now = Math.floor(Date.now() / 1000);
-        const header = { alg: 'RS256', typ: 'JWT' };
-        const payload = {
-          iss: env.FIREBASE_CLIENT_EMAIL,
-          sub: env.FIREBASE_CLIENT_EMAIL,
-          aud: 'https://oauth2.googleapis.com/token',
-          iat: now,
-          exp: now + 3600,
-          scope: 'https://www.googleapis.com/auth/datastore'
-        };
-
-        const encode = (obj) => btoa(JSON.stringify(obj)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-        const signingInput = `${encode(header)}.${encode(payload)}`;
-
-        const keyData = env.FIREBASE_PRIVATE_KEY || '';
-
-        const pemKey = `-----BEGIN PRIVATE KEY-----\n${keyData}\n-----END PRIVATE KEY-----`;
-        const pemBody = pemKey
-          .replace('-----BEGIN PRIVATE KEY-----', '')
-          .replace('-----END PRIVATE KEY-----', '')
-          .replace(/\s/g, '');
-        const binaryKey = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0));
-        const cryptoKey = await crypto.subtle.importKey(
-          'pkcs8', binaryKey,
-          { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-          false, ['sign']
-        );
-
-        const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, new TextEncoder().encode(signingInput));
-        const b64sig = btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-        const jwt = `${signingInput}.${b64sig}`;
-
-        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt })
-        });
-
-        const tokenText = await tokenRes.text();
-        console.log('TOKEN_EXCHANGE_STATUS', tokenRes.status);
-        console.log('TOKEN_EXCHANGE_BODY', tokenText);
-
-        if (!tokenRes.ok) {
-          return new Response(JSON.stringify({ error: 'OAuth token exchange failed', status: tokenRes.status, detail: tokenText }), { status: 500 });
-        }
-
-        const tokenData = JSON.parse(tokenText);
-        const accessToken = tokenData.access_token;
-
-        if (!accessToken) {
-          return new Response(JSON.stringify({ error: 'No access_token in response', detail: tokenText }), { status: 500 });
-        }
-
-        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${userId}`;
-        const patchRes = await fetch(`${firestoreUrl}?updateMask.fieldPaths=subscriptionTier&updateMask.fieldPaths=updatedAt`, {
+        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0971954368/databases/(default)/documents/users/${userId}`;
+        const patchRes = await fetch(`${firestoreUrl}?updateMask.fieldPaths=subscriptionTier&updateMask.fieldPaths=updatedAt&key=AIzaSyCxalpBsHXMbJD61Bs8u4Co7lthUq6jbr4`, {
           method: 'PATCH',
-          headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             fields: {
               subscriptionTier: { stringValue: 'pro' },

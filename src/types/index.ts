@@ -14,6 +14,7 @@ export enum SubscriptionTier {
   FREE = 'free',
   PRO = 'pro',
   ORGANIZATION = 'organization',
+  // TRIAL tier removed — legacy users fall through to FREE
   PREMIUM = 'premium',
   ENTERPRISE = 'enterprise'
 }

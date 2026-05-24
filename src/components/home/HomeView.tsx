@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { calculateDealCommission, calculatePeriodEarnings, CommissionResult } from '@/src/lib/commissionLogic';
 import { Typography } from '../ui/Typography';
 import { QuickActions } from './QuickActions';
@@ -106,7 +106,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     handleDeleteNote 
   } = useAppData();
   
-  const { profile, updateProfileData, isDeveloper } = useAuth();
+  const { profile, updateProfileData, isDeveloper, addToast } = useAuth();
   const { isMobile } = useResponsive();
 
   const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
@@ -131,6 +131,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [goalOpen, setGoalOpen] = useState(true);
   const [avgOpen, setAvgOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(true);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('upgrade') === 'success') {
+      addToast('Welcome to Pro! Your account has been upgraded.', 'success');
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
 
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();

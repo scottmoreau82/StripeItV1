@@ -50,8 +50,8 @@ export const validateDeal = (data: Partial<Deal>): ValidationError[] => {
     errors.push({ field: 'tradedVehicle', message: 'Traded vehicle is required' });
   }
 
-  if (data.isSplitDeal && (!data.splitSalespersonId || !data.splitSalespersonId.trim())) {
-    errors.push({ field: 'splitSalespersonId', message: '2nd salesperson is required' });
+  if (data.isSplitDeal && (!(data as any).splitPartnerName || !(data as any).splitPartnerName.trim())) {
+    errors.push({ field: 'splitPartnerName', message: 'Partner name is required' });
   }
 
   if (data.isSplitDeal && data.splitPercentage !== undefined) {

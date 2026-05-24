@@ -28,6 +28,7 @@ interface DealFormProps {
 
 interface DealFormState extends Partial<Deal> {
   hasTrade?: boolean;
+  splitPartnerName?: string;
 }
 
 export const DealForm: React.FC<DealFormProps> = ({
@@ -380,7 +381,7 @@ export const DealForm: React.FC<DealFormProps> = ({
               <Input
                 label="Partner Name"
                 placeholder="e.g. Jane Smith"
-                value={formData.splitPartnerName}
+                value={formData.splitPartnerName as string}
                 onChange={(e) => handleChange('splitPartnerName', e.target.value)}
                 error={getError('splitPartnerName')}
                 required={formData.isSplitDeal}

@@ -1,4 +1,4 @@
-const WORKER_URL = 'https://stripeit.app';
+const WORKER_URL = 'https://stripeit.scottmoreau82.workers.dev';
 
 export const stripeService = {
   async createCheckoutSession(userId: string, email: string): Promise<void> {

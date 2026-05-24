@@ -113,6 +113,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const isDealer = profile?.subscriptionTier === SubscriptionTier.ORGANIZATION;
   const isFrozen = profile?.isFrozen && !profile?.suspensionAcknowledgedAt && !isDeveloper;
 
+  const tierLabel = useMemo(() => {
+    switch (profile?.subscriptionTier) {
+      case SubscriptionTier.FREE: return 'Free';
+      case SubscriptionTier.PRO: return 'Pro';
+      case SubscriptionTier.ORGANIZATION: return 'Dealer';
+      default: return 'Free';
+    }
+  }, [profile?.subscriptionTier]);
+
   const [activeTab, setActiveTab] = useState<'overview' | 'trends'>('overview');
   const [selectedCompId, setSelectedCompId] = useState<string | null>(null);
   const [isCustomizing, setIsCustomizing] = useState(false);
@@ -454,7 +463,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       <PageHeader
         title="Performance Overview"
-        subtitle={`${profile?.displayName || 'Personal'} • ${profile?.subscriptionTier.toUpperCase() || 'FREE'} Tooling Activity`}
+        subtitle={`${profile?.displayName || 'Personal'} • ${tierLabel} Tooling Activity`}
         icon={LayoutGrid}
       >
         <div className="flex items-center gap-3">

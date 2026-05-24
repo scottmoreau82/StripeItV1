@@ -386,10 +386,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
               if (subscriptionTier === 'trial') {
                 subscriptionTier = SubscriptionTier.FREE;
-                updateDoc(userDocRef, {
-                  subscriptionTier: SubscriptionTier.FREE,
-                  updatedAt: serverTimestamp()
-                }).catch(e => console.error("Migration failed", e));
               }
 
               const profileData = {

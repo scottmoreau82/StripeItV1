@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   Sun,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, UserRole, SubscriptionTier, IconTheme } from '@/src/types';
@@ -29,7 +30,7 @@ import { AppIcon } from '../ui/AppIcon';
 import { PageHeader } from '../ui/PageHeader';
 import { Settings } from 'lucide-react';
 
-import { useTheme } from '@/src/contexts/ThemeContext';
+import { useTheme, isProTheme } from '@/src/contexts/ThemeContext';
 import { DashboardLayout } from '../layout/DashboardLayout';
 import { stripeService } from '@/src/services/stripeService';
 
@@ -52,6 +53,8 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
 
   const currentIconTheme = profile?.preferences?.iconTheme || IconTheme.LUCIDE;
   const isFreeTier = profile?.subscriptionTier === SubscriptionTier.FREE;
+  const canUseProThemes = profile?.subscriptionTier === SubscriptionTier.PRO || 
+    profile?.subscriptionTier === SubscriptionTier.ORGANIZATION;
 
   const handleIconThemeChange = async (newTheme: IconTheme) => {
     if (isFreeTier) {
@@ -219,6 +222,58 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                   <option value="standard">Standard (Default)</option>
                   <option value="parallelogram">Parallelogram</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Pro Themes Section */}
+            <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-[#AAFF00]/10 border border-[#AAFF00]/20 flex items-center justify-center shrink-0">
+                  <Sparkles className="text-[#AAFF00]" size={20} />
+                </div>
+                <div>
+                  <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">PRO THEMES</Typography>
+                  <Typography variant="small" className="text-slate-500 text-[10px]">EXCLUSIVE COLOR SCHEMES</Typography>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    if (canUseProThemes) {
+                      setTheme('prog');
+                    } else {
+                      addToast('Upgrade to Pro to unlock Pro Themes.', 'info');
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all border text-left",
+                    canUseProThemes
+                      ? theme === 'prog'
+                        ? "bg-[#AAFF00] text-bg-deep border-[#AAFF00] shadow-[0_0_20px_-5px_rgba(170,255,0,0.5)] font-bold cursor-pointer"
+                        : "text-slate-500 hover:text-white bg-transparent border-white/10 hover:border-white/20 cursor-pointer font-bold"
+                      : "opacity-50 cursor-not-allowed bg-transparent border-white/5 text-slate-500 font-bold"
+                  )}
+                >
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-xs font-black tracking-wider uppercase">PRO GREEN</span>
+                    <span className="text-[10px] font-mono opacity-80">#AAFF00</span>
+                  </div>
+                  {canUseProThemes ? (
+                    <div className="h-4 w-4 rounded-full bg-[#AAFF00] border border-[#AAFF00]/20" />
+                  ) : (
+                    <Lock size={12} className="text-[#AAFF00]" />
+                  )}
+                </button>
+
+                {!canUseProThemes && (
+                  <div className="p-3 bg-[#AAFF00]/5 border border-[#AAFF00]/10 rounded-xl flex items-center gap-2">
+                    <Lock size={12} className="text-[#AAFF00]" />
+                    <Typography variant="small" className="text-[10px] text-[#AAFF00] font-bold uppercase tracking-widest leading-none">
+                      PRO+ EXCLUSIVE
+                    </Typography>
+                  </div>
+                )}
               </div>
             </div>
           </div>

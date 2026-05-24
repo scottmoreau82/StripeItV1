@@ -3,8 +3,11 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/src/lib/firebase';
 import { COLLECTIONS } from '@/src/constants';
 import { useAuth } from './AuthContext';
+import { SubscriptionTier } from '../types';
 
-type Theme = 'dark' | 'light';
+type Theme = 'dark' | 'light' | `pro${string}`;
+
+export const isProTheme = (theme: string): boolean => theme.startsWith('pro');
 
 interface ThemeContextType {
   theme: Theme;
@@ -20,7 +23,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     // Check localStorage first for immediate render
     const savedTheme = localStorage.getItem('stripeit-theme') as Theme | null;
-    if (savedTheme === 'dark' || savedTheme === 'light') {
+    if (savedTheme && !['dark', 'light'].includes(savedTheme) && !savedTheme.startsWith('pro')) {
+      return 'dark';
+    }
+    if (savedTheme === 'dark' || savedTheme === 'light' || (savedTheme && savedTheme.startsWith('pro'))) {
       return savedTheme;
     }
     return 'dark';
@@ -32,7 +38,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setThemeState(profile.themePreference as Theme);
       localStorage.setItem('stripeit-theme', profile.themePreference);
     }
-  }, [profile?.themePreference]);
+
+    if (profile?.themePreference && profile.themePreference.startsWith('pro') && profile.subscriptionTier !== SubscriptionTier.PRO && profile.subscriptionTier !== SubscriptionTier.ORGANIZATION) {
+      setThemeState('dark');
+      localStorage.setItem('stripeit-theme', 'dark');
+    }
+  }, [profile?.themePreference, profile?.subscriptionTier]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);

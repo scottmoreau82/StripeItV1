@@ -55,6 +55,29 @@
   --shadow-glow: 0 0 25px -5px rgba(0, 212, 255, 0.15);
 }
 
+[data-theme="prog"] {
+  --color-bg-deep: #080C00;
+  --color-bg-surface: #0C1200;
+  --color-bg-card: #111A00;
+  --color-bg-elevated: #172200;
+  --color-border: rgba(170, 255, 0, 0.08);
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #C8E87A;
+  --color-text-muted: #6B8C00;
+  --color-brand-primary: #AAFF00;
+  --color-brand-secondary: #44AA00;
+  --accent-primary: var(--color-brand-primary);
+  --accent-secondary: var(--color-brand-secondary);
+  --bg-deep: var(--color-bg-deep);
+  --bg-main: var(--color-bg-surface);
+  --bg-card: var(--color-bg-card);
+  --bg-elevated: var(--color-bg-elevated);
+  --border-subtle: var(--color-border);
+  --border-card: var(--color-border);
+  --radius-card: 1.25rem;
+  --shadow-glow: 0 0 25px -5px rgba(170, 255, 0, 0.4);
+}
+
 /* Matrix Theme specific typography hacks - kept for preservation */
 [data-visual-theme="matrix"] h1,
 [data-visual-theme="matrix"] h2,
@@ -151,6 +174,9 @@
 @layer utilities {
   .glass {
     @apply bg-white/[0.04] backdrop-blur-2xl border border-white/[0.06];
+  }
+  .glow-pro {
+    @apply shadow-[0_0_20px_-5px_rgba(170,255,0,0.5)];
   }
   .glow-primary {
     @apply shadow-[0_0_20px_-5px_rgba(0,242,255,0.4)];

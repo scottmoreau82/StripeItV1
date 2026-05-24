@@ -44,7 +44,7 @@ export enum DealStatus {
 }
 
 export interface UserPreferences {
-  theme: 'dark' | 'light' | 'system';
+  theme: 'dark' | 'light' | 'system' | `pro${string}`;
   visualTheme?: 'matrix' | 'og';
   iconTheme?: IconTheme;
   buttonShape?: 'standard' | 'parallelogram';
@@ -102,7 +102,7 @@ export interface UserProfile {
   suspensionAcknowledgedAt?: number;
   isDeleted?: boolean;
   lastActive?: number;
-  themePreference?: 'dark' | 'light';
+  themePreference?: 'dark' | 'light' | `pro${string}`;
 }
 
 export interface PayPlanRule {

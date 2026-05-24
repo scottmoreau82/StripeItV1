@@ -7,7 +7,7 @@ import { goalService } from '../services/goalService';
 import { noteService } from '../services/noteService';
 import { competitionService } from '../services/competitionService';
 import { permissionService } from '../services/permissionService';
-import { planLimitService, LimitType } from '../services/planLimitService';
+import { planLimitService, LimitType, getCurrentMonthDealCount } from '../services/planLimitService';
 import { dashboardService } from '../services/dashboardService';
 import { activityService } from '../services/activityService';
 import { notificationService } from '../services/notificationService';
@@ -291,56 +291,15 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (!profile || !user || !effectiveOrgId) return;
     
     try {
+      let isOverLimit = false;
       if (!editingId) {
-        const now = new Date();
-        const monthStart = new Date(
-          now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0
-        ).getTime();
-        const monthEnd = new Date(
-          now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999
-        ).getTime();
-        const currentMonthDealCount = deals.filter(d => {
-          const ts = typeof d.createdAt === 'number'
-            ? d.createdAt
-            : Date.now();
-          return ts >= monthStart && ts <= monthEnd;
-        }).length;
+        const tier = profile.subscriptionTier || SubscriptionTier.FREE;
+        const monthDealCount = getCurrentMonthDealCount(deals);
+        const limit = planLimitService.getLimit(tier, LimitType.DEAL_STORAGE);
+        isOverLimit = tier === SubscriptionTier.FREE && monthDealCount >= limit;
 
-        const isLimitReached = planLimitService.isLimitReached(
-          profile.subscriptionTier || SubscriptionTier.FREE, 
-          LimitType.DEAL_STORAGE, 
-          currentMonthDealCount
-        );
-
-        if (isLimitReached) {
-          const dealId = await dealService.createDeal(effectiveOrgId, {
-            userId: user.uid,
-            createdByUserId: user.uid,
-            assignedSalespersonId: user.uid,
-            salespersonName: profile.displayName,
-            dealershipId: profile.dealershipId,
-            customerName: dealData.customerName!,
-            purchasedVehicle: dealData.purchasedVehicle!,
-            newOrUsed: dealData.newOrUsed as 'new' | 'used' | 'cpo',
-            status: dealData.status!,
-            date: dealData.date!,
-            frontEndGross: dealData.frontEndGross || 0,
-            backEndGross: dealData.backEndGross || 0,
-            isSplitDeal: dealData.isSplitDeal || false,
-            splitSalespersonId: dealData.splitSalespersonId,
-            splitPercentage: dealData.splitPercentage,
-            splitPartnerName: dealData.splitPartnerName,
-            tradedVehicle: dealData.tradedVehicle,
-            notes: dealData.notes,
-            dealNumber: dealData.dealNumber,
-            stockNumber: dealData.stockNumber,
-            lockedByTier: true,
-          });
-          addToast(
-            'Deal saved — upgrade to Pro to unlock it and include it in your metrics.',
-            'info'
-          );
-          return;
+        if (monthDealCount === limit - 1) {
+          addToast('Heads up — next deal will exceed your free monthly limit.', 'warning');
         }
       }
 
@@ -381,6 +340,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
           notes: dealData.notes,
           dealNumber: dealData.dealNumber,
           stockNumber: dealData.stockNumber,
+          lockedByTier: isOverLimit ? true : false,
         });
 
         await activityService.logEvent(effectiveOrgId, {
@@ -392,7 +352,12 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
           payload: { dealId, vehicle: dealData.purchasedVehicle }
         });
         analyticsService.trackEvent(AnalyticsEventType.DEAL_CREATED, { dealId, type: dealData.newOrUsed });
-        triggerSuccess('Deal logged successfully!');
+        
+        if (isOverLimit) {
+          addToast('Deal saved but hidden until you upgrade to Pro.', 'info');
+        } else {
+          triggerSuccess('Deal logged successfully!');
+        }
       }
     } catch (error: any) {
       console.error("Deal Save Error:", error);

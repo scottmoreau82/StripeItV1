@@ -86,6 +86,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     return s.month === spiffMonthStr;
   }), [monthlySpiffs, currentMonth, currentYear]);
 
+  const lockedCount = useMemo(() => deals.filter(d => {
+    const dDate = new Date(d.date);
+    return (d as any).lockedByTier === true &&
+      dDate.getMonth() + 1 === currentMonth &&
+      dDate.getFullYear() === currentYear;
+  }).length, [deals, currentMonth, currentYear]);
+
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
@@ -218,6 +225,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
     const filtered = logItems.filter(item => {
       const isDeal = 'customerName' in item;
+      if (isDeal && (item as any).lockedByTier === true) return false;
       const searchStr = search.toLowerCase();
       
       const searchMatch = !search || (
@@ -322,9 +330,6 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     }
   };
 
-  const lockedDeals = deals.filter(d => d.lockedByTier === true);
-  const lockedCount = lockedDeals.length;
-
   const header = (
     <PageHeader
       title="Sales Log"
@@ -399,24 +404,26 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         </div>
       )}
 
-      {profile?.subscriptionTier === 'free' && lockedCount > 0 && (
-        <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-amber-500/20 bg-amber-500/5">
+      {lockedDealsCount > 0 && (
+        <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
               <AppIcon name="lock" size={16} className="text-amber-400" />
             </div>
             <div>
-              <Typography variant="mono" className="text-[11px] font-black uppercase tracking-widest text-amber-400">
-                {lockedCount} Locked {lockedCount === 1 ? 'Deal' : 'Deals'}
+              <Typography variant="mono" className="text-amber-400 text-[10px] font-black uppercase tracking-widest block">
+                {lockedDealsCount} Locked {lockedDealsCount === 1 ? 'Deal' : 'Deals'}
               </Typography>
-              <Typography variant="mono" className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+              <Typography variant="mono" className="text-slate-500 text-[9px]">
                 Your data is safe — upgrade to Pro to unlock and include in metrics
               </Typography>
             </div>
           </div>
           <button
-            onClick={onUpgrade}
-            className="px-4 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 shrink-0"
+            onClick={() => {
+              window.location.hash = '#settings';
+            }}
+            className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all active:scale-95 shrink-0"
           >
             Upgrade
           </button>
@@ -560,8 +567,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                   <tbody className="divide-y divide-white/[0.02]">
                     {sortedDeals.map((deal, index) => {
                        const dealIndex = dealIndexMap.get(deal.id) ?? 0;
-                       const isBlurred = profile?.subscriptionTier === SubscriptionTier.FREE && !countLoading && dealIndex >= FREE_DEAL_LIMIT;
-                       const shouldBlur = isBlurred;
+                       const isBlurred = false;
+                       const shouldBlur = false;
 
                       const m = getCalendarMonth(deal.date);
                       const y = getCalendarYear(deal.date);
@@ -717,18 +724,32 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               )}
                             </div>
                           </td>
-                          {isBlurred && (
-                            <td className="absolute inset-0 backdrop-blur-sm bg-bg-deep/60 flex items-center justify-center" colSpan={8}>
-                              <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">
-                                Pro Required — Upgrade to View
-                              </Typography>
-                            </td>
-                          )}
                         </motion.tr>
                       );
                     })}
                   </tbody>
                 </table>
+                {lockedCount > 0 && (
+                  <div className="mt-4 flex items-center gap-4 px-5 py-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                      <AppIcon name="lock" size={20} className="text-amber-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Typography variant="mono" className="text-[11px] text-amber-400 font-black uppercase tracking-widest block">
+                        {lockedCount} Locked Deal{lockedCount !== 1 ? 's' : ''}
+                      </Typography>
+                      <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">
+                        Your data is safe — upgrade to Pro to unlock and include in metrics
+                      </Typography>
+                    </div>
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade-modal'))}
+                      className="px-4 py-2 rounded-xl border border-amber-500/40 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 shrink-0"
+                    >
+                      Upgrade
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -737,8 +758,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
               <div className="flex flex-col gap-2">
                 {sortedDeals.map((deal, index) => {
                   const dealIndex = dealIndexMap.get(deal.id) ?? 0;
-                  const isBlurred = profile?.subscriptionTier === SubscriptionTier.FREE && !countLoading && dealIndex >= FREE_DEAL_LIMIT;
-                  const shouldBlur = isBlurred;
+                  const isBlurred = false;
+                  const shouldBlur = false;
 
                   const isExpanded = expandedId === deal.id;
                   const m = getCalendarMonth(deal.date);
@@ -811,14 +832,6 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       </div>
 
                     </div>
-
-                      {isBlurred && (
-                        <div className="absolute inset-0 bg-bg-deep/70 flex items-center justify-center rounded-xl z-20 pointer-events-none">
-                          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black text-center">
-                            Pro Required — Upgrade to View
-                          </Typography>
-                        </div>
-                      )}
 
                       {/* Expanded Section */}
                       <AnimatePresence>
@@ -906,6 +919,27 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                     </motion.div>
                   );
                 })}
+                {lockedCount > 0 && (
+                  <div className="mt-4 flex items-center gap-4 px-5 py-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                      <AppIcon name="lock" size={20} className="text-amber-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Typography variant="mono" className="text-[11px] text-amber-400 font-black uppercase tracking-widest block">
+                        {lockedCount} Locked Deal{lockedCount !== 1 ? 's' : ''}
+                      </Typography>
+                      <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black">
+                        Your data is safe — upgrade to Pro to unlock and include in metrics
+                      </Typography>
+                    </div>
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade-modal'))}
+                      className="px-4 py-2 rounded-xl border border-amber-500/40 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 shrink-0"
+                    >
+                      Upgrade
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

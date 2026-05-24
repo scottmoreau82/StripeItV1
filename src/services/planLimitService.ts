@@ -19,14 +19,15 @@ export const planLimitService = {
       case LimitType.DEAL_STORAGE:
         switch (tier) {
           case SubscriptionTier.FREE: return 8;
+          case SubscriptionTier.TRIAL: return 500;
           case SubscriptionTier.PRO: return 500;
           case SubscriptionTier.ORGANIZATION: return Infinity;
-          case SubscriptionTier.TRIAL: return 500;
           default: return 5;
         }
       case LimitType.NOTE_COUNT:
         switch (tier) {
           case SubscriptionTier.FREE: return 5;
+          case SubscriptionTier.TRIAL: return 100;
           case SubscriptionTier.PRO: return 100;
           case SubscriptionTier.ORGANIZATION: return Infinity;
           default: return 0;
@@ -43,4 +44,14 @@ export const planLimitService = {
     const limit = planLimitService.getLimit(tier, type);
     return currentCount >= limit;
   }
+};
+
+export const getCurrentMonthDealCount = (deals: { date: string }[]): number => {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  return deals.filter(d => {
+    const dt = new Date(d.date);
+    return dt.getMonth() + 1 === month && dt.getFullYear() === year;
+  }).length;
 };

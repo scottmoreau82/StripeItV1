@@ -14,9 +14,12 @@ export enum SubscriptionTier {
   FREE = 'free',
   PRO = 'pro',
   ORGANIZATION = 'organization',
-  TRIAL = 'trial',
   PREMIUM = 'premium',
   ENTERPRISE = 'enterprise'
+}
+
+export namespace SubscriptionTier {
+  export const TRIAL = 'trial' as any as SubscriptionTier;
 }
 
 export enum OrganizationStatus {

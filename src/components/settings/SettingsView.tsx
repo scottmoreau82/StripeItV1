@@ -31,6 +31,7 @@ import { Settings } from 'lucide-react';
 
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { DashboardLayout } from '../layout/DashboardLayout';
+import { stripeService } from '@/src/services/stripeService';
 
 import { useResponsive } from '@/src/hooks/useResponsive';
 
@@ -893,7 +894,21 @@ const ProfilePanel = ({ profile, isMobile }: { profile: UserProfile | null, isMo
   );
 };
 
-const AccountPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMobile?: boolean }) => {
+const AccountPanel = ({ profile: propProfile, isMobile }: { profile: UserProfile | null, isMobile?: boolean }) => {
+  const { profile } = useAuth();
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleManage = async () => {
+    if (!profile?.uid || !profile?.email) return;
+    setIsUpgrading(true);
+    try {
+      await stripeService.createCheckoutSession(profile.uid, profile.email);
+    } catch (err) {
+      console.error('Upgrade error:', err);
+      setIsUpgrading(false);
+    }
+  };
+
   return (
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
       <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Account Security</Typography>
@@ -922,7 +937,14 @@ const AccountPanel = ({ profile, isMobile }: { profile: UserProfile | null, isMo
               <Typography variant="small" className="text-brand-primary font-bold text-[10px]">Tier: {profile?.subscriptionTier.toUpperCase()}</Typography>
             </div>
           </div>
-          <Button variant="outline" className={cn("font-black uppercase tracking-widest", isMobile ? "text-[8px] px-3 h-8" : "text-[10px] px-6 h-10")}>Manage</Button>
+          <Button
+            variant="outline"
+            onClick={handleManage}
+            disabled={isUpgrading}
+            className={cn("font-black uppercase tracking-widest disabled:opacity-50", isMobile ? "text-[8px] px-3 h-8" : "text-[10px] px-6 h-10")}
+          >
+            {isUpgrading ? 'Redirecting...' : 'Manage'}
+          </Button>
         </Card>
       </div>
     </div>

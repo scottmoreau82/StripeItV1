@@ -1,3 +1,37 @@
+async function verifyStripeSignature(body, sigHeader, secret) {
+  const parts = sigHeader.split(',').reduce((acc, part) => {
+    const [key, val] = part.split('=');
+    acc[key.trim()] = val;
+    return acc;
+  }, {});
+
+  const timestamp = parts['t'];
+  const signature = parts['v1'];
+
+  if (!timestamp || !signature) return false;
+
+  const signedPayload = `${timestamp}.${body}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const mac = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(signedPayload)
+  );
+
+  const expected = Array.from(new Uint8Array(mac))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  return expected === signature;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -73,8 +107,10 @@ export default {
           return new Response(JSON.stringify({ error: 'Missing signature' }), { status: 400 });
         }
 
-        // Signature verification temporarily disabled for testing
-        // TODO: re-enable once env secret issue is resolved
+        const isValid = await verifyStripeSignature(body, sigHeader, env.STRIPE_WEBHOOK_SECRET);
+        if (!isValid) {
+          return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 400 });
+        }
 
         const event = JSON.parse(body);
 
@@ -113,6 +149,6 @@ export default {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    return new Response('Not found', { status: 404 });
   }
 };

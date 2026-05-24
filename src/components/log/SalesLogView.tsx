@@ -15,6 +15,7 @@ import { calculateDealCommission } from '@/src/lib/commissionLogic';
 import { Badge } from '../ui/Badge';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
+import { stripeService } from '@/src/services/stripeService';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useResponsive } from '@/src/hooks/useResponsive';
 import { useMonthlyDealCount } from '@/src/hooks/useMonthlyDealCount';
@@ -104,6 +105,19 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [pendingDeleteSpiffId, setPendingDeleteSpiffId] = useState<string | null>(null);
+
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleUpgrade = async () => {
+    if (!profile?.uid || !profile?.email) return;
+    setIsUpgrading(true);
+    try {
+      await stripeService.createCheckoutSession(profile.uid, profile.email);
+    } catch (err) {
+      console.error('Upgrade error:', err);
+      setIsUpgrading(false);
+    }
+  };
 
   useEffect(() => {
     const handleOutsideClick = () => {
@@ -420,12 +434,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
             </div>
           </div>
           <button
-            onClick={() => {
-              window.location.hash = '#settings';
-            }}
-            className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all active:scale-95 shrink-0"
+            onClick={handleUpgrade}
+            disabled={isUpgrading}
+            className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all active:scale-95 shrink-0 disabled:opacity-50"
           >
-            Upgrade
+            {isUpgrading ? 'Redirecting...' : 'Upgrade'}
           </button>
         </div>
       )}
@@ -743,10 +756,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       </Typography>
                     </div>
                     <button
-                      onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade-modal'))}
-                      className="px-4 py-2 rounded-xl border border-amber-500/40 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 shrink-0"
+                      onClick={handleUpgrade}
+                      disabled={isUpgrading}
+                      className="px-4 py-2 rounded-xl border border-amber-500/40 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 shrink-0 disabled:opacity-50"
                     >
-                      Upgrade
+                      {isUpgrading ? 'Redirecting...' : 'Upgrade'}
                     </button>
                   </div>
                 )}
@@ -933,10 +947,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       </Typography>
                     </div>
                     <button
-                      onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade-modal'))}
-                      className="px-4 py-2 rounded-xl border border-amber-500/40 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 shrink-0"
+                      onClick={handleUpgrade}
+                      disabled={isUpgrading}
+                      className="px-4 py-2 rounded-xl border border-amber-500/40 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 shrink-0 disabled:opacity-50"
                     >
-                      Upgrade
+                      {isUpgrading ? 'Redirecting...' : 'Upgrade'}
                     </button>
                   </div>
                 )}

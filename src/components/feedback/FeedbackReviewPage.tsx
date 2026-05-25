@@ -309,44 +309,42 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onStatusChange, onArchi
           </div>
         </div>
         
-        <div className="flex flex-col gap-3 w-full">
+        <div className="flex items-center gap-2">
           <div className="relative">
             <select
               value={report.status}
               onChange={(e) => onStatusChange(report.id, e.target.value as FeedbackStatus)}
               className={cn(
-                "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-[11px] font-black text-white uppercase tracking-widest focus:border-brand-primary outline-none transition-all cursor-pointer shadow-lg appearance-none",
+                "bg-bg-deep border border-white/10 rounded-xl pl-4 pr-8 py-3 text-[11px] font-black text-white uppercase tracking-widest focus:border-brand-primary outline-none transition-all cursor-pointer shadow-lg appearance-none",
                 report.status === FeedbackStatus.NEW && "border-brand-primary shadow-glow",
                 report.status === FeedbackStatus.CLOSED && "border-green-500/40 text-green-500"
               )}
             >
               {Object.values(FeedbackStatus).map(s => <option key={s} value={s}>{s}</option>)}
             </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
               {report.status === FeedbackStatus.CLOSED ? <CheckCircle2 className="h-4 w-4" /> : <div className="w-2 h-2 rounded-full bg-current" />}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onArchive(report.id, !isArchived)}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-2 h-11 px-4 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest whitespace-nowrap",
-                isArchived
-                  ? "bg-slate-800/40 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white"
-                  : "bg-white/5 border-white/10 text-slate-500 hover:bg-brand-primary/10 hover:border-brand-primary/30 hover:text-brand-primary"
-              )}
-              title={isArchived ? "Restore to Active" : "Move to Archive"}
-            >
-              {isArchived ? <><ArchiveRestore className="h-3.5 w-3.5" /> Restore</> : <><Archive className="h-3.5 w-3.5" /> Archive</>}
-            </button>
-            <button
-              onClick={onDeleteReq}
-              className="w-11 h-11 flex items-center justify-center shrink-0 rounded-xl bg-rose-500/5 border border-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
-              title="Permanently Delete"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
+          <button
+            onClick={() => onArchive(report.id, !isArchived)}
+            className={cn(
+              "flex items-center justify-center gap-2 h-11 px-4 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest whitespace-nowrap",
+              isArchived
+                ? "bg-slate-800/40 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white"
+                : "bg-white/5 border-white/10 text-slate-500 hover:bg-brand-primary/10 hover:border-brand-primary/30 hover:text-brand-primary"
+            )}
+            title={isArchived ? "Restore to Active" : "Move to Archive"}
+          >
+            {isArchived ? <><ArchiveRestore className="h-3.5 w-3.5" /> Restore</> : <><Archive className="h-3.5 w-3.5" /> Archive</>}
+          </button>
+          <button
+            onClick={onDeleteReq}
+            className="w-11 h-11 flex items-center justify-center shrink-0 rounded-xl bg-rose-500/5 border border-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+            title="Permanently Delete"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
       </div>
 

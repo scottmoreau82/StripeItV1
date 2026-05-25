@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
 import { Select } from '../ui/Select';
@@ -259,95 +259,6 @@ export const FeedbackReviewPage: React.FC = () => {
   );
 };
 
-interface StatusDropdownProps {
-  value: FeedbackStatus;
-  onChange: (status: FeedbackStatus) => void;
-}
-
-const StatusDropdown: React.FC<StatusDropdownProps> = ({ value, onChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const updatePosition = () => {
-      if (!triggerRef.current) return;
-      const rect = triggerRef.current.getBoundingClientRect();
-      const menuWidth = 200;
-      const left = rect.right - menuWidth < 0 ? rect.left : rect.right - menuWidth;
-      setMenuStyle({
-        position: 'fixed',
-        top: rect.bottom + 4,
-        left,
-        width: menuWidth,
-        zIndex: 9999,
-      });
-    };
-    updatePosition();
-    window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('resize', updatePosition);
-    return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [isOpen]);
-
-  const isNew = value === FeedbackStatus.NEW;
-  const isClosed = value === FeedbackStatus.CLOSED;
-
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        onClick={() => setIsOpen(o => !o)}
-        className={cn(
-          "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-[11px] font-black text-white uppercase tracking-widest transition-all cursor-pointer shadow-lg flex items-center justify-between",
-          isNew && "border-brand-primary shadow-glow",
-          isClosed && "border-green-500/40 text-green-500"
-        )}
-      >
-        <span>{value}</span>
-        {isClosed
-          ? <CheckCircle2 className="h-4 w-4 shrink-0" />
-          : <div className="w-2 h-2 rounded-full bg-current shrink-0" />
-        }
-      </button>
-      {isOpen && (
-        <div
-          style={menuStyle}
-          className="bg-bg-deep border border-white/10 rounded-xl shadow-2xl overflow-hidden"
-        >
-          {Object.values(FeedbackStatus).map(s => (
-            <button
-              key={s}
-              onClick={() => { onChange(s); setIsOpen(false); }}
-              className={cn(
-                "w-full text-left px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-between",
-                s === value ? "text-brand-primary bg-brand-primary/5" : "text-white hover:bg-white/5 hover:text-brand-primary"
-              )}
-            >
-              {s}
-              {s === value && <div className="w-1.5 h-1.5 rounded-full bg-brand-primary shrink-0" />}
-            </button>
-          ))}
-        </div>
-      )}
-    </>
-  );
-};
-
 interface ReportCardProps {
   report: FeedbackReport;
   onStatusChange: (reportId: string, status: FeedbackStatus) => Promise<void> | void;
@@ -361,12 +272,12 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onStatusChange, onArchi
   
   return (
     <Card className={cn(
-      "p-8 bg-bg-card/30 border-white/[0.05] hover:border-brand-primary/20 transition-all flex flex-col gap-8 group relative backdrop-blur-md",
+      "p-8 bg-bg-card/30 border-white/[0.05] hover:border-brand-primary/20 transition-all flex flex-col gap-8 group relative !overflow-visible backdrop-blur-md",
       isArchived && "opacity-80 grayscale-[0.3]"
     )}>
       <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary opacity-0 group-hover:opacity-5 blur-[100px] transition-opacity pointer-events-none rounded-[inherit] overflow-hidden" />
 
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+      <div className="flex flex-col gap-4">
         <div className="flex items-start gap-5">
           <div className={cn(
             "h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
@@ -398,29 +309,39 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onStatusChange, onArchi
           </div>
         </div>
         
-        <div className="flex flex-col gap-3 w-full sm:w-44 shrink-0 min-w-0">
-          <StatusDropdown value={report.status} onChange={(status) => onStatusChange(report.id, status)} />
-
+        <div className="flex flex-col gap-3 w-full">
+          <div className="relative">
+            <select
+              value={report.status}
+              onChange={(e) => onStatusChange(report.id, e.target.value as FeedbackStatus)}
+              className={cn(
+                "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-[11px] font-black text-white uppercase tracking-widest focus:border-brand-primary outline-none transition-all cursor-pointer shadow-lg appearance-none",
+                report.status === FeedbackStatus.NEW && "border-brand-primary shadow-glow",
+                report.status === FeedbackStatus.CLOSED && "border-green-500/40 text-green-500"
+              )}
+            >
+              {Object.values(FeedbackStatus).map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
+              {report.status === FeedbackStatus.CLOSED ? <CheckCircle2 className="h-4 w-4" /> : <div className="w-2 h-2 rounded-full bg-current" />}
+            </div>
+          </div>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={() => onArchive(report.id, !isArchived)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 h-10 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest",
-                isArchived 
-                  ? "bg-slate-800/40 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white" 
+                "flex-1 flex items-center justify-center gap-2 h-11 px-4 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest whitespace-nowrap",
+                isArchived
+                  ? "bg-slate-800/40 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white"
                   : "bg-white/5 border-white/10 text-slate-500 hover:bg-brand-primary/10 hover:border-brand-primary/30 hover:text-brand-primary"
               )}
               title={isArchived ? "Restore to Active" : "Move to Archive"}
             >
-              {isArchived ? (
-                <><ArchiveRestore className="h-3.5 w-3.5" /> Restore</>
-              ) : (
-                <><Archive className="h-3.5 w-3.5" /> Archive</>
-              )}
+              {isArchived ? <><ArchiveRestore className="h-3.5 w-3.5" /> Restore</> : <><Archive className="h-3.5 w-3.5" /> Archive</>}
             </button>
-            <button 
+            <button
               onClick={onDeleteReq}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/5 border border-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-900/10"
+              className="w-11 h-11 flex items-center justify-center shrink-0 rounded-xl bg-rose-500/5 border border-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
               title="Permanently Delete"
             >
               <Trash2 className="h-4 w-4" />

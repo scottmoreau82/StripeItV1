@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
 import { Select } from '../ui/Select';
@@ -259,6 +259,111 @@ export const FeedbackReviewPage: React.FC = () => {
   );
 };
 
+const StatusDropdown: React.FC<{
+  value: FeedbackStatus;
+  onChange: (status: FeedbackStatus) => void;
+}> = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const updatePosition = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      const handleScrollAndResize = () => {
+        updatePosition();
+      };
+      window.addEventListener('scroll', handleScrollAndResize, true);
+      window.addEventListener('resize', handleScrollAndResize, true);
+      return () => {
+        window.removeEventListener('scroll', handleScrollAndResize, true);
+        window.removeEventListener('resize', handleScrollAndResize, true);
+      };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        menuRef.current && !menuRef.current.contains(event.target as Node) &&
+        triggerRef.current && !triggerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-[11px] font-black text-white uppercase tracking-widest shadow-lg flex items-center justify-between text-left transition-all",
+          value === FeedbackStatus.NEW && "border-brand-primary shadow-glow glow-primary/20",
+          value === FeedbackStatus.CLOSED && "border-green-500/40 text-green-500"
+        )}
+      >
+        <span>{value}</span>
+        {value === FeedbackStatus.CLOSED ? (
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+        ) : (
+          <div className="w-2 h-2 rounded-full bg-current shrink-0" />
+        )}
+      </button>
+
+      {isOpen && (
+        <div
+          ref={menuRef}
+          style={{
+            position: 'fixed',
+            top: `${coords.top + 4}px`,
+            left: `${coords.left}px`,
+            width: `${coords.width}px`,
+          }}
+          className="bg-bg-deep border border-white/10 rounded-xl shadow-2xl z-[9999] min-w-[180px] py-1"
+        >
+          {Object.values(FeedbackStatus).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => {
+                onChange(s);
+                setIsOpen(false);
+              }}
+              className="flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-white hover:bg-white/5 hover:text-brand-primary cursor-pointer transition-all text-left"
+            >
+              <span>{s}</span>
+              {value === s && (
+                <div className="w-1.5 h-1.5 rounded-full bg-brand-primary shrink-0" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+};
+
 interface ReportCardProps {
   report: FeedbackReport;
   onStatusChange: (reportId: string, status: FeedbackStatus) => Promise<void> | void;
@@ -272,10 +377,10 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onStatusChange, onArchi
   
   return (
     <Card className={cn(
-      "p-8 bg-bg-card/30 border-white/[0.05] hover:border-brand-primary/20 transition-all flex flex-col gap-8 group relative overflow-hidden backdrop-blur-md",
+      "p-8 bg-bg-card/30 border-white/[0.05] hover:border-brand-primary/20 transition-all flex flex-col gap-8 group relative backdrop-blur-md",
       isArchived && "opacity-80 grayscale-[0.3]"
     )}>
-      <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary opacity-0 group-hover:opacity-5 blur-[100px] transition-opacity pointer-events-none" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary opacity-0 group-hover:opacity-5 blur-[100px] transition-opacity pointer-events-none rounded-[inherit] overflow-hidden" />
 
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
         <div className="flex items-start gap-5">
@@ -310,22 +415,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onStatusChange, onArchi
         </div>
         
         <div className="flex flex-col gap-3 w-full sm:w-48 shrink-0">
-          <div className="relative group/select">
-            <select 
-              value={report.status}
-              onChange={(e) => onStatusChange(report.id, e.target.value as FeedbackStatus)}
-              className={cn(
-                "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-[11px] font-black text-white uppercase tracking-widest focus:border-brand-primary outline-none transition-all cursor-pointer shadow-lg appearance-none",
-                report.status === FeedbackStatus.NEW && "border-brand-primary shadow-glow glow-primary/20",
-                report.status === FeedbackStatus.CLOSED && "border-green-500/40 text-green-500"
-              )}
-            >
-              {Object.values(FeedbackStatus).map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-hover/select:text-brand-primary text-slate-600">
-               {report.status === FeedbackStatus.CLOSED ? <CheckCircle2 className="h-4 w-4" /> : <div className="w-2 h-2 rounded-full bg-current" />}
-            </div>
-          </div>
+          <StatusDropdown value={report.status} onChange={(status) => onStatusChange(report.id, status)} />
 
           <div className="flex items-center gap-2">
             <button 

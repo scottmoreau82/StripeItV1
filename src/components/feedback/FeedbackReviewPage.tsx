@@ -259,103 +259,87 @@ export const FeedbackReviewPage: React.FC = () => {
   );
 };
 
-const StatusDropdown: React.FC<{
+interface StatusDropdownProps {
   value: FeedbackStatus;
   onChange: (status: FeedbackStatus) => void;
-}> = ({ value, onChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+}
 
-  const updatePosition = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom,
-        left: rect.left,
-        width: rect.width
-      });
-    }
-  };
+const StatusDropdown: React.FC<StatusDropdownProps> = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      updatePosition();
-      const handleScrollAndResize = () => {
-        updatePosition();
-      };
-      window.addEventListener('scroll', handleScrollAndResize, true);
-      window.addEventListener('resize', handleScrollAndResize, true);
-      return () => {
-        window.removeEventListener('scroll', handleScrollAndResize, true);
-        window.removeEventListener('resize', handleScrollAndResize, true);
-      };
-    }
+    if (!isOpen) return;
+    const updatePosition = () => {
+      if (!triggerRef.current) return;
+      const rect = triggerRef.current.getBoundingClientRect();
+      const menuWidth = 200;
+      const left = rect.right - menuWidth < 0 ? rect.left : rect.right - menuWidth;
+      setMenuStyle({
+        position: 'fixed',
+        top: rect.bottom + 4,
+        left,
+        width: menuWidth,
+        zIndex: 9999,
+      });
+    };
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [isOpen]);
 
   useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (
-        menuRef.current && !menuRef.current.contains(event.target as Node) &&
-        triggerRef.current && !triggerRef.current.contains(event.target as Node)
-      ) {
+    if (!isOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, [isOpen]);
+
+  const isNew = value === FeedbackStatus.NEW;
+  const isClosed = value === FeedbackStatus.CLOSED;
 
   return (
     <>
       <button
         ref={triggerRef}
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(o => !o)}
         className={cn(
-          "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-[11px] font-black text-white uppercase tracking-widest shadow-lg flex items-center justify-between text-left transition-all",
-          value === FeedbackStatus.NEW && "border-brand-primary shadow-glow glow-primary/20",
-          value === FeedbackStatus.CLOSED && "border-green-500/40 text-green-500"
+          "w-full bg-bg-deep border border-white/10 rounded-xl px-4 py-3 text-[11px] font-black text-white uppercase tracking-widest transition-all cursor-pointer shadow-lg flex items-center justify-between",
+          isNew && "border-brand-primary shadow-glow",
+          isClosed && "border-green-500/40 text-green-500"
         )}
       >
         <span>{value}</span>
-        {value === FeedbackStatus.CLOSED ? (
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-        ) : (
-          <div className="w-2 h-2 rounded-full bg-current shrink-0" />
-        )}
+        {isClosed
+          ? <CheckCircle2 className="h-4 w-4 shrink-0" />
+          : <div className="w-2 h-2 rounded-full bg-current shrink-0" />
+        }
       </button>
-
       {isOpen && (
         <div
-          ref={menuRef}
-          style={{
-            position: 'fixed',
-            top: `${coords.top + 4}px`,
-            left: `${coords.left}px`,
-            width: `${coords.width}px`,
-          }}
-          className="bg-bg-deep border border-white/10 rounded-xl shadow-2xl z-[9999] min-w-[180px] py-1"
+          style={menuStyle}
+          className="bg-bg-deep border border-white/10 rounded-xl shadow-2xl overflow-hidden"
         >
-          {Object.values(FeedbackStatus).map((s) => (
+          {Object.values(FeedbackStatus).map(s => (
             <button
               key={s}
-              type="button"
-              onClick={() => {
-                onChange(s);
-                setIsOpen(false);
-              }}
-              className="flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-white hover:bg-white/5 hover:text-brand-primary cursor-pointer transition-all text-left"
-            >
-              <span>{s}</span>
-              {value === s && (
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-primary shrink-0" />
+              onClick={() => { onChange(s); setIsOpen(false); }}
+              className={cn(
+                "w-full text-left px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-between",
+                s === value ? "text-brand-primary bg-brand-primary/5" : "text-white hover:bg-white/5 hover:text-brand-primary"
               )}
+            >
+              {s}
+              {s === value && <div className="w-1.5 h-1.5 rounded-full bg-brand-primary shrink-0" />}
             </button>
           ))}
         </div>
@@ -414,7 +398,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, onStatusChange, onArchi
           </div>
         </div>
         
-        <div className="flex flex-col gap-3 w-full sm:w-48 shrink-0">
+        <div className="flex flex-col gap-3 w-full sm:w-44 shrink-0 min-w-0">
           <StatusDropdown value={report.status} onChange={(status) => onStatusChange(report.id, status)} />
 
           <div className="flex items-center gap-2">

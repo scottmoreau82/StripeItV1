@@ -8,7 +8,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { Button } from '../ui/Button';
 import { ComingSoonIndicator } from '../ui/ComingSoonIndicator';
 import { Modal } from '../ui/Modal';
-import { Lock, Zap, CheckCircle2, ArrowUpRight, Star, Sparkles } from 'lucide-react';
+import { Lock, Zap, CheckCircle2, ArrowUpRight, Star, Sparkles, Crown } from 'lucide-react';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { navigationConfig } from './NavigationItems';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
@@ -258,35 +258,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             )}
             
-            <button 
-              className="flex-1 rounded-lg bg-white/5 border border-white/10 text-slate-500 hover:bg-white/10 transition-all flex items-center justify-center gap-2 group p-1 cursor-not-allowed opacity-60"
-              title="Reserved Slot"
-              disabled
-            >
-              <AppIcon name="target" size={14} className="group-hover:scale-110 transition-transform" />
-              <span className="text-[9px] font-black uppercase tracking-widest">---</span>
-            </button>
+            {profile?.subscriptionTier === SubscriptionTier.FREE ? (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'))}
+                className="flex-1 rounded-lg bg-[#AAFF00]/10 border border-[#AAFF00]/30 text-[#AAFF00] hover:bg-[#AAFF00]/20 transition-all flex items-center justify-center gap-2 group p-1"
+                title="Upgrade to Pro"
+              >
+                <Crown size={14} className="group-hover:scale-110 transition-transform shrink-0" />
+                <span className="text-[9px] font-black uppercase tracking-widest">Pro</span>
+              </button>
+            ) : (
+              <div className="flex-1" />
+            )}
           </div>
         )}
 
         {isCollapsed && (
-          profile?.subscriptionTier === SubscriptionTier.FREE ? (
-            <button 
-              onClick={() => setIsSpiffModalOpen(true)}
-              className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 text-slate-600 flex items-center justify-center mx-auto hover:border-brand-primary/30 hover:text-brand-primary transition-all"
-              title="SPIFF - Basic+ Exclusive"
-            >
-              <AppIcon name="lock" size={18} />
-            </button>
-          ) : (
-            <button 
-              onClick={onLogSpiff}
-              className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto hover:bg-emerald-500/20 transition-all"
-              title="Log SPIFF Adjustment"
-            >
-              <AppIcon name="billing" size={18} />
-            </button>
-          )
+          <>
+            {profile?.subscriptionTier === SubscriptionTier.FREE ? (
+              <button 
+                onClick={() => setIsSpiffModalOpen(true)}
+                className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 text-slate-600 flex items-center justify-center mx-auto hover:border-brand-primary/30 hover:text-brand-primary transition-all"
+                title="SPIFF - Basic+ Exclusive"
+              >
+                <AppIcon name="lock" size={18} />
+              </button>
+            ) : (
+              <button 
+                onClick={onLogSpiff}
+                className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto hover:bg-emerald-500/20 transition-all"
+                title="Log SPIFF Adjustment"
+              >
+                <AppIcon name="billing" size={18} />
+              </button>
+            )}
+            
+            {profile?.subscriptionTier === SubscriptionTier.FREE && (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'))}
+                className="h-10 w-10 rounded-xl bg-[#AAFF00]/10 border border-[#AAFF00]/30 text-[#AAFF00] flex items-center justify-center mx-auto hover:bg-[#AAFF00]/20 transition-all shadow-[0_0_15px_-3px_rgba(170,255,0,0.4)]"
+                title="Upgrade to Pro"
+              >
+                <Crown size={18} />
+              </button>
+            )}
+          </>
         )}
       </div>
 

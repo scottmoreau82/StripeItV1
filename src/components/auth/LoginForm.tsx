@@ -147,28 +147,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
             </div>
           )}
 
-          {mode === 'signup' && (
-            <div className="absolute top-0 right-0 p-1">
-              <div className={cn(
-                "px-3 py-1 rounded-full flex items-center gap-1.5 border",
-                inviteRole 
-                  ? "bg-brand-primary/10 border-brand-primary/30" 
-                  : "bg-brand-primary/10 border-brand-primary/20"
-              )}>
-                {inviteRole ? (
-                  <>
-                    <ShieldCheck className="h-3 w-3 text-brand-primary" />
-                    <Typography variant="mono" className="text-[10px] text-brand-primary uppercase font-bold">Manager Onboarding</Typography>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-3 w-3 text-brand-primary" />
-                    <Typography variant="mono" className="text-[10px] text-brand-primary uppercase font-bold">Free Tier Beta</Typography>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+
 
           <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-6">
             {mode === 'signup' && (

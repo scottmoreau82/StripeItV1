@@ -25,6 +25,7 @@ import { cn } from './lib/utils';
 import { DealForm } from './components/forms/DealForm';
 import { dealService } from './services/dealService';
 import { StripeItCommissionSetupModal } from './components/commission/StripeItCommissionSetupModal';
+import { PayPlanWizard } from './components/commission/PayPlanWizard';
 import { payPlanService } from './services/payPlanService';
 import { goalService } from './services/goalService';
 import { Deal, DealStatus, Goal, PayPlan, UserRole, QuickNote, Competition, MonthlySpiff } from './types';
@@ -78,6 +79,7 @@ function MainAppFlow() {
   const [isNewDealOpen, setIsNewDealOpen] = useState(false);
   const [isNewSpiffOpen, setIsNewSpiffOpen] = useState(false);
   const [isPayPlanOpen, setIsPayPlanOpen] = useState(false);
+  const [isCommissionArchitectOpen, setIsCommissionArchitectOpen] = useState(false);
   const [isQuickNoteOpen, setIsQuickNoteOpen] = useState(false);
   const [isCompetitionOpen, setIsCompetitionOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -175,6 +177,11 @@ function MainAppFlow() {
     };
     window.addEventListener('stripeit:open-upgrade', handleUpgradeEvent);
 
+    const handleOpenArchitect = () => {
+      setIsCommissionArchitectOpen(true);
+    };
+    window.addEventListener('stripeit:open-commission-architect', handleOpenArchitect);
+
     return () => {
       window.removeEventListener('stripeit:create-random-deal', handleRandomDealEvent);
       window.removeEventListener('stripeit:edit-spiff', handleEditSpiffEvent);
@@ -182,6 +189,7 @@ function MainAppFlow() {
       window.removeEventListener('stripeit:drawer-toggle', handleDrawer);
       window.removeEventListener('stripeit:open-waitlist', handleOpenWaitlistEvent);
       window.removeEventListener('stripeit:open-upgrade', handleUpgradeEvent);
+      window.removeEventListener('stripeit:open-commission-architect', handleOpenArchitect);
     };
   }, [handleCreateRandomDeal]);
 
@@ -634,9 +642,17 @@ function MainAppFlow() {
       )}
 
       {/* Pay Plan Setup Modal */}
-      <StripeItCommissionSetupModal
+      <PayPlanWizard
         isOpen={isPayPlanOpen}
         onClose={() => setIsPayPlanOpen(false)}
+        initialData={payPlan}
+        onSubmit={onSavePayPlan}
+        isLoading={isSubmitting}
+      />
+
+      <StripeItCommissionSetupModal
+        isOpen={isCommissionArchitectOpen}
+        onClose={() => setIsCommissionArchitectOpen(false)}
         initialData={payPlan}
         onSubmit={onSavePayPlan}
         isLoading={isSubmitting}

@@ -559,7 +559,8 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (!payPlan) return false;
     const hasStandardTiers = payPlan.tiers && payPlan.tiers.length > 0;
     const hasMiniTiers = payPlan.isMinisActive && payPlan.miniTiers && payPlan.miniTiers.some(t => t.active);
-    return hasStandardTiers || hasMiniTiers;
+    const hasBasicRates = (payPlan.frontEndPercentage > 0) || (payPlan.backEndPercentage > 0);
+    return hasStandardTiers || hasMiniTiers || hasBasicRates;
   }, [payPlan]);
 
   const value = React.useMemo(() => ({

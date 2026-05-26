@@ -357,7 +357,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       )}
       {!isMobile && (
         <button 
-          onClick={onConfigPayPlan}
+          onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-commission-architect'))}
           className="h-11 px-6 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 shadow-glow glow-primary/5 flex items-center gap-2 text-[10px] uppercase font-black tracking-widest"
           title="Est. Payout Engine"
           aria-label="Est. Payout Engine"
@@ -1068,7 +1068,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       {isMobile && (
         <div className="pt-2 pb-4">
           <button
-            onClick={onConfigPayPlan}
+            onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-commission-architect'))}
             className="w-full h-12 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-[10px] uppercase font-black tracking-widest"
             title="Est. Payout Engine"
           >

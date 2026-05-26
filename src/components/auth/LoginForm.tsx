@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, mapAuthError } from '@/src/lib/firebase';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { analyticsService } from '@/src/services/analyticsService';
@@ -32,6 +32,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
   const [loading, setLoading] = useState(false);
   const [inviteRole, setInviteRole] = useState<UserRole | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   
   const { addToast, connectionError } = useAuth();
 
@@ -74,9 +76,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
       if (mode === 'signin') {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
+        if (!displayName.trim()) {
+          setError('Please enter your name.');
+          setLoading(false);
+          return;
+        }
+        if (confirmPassword !== password) {
+          setError('Passwords do not match.');
+          setLoading(false);
+          return;
+        }
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         // StripeItVerificationSystem - Send welcome verification
         if (userCredential.user) {
+          await updateProfile(userCredential.user, { displayName: displayName.trim() });
           const { sendEmailVerification } = await import('firebase/auth');
           await sendEmailVerification(userCredential.user);
           addToast('Verification email sent! Please check your inbox.', 'success');
@@ -96,6 +109,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
     }
     setMode(newMode);
     setError('');
+    setDisplayName('');
+    setConfirmPassword('');
   };
 
   return (
@@ -156,6 +171,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
           )}
 
           <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-6">
+            {mode === 'signup' && (
+              <Input
+                label="Your Name"
+                type="text"
+                placeholder="First Last"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                className="bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
+                disabled={loading}
+              />
+            )}
+
             <Input
               label="Email Address"
               type="email"
@@ -192,6 +220,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
                   </button>
                 </div>
               </div>
+            )}
+
+            {!showForgotPassword && mode === 'signup' && (
+              <Input
+                label="Confirm Password"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
+                disabled={loading}
+              />
             )}
             
             {mode === 'signin' && (

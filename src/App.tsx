@@ -16,6 +16,7 @@ import { Card, CardHeader, CardContent } from './components/ui/Card';
 import { Button } from './components/ui/Button';
 import { Input } from './components/ui/Input';
 import { Modal } from './components/ui/Modal';
+import { UpgradeModal } from './components/ui/UpgradeModal';
 import { FullscreenMobileFlow } from './components/layout/MobileFullscreenFlow';
 import { Plus, TrendingUp, Users, DollarSign, Car, ArrowUpRight, CheckCircle2, Calculator, Target, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -253,7 +254,6 @@ function MainAppFlow() {
   };
 
   const onUpgradeClick = () => {
-    setLimitMessage("Unlock premium sales intelligence and advanced tracking features.");
     setIsUpgradeOpen(true);
   };
 
@@ -637,19 +637,11 @@ function MainAppFlow() {
       />
 
       {/* Upgrade Modal */}
-      <Modal
+      <UpgradeModal
         isOpen={isUpgradeOpen}
         onClose={() => setIsUpgradeOpen(false)}
-        title="Upgrade Your Plan"
-        className="z-[60]"
-      >
-        <UpgradePrompt 
-          title="Unlimited Deal Logging"
-          description={limitMessage}
-          tierRequired="Pro"
-          onUpgrade={handleUpgradeClick}
-        />
-      </Modal>
+        mode={profile?.subscriptionTier === SubscriptionTier.PRO ? 'manage' : 'upgrade'}
+      />
 
       {/* Waitlist Modal */}
       <WaitlistModal

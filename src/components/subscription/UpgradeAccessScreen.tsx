@@ -142,7 +142,7 @@ export const UpgradeAccessScreen: React.FC<UpgradeAccessScreenProps> = ({
               </Typography>
             ) : (
               <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                Starting from $29/mo
+                Starting from $9.95/mo
               </Typography>
             )}
           </div>

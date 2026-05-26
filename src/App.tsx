@@ -170,12 +170,18 @@ function MainAppFlow() {
     };
     window.addEventListener('stripeit:open-waitlist', handleOpenWaitlistEvent);
 
+    const handleUpgradeEvent = () => {
+      setIsUpgradeOpen(true);
+    };
+    window.addEventListener('stripeit:open-upgrade', handleUpgradeEvent);
+
     return () => {
       window.removeEventListener('stripeit:create-random-deal', handleRandomDealEvent);
       window.removeEventListener('stripeit:edit-spiff', handleEditSpiffEvent);
       window.removeEventListener('stripeit:open-feedback', handleFeedbackEvent);
       window.removeEventListener('stripeit:drawer-toggle', handleDrawer);
       window.removeEventListener('stripeit:open-waitlist', handleOpenWaitlistEvent);
+      window.removeEventListener('stripeit:open-upgrade', handleUpgradeEvent);
     };
   }, [handleCreateRandomDeal]);
 

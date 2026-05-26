@@ -994,7 +994,7 @@ const AccountPanel = ({ profile: propProfile, isMobile }: { profile: UserProfile
           </div>
           <Button
             variant="outline"
-            onClick={handleManage}
+            onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'))}
             disabled={isUpgrading}
             className={cn("font-black uppercase tracking-widest disabled:opacity-50", isMobile ? "text-[8px] px-3 h-8" : "text-[10px] px-6 h-10")}
           >

@@ -108,15 +108,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   const [isUpgrading, setIsUpgrading] = useState(false);
 
-  const handleUpgrade = async () => {
-    if (!profile?.uid || !profile?.email) return;
-    setIsUpgrading(true);
-    try {
-      await stripeService.createCheckoutSession(profile.uid, profile.email);
-    } catch (err) {
-      console.error('Upgrade error:', err);
-      setIsUpgrading(false);
-    }
+  const handleUpgrade = () => {
+    window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'));
   };
 
   useEffect(() => {
@@ -471,7 +464,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
           </div>
           <button
             onClick={() => window.dispatchEvent(
-              new CustomEvent('stripeit:open-waitlist')
+              new CustomEvent('stripeit:open-upgrade')
             )}
             className="h-9 px-4 bg-amber-500/20 border border-amber-500/30 text-amber-400 font-black uppercase text-[10px] tracking-widest rounded-xl shrink-0 hover:bg-amber-500/30 transition-all"
           >

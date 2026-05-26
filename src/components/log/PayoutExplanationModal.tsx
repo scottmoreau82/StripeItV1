@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CommissionResult } from '@/src/lib/commissionLogic';
 import { Modal } from '../ui/Modal';
 import { Typography } from '../ui/Typography';
@@ -6,19 +6,29 @@ import { AppIcon } from '../ui/AppIcon';
 import { cn } from '@/src/lib/utils';
 import { Badge } from '../ui/Badge';
 import { Card } from '../ui/Card';
+import { Button } from '../ui/Button';
+import { Deal, DealStatus } from '@/src/types';
+import { Edit3, Trash2, Car, Tag } from 'lucide-react';
+import { formatDateSafe } from '@/src/lib/utils';
 
 interface PayoutExplanationModalProps {
   isOpen: boolean;
   onClose: () => void;
   commission: CommissionResult | null;
   customerName: string;
+  deal?: Deal;
+  onEdit?: (deal: Deal) => void;
+  onDelete?: (deal: Deal) => void;
 }
 
 export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
   isOpen,
   onClose,
   commission,
-  customerName
+  customerName,
+  deal,
+  onEdit,
+  onDelete
 }) => {
   if (!commission || !commission.explanation) return null;
 
@@ -27,6 +37,21 @@ export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
   const formatCurrency = (amt: number) => 
     `$${amt.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!onDelete || !deal) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(deal);
+      setConfirmDelete(false);
+      onClose();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -34,6 +59,38 @@ export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
       title="Payout Explanation"
     >
       <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+        {deal && (
+          <Card className="p-4 bg-white/[0.02] border-white/5">
+            <div className="flex items-center gap-2 mb-3 text-slate-500">
+              <Car size={14} />
+              <Typography variant="mono" className="text-[10px] uppercase tracking-wider">Vehicle Details</Typography>
+            </div>
+            <div className="space-y-2">
+              <Typography variant="p" className="text-white">{deal.purchasedVehicle}</Typography>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Typography variant="small" className="text-slate-500 block">Condition</Typography>
+                  <Typography variant="p" className="text-white capitalize">{deal.newOrUsed}</Typography>
+                </div>
+                <div>
+                  <Typography variant="small" className="text-slate-500 block">Deal #</Typography>
+                  <Typography variant="p" className="text-white">{deal.dealNumber || 'N/A'}</Typography>
+                </div>
+                <div>
+                  <Typography variant="small" className="text-slate-500 block">STK #</Typography>
+                  <Typography variant="p" className="text-white">{deal.stockNumber || '---'}</Typography>
+                </div>
+              </div>
+              {deal.tradedVehicle && (
+                <div className="pt-2 border-t border-white/5 flex items-center gap-2">
+                  <Tag size={12} className="text-slate-500" />
+                  <Typography variant="small" className="text-slate-400">Trade: {deal.tradedVehicle}</Typography>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
         {/* Deal Header */}
         <div className="flex items-center justify-between p-4 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-2xl">
           <div>
@@ -239,6 +296,63 @@ export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
               Calculated using standard StripeIt payout engine
             </Typography>
           </section>
+
+          {deal && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4 bg-slate-950 border-white/5">
+                  <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-600 mb-3 block">Salesperson Notes</Typography>
+                  <Typography variant="p" className="text-slate-400 text-sm italic">
+                    {deal.notes || "No notes provided."}
+                  </Typography>
+                </Card>
+                <Card className="p-4 bg-white/[0.01] border-white/5">
+                  <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-600 mb-3 block">Timeline</Typography>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Typography variant="small" className="text-slate-500">Created</Typography>
+                      <Typography variant="mono" className="text-[9px] text-slate-400">{formatDateSafe(deal.createdAt, "Pp")}</Typography>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Typography variant="small" className="text-slate-500">Last Updated</Typography>
+                      <Typography variant="mono" className="text-[9px] text-slate-400">{formatDateSafe(deal.updatedAt, "Pp")}</Typography>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {!confirmDelete ? (
+                <div className="flex gap-4 pt-4 border-t border-white/5">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-2xl border-white/10"
+                    onClick={() => onEdit?.(deal)}
+                  >
+                    <Edit3 className="mr-2 h-4 w-4" />
+                    Edit Deal
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-2xl border-rose-500/20 text-rose-500 hover:bg-rose-500/5"
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
+                  <Typography variant="p" className="text-slate-400 text-sm">
+                    Permanently delete deal for <span className="text-white font-black">{deal.customerName}</span>? This cannot be undone.
+                  </Typography>
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="flex-1 rounded-2xl border-white/5" onClick={() => setConfirmDelete(false)} disabled={isDeleting}>Cancel</Button>
+                    <Button className="flex-1 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black uppercase tracking-widest" onClick={handleDelete} isLoading={isDeleting}>Confirm Delete</Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
         </div>
       </div>

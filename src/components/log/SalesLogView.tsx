@@ -3,9 +3,7 @@ import { Deal, DealStatus, PayPlan, UserProfile, SubscriptionTier, MonthlySpiff 
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
 import { DealSearch } from './DealSearch';
-import { DealDetailView } from './DealDetailView';
 import { Modal } from '../ui/Modal';
-import { FullscreenMobileFlow } from '../layout/MobileFullscreenFlow';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppIcon } from '../ui/AppIcon';
 import { PageHeader } from '../ui/PageHeader';
@@ -96,7 +94,6 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [selectedSpiff, setSelectedSpiff] = useState<MonthlySpiff | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
 
@@ -157,13 +154,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   }, [currentCount, isFreeUser, addToast]);
 
   // Explanation Modal State
-  const [explanationData, setExplanationData] = useState<{ commission: CommissionResult, customerName: string } | null>(null);
+  const [explanationData, setExplanationData] = useState<{ commission: CommissionResult, customerName: string, deal: Deal } | null>(null);
 
-  // Sync selected deal if deals list updates (e.g. status change)
-  const currentSelectedDeal = useMemo(() => {
-    if (!selectedDeal) return null;
-    return deals.find(d => d.id === selectedDeal.id) || selectedDeal;
-  }, [deals, selectedDeal]);
+
 
   const handleQuickDeal = async () => {
     const quickDeal = {
@@ -329,10 +322,14 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   const handleDealInteraction = (deal: Deal) => {
     if (expandedId === deal.id) {
-      // Second tap on expanded deal: open fullscreen
-      setSelectedDeal(deal);
+      const m = getCalendarMonth(deal.date);
+      const y = getCalendarYear(deal.date);
+      const monthlyDealsForCalc = deals.filter(d => getCalendarMonth(d.date) === m && getCalendarYear(d.date) === y);
+      const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDealsForCalc) : null;
+      if (commission) {
+        setExplanationData({ commission, customerName: deal.customerName, deal });
+      }
     } else {
-      // First tap or tap on another deal: expand inline
       setExpandedId(deal.id);
     }
   };
@@ -592,8 +589,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.02 }}
                           onClick={() => {
-                            if (!isBlurred) {
-                              setSelectedDeal(deal);
+                            if (commission) {
+                              setExplanationData({ commission, customerName: deal.customerName, deal });
                             }
                           }}
                           className={cn(
@@ -668,21 +665,6 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                   <Typography variant="label" className="text-emerald-400 font-black text-sm">
                                     ${commission?.finalPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) || '0'}
                                   </Typography>
-                                  {commission?.explanation && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setExplanationData({ commission, customerName: deal.customerName });
-                                      }}
-                                      className="p-1 px-1.5 rounded border border-emerald-400/20 bg-emerald-400/5 text-emerald-400 hover:bg-emerald-400/20 hover:border-emerald-400/40 transition-all active:scale-90 shadow-sm shadow-emerald-500/5"
-                                      title="View Calculation Breakdown"
-                                    >
-                                      <div className="flex items-center gap-1">
-                                        <AppIcon name="eye" size={10} />
-                                        <span className="text-[8px] font-black uppercase tracking-tighter">View</span>
-                                      </div>
-                                    </button>
-                                  )}
                                 </div>
                                 {commission && (
                                   <Typography variant="mono" className="text-[8px] text-slate-600 font-black uppercase">
@@ -870,7 +852,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                    <button
                                      onClick={(e) => {
                                        e.stopPropagation();
-                                       setExplanationData({ commission, customerName: deal.customerName });
+                                       setExplanationData({ commission, customerName: deal.customerName, deal });
                                      }}
                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 text-[10px] font-black uppercase tracking-widest"
                                    >
@@ -1078,54 +1060,14 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         </div>
       )}
 
-      {/* Deal Detail Modal/Flow */}
-      <AnimatePresence>
-        {currentSelectedDeal && (
-          isMobile ? (
-            <FullscreenMobileFlow
-              isOpen={!!currentSelectedDeal}
-              onClose={() => setSelectedDeal(null)}
-              title="Deal Details"
-            >
-              <DealDetailView 
-                deal={currentSelectedDeal}
-                payPlan={payPlan}
-                onClose={() => setSelectedDeal(null)}
-                onEdit={onEdit}
-                onDelete={async (deal) => {
-                  await handleDeleteDeal?.(deal.id);
-                  setSelectedDeal(null);
-                }}
-                onStatusChange={(deal, status) => handleUpdateDealStatus(deal.id, status)}
-              />
-            </FullscreenMobileFlow>
-          ) : (
-            <Modal
-              isOpen={!!currentSelectedDeal}
-              onClose={() => setSelectedDeal(null)}
-              title="Deal Record"
-            >
-              <DealDetailView 
-                deal={currentSelectedDeal}
-                payPlan={payPlan}
-                onClose={() => setSelectedDeal(null)}
-                onEdit={onEdit}
-                onDelete={async (deal) => {
-                  await handleDeleteDeal?.(deal.id);
-                  setSelectedDeal(null);
-                }}
-                onStatusChange={(deal, status) => handleUpdateDealStatus(deal.id, status)}
-              />
-            </Modal>
-          )
-        )}
-      </AnimatePresence>
-
       <PayoutExplanationModal
         isOpen={!!explanationData}
         onClose={() => setExplanationData(null)}
         commission={explanationData?.commission || null}
         customerName={explanationData?.customerName || ''}
+        deal={explanationData?.deal}
+        onEdit={(deal) => { setExplanationData(null); onEdit?.(deal); }}
+        onDelete={async (deal) => { await handleDeleteDeal?.(deal.id); setExplanationData(null); }}
       />
     </div>
   );

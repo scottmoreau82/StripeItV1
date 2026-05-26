@@ -16,7 +16,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ isLoading, messa
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#06090F]/80 backdrop-blur-sm px-6 text-center"
+          className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#06090F]/80 backdrop-blur-sm px-6 text-center pointer-events-none"
         >
           <div className="relative flex flex-col items-center">
             <div className="relative h-16 w-16 mb-8 group">

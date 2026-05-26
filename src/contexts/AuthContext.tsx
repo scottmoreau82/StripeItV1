@@ -76,14 +76,14 @@ export const useAuth = () => useContext(AuthContext);
  */
 const ToastContainer: React.FC<{ toasts: Toast[], removeToast: (id: string) => void }> = ({ toasts, removeToast }) => {
   return (
-    <div className="fixed top-24 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 pointer-events-none items-center">
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <motion.div
             key={toast.id}
-            initial={{ opacity: 0, x: 20, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 20, scale: 0.9 }}
+            initial={{ opacity: 0, y: -16, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.9 }}
             className={`
               pointer-events-auto flex items-center gap-3 min-w-[300px] max-w-md p-4 rounded-2xl 
               border shadow-2xl backdrop-blur-xl

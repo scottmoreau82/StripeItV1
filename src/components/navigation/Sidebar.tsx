@@ -86,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           key={item.id}
           onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-feedback'))}
           title={isCollapsed ? item.label : undefined}
-          className="w-full py-3.5 hover:bg-white/[0.02] transition-all"
+          className="w-full py-3.5 hover:bg-bg-elevated/50 transition-all"
         >
           {content}
         </button>
@@ -100,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           title={isCollapsed ? item.label : undefined}
           className={cn(
             "block w-full py-3.5 transition-all text-left",
-            isActive ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
+            isActive ? "bg-bg-elevated" : "hover:bg-bg-elevated/50"
           )}
         >
           {content}
@@ -182,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 title={isCollapsed ? "MAGIC" : undefined}
                 className={cn(
                   "flex items-center w-full py-3.5 transition-all group relative text-left",
-                  location.pathname === '/deal-desk' ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"
+                  location.pathname === '/deal-desk' ? "bg-bg-elevated" : "hover:bg-bg-elevated/50"
                 )}
               >
                 <div className="w-16 shrink-0 flex items-center justify-center relative">
@@ -241,7 +241,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {profile?.subscriptionTier === SubscriptionTier.FREE ? (
               <button 
                 onClick={() => setIsSpiffModalOpen(true)}
-                className="flex-1 rounded-lg bg-white/[0.03] border border-white/10 text-slate-500 hover:bg-white/5 hover:border-brand-primary/30 transition-all flex items-center justify-center gap-2 group p-1"
+                className="flex-1 rounded-lg bg-bg-elevated border border-border-subtle text-text-muted hover:bg-bg-elevated hover:border-brand-primary/30 transition-all flex items-center justify-center gap-2 group p-1"
                 title="SPIFF - Basic+ Exclusive"
               >
                 <AppIcon name="lock" size={14} className="text-slate-400 transition-colors group-hover:text-brand-primary" />
@@ -261,7 +261,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {profile?.subscriptionTier === SubscriptionTier.FREE ? (
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'))}
-                className="flex-1 rounded-lg bg-[#AAFF00]/10 border border-[#AAFF00]/30 text-[#AAFF00] hover:bg-[#AAFF00]/20 transition-all flex items-center justify-center gap-2 group p-1"
+                className="flex-1 rounded-lg bg-[#AAFF00]/15 border border-[#AAFF00]/60 text-[#5C8A00] hover:bg-[#AAFF00]/25 transition-all flex items-center justify-center gap-2 group p-1 [html[data-theme='light']_&]:bg-[#AAFF00]/20 [html[data-theme='light']_&]:border-[#5C8A00]/60 [html[data-theme='light']_&]:text-[#3D5C00]"
                 title="Upgrade to Pro"
               >
                 <Crown size={14} className="group-hover:scale-110 transition-transform shrink-0" />
@@ -278,7 +278,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {profile?.subscriptionTier === SubscriptionTier.FREE ? (
               <button 
                 onClick={() => setIsSpiffModalOpen(true)}
-                className="h-10 w-10 rounded-xl bg-white/[0.03] border border-white/10 text-slate-600 flex items-center justify-center mx-auto hover:border-brand-primary/30 hover:text-brand-primary transition-all"
+                className="h-10 w-10 rounded-xl bg-bg-elevated border border-border-subtle text-text-muted flex items-center justify-center mx-auto hover:border-brand-primary/30 hover:text-brand-primary transition-all"
                 title="SPIFF - Basic+ Exclusive"
               >
                 <AppIcon name="lock" size={18} />
@@ -296,7 +296,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {profile?.subscriptionTier === SubscriptionTier.FREE && (
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'))}
-                className="h-10 w-10 rounded-xl bg-[#AAFF00]/10 border border-[#AAFF00]/30 text-[#AAFF00] flex items-center justify-center mx-auto hover:bg-[#AAFF00]/20 transition-all shadow-[0_0_15px_-3px_rgba(170,255,0,0.4)]"
+                className="h-10 w-10 rounded-xl bg-[#AAFF00]/15 border border-[#AAFF00]/60 text-[#5C8A00] flex items-center justify-center mx-auto hover:bg-[#AAFF00]/25 transition-all [html[data-theme='light']_&]:border-[#5C8A00]/60 [html[data-theme='light']_&]:text-[#3D5C00] shadow-[0_0_15px_-3px_rgba(170,255,0,0.4)]"
                 title="Upgrade to Pro"
               >
                 <Crown size={18} />
@@ -323,7 +323,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="absolute -right-6 -bottom-6 h-20 w-20 bg-brand-primary/5 rounded-full blur-2xl group-hover/user:bg-brand-primary/10 transition-all" />
             
             <div className="flex items-center gap-3 relative z-10">
-              <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/10 text-white font-bold uppercase overflow-hidden shrink-0 shadow-lg transition-transform group-hover/user:scale-105">
+              <div className="h-10 w-10 rounded-full bg-bg-elevated flex items-center justify-center border border-border-subtle text-text-primary font-bold uppercase overflow-hidden shrink-0 shadow-lg transition-transform group-hover/user:scale-105">
                 {profile?.photoURL ? (
                   <img src={profile.photoURL} alt="" className="h-full w-full object-cover" />
                 ) : (

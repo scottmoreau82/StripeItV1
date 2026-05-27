@@ -5,6 +5,8 @@ import { Typography } from '../ui/Typography';
 import { AppIcon } from '../ui/AppIcon';
 import { motion } from 'motion/react';
 import { EmptyState } from '../ui/EmptyState';
+import { Card } from '../ui/Card';
+import { cn } from '@/src/lib/utils';
 
 /**
  * StripeItRecentDealsSystem
@@ -55,13 +57,14 @@ export const RecentDealsList: React.FC<RecentDealsListProps> = ({
         </button>
       </div>
 
-      <div className="space-y-3">
+      <Card className="bg-bg-card border-border-subtle overflow-hidden p-0">
         {deals.map((deal, index) => (
           <motion.div
             key={deal.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
+            className={cn(index < deals.length - 1 ? "border-b border-border-subtle" : "")}
           >
             <DealSummaryCard 
               deal={deal} 
@@ -70,7 +73,7 @@ export const RecentDealsList: React.FC<RecentDealsListProps> = ({
             />
           </motion.div>
         ))}
-      </div>
+      </Card>
     </div>
   );
 };

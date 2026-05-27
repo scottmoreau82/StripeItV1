@@ -132,13 +132,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       <Card 
         onClick={onUnlock}
         className={cn(
-          "bg-bg-card border-white/[0.03] hover:border-purple-500/30 transition-all group relative overflow-hidden flex flex-col justify-center",
+          "bg-bg-card border-border-subtle hover:border-purple-500/30 transition-all group relative overflow-hidden flex flex-col justify-center",
           onUnlock && "cursor-pointer hover:shadow-purple-glow active:scale-[0.98]",
           isTelemetry ? "p-3 min-h-[75px]" : isHorizontal ? "p-3.5 min-h-[90px]" : "p-4 min-h-[140px]"
         )}
       >
         {/* Cinematic Locked Decor */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.08)_0%,transparent_70%)] opacity-0 dark:opacity-70 dark:group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.08)_0%,transparent_70%)] opacity-0 group-hover:opacity-70 transition-opacity [html[data-theme='light']_&]:hidden" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100%_3px] pointer-events-none opacity-20" />
         
         <div className="relative z-10 flex items-center justify-between gap-4 px-2">
@@ -152,7 +152,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           </div>
           
           <div className={cn(
-            "rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-slate-600 group-hover:text-purple-500 transition-colors shadow-inner",
+            "rounded-full bg-bg-card border border-white/5 flex items-center justify-center text-slate-600 group-hover:text-purple-500 transition-colors shadow-inner",
             isTelemetry ? "h-7 w-7" : "h-9 w-9"
           )}>
             <Lock className={isTelemetry ? "h-3.5 w-3.5" : "h-4.5 w-4.5"} />
@@ -170,7 +170,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       <Card 
         onClick={onClick}
         className={cn(
-          "bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden p-3.5 min-h-[95px]",
+          "bg-gradient-to-br from-white/[0.03] to-transparent border-border-subtle hover:border-white/20 transition-all group relative overflow-hidden p-3.5 min-h-[95px]",
           onClick && "cursor-pointer hover:border-white/20 transition-all"
         )}
       >
@@ -186,7 +186,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           </div>
           
           <div className="flex-1 flex flex-col justify-center min-w-0">
-            <Typography variant="label" className="text-slate-400 font-black tracking-widest block uppercase text-[7px] mb-1 opacity-90">
+            <Typography variant="label" className="text-text-muted font-black tracking-widest block uppercase text-[7px] mb-1 opacity-90">
               {label}
             </Typography>
             
@@ -199,9 +199,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                 {subValue && !loading && (
                   <div className="flex flex-col items-end shrink-0 ml-auto leading-none gap-0.5">
                     <Typography variant="mono" className="text-[12px] text-brand-primary font-black italic tracking-tighter">
-                      {subValue}<span className="text-[7px] ml-0.5 text-slate-400 font-bold uppercase not-italic">/mo</span>
+                      {subValue}<span className="text-[7px] ml-0.5 text-text-muted font-bold uppercase not-italic">/mo</span>
                     </Typography>
-                    <Typography variant="mono" className="text-[6px] text-slate-400 uppercase font-bold tracking-[0.1em]">Pacing</Typography>
+                    <Typography variant="mono" className="text-[6px] text-text-muted uppercase font-bold tracking-[0.1em]">Pacing</Typography>
                   </div>
                 )}
               </div>
@@ -294,7 +294,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     <Card 
       onClick={onClick}
       className={cn(
-        "bg-gradient-to-br from-white/[0.04] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative overflow-hidden flex flex-col items-center justify-center text-center",
+        "bg-gradient-to-br from-white/[0.04] to-transparent border-border-subtle hover:border-white/20 transition-all group relative overflow-hidden flex flex-col items-center justify-center text-center",
         isTelemetry ? "p-3 h-auto min-h-[85px]" : "p-4.5 h-full min-h-[140px]",
         onClick && "cursor-pointer hover:border-white/20 transition-all"
       )}
@@ -312,7 +312,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         </div>
         
         <div className={cn("flex flex-col w-full items-center", isTelemetry ? "space-y-0" : "space-y-0.5")}>
-          <Typography variant="label" className={cn("text-slate-400 font-black tracking-widest block uppercase shrink-0 opacity-90", isTelemetry ? "text-[6.5px]" : "text-[7.5px]")}>
+          <Typography variant="label" className={cn("text-text-muted font-black tracking-widest block uppercase shrink-0 opacity-90", isTelemetry ? "text-[6.5px]" : "text-[7.5px]")}>
             {label}
           </Typography>
           
@@ -334,7 +334,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           {subValue && !loading && !isTelemetry && (
             <div className="flex items-center gap-1.5 mt-2 animate-in fade-in slide-in-from-left-2 duration-700">
                <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.1em]">Pace:</Typography>
-               <Typography variant="mono" className="text-[13px] text-brand-primary font-black italic tracking-tighter">{subValue}<span className="text-[8px] ml-0.5 text-slate-400 font-bold uppercase not-italic">/mo</span></Typography>
+               <Typography variant="mono" className="text-[13px] text-brand-primary font-black italic tracking-tighter">{subValue}<span className="text-[8px] ml-0.5 text-text-muted font-bold uppercase not-italic">/mo</span></Typography>
             </div>
           )}
           

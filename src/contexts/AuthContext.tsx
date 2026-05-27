@@ -308,6 +308,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 isAdmin: isDeveloper,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
+                trialEndsAt: Date.now() + (30 * 24 * 60 * 60 * 1000),
                 themePreference: 'dark',
                 preferences: {
                   theme: 'dark',

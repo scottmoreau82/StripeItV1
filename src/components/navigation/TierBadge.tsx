@@ -10,9 +10,10 @@ import { cn } from '@/src/lib/utils';
 interface TierBadgeProps {
   tier?: SubscriptionTier;
   isCollapsed?: boolean;
+  trialEndsAt?: number;
 }
 
-export const TierBadge: React.FC<TierBadgeProps> = ({ tier, isCollapsed }) => {
+export const TierBadge: React.FC<TierBadgeProps> = ({ tier, isCollapsed, trialEndsAt }) => {
   const getTierStyles = (tier?: SubscriptionTier) => {
     switch (tier) {
       case SubscriptionTier.ORGANIZATION:
@@ -24,6 +25,9 @@ export const TierBadge: React.FC<TierBadgeProps> = ({ tier, isCollapsed }) => {
     }
   };
 
+  const isActiveTrial = trialEndsAt && Date.now() < trialEndsAt;
+  const daysRemaining = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
+
   const label = tier === SubscriptionTier.ORGANIZATION ? 'Dealer' : (tier || 'Free');
 
   if (isCollapsed) {
@@ -31,21 +35,30 @@ export const TierBadge: React.FC<TierBadgeProps> = ({ tier, isCollapsed }) => {
       <div 
         className={cn(
           "w-6 h-6 rounded-full border flex items-center justify-center text-[8px] font-black uppercase transition-all shrink-0",
-          getTierStyles(tier)
+          isActiveTrial && tier === SubscriptionTier.FREE
+            ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
+            : getTierStyles(tier)
         )}
-        title={label}
+        title={isActiveTrial && tier === SubscriptionTier.FREE ? `Trial — ${daysRemaining} days remaining` : label}
       >
-        {label.charAt(0)}
+        {isActiveTrial && tier === SubscriptionTier.FREE ? 'T' : label.charAt(0)}
       </div>
     );
   }
 
   return (
-    <div className={cn(
-      "px-2 py-0.5 rounded-full border text-[7px] font-black uppercase tracking-[0.15em] transition-all shrink-0",
-      getTierStyles(tier)
-    )}>
-      {label}
+    <div className="flex items-center gap-1 shrink-0">
+      <div className={cn(
+        "px-2 py-0.5 rounded-full border text-[7px] font-black uppercase tracking-[0.15em] transition-all",
+        getTierStyles(tier)
+      )}>
+        {label}
+      </div>
+      {isActiveTrial && tier === SubscriptionTier.FREE && (
+        <div className="px-2 py-0.5 rounded-full border text-[7px] font-black uppercase tracking-[0.15em] bg-amber-500/10 border-amber-500/30 text-amber-500">
+          Trial • {daysRemaining}d
+        </div>
+      )}
     </div>
   );
 };

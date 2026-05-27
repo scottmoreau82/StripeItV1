@@ -56,7 +56,7 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
     <Card
       onClick={onClick}
       className={cn(
-        "group px-4 py-3 transition-all bg-white/[0.01] hover:bg-white/[0.03] active:scale-[0.99] cursor-pointer border-white/[0.05] relative overflow-hidden",
+        "group px-4 py-3 transition-all bg-transparent hover:bg-bg-elevated active:scale-[0.99] cursor-pointer border-0 rounded-none relative overflow-hidden shadow-none",
         onClick ? "hover:border-brand-primary/20" : ""
       )}
     >
@@ -70,14 +70,14 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
               ? "bg-brand-primary/10 border-brand-primary/20 text-brand-primary"
               : deal.newOrUsed === 'cpo'
               ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
-              : "bg-white/[0.03] border-white/5 text-slate-600"
+              : "bg-bg-elevated border-border-subtle text-text-muted"
           )}>
             <Car className="h-4 w-4" />
           </div>
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <Typography variant="label" className="text-white text-xs font-black uppercase tracking-tight truncate">
+              <Typography variant="label" className="text-text-primary text-xs font-black uppercase tracking-tight truncate">
                 {getLastName(deal.customerName)}
               </Typography>
               <span className={cn(
@@ -86,7 +86,7 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
                   ? "text-cyan-400 border-cyan-500/20 bg-cyan-500/10"
                   : deal.newOrUsed === 'cpo'
                   ? "text-purple-400 border-purple-500/20 bg-purple-500/10"
-                  : "text-slate-500 border-white/10 bg-white/5"
+                  : "text-slate-500 border-border-subtle bg-bg-card"
               )}>
                 {deal.newOrUsed}
               </span>

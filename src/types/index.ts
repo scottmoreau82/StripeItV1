@@ -97,6 +97,7 @@ export interface UserProfile {
   createdAt: number;
   updatedAt: number;
   trialStartedAt?: number;
+  trialEndsAt?: number;
   preferences?: UserPreferences;
   isFrozen?: boolean;
   suspensionAcknowledgedAt?: number;

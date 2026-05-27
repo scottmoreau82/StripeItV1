@@ -20,6 +20,8 @@ interface FeeItem {
   id: string;
   description: string;
   amount: number;
+  vltPct?: number;
+  isVlt?: boolean;
 }
 
 export const DealDeskView: React.FC = () => {
@@ -65,30 +67,15 @@ export const DealDeskView: React.FC = () => {
   const [taxRateCounty, setTaxRateCounty] = useState<number>(0.7);
   const [taxRateCity, setTaxRateCity] = useState<number>(2.8);
 
+  const [simpleNonTaxFees, setSimpleNonTaxFees] = useState<number>(511.28);
   const [feeItems, setFeeItems] = useState<FeeItem[]>([
     { id: '1', description: 'Registration Fee', amount: 8.00 },
     { id: '2', description: 'Title Fee', amount: 5.50 },
     { id: '3', description: 'Tire Fee', amount: 11.65 },
-    { id: '4', description: 'AZ VLT', amount: 0 },
+    { id: '4', description: 'AZ VLT', amount: parseFloat((35000 * 0.015815).toFixed(2)), vltPct: 1.5815, isVlt: true },
     { id: '5', description: 'Postage Fee', amount: 1.50 },
   ]);
-  const [feeItemsInitialized, setFeeItemsInitialized] = useState(false);
-
-  const handleAddFeeItem = () => {
-    setFeeItems(prev => [...prev, { id: crypto.randomUUID(), description: 'New Fee', amount: 0 }]);
-  };
-
-  const handleUpdateFeeItem = (id: string, field: 'description' | 'amount', value: any) => {
-    setFeeItems(prev => prev.map(f => f.id === id ? { ...f, [field]: field === 'amount' ? parseFloat(value) || 0 : value } : f));
-  };
-
-  const handleRemoveFeeItem = (id: string) => {
-    setFeeItems(prev => prev.filter(f => f.id !== id));
-  };
-
-  const simpleNonTaxFees = useMemo(() => {
-    return parseFloat(feeItems.reduce((sum, f) => sum + f.amount, 0).toFixed(2));
-  }, [feeItems]);
+  const [isFeesModalOpen, setIsFeesModalOpen] = useState<boolean>(false);
 
   // Simple rename/inputs states
   const [isEditingP1Name, setIsEditingP1Name] = useState<boolean>(false);
@@ -153,26 +140,18 @@ export const DealDeskView: React.FC = () => {
       if (ds.protection2Name !== undefined) setProtection2Name(ds.protection2Name);
       if (ds.protection2Amount !== undefined) setProtection2Amount(ds.protection2Amount);
       if (ds.docFee !== undefined) setDocFee(ds.docFee);
+      if (ds.nonTaxFees !== undefined) setSimpleNonTaxFees(ds.nonTaxFees);
+      if (ds.nonTaxFeeItems !== undefined && Array.isArray(ds.nonTaxFeeItems)) {
+        setFeeItems(ds.nonTaxFeeItems);
+        setFeeItems(items => items.map(f =>
+          f.description === 'AZ VLT' ? { ...f, isVlt: true } : f
+        ));
+      }
       if (ds.taxRateState !== undefined) setTaxRateState(ds.taxRateState);
       if (ds.taxRateCounty !== undefined) setTaxRateCounty(ds.taxRateCounty);
       if (ds.taxRateCity !== undefined) setTaxRateCity(ds.taxRateCity);
-
-      if (ds.nonTaxFeeItems !== undefined && Array.isArray(ds.nonTaxFeeItems) && !feeItemsInitialized) {
-        setFeeItems(ds.nonTaxFeeItems);
-        setFeeItemsInitialized(true);
-      }
-
-      if (ds.nonTaxFeeItems === undefined) {
-        setFeeItems(prev => prev.map(f => 
-          f.id === '4' ? { ...f, amount: parseFloat((msrp * 0.015815).toFixed(2)) } : f
-        ));
-      }
-    } else {
-      setFeeItems(prev => prev.map(f => 
-        f.id === '4' ? { ...f, amount: parseFloat((msrp * 0.015815).toFixed(2)) } : f
-      ));
     }
-  }, [profile?.deskSettings, msrp, feeItemsInitialized]);
+  }, [profile?.deskSettings]);
 
   // Add-ons list
   const [addons, setAddons] = useState<AddonItem[]>([]);
@@ -241,14 +220,14 @@ export const DealDeskView: React.FC = () => {
     setProtection2Name("Desert Protection Package");
     setProtection2Amount(0);
     setDocFee(599.50);
+    setSimpleNonTaxFees(511.28);
     setFeeItems([
       { id: '1', description: 'Registration Fee', amount: 8.00 },
       { id: '2', description: 'Title Fee', amount: 5.50 },
       { id: '3', description: 'Tire Fee', amount: 11.65 },
-      { id: '4', description: 'AZ VLT', amount: parseFloat((35000 * 0.015815).toFixed(2)) },
+      { id: '4', description: 'AZ VLT', amount: parseFloat((35000 * 0.015815).toFixed(2)), vltPct: 1.5815, isVlt: true },
       { id: '5', description: 'Postage Fee', amount: 1.50 },
     ]);
-    setFeeItemsInitialized(false);
     setTaxRateState(5.6);
     setTaxRateCounty(0.7);
     setTaxRateCity(2.8);
@@ -305,9 +284,13 @@ export const DealDeskView: React.FC = () => {
     return parseFloat((simpleTaxableBasis * (simpleCombinedTaxRate / 100)).toFixed(2));
   }, [simpleTaxableBasis, simpleCombinedTaxRate]);
 
+  const computedNonTaxFees = useMemo(() => {
+    return parseFloat(feeItems.reduce((sum, f) => sum + f.amount, 0).toFixed(2));
+  }, [feeItems]);
+
   const simpleTotal = useMemo(() => {
-    return parseFloat((simpleTotalPurchase + docFee + simpleTax + simpleNonTaxFees).toFixed(2));
-  }, [simpleTotalPurchase, docFee, simpleTax, simpleNonTaxFees]);
+    return parseFloat((simpleTotalPurchase + docFee + simpleTax + computedNonTaxFees).toFixed(2));
+  }, [simpleTotalPurchase, docFee, simpleTax, computedNonTaxFees]);
 
   const activeBalance = useMemo(() => {
     if (mode === 'SIMPLE') {
@@ -399,6 +382,28 @@ export const DealDeskView: React.FC = () => {
     setAddons(addons.filter(item => item.id !== id));
   };
 
+  const handleAddFeeItem = () => {
+    setFeeItems(prev => [...prev, { id: Date.now().toString(), description: 'New Fee', amount: 0 }]);
+  };
+  const handleUpdateFeeItem = (id: string, field: 'description' | 'amount' | 'vltPct', value: string) => {
+    setFeeItems(prev => prev.map(f => {
+      if (f.id !== id) return f;
+      if (field === 'vltPct') {
+        const pct = parseFloat(value) || 0;
+        return { ...f, vltPct: pct, amount: parseFloat((msrp * (pct / 100)).toFixed(2)) };
+      }
+      if (field === 'amount') return { ...f, amount: parseFloat(value) || 0 };
+      return { ...f, description: value };
+    }));
+  };
+  const handleRemoveFeeItem = (id: string) => {
+    setFeeItems(prev => prev.filter(f => f.id !== id));
+  };
+  const handleSaveFeeItems = async () => {
+    await handleSaveDeskSetting('nonTaxFeeItems', feeItems);
+    setIsFeesModalOpen(false);
+  };
+
   // --- ROLL BACK CALCULATOR ALGORITHM ---
   const handleSolveRollBack = () => {
     const target = parseFloat(targetPayment.toString()) || 0;
@@ -425,7 +430,7 @@ export const DealDeskView: React.FC = () => {
         const testTotalPurchase = testNetPrice + protection1Amount + protection2Amount;
         const testTaxableBasis = testTotalPurchase + docFee;
         const testTax = parseFloat((testTaxableBasis * (simpleCombinedTaxRate / 100)).toFixed(2));
-        const testTotal = parseFloat((testTotalPurchase + docFee + testTax + simpleNonTaxFees).toFixed(2));
+        const testTotal = parseFloat((testTotalPurchase + docFee + testTax + computedNonTaxFees).toFixed(2));
         const testBalance = parseFloat((testTotal - deposit).toFixed(2));
         return getMonthlyPayment(testBalance, testCashDown, testRate, term, daysFirstPayment);
       }
@@ -1054,47 +1059,17 @@ export const DealDeskView: React.FC = () => {
                     </div>
 
                     {/* Row 9: NON TAX FEES */}
-                    <div className="py-2 border-b border-[var(--color-border)]">
-                      <div className="flex items-center justify-between mb-2">
-                        <Typography variant="mono" className="text-[var(--color-text-secondary)] text-xs font-bold">NON TAX FEES</Typography>
-                        <button
-                          onClick={handleAddFeeItem}
-                          className="flex items-center gap-1 font-mono text-[9px] font-black uppercase text-brand-primary hover:text-white transition-colors"
-                        >
-                          <Plus size={12} /> ADD
-                        </button>
+                    <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
+                      <div className="flex flex-col select-none cursor-pointer text-left shrink-0" onClick={() => setIsFeesModalOpen(true)}>
+                        <div className="flex items-center gap-1.5 hover:text-brand-primary transition-colors">
+                          <Typography variant="mono" className="text-[var(--color-text-secondary)] text-xs font-bold">NON TAX FEES</Typography>
+                          <span className="text-[9px] font-mono text-slate-500 underline uppercase tracking-tight">EDIT FEES</span>
+                        </div>
+                        <span className="text-[9px] font-mono text-slate-500 uppercase">{feeItems.length} items</span>
                       </div>
-                      <div className="space-y-1.5 mb-2">
-                        {feeItems.map(fee => (
-                          <div key={fee.id} className="flex gap-2 items-center">
-                            <input
-                              type="text"
-                              value={fee.description}
-                              onChange={(e) => handleUpdateFeeItem(fee.id, 'description', e.target.value)}
-                              onBlur={() => handleSaveDeskSetting('nonTaxFeeItems', feeItems)}
-                              className="h-8 px-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-[10px] uppercase font-bold flex-1 min-w-0 focus:outline-none focus:border-brand-primary"
-                            />
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={fee.amount}
-                              onChange={(e) => handleUpdateFeeItem(fee.id, 'amount', e.target.value)}
-                              onBlur={() => handleSaveDeskSetting('nonTaxFeeItems', feeItems)}
-                              className="h-8 px-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-right text-brand-primary font-mono text-[10px] font-black w-24 focus:outline-none focus:border-brand-primary"
-                            />
-                            <button
-                              onClick={() => { handleRemoveFeeItem(fee.id); handleSaveDeskSetting('nonTaxFeeItems', feeItems.filter(f => f.id !== fee.id)); }}
-                              className="h-8 w-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center hover:bg-rose-500/20 shrink-0"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between pt-1">
-                        <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Total</Typography>
-                        <Typography variant="mono" className="text-[10px] text-brand-primary font-black">${simpleNonTaxFees.toFixed(2)}</Typography>
-                      </div>
+                      <span className="font-mono text-xs sm:text-sm font-black text-cyan-400">
+                        ${computedNonTaxFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
                     </div>
 
                     {/* Row 10: TOTAL */}
@@ -1707,6 +1682,82 @@ export const DealDeskView: React.FC = () => {
               SAVE RATES
             </Button>
           </div>
+        </div>
+      </div>
+    </Modal>
+
+    {/* --- NON TAX FEES MODAL --- */}
+    <Modal
+      isOpen={isFeesModalOpen}
+      onClose={() => setIsFeesModalOpen(false)}
+      title="NON TAX FEES"
+      className="max-w-md z-[60]"
+    >
+      <div className="space-y-4">
+        <Typography variant="small" className="text-slate-400 leading-relaxed block text-center">
+          Edit itemized non-tax fees. AZ VLT auto-calculates from MSRP using the % rate.
+        </Typography>
+        <div className="space-y-2">
+          {feeItems.map(fee => (
+            <div key={fee.id} className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={fee.description}
+                onChange={(e) => handleUpdateFeeItem(fee.id, 'description', e.target.value)}
+                className="h-9 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-[10px] uppercase font-bold flex-1 min-w-0 focus:outline-none focus:border-brand-primary"
+              />
+              {fee.isVlt === true && (
+                <div className="flex items-center gap-1 shrink-0">
+                  <input
+                    type="number"
+                    step="0.001"
+                    value={fee.vltPct ?? 1.5815}
+                    onChange={(e) => handleUpdateFeeItem(fee.id, 'vltPct', e.target.value)}
+                    className="h-9 px-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-400 font-mono text-[10px] font-black w-16 text-center focus:outline-none focus:border-amber-400"
+                  />
+                  <span className="text-[9px] text-slate-500 font-mono shrink-0">%</span>
+                </div>
+              )}
+              <input
+                type="number"
+                step="0.01"
+                value={fee.amount}
+                onChange={(e) => handleUpdateFeeItem(fee.id, 'amount', e.target.value)}
+                className="h-9 px-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-right text-brand-primary font-mono text-[10px] font-black w-24 focus:outline-none focus:border-brand-primary"
+              />
+              <button
+                onClick={() => handleRemoveFeeItem(fee.id)}
+                className="h-9 w-9 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center hover:bg-rose-500/20 shrink-0"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={handleAddFeeItem}
+          className="flex items-center gap-1.5 font-mono text-[9px] font-black uppercase text-brand-primary hover:text-white transition-colors"
+        >
+          <Plus size={12} /> ADD FEE
+        </button>
+        <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
+          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black">Total</Typography>
+          <Typography variant="mono" className="text-sm text-brand-primary font-black">${computedNonTaxFees.toFixed(2)}</Typography>
+        </div>
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsFeesModalOpen(false)}
+            className="h-11 border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] rounded-xl"
+          >
+            CANCEL
+          </Button>
+          <Button
+            onClick={handleSaveFeeItems}
+            className="h-11 bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] rounded-xl"
+          >
+            SAVE FEES
+          </Button>
         </div>
       </div>
     </Modal>

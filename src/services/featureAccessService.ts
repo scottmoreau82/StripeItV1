@@ -40,11 +40,12 @@ export const featureAccessService = {
   hasAccess: (profile: UserProfile | null, feature: Feature): boolean => {
     if (!profile) return false;
     if (isDeveloper(profile)) return true;
-    
-    // TRIAL tier has identical access to PRO
+
     if (isOnActiveTrial(profile)) {
-      const tier = SubscriptionTier.PRO;
-      return featureAccessService.hasAccess({ ...profile, subscriptionTier: tier }, feature);
+      return featureAccessService.hasAccess(
+        { ...profile, subscriptionTier: SubscriptionTier.PRO },
+        feature
+      );
     }
 
     const tier = profile.subscriptionTier;

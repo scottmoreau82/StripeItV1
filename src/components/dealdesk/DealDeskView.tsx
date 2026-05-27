@@ -68,13 +68,14 @@ export const DealDeskView: React.FC = () => {
   const [taxRateCity, setTaxRateCity] = useState<number>(2.8);
 
   const [simpleNonTaxFees, setSimpleNonTaxFees] = useState<number>(511.28);
-  const [feeItems, setFeeItems] = useState<FeeItem[]>([
+  const DEFAULT_FEE_ITEMS = (): FeeItem[] => [
     { id: '1', description: 'Registration Fee', amount: 8.00 },
     { id: '2', description: 'Title Fee', amount: 5.50 },
     { id: '3', description: 'Tire Fee', amount: 11.65 },
-    { id: '4', description: 'AZ VLT', amount: parseFloat((35000 * 0.015815).toFixed(2)), vltPct: 1.5815, isVlt: true },
+    { id: '4', description: 'AZ VLT', amount: 553.53, vltPct: 1.5815, isVlt: true },
     { id: '5', description: 'Postage Fee', amount: 1.50 },
-  ]);
+  ];
+  const [feeItems, setFeeItems] = useState<FeeItem[]>(DEFAULT_FEE_ITEMS());
   const [isFeesModalOpen, setIsFeesModalOpen] = useState<boolean>(false);
 
   // Simple rename/inputs states
@@ -142,8 +143,7 @@ export const DealDeskView: React.FC = () => {
       if (ds.docFee !== undefined) setDocFee(ds.docFee);
       if (ds.nonTaxFees !== undefined) setSimpleNonTaxFees(ds.nonTaxFees);
       if (ds.nonTaxFeeItems !== undefined && Array.isArray(ds.nonTaxFeeItems)) {
-        setFeeItems(ds.nonTaxFeeItems);
-        setFeeItems(items => items.map(f =>
+        setFeeItems(ds.nonTaxFeeItems.map((f: FeeItem) =>
           f.description === 'AZ VLT' ? { ...f, isVlt: true } : f
         ));
       }
@@ -221,13 +221,7 @@ export const DealDeskView: React.FC = () => {
     setProtection2Amount(0);
     setDocFee(599.50);
     setSimpleNonTaxFees(511.28);
-    setFeeItems([
-      { id: '1', description: 'Registration Fee', amount: 8.00 },
-      { id: '2', description: 'Title Fee', amount: 5.50 },
-      { id: '3', description: 'Tire Fee', amount: 11.65 },
-      { id: '4', description: 'AZ VLT', amount: parseFloat((35000 * 0.015815).toFixed(2)), vltPct: 1.5815, isVlt: true },
-      { id: '5', description: 'Postage Fee', amount: 1.50 },
-    ]);
+    setFeeItems(DEFAULT_FEE_ITEMS());
     setTaxRateState(5.6);
     setTaxRateCounty(0.7);
     setTaxRateCity(2.8);
@@ -287,6 +281,14 @@ export const DealDeskView: React.FC = () => {
   const computedNonTaxFees = useMemo(() => {
     return parseFloat(feeItems.reduce((sum, f) => sum + f.amount, 0).toFixed(2));
   }, [feeItems]);
+
+  useEffect(() => {
+    setFeeItems(prev => prev.map(f =>
+      f.isVlt === true
+        ? { ...f, amount: parseFloat((msrp * ((f.vltPct ?? 1.5815) / 100)).toFixed(2)) }
+        : f
+    ));
+  }, [msrp]);
 
   const simpleTotal = useMemo(() => {
     return parseFloat((simpleTotalPurchase + docFee + simpleTax + computedNonTaxFees).toFixed(2));
@@ -1741,7 +1743,7 @@ export const DealDeskView: React.FC = () => {
           <Plus size={12} /> ADD FEE
         </button>
         <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
-          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black">Total</Typography>
+          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black">TOTAL</Typography>
           <Typography variant="mono" className="text-sm text-brand-primary font-black">${computedNonTaxFees.toFixed(2)}</Typography>
         </div>
         <div className="grid grid-cols-2 gap-3 pt-2">

@@ -48,15 +48,6 @@ export const RecentDealsList: React.FC<RecentDealsListProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-500">
-          Last {deals.length} Actions
-        </Typography>
-        <button className="p-2 -mr-2 text-slate-500 hover:text-white transition-colors">
-          <AppIcon name="search" className="h-4 w-4" />
-        </button>
-      </div>
-
       <Card className="bg-bg-card border-border-subtle overflow-hidden p-0">
         {deals.map((deal, index) => (
           <motion.div

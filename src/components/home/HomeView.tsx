@@ -215,17 +215,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
     }
   };
 
-  // If Dealer, return specific Dealer Dashboard
-  if (isDealer) {
-    return <DealerDashboard />;
-  }
-
-  // Force overview tab for free users
+  // Force overview tab for free users — must be before any early return
   useMemo(() => {
     if (isFree && activeTab === 'trends') {
       setActiveTab('overview');
     }
   }, [isFree, activeTab]);
+
+  // If Dealer, return specific Dealer Dashboard
+  if (isDealer) {
+    return <DealerDashboard />;
+  }
 
   const metrics = useMemo(() => calculateDashboardMetrics(deals, payPlan, monthlySpiffs), [deals, payPlan, monthlySpiffs]);
   const chartData = useMemo(() => getTrendsChartData(deals, payPlan), [deals, payPlan]);

@@ -307,19 +307,19 @@ export const DealForm: React.FC<DealFormProps> = ({
         />
 
         {/* Traded Vehicle Toggle */}
-        <div className="flex items-center justify-between rounded-2xl bg-white/[0.02] border border-white/[0.05] p-4">
+        <div className="flex items-center justify-between rounded-2xl bg-bg-card border border-border-subtle p-4">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${formData.hasTrade ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-800 text-slate-500'}`}>
+            <div className={`p-2 rounded-lg ${formData.hasTrade ? 'bg-orange-500/20 text-orange-400' : 'bg-bg-elevated text-text-muted'}`}>
               <Car className="h-5 w-5" />
             </div>
             <div>
-              <Typography variant="label" className="text-white">TRADED VEHICLE</Typography>
+              <Typography variant="label" className="text-text-primary">TRADED VEHICLE</Typography>
             </div>
           </div>
           <button
             type="button"
             onClick={() => handleChange('hasTrade', !formData.hasTrade)}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${formData.hasTrade ? 'bg-orange-500' : 'bg-slate-800'}`}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${formData.hasTrade ? 'bg-orange-500' : 'bg-bg-elevated'}`}
           >
             <span
               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${formData.hasTrade ? 'translate-x-5' : 'translate-x-0'}`}
@@ -349,19 +349,19 @@ export const DealForm: React.FC<DealFormProps> = ({
         </AnimatePresence>
 
         {/* Split Deal Toggle */}
-        <div className="flex items-center justify-between rounded-2xl bg-white/[0.02] border border-white/[0.05] p-4">
+        <div className="flex items-center justify-between rounded-2xl bg-bg-card border border-border-subtle p-4">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${formData.isSplitDeal ? 'bg-brand-primary/20 text-brand-primary' : 'bg-slate-800 text-slate-500'}`}>
+            <div className={`p-2 rounded-lg ${formData.isSplitDeal ? 'bg-brand-primary/20 text-brand-primary' : 'bg-bg-elevated text-text-muted'}`}>
               <UserPlus className="h-5 w-5" />
             </div>
             <div>
-              <Typography variant="label" className="text-white">SPLIT DEAL</Typography>
+              <Typography variant="label" className="text-text-primary">SPLIT DEAL</Typography>
             </div>
           </div>
           <button
             type="button"
             onClick={() => handleChange('isSplitDeal', !formData.isSplitDeal)}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${formData.isSplitDeal ? 'bg-brand-primary' : 'bg-slate-800'}`}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${formData.isSplitDeal ? 'bg-brand-primary' : 'bg-bg-elevated'}`}
           >
             <span
               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${formData.isSplitDeal ? 'translate-x-5' : 'translate-x-0'}`}
@@ -451,7 +451,7 @@ export const DealForm: React.FC<DealFormProps> = ({
       <button
         type="button"
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="flex w-full items-center justify-center gap-2 py-2 text-sm font-medium text-slate-500 hover:text-white transition-colors"
+        className="flex w-full items-center justify-center gap-2 py-2 text-sm font-medium text-slate-500 hover:text-text-primary transition-colors"
       >
         {showAdvanced ? (
           <>Hide Additional Details <ChevronUp className="h-4 w-4" /></>
@@ -473,7 +473,7 @@ export const DealForm: React.FC<DealFormProps> = ({
               <div className="flex flex-col gap-1.5">
                 <Typography variant="label" className="text-slate-400">Notes</Typography>
                 <textarea
-                  className="flex min-h-24 w-full rounded-xl border border-white/5 bg-slate-900/50 px-4 py-3 text-sm text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary/50 transition-all placeholder:text-slate-600 outline-none"
+                  className="flex min-h-24 w-full rounded-xl border border-border-subtle bg-bg-card px-4 py-3 text-sm text-text-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary/50 transition-all placeholder:text-slate-600 outline-none"
                   placeholder="Internal details or customer preferences..."
                   value={formData.notes}
                   onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}

@@ -129,11 +129,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showPaycheckBreakdown, setShowPaycheckBreakdown] = useState(false);
   const [showFrontModal, setShowFrontModal] = useState(false);
   const [showBackModal, setShowBackModal] = useState(false);
-  const [explanationData, setExplanationData] =
-    useState<{
-      commission: CommissionResult;
-      customerName: string;
-    } | null>(null);
+  const [explanationData, setExplanationData] = useState<{ commission: CommissionResult; customerName: string; deal: Deal } | null>(null);
 
   const [metricsOpen, setMetricsOpen] = useState(true);
   const [dealsOpen, setDealsOpen] = useState(true);
@@ -655,22 +651,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
                             data={widgetData}
                             onAction={(action, payload) => {
                               if (action === 'deal_click' && payload) {
-                                const deal = payload as Deal;
-                                const m = getCalendarMonth(deal.date);
-                                const y = getCalendarYear(deal.date);
-                                const monthlyDeals = deals.filter(d => {
-                                  return getCalendarMonth(d.date) === m &&
-                                    getCalendarYear(d.date) === y;
-                                });
-                                const commission = payPlan
-                                  ? calculateDealCommission(
-                                      deal, payPlan, monthlyDeals)
-                                  : null;
-                                if (commission) {
-                                  setExplanationData({
-                                    commission,
-                                    customerName: deal.customerName
+                                const clickedDeal = payload as Deal;
+                                if (payPlan) {
+                                  const currentMonth = new Date().getMonth();
+                                  const currentYear = new Date().getFullYear();
+                                  const monthlyDeals = deals.filter(d => {
+                                    const date = new Date(d.date);
+                                    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
                                   });
+                                  const commission = calculateDealCommission(clickedDeal, payPlan, monthlyDeals);
+                                  setExplanationData({ commission, customerName: clickedDeal.customerName, deal: clickedDeal });
                                 }
                               }
                             }}
@@ -692,22 +682,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     data={widgetData}
                     onAction={(action, payload) => {
                       if (action === 'deal_click' && payload) {
-                        const deal = payload as Deal;
-                        const m = getCalendarMonth(deal.date);
-                        const y = getCalendarYear(deal.date);
-                        const monthlyDeals = deals.filter(d => {
-                          return getCalendarMonth(d.date) === m &&
-                            getCalendarYear(d.date) === y;
-                        });
-                        const commission = payPlan
-                          ? calculateDealCommission(
-                              deal, payPlan, monthlyDeals)
-                          : null;
-                        if (commission) {
-                          setExplanationData({
-                            commission,
-                            customerName: deal.customerName
+                        const clickedDeal = payload as Deal;
+                        if (payPlan) {
+                          const currentMonth = new Date().getMonth();
+                          const currentYear = new Date().getFullYear();
+                          const monthlyDeals = deals.filter(d => {
+                            const date = new Date(d.date);
+                            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
                           });
+                          const commission = calculateDealCommission(clickedDeal, payPlan, monthlyDeals);
+                          setExplanationData({ commission, customerName: clickedDeal.customerName, deal: clickedDeal });
                         }
                       }
                     }}
@@ -1576,6 +1560,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
           onClose={() => setExplanationData(null)}
           commission={explanationData?.commission || null}
           customerName={explanationData?.customerName || ''}
+          deal={explanationData?.deal}
+          onEdit={(d) => { setExplanationData(null); window.dispatchEvent(new CustomEvent('stripeit:edit-deal', { detail: d })); }}
+          onDelete={async () => { setExplanationData(null); }}
         />
       </AnimatePresence>
     </>

@@ -130,6 +130,30 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
     }
   };
 
+  const handleGrantShortTrial = async (userId: string) => {
+    setUpdatingId(userId);
+    try {
+      const { doc, updateDoc } = await import('firebase/firestore');
+      const { db } = await import('@/src/lib/firebase');
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        subscriptionTier: SubscriptionTier.TRIAL,
+        trialEndsAt: Date.now() + (2 * 60 * 1000),
+        updatedAt: Date.now()
+      });
+      setUsers(prev => prev.map(u => u.uid === userId ? { 
+        ...u, 
+        subscriptionTier: SubscriptionTier.TRIAL,
+        trialEndsAt: Date.now() + (2 * 60 * 1000)
+      } : u));
+      addToast('2-minute trial granted. Expires in 2 minutes.', 'success');
+    } catch (error) {
+      addToast('Failed to grant trial.', 'error');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const handleWipeUser = async (userId: string) => {
     setDeletingId(userId);
     try {
@@ -318,7 +342,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                       onChange={(e) => handleGrantTrial(user.uid, parseInt(e.target.value))}
                       defaultValue=""
                       disabled={grantingTrialId === user.uid}
-                      className="bg-bg-deep border border-white/10 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider focus:outline-none transition-all cursor-pointer text-amber-500"
+                      className="bg-bg-deep border border-border-subtle rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider focus:outline-none transition-all cursor-pointer text-amber-500"
                       title="Grant Trial"
                     >
                       <option value="" disabled>Trial</option>
@@ -331,8 +355,17 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                       <div className="h-3 w-3 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
                     )}
                   </div>
+
+                  <button
+                    onClick={() => handleGrantShortTrial(user.uid)}
+                    disabled={updatingId === user.uid}
+                    title="Grant 2-minute trial for testing"
+                    className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 transition-all text-[9px] font-black uppercase tracking-widest disabled:opacity-40"
+                  >
+                    2M Trial
+                  </button>
                   
-                  <div className="h-8 w-px bg-white/5 mx-2" />
+                  <div className="h-8 w-px bg-bg-card mx-2" />
                   
                   {confirmDeleteId === user.uid ? (
                     <div className="flex items-center gap-2">

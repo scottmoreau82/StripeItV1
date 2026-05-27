@@ -245,3 +245,8 @@
 body.modal-open .global-mobile-log-deal-fab {
   display: none !important;
 }
+
+@keyframes exitBarDrain {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}

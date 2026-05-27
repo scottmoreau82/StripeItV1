@@ -410,7 +410,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   );
 
   const header = (
-    <div className="space-y-10">
+    <div className="space-y-4 lg:space-y-10">
       {isFrozen && (
         <AnimatePresence mode="wait">
           <motion.div 
@@ -459,7 +459,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       <PageHeader
         title="Performance Overview"
-        subtitle={`${profile?.displayName || 'Personal'} • ${tierLabel} Tooling Activity`}
+        subtitle={`${profile?.displayName || 'Personal'} • ${profile?.subscriptionTier.toUpperCase() || 'FREE'}`}
         icon={LayoutGrid}
       >
         <div className="flex items-center gap-3">
@@ -490,7 +490,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   );
 
   const mainContent = (
-    <div className="space-y-10">
+    <div className="space-y-6 lg:space-y-10">
       <AnimatePresence mode="wait">
         {activeTab === 'overview' ? (
           <motion.div 
@@ -498,7 +498,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-8"
+            className="space-y-4 lg:space-y-8"
           >
             {/* Dynamic Metric Widgets */}
             <div className="relative group/metrics">
@@ -578,7 +578,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
               )}
               
               {/* Atmospheric Continuation Hint - Visual Fade for Mobile */}
-              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-bg-deep/80 via-transparent to-transparent pointer-events-none z-20 block lg:hidden" />
             </div>
           </motion.div>
         ) : (
@@ -622,7 +621,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         />
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
         <div className="lg:col-span-2">
             {isMobile ? (
               <div>

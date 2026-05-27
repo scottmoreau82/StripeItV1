@@ -10,8 +10,10 @@ const isDeveloper = (profile: UserProfile | null) => {
   return profile?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase() && profile?.isAdmin === true;
 };
 
-const isOnActiveTrial = (profile: UserProfile | null): boolean => {
-  if (!profile?.trialEndsAt) return false;
+export const isOnActiveTrial = (profile: UserProfile | null): boolean => {
+  if (!profile) return false;
+  if (profile.subscriptionTier !== SubscriptionTier.TRIAL) return false;
+  if (!profile.trialEndsAt) return false;
   return Date.now() < profile.trialEndsAt;
 };
 
@@ -38,7 +40,12 @@ export const featureAccessService = {
   hasAccess: (profile: UserProfile | null, feature: Feature): boolean => {
     if (!profile) return false;
     if (isDeveloper(profile)) return true;
-    if (isOnActiveTrial(profile)) return true;
+    
+    // TRIAL tier has identical access to PRO
+    if (isOnActiveTrial(profile)) {
+      const tier = SubscriptionTier.PRO;
+      return featureAccessService.hasAccess({ ...profile, subscriptionTier: tier }, feature);
+    }
 
     const tier = profile.subscriptionTier;
     const role = profile.role;
@@ -81,6 +88,7 @@ export const featureAccessService = {
     switch (tier) {
       case SubscriptionTier.FREE: return 'Free';
       case SubscriptionTier.PRO: return 'Pro';
+      case SubscriptionTier.TRIAL: return 'Trial';
       case SubscriptionTier.ORGANIZATION: return 'Organization';
       default: return 'Free';
     }

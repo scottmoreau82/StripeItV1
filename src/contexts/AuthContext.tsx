@@ -292,8 +292,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (isDeveloper) {
                   tier = SubscriptionTier.ORGANIZATION;
                   role = UserRole.DEALER_OWNER;
-                } else {
-                  tier = SubscriptionTier.FREE;
+                } else if (!inviteData) {
+                  tier = SubscriptionTier.TRIAL;
                 }
               }
 
@@ -303,12 +303,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 displayName: firebaseUser.displayName || (inviteData ? 'New Manager' : 'New Salesperson'),
                 role: role,
                 subscriptionTier: tier,
+                trialEndsAt: (!isDeveloper && !inviteData) ? Date.now() + (30 * 24 * 60 * 60 * 1000) : null,
                 orgId: orgId,
                 dealershipId: '',
                 isAdmin: isDeveloper,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
-                trialEndsAt: Date.now() + (30 * 24 * 60 * 60 * 1000),
                 themePreference: 'dark',
                 preferences: {
                   theme: 'dark',
@@ -385,10 +385,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 subscriptionTier = SubscriptionTier.PRO;
               }
 
-              if (subscriptionTier === 'trial') {
-                subscriptionTier = SubscriptionTier.FREE;
-              }
-
               const profileData = {
                 uid: firebaseUser.uid,
                 ...rawData,
@@ -428,7 +424,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }).catch(e => console.error("Org check failed", e));
               }
 
-              setProfile(profileData);
+              // Silent trial expiry downgrade
+              let finalProfile = profileData;
+              if (
+                profileData.subscriptionTier === SubscriptionTier.TRIAL &&
+                profileData.trialEndsAt &&
+                Date.now() > profileData.trialEndsAt
+              ) {
+                // Downgrade in Firestore silently
+                updateDoc(userDocRef, { 
+                  subscriptionTier: SubscriptionTier.FREE,
+                  updatedAt: serverTimestamp()
+                }).catch(e => console.error("Trial downgrade failed", e));
+                finalProfile = { ...profileData, subscriptionTier: SubscriptionTier.FREE };
+              }
+              setProfile(finalProfile);
               setLoading(false);
               setInitialized(true);
             } else {

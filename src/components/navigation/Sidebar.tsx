@@ -41,14 +41,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { isCommissionConfigured } = useAppData();
   const location = useLocation();
   const [isSpiffModalOpen, setIsSpiffModalOpen] = React.useState(false);
+  const [exitArmed, setExitArmed] = React.useState(false);
+  const exitTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isDeveloper = user?.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
 
   const handleLogout = async () => {
-    try {
-      await auth.signOut();
-    } catch (error) {
-      console.error("Logout error:", error);
+    if (!exitArmed) {
+      setExitArmed(true);
+      exitTimerRef.current = setTimeout(() => {
+        setExitArmed(false);
+      }, 3000);
+    } else {
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+      setExitArmed(false);
+      try {
+        await auth.signOut();
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
     }
   };
 
@@ -350,19 +361,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* System Exit */}
         <div className="flex flex-col gap-1 px-4">
-          <button 
+          <button
             onClick={handleLogout}
-            title={isCollapsed ? "Exit Vault" : undefined}
+            title={isCollapsed ? "Exit Session" : undefined}
             className={cn(
-              "flex items-center gap-3 w-full group hover:bg-rose-500/5 transition-all rounded-xl py-3.5",
-              isCollapsed ? "justify-center" : "px-4"
+              "flex items-center gap-3 w-full group transition-all rounded-xl py-3.5 relative overflow-hidden",
+              isCollapsed ? "justify-center" : "px-4",
+              exitArmed ? "hover:bg-rose-500/10" : "hover:bg-rose-500/5"
             )}
           >
+            {/* Draining progress bar — bottom edge of button, drains right to left */}
+            {exitArmed && (
+              <span
+                className="absolute bottom-0 left-0 h-[2px] w-full pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to left, #ef4444, #f97316)',
+                  animation: 'exitBarDrain 3s linear forwards',
+                  transformOrigin: 'right center',
+                }}
+              />
+            )}
             <div className={cn("shrink-0 flex items-center justify-center", isCollapsed ? "w-full" : "w-6")}>
-              <AppIcon name="logout" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "text-slate-600 group-hover:text-rose-500 transition-colors")} />
+              <AppIcon
+                name="logout"
+                className={cn(
+                  SIDEBAR_NAV_ICON_SIZE_CLASS,
+                  "transition-colors",
+                  exitArmed ? "text-rose-500" : "text-slate-600 group-hover:text-rose-500"
+                )}
+              />
             </div>
             {!isCollapsed && (
-              <span className={cn("font-black text-[var(--color-text-secondary)] group-hover:text-rose-400 uppercase tracking-[0.25em] whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY)}>Exit Session</span>
+              <span className={cn(
+                "font-black uppercase tracking-[0.25em] whitespace-nowrap transition-all",
+                SIDEBAR_NAV_TYPOGRAPHY,
+                exitArmed ? "text-rose-400" : "text-[var(--color-text-secondary)] group-hover:text-rose-400"
+              )}>
+                {exitArmed ? "Confirm Exit" : "Exit Session"}
+              </span>
             )}
           </button>
         </div>

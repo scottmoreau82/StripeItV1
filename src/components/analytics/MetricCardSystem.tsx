@@ -295,7 +295,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       onClick={onClick}
       className={cn(
         "bg-gradient-to-br from-white/[0.04] to-transparent border-border-subtle hover:border-white/20 transition-all group relative overflow-hidden flex flex-col items-center justify-center text-center",
-        isTelemetry ? "p-3 h-auto min-h-[85px]" : "p-4.5 h-full min-h-[140px]",
+        isTelemetry ? "p-3 h-auto min-h-[85px]" : "p-4 lg:p-4.5 h-full min-h-[110px] lg:min-h-[140px]",
         onClick && "cursor-pointer hover:border-white/20 transition-all"
       )}
     >
@@ -306,7 +306,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         <div className={cn(
           "rounded-lg flex items-center justify-center border transition-transform group-hover:scale-105 shrink-0 shadow-sm",
           colorMap[color as keyof typeof colorMap],
-          isTelemetry ? "h-7 w-7 mb-2" : "h-9 w-9 mb-4 mx-auto"
+          isTelemetry ? "h-7 w-7 mb-2" : "h-8 w-8 lg:h-9 lg:w-9 mb-2 lg:mb-4 mx-auto"
         )}>
           <Icon className={isTelemetry ? "h-3.5 w-3.5" : "h-5 w-5"} />
         </div>
@@ -316,7 +316,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             {label}
           </Typography>
           
-          <Typography variant="h1" className={cn("text-text-primary tracking-tighter font-black italic leading-none w-full text-center", isTelemetry ? "text-2xl" : "text-2xl sm:text-3xl lg:text-4xl")}>
+          <Typography variant="h1" className={cn("text-text-primary tracking-tighter font-black italic leading-none w-full text-center", isTelemetry ? "text-2xl" : "text-3xl lg:text-4xl")}>
             {loading ? '...' : animatedValue}
           </Typography>
 
@@ -332,7 +332,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           )}
 
           {subValue && !loading && !isTelemetry && (
-            <div className="flex items-center gap-1.5 mt-2 animate-in fade-in slide-in-from-left-2 duration-700">
+            <div className="flex items-center gap-1.5 mt-1 lg:mt-2 animate-in fade-in slide-in-from-left-2 duration-700">
                <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-[0.1em]">Pace:</Typography>
                <Typography variant="mono" className="text-[13px] text-brand-primary font-black italic tracking-tighter">{subValue}<span className="text-[8px] ml-0.5 text-text-muted font-bold uppercase not-italic">/mo</span></Typography>
             </div>

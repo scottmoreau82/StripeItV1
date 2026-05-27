@@ -59,7 +59,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onL
         {/* Desktop TopBar System */}
         <TopBar />
         
-        <main className="flex-1 overflow-y-auto px-6 py-8 lg:px-10 lg:py-10">
+        <main className="flex-1 overflow-y-auto px-4 py-5 lg:px-10 lg:py-10">
           <ContentContainer>
             {children}
           </ContentContainer>

@@ -433,18 +433,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         </div>
       )}
 
-      {/* Results Meta */}
-      <div className="flex items-center justify-between">
-        <Typography variant="mono" className="text-[10px] uppercase tracking-widest text-slate-500">
-          Showing {sortedDeals.length} deals
-          {sortedSpiffs.length > 0 && (
-            <span className="text-slate-600">
-              {' '}• {sortedSpiffs.length} spiff
-              {sortedSpiffs.length !== 1 ? 's' : ''}
-            </span>
-          )}
-        </Typography>
-      </div>
+
 
       {isAtLimit && (
         <div className="flex items-center justify-between p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-4">
@@ -598,15 +587,15 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             isBlurred ? 'relative overflow-hidden pointer-events-none select-none' : ''
                           )}
                         >
-                          <td className="py-5 px-4 whitespace-nowrap">
+                          <td className="py-3 px-4 whitespace-nowrap">
                             <Typography variant="mono" className="text-[11px] text-slate-400 font-black">
                               {formatDateSafe(deal.date, 'MM/dd/yy')}
                             </Typography>
                           </td>
-                          <td className="py-5 px-4">
+                          <td className="py-3 px-4">
                             <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
                               <div className="flex flex-col min-w-0">
-                                <Typography variant="label" className="text-[var(--color-text-primary)] text-sm font-black truncate">
+                                <Typography variant="label" className="text-text-primary text-sm font-black truncate">
                                   {getLastName(deal.customerName)}
                                 </Typography>
                                 <Typography variant="mono" className="text-[10px] text-slate-600 font-bold">
@@ -615,7 +604,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               </div>
                             </div>
                           </td>
-                          <td className="py-5 px-4">
+                          <td className="py-3 px-4">
                             <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
                               <div className="flex flex-col min-w-0">
                                 <Typography variant="small" className="text-slate-300 truncate text-xs font-bold">
@@ -627,10 +616,10 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               </div>
                             </div>
                           </td>
-                          <td className="py-5 px-4">
+                          <td className="py-3 px-4">
                             <TypeBadge type={deal.newOrUsed as any} />
                           </td>
-                          <td className="py-5 px-4">
+                          <td className="py-3 px-4">
                             {deal.isSplitDeal && deal.splitPartnerName ? (
                               <Typography variant="mono"
                                 className="text-xs text-amber-400 font-black
@@ -644,21 +633,21 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               </Typography>
                             )}
                           </td>
-                          <td className="py-5 px-4 text-right">
+                          <td className="py-3 px-4 text-right">
                             <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
-                              <Typography variant="mono" className="text-xs text-white group-hover:text-cyan-400 transition-colors font-black">
+                              <Typography variant="mono" className="text-xs text-text-primary group-hover:text-cyan-400 transition-colors font-black">
                                 ${deal.frontEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                               </Typography>
                             </div>
                           </td>
-                          <td className="py-5 px-4 text-right">
+                          <td className="py-3 px-4 text-right">
                             <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
-                              <Typography variant="mono" className="text-xs text-white group-hover:text-purple-400 transition-colors font-black">
+                              <Typography variant="mono" className="text-xs text-text-primary group-hover:text-purple-400 transition-colors font-black">
                                 ${deal.backEndGross.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                               </Typography>
                             </div>
                           </td>
-                          <td className="py-5 px-4 text-right relative">
+                          <td className="py-3 px-4 text-right relative">
                             <div className={cn(shouldBlur && "[filter:blur(4px)] select-none")}>
                               <div className="flex flex-col items-end">
                                 <div className="flex items-center gap-2">
@@ -676,11 +665,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
 
                           </td>
-                          <td className="py-5 px-4 text-right">
+                          <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}
-                                className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-cyan-400/10 transition-all active:scale-95 shadow-sm"
+                                className="p-2 rounded-lg border border-border-subtle bg-bg-card text-slate-500 hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-cyan-400/10 transition-all active:scale-95 shadow-sm"
                                 title="Edit Deal"
                               >
                                 <AppIcon name="edit" size={14} />
@@ -704,7 +693,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                     e.stopPropagation(); 
                                     setPendingDeleteId(deal.id);
                                   }}
-                                  className="p-2 rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
+                                  className="p-2 rounded-lg border border-border-subtle bg-bg-card text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
                                   title="Delete Deal"
                                 >
                                   <AppIcon name="delete" size={14} />
@@ -767,8 +756,8 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       className={cn(
                         "transition-all duration-300 border rounded-xl overflow-hidden shadow-lg relative",
                         isExpanded 
-                          ? "bg-[var(--color-bg-elevated)] border-[var(--color-border)] p-4" 
-                          : "bg-[var(--color-bg-card)] border-[var(--color-border)] p-3",
+                          ? "bg-bg-elevated border-border-subtle p-4" 
+                          : "bg-bg-card border-border-subtle p-3",
                         isBlurred && "pointer-events-none select-none relative blur-sm"
                       )}
                       onClick={() => {
@@ -834,13 +823,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                <div>
                                  <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Front Gross</Typography>
-                                 <Typography variant="label" className="text-[var(--color-text-primary)] font-black text-sm">
+                                 <Typography variant="label" className="text-text-primary font-black text-sm">
                                    ${deal.frontEndGross.toLocaleString()}
                                  </Typography>
                                </div>
                                <div>
                                  <Typography variant="mono" className="text-[8px] text-slate-600 uppercase tracking-widest font-black mb-1 block">Back Gross</Typography>
-                                 <Typography variant="label" className="text-[var(--color-text-primary)] font-black text-sm">
+                                 <Typography variant="label" className="text-text-primary font-black text-sm">
                                    ${deal.backEndGross.toLocaleString()}
                                  </Typography>
                                </div>
@@ -895,12 +884,6 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                    </button>
                                  )}
                                </div>
-                            </div>
-                            
-                            <div className="mt-4 flex justify-center">
-                               <Typography variant="mono" className="text-[9px] text-slate-600 animate-pulse">
-                                 Tap again for full details
-                               </Typography>
                             </div>
                           </motion.div>
                         )}
@@ -969,14 +952,14 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           onClick={() => window.dispatchEvent(
                             new CustomEvent('stripeit:edit-spiff', { detail: spiff })
                           )}
-                          className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-500/[0.03] border border-emerald-500/10 cursor-pointer hover:bg-emerald-500/[0.06] transition-colors group"
+                          className="flex items-center justify-between px-4 py-3 rounded-xl bg-bg-card border border-emerald-500/10 cursor-pointer hover:bg-emerald-500/[0.06] transition-colors group"
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                               <AppIcon name="billing" size={12} className="text-emerald-400" />
                             </div>
                             <div className="min-w-0">
-                              <Typography variant="label" className="text-white text-xs font-black truncate block">
+                              <Typography variant="label" className="text-text-primary text-xs font-black truncate block">
                                 {spiff.label || 'SPIFF'}
                               </Typography>
                               <Typography variant="mono" className="text-[9px] text-slate-500">

@@ -16,6 +16,12 @@ interface AddonItem {
   cost: number;
 }
 
+interface FeeItem {
+  id: string;
+  description: string;
+  amount: number;
+}
+
 export const DealDeskView: React.FC = () => {
   const { profile, updateProfileData } = useAuth();
 
@@ -59,7 +65,30 @@ export const DealDeskView: React.FC = () => {
   const [taxRateCounty, setTaxRateCounty] = useState<number>(0.7);
   const [taxRateCity, setTaxRateCity] = useState<number>(2.8);
 
-  const [simpleNonTaxFees, setSimpleNonTaxFees] = useState<number>(511.28);
+  const [feeItems, setFeeItems] = useState<FeeItem[]>([
+    { id: '1', description: 'Registration Fee', amount: 8.00 },
+    { id: '2', description: 'Title Fee', amount: 5.50 },
+    { id: '3', description: 'Tire Fee', amount: 11.65 },
+    { id: '4', description: 'AZ VLT', amount: 0 },
+    { id: '5', description: 'Postage Fee', amount: 1.50 },
+  ]);
+  const [feeItemsInitialized, setFeeItemsInitialized] = useState(false);
+
+  const handleAddFeeItem = () => {
+    setFeeItems(prev => [...prev, { id: crypto.randomUUID(), description: 'New Fee', amount: 0 }]);
+  };
+
+  const handleUpdateFeeItem = (id: string, field: 'description' | 'amount', value: any) => {
+    setFeeItems(prev => prev.map(f => f.id === id ? { ...f, [field]: field === 'amount' ? parseFloat(value) || 0 : value } : f));
+  };
+
+  const handleRemoveFeeItem = (id: string) => {
+    setFeeItems(prev => prev.filter(f => f.id !== id));
+  };
+
+  const simpleNonTaxFees = useMemo(() => {
+    return parseFloat(feeItems.reduce((sum, f) => sum + f.amount, 0).toFixed(2));
+  }, [feeItems]);
 
   // Simple rename/inputs states
   const [isEditingP1Name, setIsEditingP1Name] = useState<boolean>(false);
@@ -124,12 +153,26 @@ export const DealDeskView: React.FC = () => {
       if (ds.protection2Name !== undefined) setProtection2Name(ds.protection2Name);
       if (ds.protection2Amount !== undefined) setProtection2Amount(ds.protection2Amount);
       if (ds.docFee !== undefined) setDocFee(ds.docFee);
-      if (ds.nonTaxFees !== undefined) setSimpleNonTaxFees(ds.nonTaxFees);
       if (ds.taxRateState !== undefined) setTaxRateState(ds.taxRateState);
       if (ds.taxRateCounty !== undefined) setTaxRateCounty(ds.taxRateCounty);
       if (ds.taxRateCity !== undefined) setTaxRateCity(ds.taxRateCity);
+
+      if (ds.nonTaxFeeItems !== undefined && Array.isArray(ds.nonTaxFeeItems) && !feeItemsInitialized) {
+        setFeeItems(ds.nonTaxFeeItems);
+        setFeeItemsInitialized(true);
+      }
+
+      if (ds.nonTaxFeeItems === undefined) {
+        setFeeItems(prev => prev.map(f => 
+          f.id === '4' ? { ...f, amount: parseFloat((msrp * 0.015815).toFixed(2)) } : f
+        ));
+      }
+    } else {
+      setFeeItems(prev => prev.map(f => 
+        f.id === '4' ? { ...f, amount: parseFloat((msrp * 0.015815).toFixed(2)) } : f
+      ));
     }
-  }, [profile?.deskSettings]);
+  }, [profile?.deskSettings, msrp, feeItemsInitialized]);
 
   // Add-ons list
   const [addons, setAddons] = useState<AddonItem[]>([]);
@@ -198,7 +241,14 @@ export const DealDeskView: React.FC = () => {
     setProtection2Name("Desert Protection Package");
     setProtection2Amount(0);
     setDocFee(599.50);
-    setSimpleNonTaxFees(511.28);
+    setFeeItems([
+      { id: '1', description: 'Registration Fee', amount: 8.00 },
+      { id: '2', description: 'Title Fee', amount: 5.50 },
+      { id: '3', description: 'Tire Fee', amount: 11.65 },
+      { id: '4', description: 'AZ VLT', amount: parseFloat((35000 * 0.015815).toFixed(2)) },
+      { id: '5', description: 'Postage Fee', amount: 1.50 },
+    ]);
+    setFeeItemsInitialized(false);
     setTaxRateState(5.6);
     setTaxRateCounty(0.7);
     setTaxRateCity(2.8);
@@ -1004,21 +1054,47 @@ export const DealDeskView: React.FC = () => {
                     </div>
 
                     {/* Row 9: NON TAX FEES */}
-                    <div className="flex items-center justify-between gap-4 py-2 border-b border-[var(--color-border)]">
-                      <Typography variant="mono" className="text-[var(--color-text-secondary)] text-xs font-bold">NON TAX FEES</Typography>
-                      <input
-                        type="number"
-                        step="10"
-                        value={simpleNonTaxFees}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value) || 0;
-                          setSimpleNonTaxFees(val);
-                        }}
-                        onBlur={(e) => {
-                          handleSaveDeskSetting('nonTaxFees', parseFloat(e.target.value) || 0);
-                        }}
-                        className="h-9 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-right text-brand-primary placeholder:text-slate-600 font-mono text-xs sm:text-sm uppercase font-black w-36 sm:w-40 focus:outline-none focus:border-brand-primary"
-                      />
+                    <div className="py-2 border-b border-[var(--color-border)]">
+                      <div className="flex items-center justify-between mb-2">
+                        <Typography variant="mono" className="text-[var(--color-text-secondary)] text-xs font-bold">NON TAX FEES</Typography>
+                        <button
+                          onClick={handleAddFeeItem}
+                          className="flex items-center gap-1 font-mono text-[9px] font-black uppercase text-brand-primary hover:text-white transition-colors"
+                        >
+                          <Plus size={12} /> ADD
+                        </button>
+                      </div>
+                      <div className="space-y-1.5 mb-2">
+                        {feeItems.map(fee => (
+                          <div key={fee.id} className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={fee.description}
+                              onChange={(e) => handleUpdateFeeItem(fee.id, 'description', e.target.value)}
+                              onBlur={() => handleSaveDeskSetting('nonTaxFeeItems', feeItems)}
+                              className="h-8 px-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-mono text-[10px] uppercase font-bold flex-1 min-w-0 focus:outline-none focus:border-brand-primary"
+                            />
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={fee.amount}
+                              onChange={(e) => handleUpdateFeeItem(fee.id, 'amount', e.target.value)}
+                              onBlur={() => handleSaveDeskSetting('nonTaxFeeItems', feeItems)}
+                              className="h-8 px-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-right text-brand-primary font-mono text-[10px] font-black w-24 focus:outline-none focus:border-brand-primary"
+                            />
+                            <button
+                              onClick={() => { handleRemoveFeeItem(fee.id); handleSaveDeskSetting('nonTaxFeeItems', feeItems.filter(f => f.id !== fee.id)); }}
+                              className="h-8 w-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center hover:bg-rose-500/20 shrink-0"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black">Total</Typography>
+                        <Typography variant="mono" className="text-[10px] text-brand-primary font-black">${simpleNonTaxFees.toFixed(2)}</Typography>
+                      </div>
                     </div>
 
                     {/* Row 10: TOTAL */}

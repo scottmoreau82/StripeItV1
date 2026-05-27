@@ -7,6 +7,8 @@ import { Badge } from '../ui/Badge';
 import { userService } from '@/src/services/userService';
 import { UserProfile, SubscriptionTier } from '@/src/types';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { db } from '@/src/lib/firebase';
+import { collection, getDocs, writeBatch, doc, query, where } from 'firebase/firestore';
 import { 
   Search, 
   User as UserIcon, 
@@ -15,7 +17,9 @@ import {
   MoreVertical,
   Check,
   X,
-  Trash2
+  Trash2,
+  Gift,
+  Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
@@ -37,6 +41,10 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
   const [hasDuplicates, setHasDuplicates] = useState(false);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null);
+  const [grantingTrialId, setGrantingTrialId] = useState<string | null>(null);
+  const [isMassGranting, setIsMassGranting] = useState(false);
+  const [massGrantDays, setMassGrantDays] = useState(30);
+  const [showMassGrantConfirm, setShowMassGrantConfirm] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -145,6 +153,42 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
       addToast(!current ? 'Random deal access enabled.' : 'Random deal access disabled.', 'success');
     } catch (error) {
       addToast('Failed to update access.', 'error');
+    }
+  };
+
+  const handleGrantTrial = async (userId: string, days: number) => {
+    setGrantingTrialId(userId);
+    try {
+      const trialEndsAt = Date.now() + (days * 24 * 60 * 60 * 1000);
+      await import('firebase/firestore').then(({ doc, updateDoc, serverTimestamp }) => {
+        return updateDoc(doc(db, 'users', userId), { trialEndsAt, updatedAt: serverTimestamp() });
+      });
+      setUsers(prev => prev.map(u => u.uid === userId ? { ...u, trialEndsAt } : u));
+      addToast(`${days}-day trial granted.`, 'success');
+    } catch {
+      addToast('Failed to grant trial.', 'error');
+    } finally {
+      setGrantingTrialId(null);
+    }
+  };
+
+  const handleMassGrant = async () => {
+    setIsMassGranting(true);
+    try {
+      const trialEndsAt = Date.now() + (massGrantDays * 24 * 60 * 60 * 1000);
+      const freeUsers = users.filter(u => u.subscriptionTier === SubscriptionTier.FREE);
+      const batch = writeBatch(db);
+      freeUsers.forEach(u => {
+        batch.update(doc(db, 'users', u.uid), { trialEndsAt });
+      });
+      await batch.commit();
+      setUsers(prev => prev.map(u => u.subscriptionTier === SubscriptionTier.FREE ? { ...u, trialEndsAt } : u));
+      addToast(`Pro trial granted to ${freeUsers.length} FREE users for ${massGrantDays} days.`, 'success');
+      setShowMassGrantConfirm(false);
+    } catch {
+      addToast('Mass grant failed.', 'error');
+    } finally {
+      setIsMassGranting(false);
     }
   };
 
@@ -268,6 +312,25 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                       <div className={cn("absolute top-0.5 h-4 w-4 rounded-full transition-all duration-200", user.canCreateRandomDeals ? "left-[18px] bg-brand-primary" : "left-0.5 bg-slate-600")} />
                     </button>
                   </div>
+
+                  <div className="flex items-center gap-2">
+                    <select
+                      onChange={(e) => handleGrantTrial(user.uid, parseInt(e.target.value))}
+                      defaultValue=""
+                      disabled={grantingTrialId === user.uid}
+                      className="bg-bg-deep border border-white/10 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider focus:outline-none transition-all cursor-pointer text-amber-500"
+                      title="Grant Trial"
+                    >
+                      <option value="" disabled>Trial</option>
+                      <option value="7">7 Days</option>
+                      <option value="14">14 Days</option>
+                      <option value="30">30 Days</option>
+                      <option value="60">60 Days</option>
+                    </select>
+                    {grantingTrialId === user.uid && (
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+                    )}
+                  </div>
                   
                   <div className="h-8 w-px bg-white/5 mx-2" />
                   
@@ -326,6 +389,47 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
           ))
         )}
       </div>
+
+      {!showMassGrantConfirm ? (
+        <Card className="p-4 bg-amber-500/5 border border-amber-500/10 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Users className="h-5 w-5 text-amber-500 shrink-0" />
+            <div>
+              <Typography variant="label" className="text-amber-500 font-black uppercase text-[10px] tracking-widest block">Mass Trial Grant</Typography>
+              <Typography variant="small" className="text-slate-500 text-[10px]">Grant Pro trial to all FREE users at once</Typography>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <select
+              value={massGrantDays}
+              onChange={(e) => setMassGrantDays(parseInt(e.target.value))}
+              className="bg-bg-deep border border-white/10 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider focus:outline-none text-amber-500 font-bold"
+            >
+              <option value={7}>7 Days</option>
+              <option value={14}>14 Days</option>
+              <option value={30}>30 Days</option>
+              <option value={60}>60 Days</option>
+            </select>
+            <Button
+              onClick={() => setShowMassGrantConfirm(true)}
+              className="h-8 px-4 bg-amber-500/10 border border-amber-500/20 text-amber-500 hover:bg-amber-500/20 text-[10px] font-black uppercase tracking-widest rounded-lg"
+            >
+              <Gift size={12} className="mr-1 inline" />
+              Grant All
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <Card className="p-4 bg-amber-500/10 border border-amber-500/30 space-y-3">
+          <Typography variant="p" className="text-amber-400 text-sm font-bold">
+            Grant {massGrantDays}-day Pro trial to all {users.filter(u => u.subscriptionTier === SubscriptionTier.FREE).length} FREE users?
+          </Typography>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1 rounded-xl border-white/10 text-[10px] font-black uppercase" onClick={() => setShowMassGrantConfirm(false)} disabled={isMassGranting}>Cancel</Button>
+            <Button className="flex-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-black text-[10px] font-black uppercase" onClick={handleMassGrant} isLoading={isMassGranting}>Confirm Grant</Button>
+          </div>
+        </Card>
+      )}
 
       <Card className="p-6 bg-brand-primary/5 border border-brand-primary/10 flex items-center gap-4">
         <Shield className="h-5 w-5 text-brand-primary" />

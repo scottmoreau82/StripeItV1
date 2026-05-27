@@ -342,7 +342,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
               <div className="shrink-0 flex items-center">
-                <TierBadge tier={tierOverride || profile?.subscriptionTier} size="sm" />
+                <TierBadge tier={tierOverride || profile?.subscriptionTier} trialEndsAt={profile?.trialEndsAt} />
               </div>
             </div>
           </div>

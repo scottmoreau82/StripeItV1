@@ -7,8 +7,7 @@ import { Badge } from '../ui/Badge';
 import { userService } from '@/src/services/userService';
 import { UserProfile, SubscriptionTier } from '@/src/types';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { db } from '@/src/lib/firebase';
-import { collection, getDocs, writeBatch, doc, query, where } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, query, where } from 'firebase/firestore';
 import { 
   Search, 
   User as UserIcon, 
@@ -23,6 +22,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
+import { db } from '@/src/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 interface UserManagementPanelProps {
   orgId: string;
@@ -133,20 +134,14 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
   const handleGrantShortTrial = async (userId: string) => {
     setUpdatingId(userId);
     try {
-      const { doc, updateDoc } = await import('firebase/firestore');
-      const { db } = await import('@/src/lib/firebase');
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
         subscriptionTier: SubscriptionTier.TRIAL,
         trialEndsAt: Date.now() + (2 * 60 * 1000),
         updatedAt: Date.now()
       });
-      setUsers(prev => prev.map(u => u.uid === userId ? { 
-        ...u, 
-        subscriptionTier: SubscriptionTier.TRIAL,
-        trialEndsAt: Date.now() + (2 * 60 * 1000)
-      } : u));
-      addToast('2-minute trial granted. Expires in 2 minutes.', 'success');
+      setUsers(prev => prev.map(u => u.uid === userId ? { ...u, subscriptionTier: SubscriptionTier.TRIAL } : u));
+      addToast('2-minute trial granted.', 'success');
     } catch (error) {
       addToast('Failed to grant trial.', 'error');
     } finally {

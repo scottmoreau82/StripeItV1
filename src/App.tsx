@@ -109,16 +109,17 @@ function MainAppFlow() {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (
-      profile?.subscriptionTier === SubscriptionTier.TRIAL
-    ) {
-      const key = `stripeit_trial_welcome_seen_${user?.uid}`;
-      if (!localStorage.getItem(key)) {
-        setIsTrialWelcomeOpen(true);
-        localStorage.setItem(key, 'true');
-      }
-    }
-  }, [profile?.subscriptionTier, user?.uid]);
+    if (!profile) return;
+    if (profile.subscriptionTier !== SubscriptionTier.TRIAL) return;
+    if (!profile.trialEndsAt) return;
+    if (Date.now() > profile.trialEndsAt) return;
+    
+    const sessionKey = `stripeit_trial_welcome_shown_${profile.uid}`;
+    if (sessionStorage.getItem(sessionKey)) return;
+    
+    sessionStorage.setItem(sessionKey, 'true');
+    setIsTrialWelcomeOpen(true);
+  }, [profile?.uid, profile?.subscriptionTier]);
   
   const { 
     deals,
@@ -671,22 +672,6 @@ function MainAppFlow() {
         onClose={() => setIsWaitlistOpen(false)}
       />
 
-      {/* Trial Welcome Modal */}
-      <TrialWelcomeModal
-        isOpen={isTrialWelcomeOpen}
-        daysRemaining={30}
-        onConfigPayPlan={() => {
-          setIsTrialWelcomeOpen(false);
-          setIsPayPlanOpen(true);
-        }}
-        onLogDeal={() => {
-          setIsTrialWelcomeOpen(false);
-          setEditingDeal(null);
-          setIsNewDealOpen(true);
-        }}
-        onDismiss={() => setIsTrialWelcomeOpen(false)}
-      />
-
       {/* Global Mobile Log Deal FAB */}
       {isMobile && (location.pathname === '/' || isDrawerOpen) && !isNewDealOpen && !isNewSpiffOpen && !isFeedbackOpen && !isQuickNoteOpen && !isCompetitionOpen && (
         <div className={cn(
@@ -719,6 +704,14 @@ function MainAppFlow() {
         !isCompetitionOpen && (
         <div className="h-20 pointer-events-none" />
       )}
+
+      <TrialWelcomeModal
+        isOpen={isTrialWelcomeOpen}
+        daysRemaining={profile?.trialEndsAt ? Math.max(0, Math.ceil((profile.trialEndsAt - Date.now()) / (1000 * 60 * 60 * 24))) : 0}
+        onConfigPayPlan={() => { setIsTrialWelcomeOpen(false); setIsPayPlanOpen(true); }}
+        onLogDeal={() => { setIsTrialWelcomeOpen(false); setEditingDeal(null); setIsNewDealOpen(true); }}
+        onDismiss={() => setIsTrialWelcomeOpen(false)}
+      />
     </RootLayout>
     </>
   );

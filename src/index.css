@@ -147,6 +147,29 @@
   --shadow-glow: 0 0 25px -5px rgba(255, 0, 128, 0.35);
 }
 
+[data-theme="prowarm"] {
+ --color-bg-deep: #1A1813;
+ --color-bg-surface: #1F1E1B;
+ --color-bg-card: #262420;
+ --color-bg-elevated: #2E2C28;
+ --color-border: rgba(255, 255, 255, 0.06);
+ --color-text-primary: #F5F0E8;
+ --color-text-secondary: #A89F8C;
+ --color-text-muted: #6B6459;
+ --color-brand-primary: #D4A574;
+ --color-brand-secondary: #B8864E;
+ --accent-primary: var(--color-brand-primary);
+ --accent-secondary: var(--color-brand-secondary);
+ --bg-deep: var(--color-bg-deep);
+ --bg-main: var(--color-bg-surface);
+ --bg-card: var(--color-bg-card);
+ --bg-elevated: var(--color-bg-elevated);
+ --border-subtle: var(--color-border);
+ --border-card: var(--color-border);
+ --radius-card: 1.25rem;
+ --shadow-glow: 0 0 25px -5px rgba(212, 165, 116, 0.30);
+}
+
 [data-theme="light"] .text-white,
 [data-theme="light"] .text-slate-200,
 [data-theme="light"] .text-slate-300,

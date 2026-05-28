@@ -5,9 +5,9 @@ import { COLLECTIONS } from '@/src/constants';
 import { useAuth } from './AuthContext';
 import { SubscriptionTier } from '../types';
 
-type Theme = 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink';
+type Theme = 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink' | 'prowarm';
 
-export const isProTheme = (theme: Theme): boolean => ['prog', 'propink', 'lightTeal', 'lightBlue'].includes(theme);
+export const isProTheme = (theme: Theme): boolean => ['prog', 'propink', 'lightTeal', 'lightBlue', 'prowarm'].includes(theme);
 
 interface ThemeContextType {
   theme: Theme;
@@ -23,7 +23,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     // Check localStorage first for immediate render
     const savedTheme = localStorage.getItem('stripeit-theme') as Theme | null;
-    const validThemes: Theme[] = ['dark', 'light', 'lightTeal', 'lightBlue', 'prog', 'propink'];
+    const validThemes: Theme[] = ['dark', 'light', 'lightTeal', 'lightBlue', 'prog', 'propink', 'prowarm'];
     if (savedTheme && validThemes.includes(savedTheme)) {
       return savedTheme;
     }

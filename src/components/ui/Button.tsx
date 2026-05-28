@@ -3,6 +3,8 @@ import { cn } from '@/src/lib/utils';
 import { motion } from 'motion/react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { BUTTON_SHAPES } from '@/src/constants';
+import { useTheme } from '@/src/contexts/ThemeContext';
+import { isProTheme } from '@/src/contexts/ThemeContext';
 
 /**
  * StripeItButtonSystem
@@ -23,6 +25,7 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const { profile } = useAuth();
+  const { theme } = useTheme();
   const shapePreference = profile?.preferences?.buttonShape || 'standard';
   
   // Eligible for custom geometry: Major CTAs, actions, and primary buttons
@@ -33,7 +36,9 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = "inline-flex items-center justify-center font-medium transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
   
   const variants = {
-    primary: "bg-brand-primary text-bg-deep hover:bg-brand-primary/90 shadow-glow glow-primary font-black uppercase tracking-widest",
+    primary: isProTheme(theme)
+      ? "border border-brand-primary bg-transparent text-brand-primary hover:bg-brand-primary/10 shadow-glow glow-primary font-black uppercase tracking-widest"
+      : "bg-brand-primary text-bg-deep hover:bg-brand-primary/90 shadow-glow glow-primary font-black uppercase tracking-widest",
     secondary: "bg-brand-secondary/10 text-brand-secondary border border-brand-secondary/20 hover:bg-brand-secondary/20 font-bold uppercase tracking-wider text-[10px]",
     outline: "border border-white/10 bg-transparent hover:bg-white/5 text-slate-300",
     ghost: "text-slate-500 hover:bg-white/5 hover:text-white transition-colors",

@@ -63,7 +63,8 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
     { id: 'lightTeal', label: 'LT TEAL', bg: '#F0F3F7', accent: '#0891B2' },
     { id: 'lightBlue', label: 'LT BLUE', bg: '#F0F3F7', accent: '#0077CC' },
     { id: 'prog', label: 'PRO GREEN', bg: '#0A0E1A', accent: '#AAFF00' },
-    { id: 'propink', label: 'PRO PINK', bg: '#0A0E1A', accent: '#FF0080' }
+    { id: 'propink', label: 'PRO PINK', bg: '#0A0E1A', accent: '#FF0080' },
+    { id: 'prowarm', label: 'PRO WARM', bg: '#1A1813', accent: '#D4A574' }
   ];
 
   const handleIconThemeChange = async (newTheme: IconTheme) => {

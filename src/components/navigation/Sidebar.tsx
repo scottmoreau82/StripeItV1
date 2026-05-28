@@ -17,6 +17,8 @@ import { useResponsive } from '@/src/hooks/useResponsive';
 import { SubscriptionTier } from '@/src/types';
 import { AdminAnalyticsCard } from './AdminAnalyticsCard';
 import { useAppData } from '@/src/contexts/AppDataContext';
+import { useTheme } from '@/src/contexts/ThemeContext';
+import { isProTheme } from '@/src/contexts/ThemeContext';
 
 /**
  * StripeItSidebarSystem
@@ -38,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse 
 }) => {
   const { profile, user, isAdmin, tierOverride, setTierOverride, isEditMode, setIsEditMode } = useAuth();
+  const { theme } = useTheme();
   const { isCommissionConfigured } = useAppData();
   const location = useLocation();
   const [isSpiffModalOpen, setIsSpiffModalOpen] = React.useState(false);
@@ -231,7 +234,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onLogDeal}
           title={isCollapsed ? "Log Deal" : undefined}
           className={cn(
-            "bg-brand-primary hover:bg-brand-primary/90 text-bg-deep font-black shadow-glow glow-primary transition-all flex items-center justify-center group overflow-hidden",
+            isProTheme(theme)
+              ? "border border-brand-primary bg-transparent text-brand-primary hover:bg-brand-primary/10 shadow-glow glow-primary font-black transition-all flex items-center justify-center group overflow-hidden"
+              : "bg-brand-primary hover:bg-brand-primary/90 text-bg-deep font-black shadow-glow glow-primary transition-all flex items-center justify-center group overflow-hidden",
             isCollapsed 
               ? "h-10 w-10 p-0 rounded-xl mx-auto" 
               : "h-14 w-full rounded-xl px-4"

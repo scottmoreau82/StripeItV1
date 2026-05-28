@@ -252,7 +252,8 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
                 <div className="space-y-1">
                   {[
                     { label: 'Text Primary', field: 'textPrimary' },
-                    { label: 'Text Secondary', field: 'textSecondary' }
+                    { label: 'Text Secondary', field: 'textSecondary' },
+                    { label: 'Text Muted', field: 'textMuted' }
                   ].map((row) => (
                     <div key={row.field} className="flex items-center justify-between py-1.5 border-b border-border-subtle last:border-0">
                       <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">{row.label}</span>

@@ -138,7 +138,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
       <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Global Theme</Typography>
       
       <Card className={cn("bg-bg-card/20 border-border-subtle", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
-        <div className={cn("grid grid-cols-1 gap-8", !isMobile && "md:grid-cols-2")}>
+        <div className="flex flex-col gap-6">
           <div className="space-y-8">
             {/* Appearance Toggle */}
             <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
@@ -154,7 +154,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                 </div>
 
                 {/* 3-column grid of swatch cards */}
-                <div className="grid grid-cols-3 gap-3 font-medium">
+                <div className="grid grid-cols-4 gap-2 font-medium">
                   {swatches.map((swatch) => {
                     const isActive = theme === swatch.id;
                     const isLocked = isProTheme(swatch.id as any) && isFreeTier;
@@ -182,7 +182,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                       >
                         {/* Top half: 40px tall div showing theme background */}
                         <div 
-                          className="h-10 w-full rounded-lg relative flex items-center justify-center overflow-hidden"
+                          className="h-8 w-full rounded-lg relative flex items-center justify-center overflow-hidden"
                           style={{ backgroundColor: swatch.bg }}
                         >
                           <div 
@@ -212,7 +212,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
               </div>
             </div>
 
-            <div className="border-t border-border-subtle pt-6 mt-2">
+            <div className={cn("border-t border-border-subtle pt-6 mt-2", theme !== 'custom' && "hidden")}>
               <ThemeCreator isMobile={isMobile} />
             </div>
 
@@ -254,6 +254,28 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
               </div>
             </div>
 
+            {/* Visual Preview */}
+            <div className={cn("bg-white/[0.02] border border-border-subtle rounded-xl flex items-center justify-around", isMobile ? "p-3" : "p-4")}>
+              <div className="flex flex-col items-center gap-1">
+                <div className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center">
+                  <AppIcon name="dashboard" size={16} />
+                </div>
+                <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Home</Typography>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center">
+                  <AppIcon name="salesLog" size={16} />
+                </div>
+                <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Log</Typography>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center">
+                  <AppIcon name="settings" size={16} />
+                </div>
+                <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Config</Typography>
+              </div>
+            </div>
+
             {/* Button Geometry */}
             <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
               <div className="flex items-center gap-3">
@@ -278,82 +300,6 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                 </select>
               </div>
             </div>
-
-            {/* Pro Themes Section */}
-            <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-[#AAFF00]/10 border border-[#AAFF00]/20 flex items-center justify-center shrink-0">
-                  <Sparkles className="text-[#AAFF00]" size={20} />
-                </div>
-                <div>
-                  <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">PRO THEMES</Typography>
-                  <Typography variant="small" className="text-slate-500 text-[10px]">EXCLUSIVE COLOR SCHEMES</Typography>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    if (canUseProThemes) {
-                      setTheme('prog');
-                    } else {
-                      addToast('Upgrade to Pro to unlock Pro Themes.', 'info');
-                    }
-                  }}
-                  className={cn(
-                    "flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all border text-left",
-                    canUseProThemes
-                      ? theme === 'prog'
-                        ? "bg-[#AAFF00] text-bg-deep border-[#AAFF00] shadow-[0_0_20px_-5px_rgba(170,255,0,0.5)] font-bold cursor-pointer"
-                        : "text-slate-500 hover:text-white bg-transparent border-white/10 hover:border-white/20 cursor-pointer font-bold"
-                      : "opacity-50 cursor-not-allowed bg-transparent border-white/5 text-slate-500 font-bold"
-                  )}
-                >
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-xs font-black tracking-wider uppercase">PRO GREEN</span>
-                    <span className="text-[10px] font-mono opacity-80">#AAFF00</span>
-                  </div>
-                  {canUseProThemes ? (
-                    <div className="h-4 w-4 rounded-full bg-[#AAFF00] border border-[#AAFF00]/20" />
-                  ) : (
-                    <Lock size={12} className="text-[#AAFF00]" />
-                  )}
-                </button>
-
-                {!canUseProThemes && (
-                  <div className="p-3 bg-[#AAFF00]/5 border border-[#AAFF00]/10 rounded-xl flex items-center gap-2">
-                    <Lock size={12} className="text-[#AAFF00]" />
-                    <Typography variant="small" className="text-[10px] text-[#AAFF00] font-bold uppercase tracking-widest leading-none">
-                      PRO+ EXCLUSIVE
-                    </Typography>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className={cn("bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col justify-center gap-4", isMobile ? "p-4" : "p-6")}>
-             <Typography variant="small" className="text-slate-500 uppercase tracking-widest font-black text-[9px] mb-1">Visual Preview</Typography>
-             <div className="flex items-center justify-around">
-                <div className="flex flex-col items-center gap-1.5">
-                   <div className={cn("rounded-lg bg-white/5 flex items-center justify-center", isMobile ? "h-8 w-8" : "h-10 w-10")}>
-                      <AppIcon name="dashboard" size={isMobile ? 20 : 24} />
-                   </div>
-                   <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Home</Typography>
-                </div>
-                <div className="flex flex-col items-center gap-1.5">
-                   <div className={cn("rounded-lg bg-white/5 flex items-center justify-center", isMobile ? "h-8 w-8" : "h-10 w-10")}>
-                      <AppIcon name="salesLog" size={isMobile ? 20 : 24} />
-                   </div>
-                   <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Log</Typography>
-                </div>
-                <div className="flex flex-col items-center gap-1.5">
-                   <div className={cn("rounded-lg bg-white/5 flex items-center justify-center", isMobile ? "h-8 w-8" : "h-10 w-10")}>
-                      <AppIcon name="settings" size={isMobile ? 20 : 24} />
-                   </div>
-                   <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Config</Typography>
-                </div>
-             </div>
           </div>
         </div>
       </Card>

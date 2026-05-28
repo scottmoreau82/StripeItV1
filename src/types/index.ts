@@ -36,6 +36,21 @@ export enum IconTheme {
   HEROICONS = 'heroicons'
 }
 
+export interface CustomThemeConfig {
+  bgDeep: string;
+  bgSurface: string;
+  bgCard: string;
+  bgElevated: string;
+  brandPrimary: string;
+  brandSecondary: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  borderColor: string;
+  baseTheme: 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink' | 'prowarm';
+  savedAt: number;
+}
+
 export enum DealStatus {
   DRAFT = 'Draft',
   SUBMITTED = 'Submitted',
@@ -103,7 +118,8 @@ export interface UserProfile {
   suspensionAcknowledgedAt?: number;
   isDeleted?: boolean;
   lastActive?: number;
-  themePreference?: 'dark' | 'light' | `pro${string}`;
+  themePreference?: 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink' | 'prowarm' | 'custom';
+  customTheme?: CustomThemeConfig;
 }
 
 export interface PayPlanRule {

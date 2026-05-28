@@ -30,7 +30,8 @@ import { AppIcon } from '../ui/AppIcon';
 import { PageHeader } from '../ui/PageHeader';
 import { Settings } from 'lucide-react';
 
-import { useTheme, isProTheme } from '@/src/contexts/ThemeContext';
+import { useTheme, isProTheme, applyCustomTheme } from '@/src/contexts/ThemeContext';
+import { ThemeCreator } from './ThemeCreator';
 import { DashboardLayout } from '../layout/DashboardLayout';
 import { stripeService } from '@/src/services/stripeService';
 
@@ -64,7 +65,13 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
     { id: 'lightBlue', label: 'LT BLUE', bg: '#F0F3F7', accent: '#0077CC' },
     { id: 'prog', label: 'PRO GREEN', bg: '#0A0E1A', accent: '#AAFF00' },
     { id: 'propink', label: 'PRO PINK', bg: '#0A0E1A', accent: '#FF0080' },
-    { id: 'prowarm', label: 'PRO WARM', bg: '#1A1813', accent: '#D4A574' }
+    { id: 'prowarm', label: 'PRO WARM', bg: '#1A1813', accent: '#D4A574' },
+    {
+      id: 'custom',
+      label: 'CUSTOM',
+      bg: profile?.customTheme?.bgDeep || '#0A0E1A',
+      accent: profile?.customTheme?.brandPrimary || '#00D4FF'
+    }
   ];
 
   const handleIconThemeChange = async (newTheme: IconTheme) => {
@@ -161,6 +168,9 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                             window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'));
                           } else {
                             setTheme(swatch.id as any);
+                            if (swatch.id === 'custom' && profile?.customTheme) {
+                              applyCustomTheme(profile.customTheme);
+                            }
                           }
                         }}
                         className={cn(
@@ -200,6 +210,10 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                   })}
                 </div>
               </div>
+            </div>
+
+            <div className="border-t border-border-subtle pt-6 mt-2">
+              <ThemeCreator isMobile={isMobile} />
             </div>
 
             <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>

@@ -3,11 +3,39 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/src/lib/firebase';
 import { COLLECTIONS } from '@/src/constants';
 import { useAuth } from './AuthContext';
-import { SubscriptionTier } from '../types';
+import { SubscriptionTier, CustomThemeConfig } from '../types';
 
-type Theme = 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink' | 'prowarm';
+type Theme = 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink' | 'prowarm' | 'custom';
 
-export const isProTheme = (theme: Theme): boolean => ['prog', 'propink', 'lightTeal', 'lightBlue', 'prowarm'].includes(theme);
+export const isProTheme = (theme: Theme): boolean => ['prog', 'propink', 'lightTeal', 'lightBlue', 'prowarm', 'custom'].includes(theme);
+
+export const applyCustomTheme = (config: CustomThemeConfig) => {
+  const root = document.documentElement;
+  root.style.setProperty('--color-bg-deep', config.bgDeep);
+  root.style.setProperty('--color-bg-surface', config.bgSurface);
+  root.style.setProperty('--color-bg-card', config.bgCard);
+  root.style.setProperty('--color-bg-elevated', config.bgElevated);
+  root.style.setProperty('--color-brand-primary', config.brandPrimary);
+  root.style.setProperty('--color-brand-secondary', config.brandSecondary);
+  root.style.setProperty('--color-text-primary', config.textPrimary);
+  root.style.setProperty('--color-text-secondary', config.textSecondary);
+  root.style.setProperty('--color-text-muted', config.textMuted);
+  root.style.setProperty('--color-border', config.borderColor);
+  root.style.setProperty('--accent-primary', config.brandPrimary);
+  root.style.setProperty('--accent-secondary', config.brandSecondary);
+  root.style.setProperty('--shadow-glow', `0 0 25px -5px ${config.brandPrimary}55`);
+};
+
+export const clearCustomTheme = () => {
+  const root = document.documentElement;
+  const props = [
+    '--color-bg-deep', '--color-bg-surface', '--color-bg-card', '--color-bg-elevated',
+    '--color-brand-primary', '--color-brand-secondary', '--color-text-primary',
+    '--color-text-secondary', '--color-text-muted', '--color-border',
+    '--accent-primary', '--accent-secondary', '--shadow-glow'
+  ];
+  props.forEach(p => root.style.removeProperty(p));
+};
 
 interface ThemeContextType {
   theme: Theme;
@@ -23,7 +51,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     // Check localStorage first for immediate render
     const savedTheme = localStorage.getItem('stripeit-theme') as Theme | null;
-    const validThemes: Theme[] = ['dark', 'light', 'lightTeal', 'lightBlue', 'prog', 'propink', 'prowarm'];
+    const validThemes: Theme[] = ['dark', 'light', 'lightTeal', 'lightBlue', 'prog', 'propink', 'prowarm', 'custom'];
     if (savedTheme && validThemes.includes(savedTheme)) {
       return savedTheme;
     }
@@ -44,6 +72,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [profile?.themePreference, profile?.subscriptionTier]);
 
   const setTheme = (newTheme: Theme) => {
+    if (newTheme !== 'custom') {
+      clearCustomTheme();
+    }
     setThemeState(newTheme);
     localStorage.setItem('stripeit-theme', newTheme);
     

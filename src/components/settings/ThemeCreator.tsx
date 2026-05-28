@@ -187,13 +187,13 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
 
       {/* Main Base Card */}
       <div className="relative">
-        <Card className={cn("p-6 space-y-6 bg-bg-card/20 border-border-subtle", isFreeTier && "select-none")}>
+        <Card className={cn("p-5 space-y-4 bg-bg-card/20 border-border-subtle", isFreeTier && "select-none")}>
           {/* Start From Presets */}
           <div className="space-y-3">
             <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-text-muted">
               START FROM
             </Typography>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {(['dark', 'prowarm', 'prog', 'propink', 'light'] as const).map((presetId) => {
                 const isActive = selectedBase === presetId;
                 return (
@@ -203,7 +203,7 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
                     disabled={isFreeTier}
                     onClick={() => handleLoadPreset(presetId)}
                     className={cn(
-                      "px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer",
+                      "px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all cursor-pointer",
                       isActive
                         ? "border-brand-primary text-brand-primary bg-brand-primary/10 shadow-glow glow-primary"
                         : "border-border-subtle text-text-muted hover:border-brand-primary/50"
@@ -216,14 +216,14 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
             </div>
           </div>
 
-          <div className="border-t border-border-subtle my-4" />
+          <div className="border-t border-border-subtle my-0" />
 
           {/* Color Row Categories */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
             {/* Column 1: Brand & Text */}
             <div className="space-y-4">
               <div>
-                <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-text-muted mb-3 block">
+                <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-text-muted mb-2 block">
                   ACCENT & BRAND
                 </Typography>
                 <div className="space-y-1">
@@ -231,14 +231,14 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
                     { label: 'Accent Color', field: 'brandPrimary' },
                     { label: 'Accent Secondary', field: 'brandSecondary' }
                   ].map((row) => (
-                    <div key={row.field} className="flex items-center justify-between py-2 border-b border-border-subtle last:border-0 hover:bg-white/5 px-2 rounded-lg transition-colors">
+                    <div key={row.field} className="flex items-center justify-between py-1.5 border-b border-border-subtle last:border-0">
                       <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">{row.label}</span>
                       <input
                         type="color"
                         disabled={isFreeTier}
                         value={(config as any)[row.field]}
                         onChange={(e) => handleColorChange(row.field as any, e.target.value)}
-                        className="h-10 w-16 rounded-lg cursor-pointer border border-border-subtle bg-bg-card appearance-none p-0 outline-none overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-lg"
+                        className="h-8 w-12 rounded-md cursor-pointer border border-border-subtle bg-bg-card appearance-none p-0 outline-none overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-md"
                       />
                     </div>
                   ))}
@@ -246,7 +246,7 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
               </div>
 
               <div>
-                <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-text-muted mb-3 block">
+                <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-text-muted mb-2 block">
                   TEXT
                 </Typography>
                 <div className="space-y-1">
@@ -254,14 +254,14 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
                     { label: 'Text Primary', field: 'textPrimary' },
                     { label: 'Text Secondary', field: 'textSecondary' }
                   ].map((row) => (
-                    <div key={row.field} className="flex items-center justify-between py-2 border-b border-border-subtle last:border-0 hover:bg-white/5 px-2 rounded-lg transition-colors">
+                    <div key={row.field} className="flex items-center justify-between py-1.5 border-b border-border-subtle last:border-0">
                       <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">{row.label}</span>
                       <input
                         type="color"
                         disabled={isFreeTier}
                         value={(config as any)[row.field]}
                         onChange={(e) => handleColorChange(row.field as any, e.target.value)}
-                        className="h-10 w-16 rounded-lg cursor-pointer border border-border-subtle bg-bg-card appearance-none p-0 outline-none overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-lg"
+                        className="h-8 w-12 rounded-md cursor-pointer border border-border-subtle bg-bg-card appearance-none p-0 outline-none overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-md"
                       />
                     </div>
                   ))}
@@ -271,7 +271,7 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
 
             {/* Column 2: Backgrounds */}
             <div>
-              <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-text-muted mb-3 block">
+              <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-text-muted mb-2 block">
                 BACKGROUNDS
               </Typography>
               <div className="space-y-1">
@@ -281,14 +281,14 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
                   { label: 'Card', field: 'bgCard' },
                   { label: 'Elevated', field: 'bgElevated' }
                 ].map((row) => (
-                  <div key={row.field} className="flex items-center justify-between py-2 border-b border-border-subtle last:border-0 hover:bg-white/5 px-2 rounded-lg transition-colors">
+                  <div key={row.field} className="flex items-center justify-between py-1.5 border-b border-border-subtle last:border-0">
                     <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">{row.label}</span>
                     <input
                       type="color"
                       disabled={isFreeTier}
                       value={(config as any)[row.field]}
                       onChange={(e) => handleColorChange(row.field as any, e.target.value)}
-                      className="h-10 w-16 rounded-lg cursor-pointer border border-border-subtle bg-bg-card appearance-none p-0 outline-none overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-lg"
+                      className="h-8 w-12 rounded-md cursor-pointer border border-border-subtle bg-bg-card appearance-none p-0 outline-none overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-md"
                     />
                   </div>
                 ))}
@@ -296,10 +296,10 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
             </div>
           </div>
 
-          <div className="border-t border-border-subtle my-4" />
+          <div className="border-t border-border-subtle my-0" />
 
           {/* Action Row */}
-          <div className="flex items-center justify-between pt-4 flex-wrap gap-3">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"

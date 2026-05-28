@@ -35,6 +35,7 @@ import { DashboardLayout } from '../layout/DashboardLayout';
 import { stripeService } from '@/src/services/stripeService';
 
 import { useResponsive } from '@/src/hooks/useResponsive';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 
 /**
  * StripeItSettingsSystem
@@ -950,17 +951,27 @@ const ProfilePanel = ({ profile, isMobile }: { profile: UserProfile | null, isMo
 };
 
 const AccountPanel = ({ profile: propProfile, isMobile }: { profile: UserProfile | null, isMobile?: boolean }) => {
-  const { profile } = useAuth();
+  const { profile, addToast } = useAuth();
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [resetPending, setResetPending] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
-  const handleManage = async () => {
-    if (!profile?.uid || !profile?.email) return;
-    setIsUpgrading(true);
+  const handleChangePassword = async () => {
+    if (!resetPending) {
+      setResetPending(true);
+      return;
+    }
+    if (!profile?.email) return;
+    setIsSendingReset(true);
     try {
-      await stripeService.createCheckoutSession(profile.uid, profile.email);
-    } catch (err) {
-      console.error('Upgrade error:', err);
-      setIsUpgrading(false);
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, profile.email);
+      addToast(`Reset link sent to ${profile.email}`, 'success');
+      setResetPending(false);
+    } catch (error) {
+      addToast('Failed to send reset email. Try again.', 'error');
+    } finally {
+      setIsSendingReset(false);
     }
   };
 
@@ -979,7 +990,35 @@ const AccountPanel = ({ profile: propProfile, isMobile }: { profile: UserProfile
               <Typography variant="small" className="text-slate-500 text-[10px]">Last changed 4 months ago</Typography>
             </div>
           </div>
-          <Button variant="secondary" className={cn("bg-white/5 border-white/10", isMobile ? "text-[10px] px-3 h-8" : "text-xs px-6")}>Change</Button>
+          {resetPending ? (
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col items-end gap-0.5 mr-1">
+                <Typography variant="mono" className="text-[9px] text-slate-400 uppercase font-black">Send reset to</Typography>
+                <Typography variant="mono" className="text-[9px] text-brand-primary font-black truncate max-w-[140px]">{profile?.email}</Typography>
+              </div>
+              <button
+                onClick={handleChangePassword}
+                disabled={isSendingReset}
+                className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[9px] font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all disabled:opacity-50"
+              >
+                {isSendingReset ? 'Sending...' : 'Confirm'}
+              </button>
+              <button
+                onClick={() => setResetPending(false)}
+                className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={handleChangePassword}
+              className={cn("bg-white/5 border-white/10", isMobile ? "text-[10px] px-3 h-8" : "text-xs px-6")}
+            >
+              Change
+            </Button>
+          )}
         </Card>
 
         <Card className={cn("bg-bg-card/20 border-white/5 flex items-center justify-between", isMobile ? "p-4" : "p-8")}>

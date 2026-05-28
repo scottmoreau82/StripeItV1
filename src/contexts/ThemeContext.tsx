@@ -5,9 +5,9 @@ import { COLLECTIONS } from '@/src/constants';
 import { useAuth } from './AuthContext';
 import { SubscriptionTier } from '../types';
 
-type Theme = 'dark' | 'light' | `pro${string}`;
+type Theme = 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink';
 
-export const isProTheme = (theme: string): boolean => theme.startsWith('pro');
+export const isProTheme = (theme: Theme): boolean => ['prog', 'propink', 'lightTeal', 'lightBlue'].includes(theme);
 
 interface ThemeContextType {
   theme: Theme;
@@ -23,10 +23,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     // Check localStorage first for immediate render
     const savedTheme = localStorage.getItem('stripeit-theme') as Theme | null;
-    if (savedTheme && !['dark', 'light'].includes(savedTheme) && !savedTheme.startsWith('pro')) {
-      return 'dark';
-    }
-    if (savedTheme === 'dark' || savedTheme === 'light' || (savedTheme && savedTheme.startsWith('pro'))) {
+    const validThemes: Theme[] = ['dark', 'light', 'lightTeal', 'lightBlue', 'prog', 'propink'];
+    if (savedTheme && validThemes.includes(savedTheme)) {
       return savedTheme;
     }
     return 'dark';
@@ -34,12 +32,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // sync with profile on mount/change
   useEffect(() => {
-    if (profile?.themePreference && profile.themePreference !== theme) {
+    if (profile?.themePreference && (profile.themePreference as Theme) !== theme) {
       setThemeState(profile.themePreference as Theme);
       localStorage.setItem('stripeit-theme', profile.themePreference);
     }
 
-    if (profile?.themePreference && profile.themePreference.startsWith('pro') && profile.subscriptionTier !== SubscriptionTier.PRO && profile.subscriptionTier !== SubscriptionTier.ORGANIZATION) {
+    if (profile?.themePreference && isProTheme(profile.themePreference as Theme) && profile.subscriptionTier !== SubscriptionTier.PRO && profile.subscriptionTier !== SubscriptionTier.ORGANIZATION) {
       setThemeState('dark');
       localStorage.setItem('stripeit-theme', 'dark');
     }

@@ -57,6 +57,15 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
   const canUseProThemes = profile?.subscriptionTier === SubscriptionTier.PRO || 
     profile?.subscriptionTier === SubscriptionTier.ORGANIZATION;
 
+  const swatches = [
+    { id: 'dark', label: 'DARK', bg: '#0A0E1A', accent: '#00D4FF' },
+    { id: 'light', label: 'LIGHT', bg: '#F0F3F7', accent: '#00D4FF' },
+    { id: 'lightTeal', label: 'LT TEAL', bg: '#F0F3F7', accent: '#0891B2' },
+    { id: 'lightBlue', label: 'LT BLUE', bg: '#F0F3F7', accent: '#0077CC' },
+    { id: 'prog', label: 'PRO GREEN', bg: '#0A0E1A', accent: '#AAFF00' },
+    { id: 'propink', label: 'PRO PINK', bg: '#0A0E1A', accent: '#FF0080' }
+  ];
+
   const handleIconThemeChange = async (newTheme: IconTheme) => {
     if (isFreeTier) {
       addToast('Upgrade to Pro or higher to change icon themes.', 'info');
@@ -120,45 +129,74 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
       <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Global Theme</Typography>
       
-      <Card className={cn("bg-bg-card/20 border-white/5", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
+      <Card className={cn("bg-bg-card/20 border-border-subtle", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
         <div className={cn("grid grid-cols-1 gap-8", !isMobile && "md:grid-cols-2")}>
           <div className="space-y-8">
             {/* Appearance Toggle */}
             <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-              <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0 border border-brand-primary/20">
                     <Sun className="text-brand-primary" size={20} />
                   </div>
                   <div>
                     <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">APPEARANCE</Typography>
-                    <Typography variant="small" className="text-slate-500 text-[10px]">DARK / LIGHT THEME</Typography>
+                    <Typography variant="small" className="text-slate-500 text-[10px] uppercase">DARK / LIGHT THEME</Typography>
                   </div>
                 </div>
 
-                <div className="flex bg-bg-deep p-1 rounded-xl border border-white/10 shrink-0">
-                  <button
-                    onClick={() => setTheme('dark')}
-                    className={cn(
-                      "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer",
-                      theme === 'dark' 
-                        ? "bg-brand-primary text-bg-deep shadow-glow glow-primary" 
-                        : "text-slate-500 hover:text-white bg-transparent"
-                    )}
-                  >
-                    Dark
-                  </button>
-                  <button
-                    onClick={() => setTheme('light')}
-                    className={cn(
-                      "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer",
-                      theme === 'light' 
-                        ? "bg-brand-primary text-bg-deep shadow-glow glow-primary" 
-                        : "text-slate-500 hover:text-white bg-transparent"
-                    )}
-                  >
-                    Light
-                  </button>
+                {/* 3-column grid of swatch cards */}
+                <div className="grid grid-cols-3 gap-3 font-medium">
+                  {swatches.map((swatch) => {
+                    const isActive = theme === swatch.id;
+                    const isLocked = isProTheme(swatch.id as any) && isFreeTier;
+
+                    return (
+                      <button
+                        key={swatch.id}
+                        type="button"
+                        onClick={() => {
+                          if (isLocked) {
+                            window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'));
+                          } else {
+                            setTheme(swatch.id as any);
+                          }
+                        }}
+                        className={cn(
+                          "relative rounded-xl border-2 p-3 cursor-pointer transition-all flex flex-col gap-2 text-left bg-bg-card",
+                          isActive
+                            ? "border-brand-primary shadow-glow"
+                            : "border-border-subtle hover:border-border-subtle/80"
+                        )}
+                      >
+                        {/* Top half: 40px tall div showing theme background */}
+                        <div 
+                          className="h-10 w-full rounded-lg relative flex items-center justify-center overflow-hidden"
+                          style={{ backgroundColor: swatch.bg }}
+                        >
+                          <div 
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: swatch.accent }}
+                          />
+                        </div>
+
+                        {/* Bottom label */}
+                        <Typography 
+                          variant="mono" 
+                          className="text-[9px] font-black uppercase tracking-widest text-text-primary text-center w-full block truncate"
+                        >
+                          {swatch.label}
+                        </Typography>
+
+                        {/* PRO badge */}
+                        {isLocked && (
+                          <div className="absolute top-1.5 right-1.5 px-1 pb-0.5 rounded bg-amber-500 text-black text-[7px] font-black tracking-wider uppercase leading-none shadow-sm">
+                            PRO+
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

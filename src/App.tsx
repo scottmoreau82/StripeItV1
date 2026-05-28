@@ -174,9 +174,15 @@ function MainAppFlow() {
     window.addEventListener('stripeit:open-waitlist', handleOpenWaitlistEvent);
 
     const handleUpgradeEvent = () => {
-      setIsUpgradeOpen(true);
+      setUpgradeModalMode('upgrade');
+      setIsUpgradeModalOpen(true);
+    };
+    const handleManageEvent = () => {
+      setUpgradeModalMode('manage');
+      setIsUpgradeModalOpen(true);
     };
     window.addEventListener('stripeit:open-upgrade', handleUpgradeEvent);
+    window.addEventListener('stripeit:open-manage', handleManageEvent);
 
     const handleOpenArchitect = () => {
       setIsCommissionArchitectOpen(true);
@@ -190,12 +196,15 @@ function MainAppFlow() {
       window.removeEventListener('stripeit:drawer-toggle', handleDrawer);
       window.removeEventListener('stripeit:open-waitlist', handleOpenWaitlistEvent);
       window.removeEventListener('stripeit:open-upgrade', handleUpgradeEvent);
+      window.removeEventListener('stripeit:open-manage', handleManageEvent);
       window.removeEventListener('stripeit:open-commission-architect', handleOpenArchitect);
     };
   }, [handleCreateRandomDeal]);
 
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [limitMessage, setLimitMessage] = useState('');
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeModalMode, setUpgradeModalMode] = useState<'upgrade' | 'manage'>('upgrade');
 
   const handleSubmitDeal = async (dealData: Partial<Deal>) => {
     setIsSubmitting(true);
@@ -659,11 +668,30 @@ function MainAppFlow() {
         isLoading={isSubmitting}
       />
 
-      {/* Upgrade Modal */}
-      <UpgradeModal
+      {/* Upgrade Modal - Plan Limit */}
+      <Modal
         isOpen={isUpgradeOpen}
         onClose={() => setIsUpgradeOpen(false)}
-        mode={profile?.subscriptionTier === SubscriptionTier.PRO ? 'manage' : 'upgrade'}
+        title="Upgrade Your Plan"
+        className="z-[60]"
+      >
+        <UpgradePrompt 
+          title="Unlimited Deal Logging"
+          description={limitMessage}
+          tierRequired="Pro"
+          onUpgrade={() => {
+            setIsUpgradeOpen(false);
+            setUpgradeModalMode('upgrade');
+            setIsUpgradeModalOpen(true);
+          }}
+        />
+      </Modal>
+
+      {/* Upgrade Modal - Stripe Checkout */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        mode={upgradeModalMode}
       />
 
       {/* Waitlist Modal */}

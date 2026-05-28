@@ -155,6 +155,7 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
         customTheme: finalConfig,
         themePreference: 'custom'
       });
+      localStorage.setItem('stripeit-custom-theme', JSON.stringify(finalConfig));
       setTheme('custom');
       applyCustomTheme(finalConfig);
       addToast('Custom theme saved!', 'success');

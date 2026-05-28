@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/src/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '@/src/lib/firebase';
 import { COLLECTIONS } from '@/src/constants';
 import { useAuth } from './AuthContext';
 import { SubscriptionTier, CustomThemeConfig } from '../types';
@@ -99,8 +100,30 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
-    // Apply data-theme attribute to document root
-    document.documentElement.setAttribute('data-theme', theme);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+    });
+    return () => unsubscribe();
+  }, [theme]);
+
+  useEffect(() => {
+    if (theme === 'custom') {
+      try {
+        const stored = localStorage.getItem('stripeit-custom-theme');
+        if (stored) {
+          const config = JSON.parse(stored);
+          applyCustomTheme(config);
+        }
+      } catch (e) {
+        console.warn('Failed to restore custom theme:', e);
+      }
+    } else {
+      clearCustomTheme();
+    }
   }, [theme]);
 
   return (

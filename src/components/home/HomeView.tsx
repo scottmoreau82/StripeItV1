@@ -702,68 +702,30 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="flex flex-col gap-6">
           {/* Average Performance Static Card */}
           {!isFree && (
-            isMobile ? (
-              <div>
-                <CollapsibleHeader
-                  label="Avg Performance"
-                  isOpen={avgOpen}
-                  onToggle={() => setAvgOpen(p => !p)}
-                />
-                <AnimatePresence initial={false}>
-                  {avgOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden pt-2"
-                    >
-                      <Card className="p-6 bg-bg-card/40 border-white/5 space-y-4">
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
-                           <div className="h-10 w-10 rounded-full bg-brand-deep/10 flex items-center justify-center border border-brand-deep/20 shrink-0">
-                             <Activity className="h-5 w-5 text-brand-deep" />
-                           </div>
-                           <div className="flex flex-col items-center sm:items-start">
-                              <Typography variant="mono" className="text-[9px] text-slate-500">AVG FRONT / UNIT</Typography>
-                              <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}</Typography>
-                           </div>
-                        </div>
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 pt-4 border-t border-white/5">
-                           <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
-                             <Award className="h-5 w-5 text-emerald-500" />
-                           </div>
-                           <div className="flex flex-col items-center sm:items-start">
-                              <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest">Avg Est. Payout / Unit</Typography>
-                              <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
-                           </div>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+            <Card className="p-4 bg-bg-card/40 border-border-subtle">
+              <div className="grid grid-cols-2 divide-x divide-border-subtle">
+                <div className="flex flex-col gap-0.5 pr-4">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Activity className="h-3 w-3 text-brand-primary shrink-0" />
+                    <Typography variant="mono" className="text-[8px] text-text-muted uppercase tracking-widest font-black leading-none">Avg Front</Typography>
+                  </div>
+                  <Typography variant="mono" className="text-text-primary text-base font-black leading-none">
+                    ${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}
+                  </Typography>
+                  <Typography variant="mono" className="text-[8px] text-text-muted">/unit</Typography>
+                </div>
+                <div className="flex flex-col gap-0.5 pl-4">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Award className="h-3 w-3 text-emerald-500 shrink-0" />
+                    <Typography variant="mono" className="text-[8px] text-text-muted uppercase tracking-widest font-black leading-none">Avg Payout</Typography>
+                  </div>
+                  <Typography variant="mono" className="text-emerald-400 text-base font-black leading-none">
+                    ${Math.round(metrics.avgCommission).toLocaleString()}
+                  </Typography>
+                  <Typography variant="mono" className="text-[8px] text-text-muted">/unit</Typography>
+                </div>
               </div>
-            ) : (
-              <Card className="p-6 bg-bg-card/40 border-white/5 space-y-4">
-                <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
-                   <div className="h-10 w-10 rounded-full bg-brand-deep/10 flex items-center justify-center border border-brand-deep/20 shrink-0">
-                     <Activity className="h-5 w-5 text-brand-deep" />
-                   </div>
-                   <div className="flex flex-col items-center sm:items-start">
-                      <Typography variant="mono" className="text-[9px] text-slate-500">AVG FRONT / UNIT</Typography>
-                      <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}</Typography>
-                   </div>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 pt-4 border-t border-white/5">
-                   <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
-                     <Award className="h-5 w-5 text-emerald-500" />
-                   </div>
-                   <div className="flex flex-col items-center sm:items-start">
-                      <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest">Avg Est. Payout / Unit</Typography>
-                      <Typography variant="h3" className="text-text-primary text-lg">${Math.round(metrics.avgCommission).toLocaleString()}</Typography>
-                   </div>
-                </div>
-              </Card>
-            )
+            </Card>
           )}
 
           {!isMobile && !isFree && <QuickActions onQuickNote={onQuickNote} />}

@@ -100,8 +100,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const [devTierOverride, setDevTierOverride] = useState<SubscriptionTier | null>(null);
   const [showSpiffs, setShowSpiffs] = useState(false);
 
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDeleteDealId, setPendingDeleteDealId] = useState<string | null>(null);
   const [pendingDeleteSpiffId, setPendingDeleteSpiffId] = useState<string | null>(null);
+  const [pendingDeleteMobileDealId, setPendingDeleteMobileDealId] = useState<string | null>(null);
 
   const [isUpgrading, setIsUpgrading] = useState(false);
 
@@ -111,8 +112,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   useEffect(() => {
     const handleOutsideClick = () => {
-      setPendingDeleteId(null);
+      setPendingDeleteDealId(null);
       setPendingDeleteSpiffId(null);
+      setPendingDeleteMobileDealId(null);
     };
     window.addEventListener('click', handleOutsideClick);
     return () => {
@@ -674,25 +676,24 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                               >
                                 <AppIcon name="edit" size={14} />
                               </button>
-                              {pendingDeleteId === deal.id ? (
-                                <button 
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    handleDeleteDeal?.(deal.id);
-                                    setPendingDeleteId(null);
-                                  }}
-                                  className="p-1 px-2 text-[10px] uppercase font-black tracking-widest rounded-lg border border-rose-500/50 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-all active:scale-95 shadow-sm flex items-center gap-1"
-                                  title="Confirm Delete"
-                                >
-                                  <Check size={10} className="text-rose-400 shrink-0" />
-                                  <span>Confirm?</span>
-                                </button>
+                              {pendingDeleteDealId === deal.id ? (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteDeal?.(deal.id); setPendingDeleteDealId(null); }}
+                                    className="px-2 py-1 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-400 text-[9px] font-black uppercase tracking-widest hover:bg-rose-500/30 transition-all"
+                                  >
+                                    Confirm
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setPendingDeleteDealId(null); }}
+                                    className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
                               ) : (
                                 <button 
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    setPendingDeleteId(deal.id);
-                                  }}
+                                  onClick={(e) => { e.stopPropagation(); setPendingDeleteDealId(deal.id); }}
                                   className="p-2 rounded-lg border border-border-subtle bg-bg-card text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm"
                                   title="Delete Deal"
                                 >
@@ -858,31 +859,29 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                  >
                                    <AppIcon name="edit" size={16} />
                                  </button>
-                                 {pendingDeleteId === deal.id ? (
-                                   <button 
-                                     onClick={(e) => { 
-                                       e.stopPropagation(); 
-                                       handleDeleteDeal?.(deal.id);
-                                       setPendingDeleteId(null);
-                                     }}
-                                     className="p-2.5 px-3.5 text-xs font-black uppercase tracking-widest rounded-xl bg-rose-500/20 border border-rose-500 text-rose-400 hover:text-rose-300 hover:bg-rose-500/30 transition-all active:scale-95 flex items-center gap-1.5"
-                                     title="Confirm Delete"
-                                   >
-                                     <Check size={12} className="text-rose-400 shrink-0" />
-                                     <span>Confirm</span>
-                                   </button>
-                                 ) : (
-                                   <button 
-                                     onClick={(e) => { 
-                                       e.stopPropagation(); 
-                                       setPendingDeleteId(deal.id);
-                                     }}
-                                     className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-all active:scale-95"
-                                     title="Delete Deal"
-                                   >
-                                     <AppIcon name="delete" size={16} />
-                                   </button>
-                                 )}
+                                 {pendingDeleteMobileDealId === deal.id ? (
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteDeal?.(deal.id); setPendingDeleteMobileDealId(null); }}
+                                        className="px-2 py-1 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-400 text-[9px] font-black uppercase tracking-widest"
+                                      >
+                                        Confirm
+                                      </button>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); setPendingDeleteMobileDealId(null); }}
+                                        className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); setPendingDeleteMobileDealId(deal.id); }}
+                                      className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 transition-all active:scale-95"
+                                    >
+                                      <AppIcon name="delete" size={16} />
+                                    </button>
+                                  )}
                                </div>
                             </div>
                           </motion.div>
@@ -944,71 +943,60 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                 {showSpiffs && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                     {sortedSpiffs.map((spiff, index) => (
-                      <React.Fragment key={spiff.id}>
-                        <motion.div
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.03 }}
-                          onClick={() => window.dispatchEvent(
-                            new CustomEvent('stripeit:edit-spiff', { detail: spiff })
-                          )}
-                          className="flex items-center justify-between px-4 py-3 rounded-xl bg-bg-card border border-emerald-500/10 cursor-pointer hover:bg-emerald-500/[0.06] transition-colors group"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                              <AppIcon name="billing" size={12} className="text-emerald-400" />
-                            </div>
-                            <div className="min-w-0">
-                              <Typography variant="label" className="text-text-primary text-xs font-black truncate block">
-                                {spiff.label || 'SPIFF'}
-                              </Typography>
-                              <Typography variant="mono" className="text-[9px] text-slate-500">
-                                {formatDateSafe(spiff.date, 'MM/dd/yy')}
-                                {spiff.notes && ` • ${spiff.notes}`}
-                              </Typography>
-                            </div>
+                      <motion.div
+                        key={spiff.id}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        onClick={() => window.dispatchEvent(
+                          new CustomEvent('stripeit:edit-spiff', { detail: spiff })
+                        )}
+                        className="flex items-center justify-between px-4 py-3 rounded-xl bg-bg-card border border-emerald-500/10 cursor-pointer hover:bg-emerald-500/[0.06] transition-colors group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                            <AppIcon name="billing" size={12} className="text-emerald-400" />
                           </div>
-                          <div className="flex items-center gap-3 shrink-0">
-                            <Typography variant="label" className="text-emerald-400 font-black text-sm">
-                              +${spiff.amount.toLocaleString()}
+                          <div className="min-w-0">
+                            <Typography variant="label" className="text-text-primary text-xs font-black truncate block">
+                              {spiff.label || 'SPIFF'}
                             </Typography>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPendingDeleteSpiffId(spiff.id);
-                              }}
-                              className="p-1.5 rounded-lg text-slate-700 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
-                            >
-                              <AppIcon name="delete" size={12} />
-                            </button>
+                            <Typography variant="mono" className="text-[9px] text-slate-500">
+                              {formatDateSafe(spiff.date, 'MM/dd/yy')}
+                              {spiff.notes && ` • ${spiff.notes}`}
+                            </Typography>
                           </div>
-                        </motion.div>
-
-                        {pendingDeleteSpiffId === spiff.id && (
-                          <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                            <Typography variant="mono" className="text-[10px] text-rose-400 uppercase font-black tracking-widest">
-                              Delete this spiff?
-                            </Typography>
-                            <div className="flex items-center gap-2">
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <Typography variant="label" className="text-emerald-400 font-black text-sm">
+                            +${spiff.amount.toLocaleString()}
+                          </Typography>
+                          {pendingDeleteSpiffId === spiff.id ? (
+                            <div className="flex items-center gap-1">
                               <button
-                                onClick={() => {
-                                  handleDeleteMonthlySpiff?.(spiff.id);
-                                  setPendingDeleteSpiffId(null);
-                                }}
-                                className="px-3 py-1.5 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500/30 transition-all active:scale-95"
+                                onClick={(e) => { e.stopPropagation(); handleDeleteMonthlySpiff?.(spiff.id); setPendingDeleteSpiffId(null); }}
+                                className="px-2 py-1 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-400 text-[9px] font-black uppercase tracking-widest hover:bg-rose-500/30 transition-all"
                               >
-                                Delete
+                                Confirm
                               </button>
                               <button
-                                onClick={() => setPendingDeleteSpiffId(null)}
-                                className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95"
+                                onClick={(e) => { e.stopPropagation(); setPendingDeleteSpiffId(null); }}
+                                className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
                               >
                                 Cancel
                               </button>
                             </div>
-                          </div>
-                        )}
-                      </React.Fragment>
+                          ) : (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setPendingDeleteSpiffId(spiff.id); }}
+                              className="p-2 rounded-lg border border-border-subtle bg-bg-card text-slate-500 hover:text-rose-400 hover:border-rose-400/30 hover:bg-rose-400/10 transition-all active:scale-95 shadow-sm opacity-100 md:opacity-0 group-hover:opacity-100"
+                              title="Delete Adjustment"
+                            >
+                              <AppIcon name="delete" size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
                     ))}
                   </div>
                 )}

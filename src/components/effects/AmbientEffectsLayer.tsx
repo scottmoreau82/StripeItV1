@@ -7,19 +7,22 @@ import { cn } from '@/src/lib/utils';
 const AuroraEffect = () => (
   <>
     <motion.div
-      animate={{ x: [0, 60, -30, 0], y: [0, -40, 30, 0], scale: [1, 1.3, 0.85, 1] }}
+      initial={{ opacity: 0 }}
+      animate={{ x: [0, 60, -30, 0], y: [0, -40, 30, 0], scale: [1, 1.3, 0.85, 1], opacity: [0, 1, 1, 1] }}
       transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
       className="absolute top-[-20%] left-[-15%] w-[600px] h-[600px] rounded-full blur-[140px]"
       style={{ backgroundColor: 'color-mix(in srgb, var(--color-brand-primary) 18%, transparent)' }}
     />
     <motion.div
-      animate={{ x: [0, -40, 60, 0], y: [0, 50, -30, 0], scale: [1, 0.8, 1.2, 1] }}
+      initial={{ opacity: 0 }}
+      animate={{ x: [0, -40, 60, 0], y: [0, 50, -30, 0], scale: [1, 0.8, 1.2, 1], opacity: [0, 1, 1, 1] }}
       transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
       className="absolute top-[-10%] right-[-15%] w-[500px] h-[500px] rounded-full blur-[120px]"
       style={{ backgroundColor: 'color-mix(in srgb, var(--color-brand-secondary) 15%, transparent)' }}
     />
     <motion.div
-      animate={{ x: [0, 30, -50, 0], y: [0, 40, -20, 0] }}
+      initial={{ opacity: 0 }}
+      animate={{ x: [0, 30, -50, 0], y: [0, 40, -20, 0], opacity: [0, 1, 1, 1] }}
       transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 8 }}
       className="absolute bottom-[-20%] left-[20%] w-[450px] h-[450px] rounded-full blur-[120px]"
       style={{ backgroundColor: 'color-mix(in srgb, var(--color-brand-primary) 10%, transparent)' }}
@@ -30,19 +33,22 @@ const AuroraEffect = () => (
 const GradientMeshEffect = () => (
   <>
     <motion.div
-      animate={{ x: [0, 40, 0], y: [0, -30, 0] }}
+      initial={{ opacity: 0 }}
+      animate={{ x: [0, 40, 0], y: [0, -30, 0], opacity: [0, 1, 1] }}
       transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
       className="absolute top-[10%] left-[5%] w-[400px] h-[400px] rounded-full blur-[100px]"
       style={{ backgroundColor: 'color-mix(in srgb, var(--color-brand-primary) 12%, transparent)' }}
     />
     <motion.div
-      animate={{ x: [0, -30, 0], y: [0, 40, 0] }}
+      initial={{ opacity: 0 }}
+      animate={{ x: [0, -30, 0], y: [0, 40, 0], opacity: [0, 1, 1] }}
       transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
       className="absolute bottom-[10%] right-[5%] w-[350px] h-[350px] rounded-full blur-[90px]"
       style={{ backgroundColor: 'color-mix(in srgb, var(--color-brand-secondary) 10%, transparent)' }}
     />
     <motion.div
-      animate={{ x: [0, 20, -20, 0], y: [0, -20, 20, 0] }}
+      initial={{ opacity: 0 }}
+      animate={{ x: [0, 20, -20, 0], y: [0, -20, 20, 0], opacity: [0, 1, 1, 1] }}
       transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 5 }}
       className="absolute top-[40%] left-[40%] w-[300px] h-[300px] rounded-full blur-[80px]"
       style={{ backgroundColor: 'color-mix(in srgb, var(--color-brand-primary) 8%, transparent)' }}

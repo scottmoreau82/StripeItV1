@@ -480,6 +480,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [retryKey]);
 
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && auth.currentUser) {
+        try {
+          // Force token refresh to re-establish Firebase connection
+          await auth.currentUser.getIdToken(true);
+          
+          // Re-fetch profile directly to get fresh data
+          const { getDoc, doc } = await import('firebase/firestore');
+          const userDocRef = doc(db, COLLECTIONS.USERS, auth.currentUser.uid);
+          const snap = await getDoc(userDocRef);
+          
+          if (snap.exists()) {
+            const rawData = snap.data();
+            let subscriptionTier = rawData.subscriptionTier;
+            if (subscriptionTier === 'basic') subscriptionTier = SubscriptionTier.PRO;
+            
+            setProfile(prev => prev ? {
+              ...prev,
+              ...rawData,
+              subscriptionTier,
+              updatedAt: rawData.updatedAt?.toMillis?.() || rawData.updatedAt || Date.now(),
+            } as any : prev);
+          }
+        } catch (error) {
+          console.warn('Visibility refresh failed:', error);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   const logout = async () => {
     try {
       setLoading(true);

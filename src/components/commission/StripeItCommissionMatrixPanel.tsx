@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   PayPlan, 
   PayPlanRule, 
@@ -485,6 +485,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   const { deals, triggerError, monthlySpiffs = [] } = useAppData();
   const { profile, addToast } = useAuth();
   const isSimulationEngineEnabled = true;
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Import/Export States
   const [importPreview, setImportPreview] = useState<Partial<PayPlan> | null>(null);
@@ -1358,17 +1360,19 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
               >
                 <FileDown size={16} className="mr-2" /> Export CSV
               </Button>
-              <div className="relative flex-1 md:flex-none h-11">
+              <div className="flex-1 md:flex-none">
                 <input
+                   ref={fileInputRef}
                    type="file"
                    accept=".csv"
                    onChange={handleImportFile}
-                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                   className="hidden"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
+                  onClick={() => fileInputRef.current?.click()}
                   className="w-full h-11 px-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] text-slate-300 hover:text-[var(--color-text-primary)]"
                 >
                   <FileUp size={16} className="mr-2" /> Import CSV

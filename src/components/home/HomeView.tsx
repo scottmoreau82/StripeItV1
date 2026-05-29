@@ -131,6 +131,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showFrontModal, setShowFrontModal] = useState(false);
   const [showBackModal, setShowBackModal] = useState(false);
   const [explanationData, setExplanationData] = useState<{ commission: CommissionResult; customerName: string; deal: Deal } | null>(null);
+  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+
+  const selectedDealCommission = React.useMemo(() => {
+    if (!selectedDeal || !payPlan) return null;
+    const monthlyDeals = deals.filter(d => d.date.startsWith(selectedDeal.date.slice(0, 7)));
+    return calculateDealCommission(selectedDeal, payPlan, monthlyDeals);
+  }, [selectedDeal, payPlan, deals]);
 
   const [metricsOpen, setMetricsOpen] = useState(true);
   const [dealsOpen, setDealsOpen] = useState(true);
@@ -663,18 +670,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
                             type={widget.type as WidgetType} 
                             data={widgetData}
                             onAction={(action, payload) => {
-                              if (action === 'deal_click' && payload) {
-                                const clickedDeal = payload as Deal;
-                                if (payPlan) {
-                                  const currentMonth = new Date().getMonth();
-                                  const currentYear = new Date().getFullYear();
-                                  const monthlyDeals = deals.filter(d => {
-                                    const date = new Date(d.date);
-                                    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-                                  });
-                                  const commission = calculateDealCommission(clickedDeal, payPlan, monthlyDeals);
-                                  setExplanationData({ commission, customerName: clickedDeal.customerName, deal: clickedDeal });
-                                }
+                              if (action === 'view_deal') {
+                                setSelectedDeal(payload);
+                                window.dispatchEvent(new CustomEvent('stripeit:deal-click', { detail: payload }));
                               }
                             }}
                           />
@@ -694,7 +692,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     type={widget.type as WidgetType} 
                     data={widgetData}
                     onAction={(action, payload) => {
-                      if (action === 'deal_click' && payload) {
+                      if (action === 'view_deal') {
+                        setSelectedDeal(payload);
+                        window.dispatchEvent(new CustomEvent('stripeit:deal-click', { detail: payload }));
+                      }
+                      if (false) { /*
                         const clickedDeal = payload as Deal;
                         if (payPlan) {
                           const currentMonth = new Date().getMonth();
@@ -706,7 +708,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                           const commission = calculateDealCommission(clickedDeal, payPlan, monthlyDeals);
                           setExplanationData({ commission, customerName: clickedDeal.customerName, deal: clickedDeal });
                         }
-                      }
+                      */ }
                     }}
                   />
                 ))
@@ -1538,6 +1540,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
           deal={explanationData?.deal}
           onEdit={(d) => { setExplanationData(null); window.dispatchEvent(new CustomEvent('stripeit:edit-deal', { detail: d })); }}
           onDelete={async () => { setExplanationData(null); }}
+        />
+        <PayoutExplanationModal
+          isOpen={!!selectedDeal}
+          onClose={() => setSelectedDeal(null)}
+          commission={selectedDealCommission}
+          customerName={selectedDeal?.customerName || ''}
         />
       </AnimatePresence>
     </>

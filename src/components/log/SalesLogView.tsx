@@ -586,9 +586,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       return (
                         <motion.tr
                           key={deal.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.02 }}
+                          initial={{ opacity: 0, y: 8, scale: 0.99 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{ delay: index * 0.04, duration: 0.2, ease: 'easeOut' }}
                           onClick={() => {
                             if (commission) {
                               setExplanationData({ commission, customerName: deal.customerName, deal });
@@ -761,8 +761,9 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                   return (
                     <motion.div
                       key={deal.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: index * 0.04, duration: 0.2, ease: 'easeOut' }}
                       layout
                       className={cn(
                         "transition-all duration-300 border rounded-xl overflow-hidden shadow-lg relative",

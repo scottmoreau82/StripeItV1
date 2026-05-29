@@ -55,6 +55,7 @@ import { DealerDashboard } from '../dealer/DealerDashboard';
 import { PageHeader } from '../ui/PageHeader';
 import { LayoutGrid } from 'lucide-react';
 import { PayoutExplanationModal } from '../log/PayoutExplanationModal';
+import { MetricCardSkeleton } from '../ui/Skeleton';
 
 /**
  * StripeItDashboardMetricSystem
@@ -505,54 +506,67 @@ export const HomeView: React.FC<HomeViewProps> = ({
               {isCarousel ? (
                 carouselContent
               ) : isMobile ? (
-                <div className="flex flex-col gap-3">
-                  <div className="grid grid-cols-1 gap-2.5">
-                    {[WidgetType.UNITS, WidgetType.COMMISSION]
-                      .map(type => {
-                      const widget = dashboardLayout.widgets
-                        .find(w => w.type === type);
-                      if (!widget || !widget.visible) return null;
-                      return (
-                        <WidgetRegistry
-                          key={type}
-                          type={type as WidgetType}
-                          data={widgetData}
-                          variant="hero-horizontal"
-                          onUpgrade={() => {
-                            window.location.hash = '#settings';
-                          }}
-                        />
-                      );
-                    })}
+                isLoading ? (
+                  <div className="flex flex-col gap-2.5">
+                    {[1,2].map(i => <MetricCardSkeleton key={i} />)}
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {[1,2,3,4].map(i => <MetricCardSkeleton key={i} />)}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {[WidgetType.FRONT_END_GROSS,
-                      WidgetType.BACK_END_GROSS,
-                      WidgetType.TOTAL_GROSS,
-                      WidgetType.AVERAGE_GROSS]
-                      .map(type => {
-                      const widget = dashboardLayout.widgets
-                        .find(w => w.type === type);
-                      if (!widget || !widget.visible) return null;
-                      const isWidgetLocked = isFree &&
-                        widget.type !== WidgetType.UNITS;
-                      return (
-                        <div key={type} className={cn(
-                          isWidgetLocked
-                            ? "col-span-2" : "col-span-1"
-                        )}>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {[WidgetType.UNITS, WidgetType.COMMISSION]
+                        .map(type => {
+                        const widget = dashboardLayout.widgets
+                          .find(w => w.type === type);
+                        if (!widget || !widget.visible) return null;
+                        return (
                           <WidgetRegistry
+                            key={type}
                             type={type as WidgetType}
                             data={widgetData}
-                            variant="telemetry"
+                            variant="hero-horizontal"
                             onUpgrade={() => {
                               window.location.hash = '#settings';
                             }}
                           />
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {[WidgetType.FRONT_END_GROSS,
+                        WidgetType.BACK_END_GROSS,
+                        WidgetType.TOTAL_GROSS,
+                        WidgetType.AVERAGE_GROSS]
+                        .map(type => {
+                        const widget = dashboardLayout.widgets
+                          .find(w => w.type === type);
+                        if (!widget || !widget.visible) return null;
+                        const isWidgetLocked = isFree &&
+                          widget.type !== WidgetType.UNITS;
+                        return (
+                          <div key={type} className={cn(
+                            isWidgetLocked
+                              ? "col-span-2" : "col-span-1"
+                          )}>
+                            <WidgetRegistry
+                              type={type as WidgetType}
+                              data={widgetData}
+                              variant="telemetry"
+                              onUpgrade={() => {
+                                window.location.hash = '#settings';
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
+                )
+              ) : isLoading ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {[1,2,3,4].map(i => <MetricCardSkeleton key={i} />)}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:max-h-none overflow-y-auto lg:overflow-visible snap-y lg:snap-none snap-mandatory scrollbar-hide pr-2 pb-12 lg:pb-0">

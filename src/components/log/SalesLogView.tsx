@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Deal, DealStatus, PayPlan, UserProfile, SubscriptionTier, MonthlySpiff } from '@/src/types';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
+import { DealRowSkeleton, DealCardSkeleton } from '../ui/Skeleton';
 import { DealSearch } from './DealSearch';
 import { Modal } from '../ui/Modal';
 import { motion, AnimatePresence } from 'motion/react';
@@ -464,11 +465,20 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       {/* Results List */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-20 w-full animate-pulse rounded-2xl bg-white/5" />
-            ))}
-          </div>
+          <>
+            {/* Desktop skeleton */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full border-collapse">
+                <tbody>
+                  {[1,2,3,4,5,6].map(i => <DealRowSkeleton key={i} />)}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile skeleton */}
+            <div className="flex flex-col gap-2 md:hidden">
+              {[1,2,3,4,5].map(i => <DealCardSkeleton key={i} />)}
+            </div>
+          </>
         ) : sortedItems.length > 0 ? (
           <>
             {/* Desktop Table Layout */}

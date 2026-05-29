@@ -36,72 +36,48 @@ const colorMap = {
   orange: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
 };
 
-const useCountUp = (value: string | number, duration: number = 1000) => {
-  const [display, setDisplay] = useState('0');
-  const frameRef = useRef<number>();
-  const startRef = useRef<number>();
+const useCountUp = (value: string | number) => {
+  const str = String(value);
+  const prefix = str.startsWith('$') ? '$' : '';
+  const suffix = str.endsWith('%') ? '%' : '';
+  const raw = parseFloat(str.replace(/[$,%]/g, '').replace(/,/g, '')) || 0;
+  const isDecimal = str.includes('.') && !str.endsWith('.0');
+  const decimals = isDecimal ? (str.split('.')[1]?.length || 1) : 0;
+
+  const [display, setDisplay] = useState(str);
+  const prevRef = useRef(raw);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const str = String(value);
+    const from = prevRef.current;
+    const to = raw;
+    if (from === to) return;
 
-    // Extract prefix ($), suffix (%), and numeric part
-    const prefix = str.startsWith('$') ? '$' : '';
-    const suffix = str.endsWith('%') ? '%' : '';
-    const cleaned = str
-      .replace(/[$%,]/g, '')
-      .trim();
-    const numeric = parseFloat(cleaned);
+    const duration = 800;
+    const start = performance.now();
 
-    if (isNaN(numeric)) {
-      setDisplay(str);
-      return;
-    }
-
-    const isNegative = numeric < 0;
-    const absTarget = Math.abs(numeric);
-    const isDecimal = cleaned.includes('.');
-    const decimalPlaces = isDecimal
-      ? (cleaned.split('.')[1] || '').length : 0;
-
-    startRef.current = undefined;
-
-    const animate = (timestamp: number) => {
-      if (!startRef.current) {
-        startRef.current = timestamp;
-      }
-      const elapsed = timestamp - startRef.current;
+    const tick = (now: number) => {
+      const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
-      const current = absTarget * eased;
-      const sign = isNegative ? '-' : '';
+      const current = from + (to - from) * eased;
 
-      let formatted: string;
-      if (decimalPlaces > 0) {
-        formatted = current.toLocaleString(undefined, {
-          minimumFractionDigits: decimalPlaces,
-          maximumFractionDigits: decimalPlaces
-        });
-      } else {
-        formatted = Math.round(current).toLocaleString();
-      }
-
-      setDisplay(`${prefix}${sign}${formatted}${suffix}`);
+      setDisplay(`${prefix}${decimals > 0 ? current.toFixed(decimals) : Math.round(current).toLocaleString()}${suffix}`);
 
       if (progress < 1) {
-        frameRef.current =
-          requestAnimationFrame(animate);
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        setDisplay(str);
+        prevRef.current = to;
       }
     };
 
-    frameRef.current = requestAnimationFrame(animate);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(tick);
+    prevRef.current = to;
 
-    return () => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
-    };
-  }, [value, duration]);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [raw]);
 
   return display;
 };
@@ -125,7 +101,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const isTelemetry = variant === 'telemetry';
   const isHorizontal = variant === 'hero-horizontal';
   const isCarousel = variant === 'carousel';
-  const animatedValue = useCountUp(loading ? '0' : value);
+  const animatedValue = useCountUp(loading ? 0 : value);
 
   if (isLocked) {
     return (

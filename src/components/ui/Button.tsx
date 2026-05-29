@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { cn } from '@/src/lib/utils';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { BUTTON_SHAPES } from '@/src/constants';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { isProTheme } from '@/src/contexts/ThemeContext';
+
+interface Ripple {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+}
 
 /**
  * StripeItButtonSystem
@@ -28,12 +35,29 @@ export const Button: React.FC<ButtonProps> = ({
   const { theme } = useTheme();
   const shapePreference = profile?.preferences?.buttonShape || 'standard';
   
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    if (props.disabled || isLoading) return;
+    const button = buttonRef.current;
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 2;
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+    const id = Date.now();
+    setRipples(prev => [...prev, { id, x, y, size }]);
+    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
+    props.onClick?.(e);
+  }, [props.disabled, isLoading, props.onClick]);
+
   // Eligible for custom geometry: Major CTAs, actions, and primary buttons
   // Excludes ghost, icon-only, and small utility buttons (secondary)
   const isEligible = size !== 'icon' && (variant === 'primary' || variant === 'danger' || variant === 'outline');
   const shapeClass = isEligible ? BUTTON_SHAPES[shapePreference] : BUTTON_SHAPES.standard;
 
-  const baseStyles = "inline-flex items-center justify-center font-medium transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
+  const baseStyles = "inline-flex items-center justify-center font-medium transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer relative overflow-hidden";
   
   const variants = {
     primary: isProTheme(theme)
@@ -54,12 +78,35 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <motion.button
+      ref={buttonRef}
       whileTap={(!props.disabled && !isLoading) ? { scale: 0.97 } : undefined}
       whileHover={(!props.disabled && !isLoading) ? { y: -1 } : undefined}
       className={cn(baseStyles, variants[variant], sizes[size], className, shapeClass)}
       disabled={props.disabled || isLoading}
       {...props as any}
+      onClick={handleClick}
     >
+      <AnimatePresence>
+        {ripples.map((ripple) => (
+          <motion.span
+            key={ripple.id}
+            initial={{ scale: 0, opacity: 0.4 }}
+            animate={{ scale: 1, opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            style={{
+              position: 'absolute',
+              left: ripple.x,
+              top: ripple.y,
+              width: ripple.size,
+              height: ripple.size,
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.35)',
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+      </AnimatePresence>
       {isLoading ? (
         <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
       ) : null}

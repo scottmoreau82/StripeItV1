@@ -73,6 +73,45 @@ const THEME_PRESETS: Record<string, Omit<CustomThemeConfig, 'savedAt'>> = {
     textMuted: '#64748B',
     borderColor: 'rgba(0, 0, 0, 0.10)',
     baseTheme: 'light'
+  },
+  progray: {
+    bgDeep: '#1A1A1A',
+    bgSurface: '#212121',
+    bgCard: '#282828',
+    bgElevated: '#2F2F2F',
+    brandPrimary: '#00D4FF',
+    brandSecondary: '#7C3AED',
+    textPrimary: '#F0F0F0',
+    textSecondary: '#909090',
+    textMuted: '#5A5A5A',
+    borderColor: 'rgba(255,255,255,0.07)',
+    baseTheme: 'progray' as any
+  },
+  lightTeal: {
+    bgDeep: '#E8ECF0',
+    bgSurface: '#DDE2E8',
+    bgCard: '#F0F3F7',
+    bgElevated: '#FFFFFF',
+    brandPrimary: '#0891B2',
+    brandSecondary: '#0E7490',
+    textPrimary: '#0F1923',
+    textSecondary: '#2D3748',
+    textMuted: '#64748B',
+    borderColor: 'rgba(0,0,0,0.10)',
+    baseTheme: 'lightTeal'
+  },
+  lightBlue: {
+    bgDeep: '#E8ECF0',
+    bgSurface: '#DDE2E8',
+    bgCard: '#F0F3F7',
+    bgElevated: '#FFFFFF',
+    brandPrimary: '#0077CC',
+    brandSecondary: '#005FA3',
+    textPrimary: '#0F1923',
+    textSecondary: '#2D3748',
+    textMuted: '#64748B',
+    borderColor: 'rgba(0,0,0,0.10)',
+    baseTheme: 'lightBlue'
   }
 };
 
@@ -99,7 +138,7 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
 
   const isLivePreviewing = theme === 'custom';
 
-  const handleLoadPreset = (presetId: 'dark' | 'prowarm' | 'prog' | 'propink' | 'light') => {
+  const handleLoadPreset = (presetId: string) => {
     const preset = THEME_PRESETS[presetId];
     const newConfig: CustomThemeConfig = {
       ...preset,
@@ -190,31 +229,25 @@ export const ThemeCreator = ({ isMobile }: { isMobile?: boolean }) => {
       <div className="relative">
         <Card className={cn("p-5 space-y-4 bg-bg-card/20 border-border-subtle", isFreeTier && "select-none")}>
           {/* Start From Presets */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Typography variant="mono" className="text-[9px] font-black uppercase tracking-widest text-text-muted">
               START FROM
             </Typography>
-            <div className="flex flex-wrap gap-1.5">
-              {(['dark', 'prowarm', 'prog', 'propink', 'light'] as const).map((presetId) => {
-                const isActive = selectedBase === presetId;
-                return (
-                  <button
-                    key={presetId}
-                    type="button"
-                    disabled={isFreeTier}
-                    onClick={() => handleLoadPreset(presetId)}
-                    className={cn(
-                      "px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all cursor-pointer",
-                      isActive
-                        ? "border-brand-primary text-brand-primary bg-brand-primary/10 shadow-glow glow-primary"
-                        : "border-border-subtle text-text-muted hover:border-brand-primary/50"
-                    )}
-                  >
-                    {presetId}
-                  </button>
-                );
-              })}
-            </div>
+            <select
+              disabled={isFreeTier}
+              value={selectedBase}
+              onChange={(e) => handleLoadPreset(e.target.value)}
+              className="w-full bg-bg-card border border-border-subtle rounded-xl px-4 py-3 text-[11px] font-black text-text-primary uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="lightTeal">LT Teal</option>
+              <option value="lightBlue">LT Blue</option>
+              <option value="prog">Pro Green</option>
+              <option value="propink">Pro Pink</option>
+              <option value="prowarm">Pro Warm</option>
+              <option value="progray">Pro Gray</option>
+            </select>
           </div>
 
           <div className="border-t border-border-subtle my-0" />

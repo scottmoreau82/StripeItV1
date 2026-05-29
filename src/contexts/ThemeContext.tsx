@@ -6,9 +6,9 @@ import { COLLECTIONS } from '@/src/constants';
 import { useAuth } from './AuthContext';
 import { SubscriptionTier, CustomThemeConfig } from '../types';
 
-type Theme = 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink' | 'prowarm' | 'custom';
+type Theme = 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink' | 'prowarm' | 'progray' | 'custom';
 
-export const isProTheme = (theme: Theme): boolean => ['prog', 'propink', 'lightTeal', 'lightBlue', 'prowarm', 'custom'].includes(theme);
+export const isProTheme = (theme: Theme): boolean => ['prog', 'propink', 'lightTeal', 'lightBlue', 'prowarm', 'progray', 'custom'].includes(theme);
 
 export const applyCustomTheme = (config: CustomThemeConfig) => {
   const root = document.documentElement;
@@ -52,7 +52,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     // Check localStorage first for immediate render
     const savedTheme = localStorage.getItem('stripeit-theme') as Theme | null;
-    const validThemes: Theme[] = ['dark', 'light', 'lightTeal', 'lightBlue', 'prog', 'propink', 'prowarm', 'custom'];
+    const validThemes: Theme[] = ['dark', 'light', 'lightTeal', 'lightBlue', 'prog', 'propink', 'prowarm', 'progray', 'custom'];
     if (savedTheme && validThemes.includes(savedTheme)) {
       return savedTheme;
     }

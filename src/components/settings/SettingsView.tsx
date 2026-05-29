@@ -66,6 +66,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
     { id: 'prog', label: 'PRO GREEN', bg: '#0A0E1A', accent: '#AAFF00' },
     { id: 'propink', label: 'PRO PINK', bg: '#0A0E1A', accent: '#FF0080' },
     { id: 'prowarm', label: 'PRO WARM', bg: '#1A1813', accent: '#D4A574' },
+    { id: 'progray', label: 'PRO GRAY', bg: '#212121', accent: '#00D4FF' },
     {
       id: 'custom',
       label: 'CUSTOM',

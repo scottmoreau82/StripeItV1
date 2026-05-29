@@ -191,86 +191,30 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
     <div className={cn("space-y-6", isMobile ? "space-y-4" : "space-y-8")}>
       <Typography variant="h3" className={cn("text-[var(--color-text-primary)] font-black uppercase tracking-tight italic", isMobile ? "text-lg" : "text-xl")}>Global Theme</Typography>
       
-      <Card className={cn("bg-bg-card/20 border-border-subtle", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
-        <div className="flex flex-col gap-6">
-          <div className="space-y-8">
+      <Card className={cn("bg-bg-card/20 border-white/5 space-y-8", isMobile ? "p-4 space-y-6" : "p-8 space-y-8")}>
+
+        {/* Row 1: Appearance + Visual Preview */}
+        <div className={cn("grid grid-cols-1 gap-8", !isMobile && "md:grid-cols-2")}>
+          <div className="space-y-6">
             {/* Appearance Toggle */}
-            <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0 border border-brand-primary/20">
-                    <Sun className="text-brand-primary" size={20} />
-                  </div>
-                  <div>
-                    <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">APPEARANCE</Typography>
-                    <Typography variant="small" className="text-slate-500 text-[10px] uppercase">DARK / LIGHT THEME</Typography>
-                  </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0 border border-brand-primary/20">
+                  <Sun className="text-brand-primary" size={20} />
                 </div>
-
-                {/* 3-column grid of swatch cards */}
-                <div className="grid grid-cols-4 gap-2 font-medium">
-                  {swatches.map((swatch) => {
-                    const isActive = theme === swatch.id;
-                    const isLocked = isProTheme(swatch.id as any) && isFreeTier;
-
-                    return (
-                      <button
-                        key={swatch.id}
-                        type="button"
-                        onClick={() => {
-                          if (isLocked) {
-                            window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'));
-                          } else {
-                            setTheme(swatch.id as any);
-                            if (swatch.id === 'custom' && profile?.customTheme) {
-                              applyCustomTheme(profile.customTheme);
-                            }
-                          }
-                        }}
-                        className={cn(
-                          "relative rounded-xl border-2 p-3 cursor-pointer transition-all flex flex-col gap-2 text-left bg-bg-card",
-                          isActive
-                            ? "border-brand-primary shadow-glow"
-                            : "border-border-subtle hover:border-border-subtle/80"
-                        )}
-                      >
-                        {/* Top half: 40px tall div showing theme background */}
-                        <div 
-                          className="h-8 w-full rounded-lg relative flex items-center justify-center overflow-hidden"
-                          style={{ backgroundColor: swatch.bg }}
-                        >
-                          <div 
-                            className="h-2 w-2 rounded-full"
-                            style={{ backgroundColor: swatch.accent }}
-                          />
-                        </div>
-
-                        {/* Bottom label */}
-                        <Typography 
-                          variant="mono" 
-                          className="text-[9px] font-black uppercase tracking-widest text-text-primary text-center w-full block truncate"
-                        >
-                          {swatch.label}
-                        </Typography>
-
-                        {/* PRO badge */}
-                        {isLocked && (
-                          <div className="absolute top-1.5 right-1.5 px-1 pb-0.5 rounded bg-amber-500 text-black text-[7px] font-black tracking-wider uppercase leading-none shadow-sm">
-                            PRO+
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+                <div>
+                  <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">APPEARANCE</Typography>
+                  <Typography variant="small" className="text-slate-500 text-[10px]">DARK / LIGHT THEME</Typography>
                 </div>
+              </div>
+              <div className="flex bg-bg-deep p-1 rounded-xl border border-white/10 shrink-0">
+                <button onClick={() => setTheme('dark')} className={cn("px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer", theme === 'dark' ? "bg-brand-primary text-bg-deep shadow-glow glow-primary" : "text-slate-500 hover:text-white bg-transparent")}>Dark</button>
+                <button onClick={() => setTheme('light')} className={cn("px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer", theme === 'light' ? "bg-brand-primary text-bg-deep shadow-glow glow-primary" : "text-slate-500 hover:text-white bg-transparent")}>Light</button>
               </div>
             </div>
 
-            <div className={cn("border-t border-border-subtle pt-6 mt-2", theme !== 'custom' && "hidden")}>
-              <ThemeCreator isMobile={isMobile} />
-            </div>
-
-            <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
+            {/* Icon Pack */}
+            <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
                   <AppIcon name="sparkles" className="text-brand-primary" />
@@ -280,197 +224,144 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                   <Typography variant="small" className="text-slate-500 text-[10px]">Choose your interface symbols</Typography>
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <select
-                  value={currentIconTheme}
-                  onChange={(e) => handleIconThemeChange(e.target.value as IconTheme)}
-                  disabled={isSaving}
-                  className={cn(
-                    "w-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer",
-                    isFreeTier && "opacity-50 cursor-not-allowed"
-                  )}
-                >
-                  <option value={IconTheme.LUCIDE}>Lucide (Default)</option>
-                  <option value={IconTheme.PHOSPHOR}>Phosphor icons</option>
-                  <option value={IconTheme.TABLER}>Tabler icons</option>
-                  <option value={IconTheme.HEROICONS}>Heroicons (v2)</option>
-                </select>
-                
-                {isFreeTier && (
-                  <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
-                    <AppIcon name="lock" size={12} className="text-brand-primary" />
-                    <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
-                      PRO+ EXCLUSIVE
-                    </Typography>
-                  </div>
-                )}
-              </div>
+              <select value={currentIconTheme} onChange={(e) => handleIconThemeChange(e.target.value as IconTheme)} disabled={isSaving} className={cn("w-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer", isFreeTier && "opacity-50 cursor-not-allowed")}>
+                <option value={IconTheme.LUCIDE}>Lucide (Default)</option>
+                <option value={IconTheme.PHOSPHOR}>Phosphor icons</option>
+                <option value={IconTheme.TABLER}>Tabler icons</option>
+                <option value={IconTheme.HEROICONS}>Heroicons (v2)</option>
+              </select>
+              {isFreeTier && (
+                <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
+                  <AppIcon name="lock" size={12} className="text-brand-primary" />
+                  <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">PRO+ EXCLUSIVE</Typography>
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Visual Preview */}
-            <div className={cn("bg-white/[0.02] border border-border-subtle rounded-xl flex items-center justify-around", isMobile ? "p-3" : "p-4")}>
-              <div className="flex flex-col items-center gap-1">
-                <div className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center">
-                  <AppIcon name="dashboard" size={16} />
-                </div>
-                <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Home</Typography>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center">
-                  <AppIcon name="salesLog" size={16} />
-                </div>
-                <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Log</Typography>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center">
-                  <AppIcon name="settings" size={16} />
-                </div>
-                <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">Config</Typography>
-              </div>
-            </div>
-
-            {/* Button Geometry & Effects Grid */}
-            <div className={cn("grid grid-cols-1 gap-6", !isMobile && "md:grid-cols-2")}>
-              {/* Button Geometry */}
-              <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
-                    <Target className="text-brand-primary" size={20} />
+          {/* Visual Preview */}
+          <div className={cn("bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col justify-center gap-4", isMobile ? "p-4" : "p-6")}>
+            <Typography variant="small" className="text-slate-500 uppercase tracking-widest font-black text-[9px] mb-1">Visual Preview</Typography>
+            <div className="flex items-center justify-around">
+              {[{name:'dashboard',label:'Home'},{name:'salesLog',label:'Log'},{name:'settings',label:'Config'}].map(item => (
+                <div key={item.name} className="flex flex-col items-center gap-1.5">
+                  <div className={cn("rounded-lg bg-white/5 flex items-center justify-center", isMobile ? "h-8 w-8" : "h-10 w-10")}>
+                    <AppIcon name={item.name} size={isMobile ? 20 : 24} />
                   </div>
-                  <div>
-                    <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Button Geometry</Typography>
-                    <Typography variant="small" className="text-slate-500 text-[10px]">Choose your tactical silhouette</Typography>
-                  </div>
+                  <Typography variant="mono" className="text-[7px] text-slate-500 uppercase">{item.label}</Typography>
                 </div>
-
-                <div className="space-y-2">
-                  <select
-                    value={profile?.preferences?.buttonShape || 'standard'}
-                    onChange={(e) => handleButtonShapeChange(e.target.value as any)}
-                    disabled={isSaving}
-                    className="w-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
-                  >
-                    <option value="standard">Standard (Default)</option>
-                    <option value="parallelogram">Parallelogram</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Ambient Effects */}
-              <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
-                    <Sparkles className="text-brand-primary" size={20} />
-                  </div>
-                  <div>
-                    <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Ambient Effects</Typography>
-                    <Typography variant="small" className="text-slate-500 text-[10px]">Layer visual effects across the app</Typography>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { id: AmbientEffect.PARTICLES, label: 'Particle Field', desc: 'Floating dots' },
-                    { id: AmbientEffect.AURORA, label: 'Aurora', desc: 'Color blobs' },
-                    { id: AmbientEffect.GRADIENT_MESH, label: 'Gradient Mesh', desc: 'Color gradients' },
-                    { id: AmbientEffect.SCANLINE, label: 'Scanline', desc: 'Metric card sweep' },
-                    { id: AmbientEffect.SPOTLIGHT, label: 'Spotlight', desc: 'Cursor light' },
-                    { id: AmbientEffect.TEXT_SCRAMBLE, label: 'Text Scramble', desc: 'Title scramble' },
-                    { id: AmbientEffect.TYPEWRITER, label: 'Typewriter', desc: 'Title types out' },
-                  ] as { id: AmbientEffect; label: string; desc: string }[]).map((effect) => {
-                    const isActive = currentAmbientEffects.includes(effect.id);
-                    return (
-                      <button
-                        key={effect.id}
-                        type="button"
-                        onClick={() => handleAmbientEffectToggle(effect.id)}
-                        disabled={isSaving || isFreeTier}
-                        className={cn(
-                          "flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all text-left",
-                          isActive
-                            ? "bg-brand-primary/10 border-brand-primary/30 text-[var(--color-text-primary)]"
-                            : "bg-[var(--color-bg-card)] border-[var(--color-border)] text-slate-500 hover:border-brand-primary/20",
-                          (isSaving || isFreeTier) && "opacity-50 cursor-not-allowed"
-                        )}
-                      >
-                        <div>
-                          <Typography variant="label" className="text-[10px] font-black uppercase tracking-widest block leading-tight">
-                            {effect.label}
-                          </Typography>
-                          <Typography variant="mono" className="text-[8px] text-slate-600">
-                            {effect.desc}
-                          </Typography>
-                        </div>
-                        <div className={cn(
-                          "h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ml-2 transition-all",
-                          isActive ? "border-brand-primary bg-brand-primary" : "border-slate-700"
-                        )}>
-                          {isActive && <div className="h-1.5 w-1.5 rounded-full bg-bg-deep" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-                {isFreeTier && (
-                  <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
-                    <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
-                      PRO+ EXCLUSIVE
-                    </Typography>
-                  </div>
-                )}
-              </div>
-
-              {/* Button Effects */}
-              <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
-                    <Sparkles className="text-brand-primary" size={20} />
-                  </div>
-                  <div>
-                    <Typography variant="label" className="text-text-primary block text-sm">Button Effects</Typography>
-                    <Typography variant="small" className="text-text-muted text-[10px]">Choose your click interaction style</Typography>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <select
-                    value={currentButtonEffect}
-                    onChange={(e) => handleButtonEffectChange(e.target.value as ButtonEffect)}
-                    disabled={isSaving || isFreeTier}
-                    className={cn(
-                      "flex-1 bg-bg-card border border-border-subtle rounded-xl px-4 py-3 text-sm font-bold text-text-primary uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer",
-                      isFreeTier && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    <option value={ButtonEffect.NONE}>None (Default)</option>
-                    <option value={ButtonEffect.RIPPLE}>Ripple</option>
-                    <option value={ButtonEffect.GLOW_PULSE}>Glow Pulse</option>
-                    <option value={ButtonEffect.BORDER_FLASH}>Border Flash</option>
-                    <option value={ButtonEffect.SCALE_COLOR}>Scale + Color Shift</option>
-                  </select>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 font-black uppercase tracking-widest text-[10px] px-4"
-                    onClick={() => {}}
-                  >
-                    TEST
-                  </Button>
-                </div>
-
-                {isFreeTier && (
-                  <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
-                    <AppIcon name="lock" size={12} className="text-brand-primary" />
-                    <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
-                      PRO+ EXCLUSIVE
-                    </Typography>
-                  </div>
-                )}
-              </div>
+              ))}
             </div>
           </div>
         </div>
+
+        <div className="border-t border-white/5" />
+
+        {/* Row 2: Button Geometry + Button Effects side by side */}
+        <div className={cn("grid grid-cols-1 gap-6", !isMobile && "md:grid-cols-2")}>
+          {/* Button Geometry */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
+                <Target className="text-brand-primary" size={20} />
+              </div>
+              <div>
+                <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Button Geometry</Typography>
+                <Typography variant="small" className="text-slate-500 text-[10px]">Choose your tactical silhouette</Typography>
+              </div>
+            </div>
+            <select value={profile?.preferences?.buttonShape || 'standard'} onChange={(e) => handleButtonShapeChange(e.target.value as any)} disabled={isSaving} className="w-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer">
+              <option value="standard">Standard (Default)</option>
+              <option value="parallelogram">Parallelogram</option>
+            </select>
+          </div>
+
+          {/* Button Effects */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
+                <Sparkles className="text-brand-primary" size={20} />
+              </div>
+              <div>
+                <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Button Effects</Typography>
+                <Typography variant="small" className="text-slate-500 text-[10px]">Choose your click interaction style</Typography>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <select value={profile?.preferences?.buttonEffect || ButtonEffect.NONE} onChange={(e) => handleButtonEffectChange(e.target.value as ButtonEffect)} disabled={isSaving || isFreeTier} className={cn("flex-1 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer", isFreeTier && "opacity-50 cursor-not-allowed")}>
+                <option value={ButtonEffect.NONE}>None (Default)</option>
+                <option value={ButtonEffect.RIPPLE}>Ripple</option>
+                <option value={ButtonEffect.GLOW_PULSE}>Glow Pulse</option>
+                <option value={ButtonEffect.BORDER_FLASH}>Border Flash</option>
+                <option value={ButtonEffect.SCALE_COLOR}>Scale + Color Shift</option>
+              </select>
+              <Button variant="outline" size="sm" className="shrink-0 font-black uppercase tracking-widest text-[10px] px-4" onClick={() => {}}>TEST</Button>
+            </div>
+            {isFreeTier && (
+              <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
+                <AppIcon name="lock" size={12} className="text-brand-primary" />
+                <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">PRO+ EXCLUSIVE</Typography>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="border-t border-white/5" />
+
+        {/* Row 3: Ambient Effects — full width, 2-column toggle grid */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
+              <Sparkles className="text-brand-primary" size={20} />
+            </div>
+            <div>
+              <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Ambient Effects</Typography>
+              <Typography variant="small" className="text-slate-500 text-[10px]">Layer visual effects across the app — combine freely</Typography>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { id: AmbientEffect.PARTICLES, label: 'Particle Field', desc: 'Floating dots' },
+              { id: AmbientEffect.AURORA, label: 'Aurora', desc: 'Color blobs' },
+              { id: AmbientEffect.GRADIENT_MESH, label: 'Gradient Mesh', desc: 'Color gradients' },
+              { id: AmbientEffect.SCANLINE, label: 'Scanline', desc: 'Metric card sweep' },
+              { id: AmbientEffect.SPOTLIGHT, label: 'Spotlight', desc: 'Cursor light' },
+              { id: AmbientEffect.TEXT_SCRAMBLE, label: 'Text Scramble', desc: 'Title scramble' },
+              { id: AmbientEffect.TYPEWRITER, label: 'Typewriter', desc: 'Title types out' },
+              { id: AmbientEffect.GLASSMORPHISM, label: 'Glassmorphism', desc: 'Frosted glass cards' },
+            ] as { id: AmbientEffect; label: string; desc: string }[]).map((effect) => {
+              const isActive = currentAmbientEffects.includes(effect.id);
+              return (
+                <button
+                  key={effect.id}
+                  type="button"
+                  onClick={() => handleAmbientEffectToggle(effect.id)}
+                  disabled={isSaving || isFreeTier}
+                  className={cn(
+                    "flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all text-left",
+                    isActive ? "bg-brand-primary/10 border-brand-primary/30 text-[var(--color-text-primary)]" : "bg-[var(--color-bg-card)] border-[var(--color-border)] text-slate-500 hover:border-brand-primary/20",
+                    (isSaving || isFreeTier) && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <div>
+                    <Typography variant="label" className="text-[10px] font-black uppercase tracking-widest block leading-tight">{effect.label}</Typography>
+                    <Typography variant="mono" className="text-[8px] text-slate-600">{effect.desc}</Typography>
+                  </div>
+                  <div className={cn("h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ml-2 transition-all", isActive ? "border-brand-primary bg-brand-primary" : "border-slate-700")}>
+                    {isActive && <div className="h-1.5 w-1.5 rounded-full bg-bg-deep" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {isFreeTier && (
+            <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
+              <AppIcon name="lock" size={12} className="text-brand-primary" />
+              <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">PRO+ EXCLUSIVE</Typography>
+            </div>
+          )}
+        </div>
+
       </Card>
     </div>
   );

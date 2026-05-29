@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { Card } from '../ui/Card';
 import { Typography } from '../ui/Typography';
 import { cn } from '@/src/lib/utils';
@@ -112,15 +112,21 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const [spotPos, setSpotPos] = useState<{x: number; y: number} | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  // Randomize scanline per card using label as seed
+  const scanlineProps = useMemo(() => {
+    const seed = label.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return {
+      duration: 2.5 + (seed % 5) * 0.5,
+      opacity: 0.04 + (seed % 4) * 0.015,
+    };
+  }, [label]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!hasSpotlight || !cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     setSpotPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   }, [hasSpotlight]);
-
-  const handleMouseLeave = useCallback(() => {
-    setSpotPos(null);
-  }, []);
+  const handleMouseLeave = useCallback(() => setSpotPos(null), []);
 
   if (isLocked) {
     return (
@@ -177,21 +183,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-10" />
         
         {hasSpotlight && spotPos && (
-          <div
-            className="absolute inset-0 pointer-events-none z-20"
-            style={{
-              background: `radial-gradient(160px circle at ${spotPos.x}px ${spotPos.y}px, color-mix(in srgb, var(--color-brand-primary) 10%, transparent), transparent 70%)`,
-            }}
-          />
+          <div className="absolute inset-0 pointer-events-none z-20" style={{ background: `radial-gradient(160px circle at ${spotPos.x}px ${spotPos.y}px, color-mix(in srgb, var(--color-brand-primary) 10%, transparent), transparent 70%)` }} />
         )}
         {hasScanline && (
           <motion.div
             animate={{ top: ['-15%', '115%'] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
+            transition={{ duration: scanlineProps.duration, repeat: Infinity, ease: 'linear' }}
             className="absolute inset-x-0 h-12 pointer-events-none z-20"
-            style={{
-              background: 'linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-brand-primary) 6%, transparent), transparent)',
-            }}
+            style={{ background: `linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-brand-primary) ${Math.round(scanlineProps.opacity * 100)}%, transparent), transparent)` }}
           />
         )}
 
@@ -325,21 +324,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_8px] pointer-events-none opacity-20" />
 
       {hasSpotlight && spotPos && (
-        <div
-          className="absolute inset-0 pointer-events-none z-20"
-          style={{
-            background: `radial-gradient(160px circle at ${spotPos.x}px ${spotPos.y}px, color-mix(in srgb, var(--color-brand-primary) 10%, transparent), transparent 70%)`,
-          }}
-        />
+        <div className="absolute inset-0 pointer-events-none z-20" style={{ background: `radial-gradient(160px circle at ${spotPos.x}px ${spotPos.y}px, color-mix(in srgb, var(--color-brand-primary) 10%, transparent), transparent 70%)` }} />
       )}
       {hasScanline && (
         <motion.div
           animate={{ top: ['-15%', '115%'] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: scanlineProps.duration, repeat: Infinity, ease: 'linear' }}
           className="absolute inset-x-0 h-12 pointer-events-none z-20"
-          style={{
-            background: 'linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-brand-primary) 6%, transparent), transparent)',
-          }}
+          style={{ background: `linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-brand-primary) ${Math.round(scanlineProps.opacity * 100)}%, transparent), transparent)` }}
         />
       )}
 

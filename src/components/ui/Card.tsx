@@ -1,5 +1,7 @@
 import React from 'react';
 import { cn } from '@/src/lib/utils';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { AmbientEffect } from '@/src/types';
 
 /**
  * StripeItCardSystem
@@ -18,11 +20,15 @@ export const Card: React.FC<CardProps> = ({
   onClick,
   hoverable = false 
 }) => {
+  const { profile } = useAuth();
+  const hasGlass = profile?.preferences?.ambientEffects?.includes(AmbientEffect.GLASSMORPHISM) ?? false;
+
   return (
     <div 
       onClick={onClick}
       className={cn(
         "rounded-2xl border border-border-card bg-bg-card p-6 shadow-deal overflow-hidden",
+        hasGlass && "!bg-white/[0.04] !backdrop-blur-xl !border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
         hoverable && "transition-all hover:translate-y-[-2px] hover:bg-bg-elevated hover:border-border-card hover:shadow-cyan-glow cursor-pointer",
         className
       )}

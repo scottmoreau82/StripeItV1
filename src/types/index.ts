@@ -52,6 +52,7 @@ export enum AmbientEffect {
   SPOTLIGHT = 'spotlight',
   TEXT_SCRAMBLE = 'text_scramble',
   TYPEWRITER = 'typewriter',
+  GLASSMORPHISM = 'glassmorphism',
 }
 
 export interface CustomThemeConfig {

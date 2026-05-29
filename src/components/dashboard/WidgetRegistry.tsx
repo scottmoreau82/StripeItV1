@@ -141,10 +141,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
       );
     case WidgetType.RECENT_DEALS:
       return (
-        <div className="space-y-4">
-          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest px-2">Recent Deals</Typography>
-          <RecentDealsList deals={deals.slice(0, 5)} onDealClick={(deal) => onAction?.('deal_click', deal)} isLoading={isLoading} />
-        </div>
+        <RecentDealsList deals={deals.slice(0, 5)} onDealClick={(deal) => onAction?.('view_deal', deal)} isLoading={isLoading} />
       );
     case WidgetType.QUICK_NOTES:
       return (

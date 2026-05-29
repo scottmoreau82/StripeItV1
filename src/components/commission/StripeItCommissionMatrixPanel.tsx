@@ -1358,7 +1358,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
               >
                 <FileDown size={16} className="mr-2" /> Export CSV
               </Button>
-              <div className="relative flex-1 md:flex-none">
+              <div className="relative flex-1 md:flex-none h-11">
                 <input
                    type="file"
                    accept=".csv"

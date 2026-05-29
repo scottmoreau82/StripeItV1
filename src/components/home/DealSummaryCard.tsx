@@ -32,13 +32,15 @@ interface DealSummaryCardProps {
   payPlan?: PayPlan | null;
   showGross?: boolean;
   onClick?: () => void;
+  noCard?: boolean;
 }
 
 export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({ 
   deal, 
   payPlan, 
   showGross = false,
-  onClick 
+  onClick,
+  noCard = false
 }) => {
   const { deals } = useAppData();
   const { profile } = useAuth();
@@ -55,12 +57,16 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
 
   const commission = payPlan ? calculateDealCommission(deal, payPlan, monthlyDeals) : null;
   
+  const Wrapper = noCard ? 'div' : Card;
+
   return (
-    <Card
+    <Wrapper
       onClick={onClick}
       className={cn(
         "group p-5 transition-all active:scale-[0.99] cursor-pointer relative overflow-hidden",
-        hasGlass ? "border-white/10" : "bg-white/[0.01] hover:bg-white/[0.03] border-white/[0.05]",
+        noCard
+          ? "hover:bg-white/[0.03]"
+          : hasGlass ? "border-white/10" : "bg-white/[0.01] hover:bg-white/[0.03] border-white/[0.05]",
         onClick ? "hover:border-brand-primary/20" : ""
       )}
     >
@@ -111,6 +117,6 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
           <ChevronRight className="h-4 w-4 text-slate-700 group-hover:text-brand-primary transition-colors" />
         </div>
       </div>
-    </Card>
+    </Wrapper>
   );
 };

@@ -36,6 +36,14 @@ export enum IconTheme {
   HEROICONS = 'heroicons'
 }
 
+export enum ButtonEffect {
+  NONE = 'none',
+  RIPPLE = 'ripple',
+  GLOW_PULSE = 'glow_pulse',
+  BORDER_FLASH = 'border_flash',
+  SCALE_COLOR = 'scale_color'
+}
+
 export interface CustomThemeConfig {
   bgDeep: string;
   bgSurface: string;
@@ -63,6 +71,7 @@ export interface UserPreferences {
   visualTheme?: 'matrix' | 'og';
   iconTheme?: IconTheme;
   buttonShape?: 'standard' | 'parallelogram';
+  buttonEffect?: ButtonEffect;
   onboarding?: OnboardingState;
   notifications: {
     dealReminders: boolean;

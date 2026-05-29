@@ -5,6 +5,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { BUTTON_SHAPES } from '@/src/constants';
 import { useTheme } from '@/src/contexts/ThemeContext';
 import { isProTheme } from '@/src/contexts/ThemeContext';
+import { ButtonEffect } from '@/src/types';
 
 interface Ripple {
   id: number;
@@ -29,28 +30,50 @@ export const Button: React.FC<ButtonProps> = ({
   size = 'md',
   isLoading,
   children,
+  onClick,
   ...props
 }) => {
   const { profile } = useAuth();
   const { theme } = useTheme();
   const shapePreference = profile?.preferences?.buttonShape || 'standard';
   
+  const buttonEffect = profile?.preferences?.buttonEffect || ButtonEffect.NONE;
   const [ripples, setRipples] = useState<Ripple[]>([]);
+  const [isGlowPulsing, setIsGlowPulsing] = useState(false);
+  const [isBorderFlashing, setIsBorderFlashing] = useState(false);
+  const [isScaleColor, setIsScaleColor] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (props.disabled || isLoading) return;
-    const button = buttonRef.current;
-    if (!button) return;
-    const rect = button.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height) * 2;
-    const x = e.clientX - rect.left - size / 2;
-    const y = e.clientY - rect.top - size / 2;
-    const id = Date.now();
-    setRipples(prev => [...prev, { id, x, y, size }]);
-    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
-    props.onClick?.(e);
-  }, [props.disabled, isLoading, props.onClick]);
+    onClick?.(e);
+    switch (buttonEffect) {
+      case ButtonEffect.RIPPLE: {
+        const btn = buttonRef.current;
+        if (!btn) break;
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height) * 2;
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        const id = Date.now();
+        setRipples(prev => [...prev, { id, x, y, size }]);
+        setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
+        break;
+      }
+      case ButtonEffect.GLOW_PULSE:
+        setIsGlowPulsing(true);
+        setTimeout(() => setIsGlowPulsing(false), 400);
+        break;
+      case ButtonEffect.BORDER_FLASH:
+        setIsBorderFlashing(true);
+        setTimeout(() => setIsBorderFlashing(false), 350);
+        break;
+      case ButtonEffect.SCALE_COLOR:
+        setIsScaleColor(true);
+        setTimeout(() => setIsScaleColor(false), 300);
+        break;
+    }
+  }, [props.disabled, isLoading, onClick, buttonEffect]);
 
   // Eligible for custom geometry: Major CTAs, actions, and primary buttons
   // Excludes ghost, icon-only, and small utility buttons (secondary)
@@ -79,8 +102,14 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <motion.button
       ref={buttonRef}
-      whileTap={(!props.disabled && !isLoading) ? { scale: 0.97 } : undefined}
+      whileTap={(!props.disabled && !isLoading) ? { scale: buttonEffect === ButtonEffect.SCALE_COLOR ? 0.94 : 0.97 } : undefined}
       whileHover={(!props.disabled && !isLoading) ? { y: -1 } : undefined}
+      animate={{
+        boxShadow: isGlowPulsing ? '0 0 35px 8px var(--color-brand-primary)' : undefined,
+        backgroundColor: isScaleColor ? 'var(--color-brand-secondary)' : undefined,
+        borderColor: isBorderFlashing ? 'var(--color-brand-primary)' : undefined,
+      }}
+      transition={{ duration: 0.2 }}
       className={cn(baseStyles, variants[variant], sizes[size], className, shapeClass)}
       disabled={props.disabled || isLoading}
       {...props as any}
@@ -90,7 +119,7 @@ export const Button: React.FC<ButtonProps> = ({
         {ripples.map((ripple) => (
           <motion.span
             key={ripple.id}
-            initial={{ scale: 0, opacity: 0.4 }}
+            initial={{ scale: 0, opacity: 0.35 }}
             animate={{ scale: 1, opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}

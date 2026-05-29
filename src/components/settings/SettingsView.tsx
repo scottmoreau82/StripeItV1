@@ -23,7 +23,7 @@ import {
   Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserProfile, UserRole, SubscriptionTier, IconTheme } from '@/src/types';
+import { UserProfile, UserRole, SubscriptionTier, IconTheme, ButtonEffect } from '@/src/types';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
 import { AppIcon } from '../ui/AppIcon';
@@ -127,6 +127,30 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
             compactMode: false
           },
           buttonShape: newShape
+        }
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const currentButtonEffect = profile?.preferences?.buttonEffect || ButtonEffect.NONE;
+  const handleButtonEffectChange = async (newEffect: ButtonEffect) => {
+    if (isFreeTier) return;
+    setIsSaving(true);
+    try {
+      await updateProfileData({
+        preferences: {
+          ...profile?.preferences,
+          theme: profile?.preferences?.theme || 'dark',
+          notifications: profile?.preferences?.notifications || {
+            dealReminders: true, goalAlerts: true, managerAnnouncements: true,
+            competitionNotifications: true, payoutAlerts: true
+          },
+          display: profile?.preferences?.display || {
+            showMetricsByDefault: true, currencySymbol: '$', compactMode: false
+          },
+          buttonEffect: newEffect
         }
       });
     } finally {
@@ -277,28 +301,80 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
               </div>
             </div>
 
-            {/* Button Geometry */}
-            <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
-                  <Target className="text-brand-primary" size={20} />
+            {/* Button Geometry & Effects Grid */}
+            <div className={cn("grid grid-cols-1 gap-6", !isMobile && "md:grid-cols-2")}>
+              {/* Button Geometry */}
+              <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
+                    <Target className="text-brand-primary" size={20} />
+                  </div>
+                  <div>
+                    <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Button Geometry</Typography>
+                    <Typography variant="small" className="text-slate-500 text-[10px]">Choose your tactical silhouette</Typography>
+                  </div>
                 </div>
-                <div>
-                  <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Button Geometry</Typography>
-                  <Typography variant="small" className="text-slate-500 text-[10px]">Choose your tactical silhouette</Typography>
+
+                <div className="space-y-2">
+                  <select
+                    value={profile?.preferences?.buttonShape || 'standard'}
+                    onChange={(e) => handleButtonShapeChange(e.target.value as any)}
+                    disabled={isSaving}
+                    className="w-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="standard">Standard (Default)</option>
+                    <option value="parallelogram">Parallelogram</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <select
-                  value={profile?.preferences?.buttonShape || 'standard'}
-                  onChange={(e) => handleButtonShapeChange(e.target.value as any)}
-                  disabled={isSaving}
-                  className="w-full bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
-                >
-                  <option value="standard">Standard (Default)</option>
-                  <option value="parallelogram">Parallelogram</option>
-                </select>
+              {/* Button Effects */}
+              <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
+                    <Sparkles className="text-brand-primary" size={20} />
+                  </div>
+                  <div>
+                    <Typography variant="label" className="text-text-primary block text-sm">Button Effects</Typography>
+                    <Typography variant="small" className="text-text-muted text-[10px]">Choose your click interaction style</Typography>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <select
+                    value={currentButtonEffect}
+                    onChange={(e) => handleButtonEffectChange(e.target.value as ButtonEffect)}
+                    disabled={isSaving || isFreeTier}
+                    className={cn(
+                      "flex-1 bg-bg-card border border-border-subtle rounded-xl px-4 py-3 text-sm font-bold text-text-primary uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer",
+                      isFreeTier && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <option value={ButtonEffect.NONE}>None (Default)</option>
+                    <option value={ButtonEffect.RIPPLE}>Ripple</option>
+                    <option value={ButtonEffect.GLOW_PULSE}>Glow Pulse</option>
+                    <option value={ButtonEffect.BORDER_FLASH}>Border Flash</option>
+                    <option value={ButtonEffect.SCALE_COLOR}>Scale + Color Shift</option>
+                  </select>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 font-black uppercase tracking-widest text-[10px] px-4"
+                    onClick={() => {}}
+                  >
+                    TEST
+                  </Button>
+                </div>
+
+                {isFreeTier && (
+                  <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
+                    <AppIcon name="lock" size={12} className="text-brand-primary" />
+                    <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
+                      PRO+ EXCLUSIVE
+                    </Typography>
+                  </div>
+                )}
               </div>
             </div>
           </div>

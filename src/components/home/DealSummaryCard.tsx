@@ -1,11 +1,12 @@
 import React from 'react';
-import { Deal, PayPlan } from '@/src/types';
+import { Deal, PayPlan, AmbientEffect } from '@/src/types';
 import { calculateDealCommission } from '@/src/lib/commissionLogic';
 import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
 import { Car, ChevronRight } from 'lucide-react';
 import { cn, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
 import { useAppData } from '@/src/contexts/AppDataContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 const getLastName = (fullName: string): string => {
   if (!fullName) return '';
@@ -40,6 +41,8 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
   onClick 
 }) => {
   const { deals } = useAppData();
+  const { profile } = useAuth();
+  const hasGlass = profile?.preferences?.ambientEffects?.includes(AmbientEffect.GLASSMORPHISM) ?? false;
   
   // Filter deals for the specific month/year of this deal to provide correct context
   const monthlyDeals = React.useMemo(() => {
@@ -56,7 +59,8 @@ export const DealSummaryCard: React.FC<DealSummaryCardProps> = ({
     <Card
       onClick={onClick}
       className={cn(
-        "group px-4 py-3 transition-all bg-transparent hover:bg-bg-elevated active:scale-[0.99] cursor-pointer border-0 rounded-none relative overflow-hidden shadow-none",
+        "group p-5 transition-all active:scale-[0.99] cursor-pointer relative overflow-hidden",
+        hasGlass ? "border-white/10" : "bg-white/[0.01] hover:bg-white/[0.03] border-white/[0.05]",
         onClick ? "hover:border-brand-primary/20" : ""
       )}
     >

@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { EmptyState } from '../ui/EmptyState';
 import { Card } from '../ui/Card';
 import { cn } from '@/src/lib/utils';
+import { DealCardSkeleton } from '../ui/Skeleton';
 
 interface RecentDealsListProps {
   deals: Deal[];
@@ -21,9 +22,9 @@ export const RecentDealsList: React.FC<RecentDealsListProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="flex flex-col gap-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-20 w-full animate-pulse rounded-2xl bg-white/5" />
+          <DealCardSkeleton key={i} />
         ))}
       </div>
     );

@@ -11,6 +11,7 @@ import { cn } from '@/src/lib/utils';
 import { PerformanceChart } from './ChartSystem';
 import { DashboardLayout } from '../layout/DashboardLayout';
 import { getMonthlyHistoricalData, getTrendsChartData, calculateDashboardMetrics } from '@/src/services/analyticsService';
+import { Skeleton, MetricCardSkeleton } from '../ui/Skeleton';
 
 const CustomBarTooltip = ({ active, payload, label,
   isCurrency }: any) => {
@@ -60,7 +61,7 @@ const CustomPieTooltip = ({ active, payload }: any) => {
 };
 
 export const AnalyticsView: React.FC = () => {
-  const { deals, payPlan, monthlySpiffs } = useAppData();
+  const { deals, payPlan, monthlySpiffs, isLoading } = useAppData();
   const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'breakdown'>('overview');
   const [monthsBack, setMonthsBack] = useState<number>(6);
 
@@ -181,7 +182,13 @@ export const AnalyticsView: React.FC = () => {
     </PageHeader>
   );
 
-  const statsContent = (
+  const statsContent = isLoading ? (
+    <>
+      {[1, 2, 3, 4].map((i) => (
+        <MetricCardSkeleton key={i} />
+      ))}
+    </>
+  ) : (
     <>
       {/* MTD Units (Car icon, cyan) */}
       <Card className="p-6 bg-bg-card/40 border border-white/5 hover:border-white/10 transition-all rounded-3xl relative overflow-hidden group flex flex-col justify-between">
@@ -281,46 +288,52 @@ export const AnalyticsView: React.FC = () => {
                 MONTHLY UNIT VOLUME
               </Typography>
               <div className="h-[240px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                    <XAxis
-                      dataKey="month"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
-                      dy={10}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
-                    />
-                    <Tooltip content={<CustomBarTooltip isCurrency={false} />} cursor={{ fill: 'rgba(255,255,255,0.01)' }} />
-                    <Bar
-                      dataKey="newUnits"
-                      name="New"
-                      stackId="units"
-                      fill="#00D4FF"
-                      animationDuration={1500}
-                    />
-                    <Bar
-                      dataKey="usedUnits"
-                      name="Used"
-                      stackId="units"
-                      fill="#8B5CF6"
-                      animationDuration={1500}
-                    />
-                    <Bar
-                      dataKey="cpoUnits"
-                      name="CPO"
-                      stackId="units"
-                      fill="#10B981"
-                      radius={[4, 4, 0, 0]}
-                      animationDuration={1500}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                {isLoading ? (
+                  <div className="w-full rounded-xl overflow-hidden" style={{ height: 220 }}>
+                    <Skeleton className="w-full h-full" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
+                        dy={10}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
+                      />
+                      <Tooltip content={<CustomBarTooltip isCurrency={false} />} cursor={{ fill: 'rgba(255,255,255,0.01)' }} />
+                      <Bar
+                        dataKey="newUnits"
+                        name="New"
+                        stackId="units"
+                        fill="#00D4FF"
+                        animationDuration={1500}
+                      />
+                      <Bar
+                        dataKey="usedUnits"
+                        name="Used"
+                        stackId="units"
+                        fill="#8B5CF6"
+                        animationDuration={1500}
+                      />
+                      <Bar
+                        dataKey="cpoUnits"
+                        name="CPO"
+                        stackId="units"
+                        fill="#10B981"
+                        radius={[4, 4, 0, 0]}
+                        animationDuration={1500}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </Card>
 
@@ -330,31 +343,37 @@ export const AnalyticsView: React.FC = () => {
                 MONTHLY GROSS
               </Typography>
               <div className="h-[240px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                    <XAxis
-                      dataKey="month"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
-                      dy={10}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
-                      tickFormatter={(val) => `$${val.toLocaleString()}`}
-                    />
-                    <Tooltip content={<CustomBarTooltip isCurrency={true} />} cursor={{ fill: 'rgba(255,255,255,0.01)' }} />
-                    <Bar
-                      dataKey="gross"
-                      fill="#10B981"
-                      radius={[4, 4, 0, 0]}
-                      animationDuration={1500}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                {isLoading ? (
+                  <div className="w-full rounded-xl overflow-hidden" style={{ height: 220 }}>
+                    <Skeleton className="w-full h-full" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
+                        dy={10}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
+                        tickFormatter={(val) => `$${val.toLocaleString()}`}
+                      />
+                      <Tooltip content={<CustomBarTooltip isCurrency={true} />} cursor={{ fill: 'rgba(255,255,255,0.01)' }} />
+                      <Bar
+                        dataKey="gross"
+                        fill="#10B981"
+                        radius={[4, 4, 0, 0]}
+                        animationDuration={1500}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </Card>
           </div>
@@ -379,25 +398,31 @@ export const AnalyticsView: React.FC = () => {
               DEAL CLASSIFICATION SPLIT
             </Typography>
             <div className="h-[240px] w-full flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <RPieChart>
-                  <Pie
-                    data={dealTypeData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {dealTypeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomPieTooltip />} />
-                  <Legend iconType="circle" />
-                </RPieChart>
-              </ResponsiveContainer>
+              {isLoading ? (
+                <div className="flex items-center justify-center" style={{ height: 220 }}>
+                  <Skeleton className="h-48 w-48 rounded-full" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RPieChart>
+                    <Pie
+                      data={dealTypeData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {dealTypeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomPieTooltip />} />
+                    <Legend iconType="circle" />
+                  </RPieChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </Card>
 

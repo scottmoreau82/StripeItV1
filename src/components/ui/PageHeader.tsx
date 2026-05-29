@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Typography } from '../ui/Typography';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { AmbientEffect } from '@/src/types';
 
 /**
  * PageHeader
@@ -26,6 +28,50 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   children,
   className
 }) => {
+  const { profile } = useAuth();
+  const activeEffects = profile?.preferences?.ambientEffects || [];
+  const hasScramble = activeEffects.includes(AmbientEffect.TEXT_SCRAMBLE);
+  const hasTypewriter = activeEffects.includes(AmbientEffect.TYPEWRITER);
+  const titleStr = typeof title === 'string' ? title : '';
+  const [displayTitle, setDisplayTitle] = useState(titleStr);
+  const animRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+  useEffect(() => {
+    if (!titleStr) return;
+    if (animRef.current) clearInterval(animRef.current);
+
+    if (hasTypewriter) {
+      setDisplayTitle('');
+      let i = 0;
+      animRef.current = setInterval(() => {
+        i++;
+        setDisplayTitle(titleStr.slice(0, i));
+        if (i >= titleStr.length) clearInterval(animRef.current!);
+      }, 55);
+    } else if (hasScramble) {
+      let iteration = 0;
+      animRef.current = setInterval(() => {
+        setDisplayTitle(
+          titleStr.split('').map((char, idx) => {
+            if (char === ' ') return ' ';
+            if (idx < iteration) return titleStr[idx];
+            return chars[Math.floor(Math.random() * chars.length)];
+          }).join('')
+        );
+        iteration += 0.6;
+        if (iteration >= titleStr.length) {
+          clearInterval(animRef.current!);
+          setDisplayTitle(titleStr);
+        }
+      }, 35);
+    } else {
+      setDisplayTitle(titleStr);
+    }
+
+    return () => { if (animRef.current) clearInterval(animRef.current); };
+  }, [titleStr, hasScramble, hasTypewriter]);
+
   return (
     <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-6", className)}>
       <div className="flex items-center gap-4">
@@ -37,7 +83,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </div>
         <div className="space-y-0.5">
           <Typography variant="h2" className="text-text-primary italic font-black uppercase tracking-tighter text-xl md:text-2xl leading-none">
-            {title}
+            {(hasScramble || hasTypewriter) ? displayTitle : title}
           </Typography>
           <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black tracking-[0.2em] block">
             {subtitle}

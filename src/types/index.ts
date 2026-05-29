@@ -44,6 +44,16 @@ export enum ButtonEffect {
   SCALE_COLOR = 'scale_color'
 }
 
+export enum AmbientEffect {
+  PARTICLES = 'particles',
+  AURORA = 'aurora',
+  GRADIENT_MESH = 'gradient_mesh',
+  SCANLINE = 'scanline',
+  SPOTLIGHT = 'spotlight',
+  TEXT_SCRAMBLE = 'text_scramble',
+  TYPEWRITER = 'typewriter',
+}
+
 export interface CustomThemeConfig {
   bgDeep: string;
   bgSurface: string;
@@ -72,6 +82,7 @@ export interface UserPreferences {
   iconTheme?: IconTheme;
   buttonShape?: 'standard' | 'parallelogram';
   buttonEffect?: ButtonEffect;
+  ambientEffects?: AmbientEffect[];
   onboarding?: OnboardingState;
   notifications: {
     dealReminders: boolean;

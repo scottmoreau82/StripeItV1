@@ -70,6 +70,7 @@ import { DealerLogBuilderView } from './components/dealer/DealerLogBuilderView';
 import { DealerAccessRequestFlow } from './components/dealer/DealerAccessRequestFlow';
 import { DealerRequestsAdminView } from './components/management/DealerRequestsAdminView';
 import { EffectsPreview } from './components/admin/EffectsPreview';
+import { AmbientEffectsLayer } from './components/effects/AmbientEffectsLayer';
 
 import { AuthHydrationFallback } from './components/auth/AuthHydrationFallback';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
@@ -293,6 +294,7 @@ function MainAppFlow() {
       onLogSpiff={() => { setEditingSpiff(null); setIsNewSpiffOpen(true); }}
       onConfigPayPlan={() => setIsPayPlanOpen(true)}
     >
+      <AmbientEffectsLayer />
       <LoadingOverlay isLoading={isLoading && !!profile} />
       <OnboardingFlow
         onConfigPayPlan={() => setIsPayPlanOpen(true)}

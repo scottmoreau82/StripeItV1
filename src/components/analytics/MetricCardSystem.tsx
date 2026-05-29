@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Card } from '../ui/Card';
 import { Typography } from '../ui/Typography';
 import { cn } from '@/src/lib/utils';
 import { LucideIcon, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { AmbientEffect } from '@/src/types';
 
 /**
  * StripeItMetricCardSystem
@@ -102,6 +104,23 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const isHorizontal = variant === 'hero-horizontal';
   const isCarousel = variant === 'carousel';
   const animatedValue = useCountUp(loading ? 0 : value);
+
+  const { profile } = useAuth();
+  const activeEffects = profile?.preferences?.ambientEffects || [];
+  const hasScanline = activeEffects.includes(AmbientEffect.SCANLINE);
+  const hasSpotlight = activeEffects.includes(AmbientEffect.SPOTLIGHT);
+  const [spotPos, setSpotPos] = useState<{x: number; y: number} | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!hasSpotlight || !cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    setSpotPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, [hasSpotlight]);
+
+  const handleMouseLeave = useCallback(() => {
+    setSpotPos(null);
+  }, []);
 
   if (isLocked) {
     return (
@@ -267,14 +286,49 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   }
 
   return (
-    <Card 
+    <div 
       onClick={onClick}
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       className={cn(
-        "bg-gradient-to-br from-white/[0.04] to-transparent border-border-subtle hover:border-white/20 transition-all group relative overflow-hidden flex flex-col items-center justify-center text-center",
+        "rounded-2xl border border-border-card bg-bg-card shadow-deal relative overflow-hidden",
+        "bg-gradient-to-br from-white/[0.04] to-transparent border-border-subtle hover:border-white/20 transition-all group flex flex-col items-center justify-center text-center",
         isTelemetry ? "p-3 h-auto min-h-[85px]" : "p-4 lg:p-4.5 h-full min-h-[110px] lg:min-h-[140px]",
         onClick && "cursor-pointer hover:border-white/20 transition-all"
       )}
     >
+      {/* Spotlight effect */}
+      {hasSpotlight && spotPos && (
+        <div
+          className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(180px circle at ${spotPos.x}px ${spotPos.y}px, color-mix(in srgb, var(--color-brand-primary) 10%, transparent), transparent 70%)`,
+          }}
+        />
+      )}
+
+      {/* Scanline effect */}
+      {hasScanline && (
+        <>
+          <div
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)',
+              backgroundSize: '100% 4px',
+            }}
+          />
+          <motion.div
+            animate={{ top: ['-15%', '115%'] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
+            className="absolute inset-x-0 h-12 pointer-events-none z-10"
+            style={{
+              background: 'linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-brand-primary) 6%, transparent), transparent)',
+            }}
+          />
+        </>
+      )}
+
       {/* Scanlines visual accent */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_8px] pointer-events-none opacity-20" />
 
@@ -331,6 +385,6 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         color === 'purple' ? 'text-purple-500' :
         color === 'orange' ? 'text-orange-500' : 'text-rose-500'
       )} />
-    </Card>
+    </div>
   );
 };

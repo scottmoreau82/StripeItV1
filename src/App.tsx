@@ -69,6 +69,7 @@ import { DealerUserManagementView } from './components/dealer/DealerUserManageme
 import { DealerLogBuilderView } from './components/dealer/DealerLogBuilderView';
 import { DealerAccessRequestFlow } from './components/dealer/DealerAccessRequestFlow';
 import { DealerRequestsAdminView } from './components/management/DealerRequestsAdminView';
+import { EffectsPreview } from './components/admin/EffectsPreview';
 
 import { AuthHydrationFallback } from './components/auth/AuthHydrationFallback';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
@@ -502,6 +503,14 @@ function MainAppFlow() {
                   ? <DealerRequestsAdminView /> 
                   : <Navigate to="/" />
               } 
+            />
+            <Route
+              path="/effects-preview"
+              element={
+                profile?.isAdmin
+                  ? <EffectsPreview />
+                  : <Navigate to="/" />
+              }
             />
             <Route 
               path="/deal-desk" 

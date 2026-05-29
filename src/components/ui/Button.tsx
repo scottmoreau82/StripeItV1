@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { cn } from '@/src/lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'motion/react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { BUTTON_SHAPES } from '@/src/constants';
 import { useTheme } from '@/src/contexts/ThemeContext';
@@ -42,14 +42,14 @@ export const Button: React.FC<ButtonProps> = ({
   const [isGlowPulsing, setIsGlowPulsing] = useState(false);
   const [isBorderFlashing, setIsBorderFlashing] = useState(false);
   const [isScaleColor, setIsScaleColor] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const magnetRef = useRef<HTMLButtonElement>(null);
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (props.disabled || isLoading) return;
     onClick?.(e);
     switch (buttonEffect) {
       case ButtonEffect.RIPPLE: {
-        const btn = buttonRef.current;
+        const btn = magnetRef.current;
         if (!btn) break;
         const rect = btn.getBoundingClientRect();
         const size = Math.max(rect.width, rect.height) * 2;
@@ -80,6 +80,28 @@ export const Button: React.FC<ButtonProps> = ({
   const isEligible = size !== 'icon' && (variant === 'primary' || variant === 'danger' || variant === 'outline');
   const shapeClass = isEligible ? BUTTON_SHAPES[shapePreference] : BUTTON_SHAPES.standard;
 
+  const isMagnetic = !props.disabled && !isLoading && (variant === 'primary' || variant === 'outline') && size !== 'icon' && size !== 'sm';
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 200, damping: 15, mass: 0.5 });
+  const springY = useSpring(y, { stiffness: 200, damping: 15, mass: 0.5 });
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!isMagnetic || !magnetRef.current) return;
+    const rect = magnetRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const distX = e.clientX - centerX;
+    const distY = e.clientY - centerY;
+    x.set(distX * 0.25);
+    y.set(distY * 0.25);
+  }, [isMagnetic, x, y]);
+
+  const handleMouseLeave = useCallback(() => {
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
+
   const baseStyles = "inline-flex items-center justify-center font-medium transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer relative overflow-hidden";
   
   const variants = {
@@ -101,7 +123,10 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <motion.button
-      ref={buttonRef}
+      ref={magnetRef}
+      style={isMagnetic ? { x: springX, y: springY } : undefined}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       whileTap={(!props.disabled && !isLoading) ? { scale: buttonEffect === ButtonEffect.SCALE_COLOR ? 0.94 : 0.97 } : undefined}
       whileHover={(!props.disabled && !isLoading) ? { y: -1 } : undefined}
       animate={{

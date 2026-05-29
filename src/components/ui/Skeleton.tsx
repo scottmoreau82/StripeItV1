@@ -1,17 +1,20 @@
 import React from 'react';
 import { cn } from '@/src/lib/utils';
-import { motion } from 'motion/react';
 
-const shimmer = {
-  animate: {
-    backgroundPosition: ['200% 0', '-200% 0'],
-  },
-  transition: {
-    duration: 1.8,
-    repeat: Infinity,
-    ease: 'linear',
-  },
-};
+const skeletonStyle = `
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+`;
+
+// Inject skeleton styles once
+if (typeof document !== 'undefined' && !document.getElementById('skeleton-styles')) {
+  const style = document.createElement('style');
+  style.id = 'skeleton-styles';
+  style.textContent = skeletonStyle;
+  document.head.appendChild(style);
+}
 
 interface SkeletonProps {
   className?: string;
@@ -19,18 +22,20 @@ interface SkeletonProps {
 
 // Base shimmer block
 export const Skeleton = ({ className }: SkeletonProps) => (
-  <motion.div
-    animate={shimmer.animate}
-    transition={shimmer.transition}
+  <div
     className={cn(
-      'rounded-lg',
+      'relative overflow-hidden rounded-lg bg-white/[0.06]',
       className
     )}
-    style={{
-      background: 'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%)',
-      backgroundSize: '400% 100%',
-    }}
-  />
+  >
+    <div
+      className="absolute inset-0 -translate-x-full"
+      style={{
+        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 40%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.12) 60%, transparent 100%)',
+        animation: 'skeleton-shimmer 1.6s ease-in-out infinite',
+      }}
+    />
+  </div>
 );
 
 // Sales Log desktop table row skeleton

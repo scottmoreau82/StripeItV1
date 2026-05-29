@@ -343,7 +343,7 @@ export const LandingView: React.FC<{ isInitializing?: boolean }> = ({ isInitiali
             >
               <Link to="/signup" className="contents">
                 <Button 
-                  className="h-16 px-12 text-base font-black italic uppercase tracking-tighter shadow-glow glow-primary group w-full sm:w-auto text-[var(--color-bg-deep)]"
+                  className="h-16 px-12 text-base font-black italic uppercase tracking-tighter shadow-glow glow-primary group w-full sm:w-auto !bg-brand-primary !text-bg-deep hover:!bg-brand-primary/90 border-0"
                   id="landing-hero-signup-btn"
                 >
                   Start My Account

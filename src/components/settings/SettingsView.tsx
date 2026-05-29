@@ -357,6 +357,69 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                 </div>
               </div>
 
+              {/* Ambient Effects */}
+              <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
+                    <Sparkles className="text-brand-primary" size={20} />
+                  </div>
+                  <div>
+                    <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Ambient Effects</Typography>
+                    <Typography variant="small" className="text-slate-500 text-[10px]">Layer visual effects across the app</Typography>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { id: AmbientEffect.PARTICLES, label: 'Particle Field', desc: 'Floating dots' },
+                    { id: AmbientEffect.AURORA, label: 'Aurora', desc: 'Color blobs' },
+                    { id: AmbientEffect.GRADIENT_MESH, label: 'Gradient Mesh', desc: 'Color gradients' },
+                    { id: AmbientEffect.SCANLINE, label: 'Scanline', desc: 'Metric card sweep' },
+                    { id: AmbientEffect.SPOTLIGHT, label: 'Spotlight', desc: 'Cursor light' },
+                    { id: AmbientEffect.TEXT_SCRAMBLE, label: 'Text Scramble', desc: 'Title scramble' },
+                    { id: AmbientEffect.TYPEWRITER, label: 'Typewriter', desc: 'Title types out' },
+                  ] as { id: AmbientEffect; label: string; desc: string }[]).map((effect) => {
+                    const isActive = currentAmbientEffects.includes(effect.id);
+                    return (
+                      <button
+                        key={effect.id}
+                        type="button"
+                        onClick={() => handleAmbientEffectToggle(effect.id)}
+                        disabled={isSaving || isFreeTier}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all text-left",
+                          isActive
+                            ? "bg-brand-primary/10 border-brand-primary/30 text-[var(--color-text-primary)]"
+                            : "bg-[var(--color-bg-card)] border-[var(--color-border)] text-slate-500 hover:border-brand-primary/20",
+                          (isSaving || isFreeTier) && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        <div>
+                          <Typography variant="label" className="text-[10px] font-black uppercase tracking-widest block leading-tight">
+                            {effect.label}
+                          </Typography>
+                          <Typography variant="mono" className="text-[8px] text-slate-600">
+                            {effect.desc}
+                          </Typography>
+                        </div>
+                        <div className={cn(
+                          "h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ml-2 transition-all",
+                          isActive ? "border-brand-primary bg-brand-primary" : "border-slate-700"
+                        )}>
+                          {isActive && <div className="h-1.5 w-1.5 rounded-full bg-bg-deep" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {isFreeTier && (
+                  <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
+                    <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
+                      PRO+ EXCLUSIVE
+                    </Typography>
+                  </div>
+                )}
+              </div>
+
               {/* Button Effects */}
               <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
                 <div className="flex items-center gap-3">
@@ -394,71 +457,6 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
                   >
                     TEST
                   </Button>
-                </div>
-
-                {isFreeTier && (
-                  <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl flex items-center gap-2">
-                    <AppIcon name="lock" size={12} className="text-brand-primary" />
-                    <Typography variant="small" className="text-[10px] text-brand-primary font-bold uppercase tracking-widest leading-none">
-                      PRO+ EXCLUSIVE
-                    </Typography>
-                  </div>
-                )}
-              </div>
-
-              {/* Ambient Effects */}
-              <div className={cn("space-y-4", isMobile ? "space-y-3" : "")}>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
-                    <Sparkles className="text-brand-primary" size={20} />
-                  </div>
-                  <div>
-                    <Typography variant="label" className="text-text-primary block text-sm">Ambient Effects</Typography>
-                    <Typography variant="small" className="text-text-muted text-[10px]">Layer visual effects across the app</Typography>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  {[
-                    { id: AmbientEffect.PARTICLES, label: 'Particle Field', desc: 'Floating dots in the background' },
-                    { id: AmbientEffect.AURORA, label: 'Aurora', desc: 'Slow moving color blobs behind content' },
-                    { id: AmbientEffect.GRADIENT_MESH, label: 'Gradient Mesh', desc: 'Animated color gradients' },
-                    { id: AmbientEffect.SCANLINE, label: 'Scanline', desc: 'Sweeping light on metric cards' },
-                    { id: AmbientEffect.SPOTLIGHT, label: 'Spotlight', desc: 'Light follows cursor on metric cards' },
-                    { id: AmbientEffect.TEXT_SCRAMBLE, label: 'Text Scramble', desc: 'Page titles scramble on navigation' },
-                    { id: AmbientEffect.TYPEWRITER, label: 'Typewriter', desc: 'Page titles type out on navigation' },
-                  ].map((effect) => {
-                    const isActive = currentAmbientEffects.includes(effect.id);
-                    return (
-                      <button
-                        key={effect.id}
-                        onClick={() => handleAmbientEffectToggle(effect.id)}
-                        disabled={isSaving || isFreeTier}
-                        className={cn(
-                          "w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all text-left",
-                          isActive
-                            ? "bg-brand-primary/10 border-brand-primary/30 text-text-primary"
-                            : "bg-bg-card border-border-subtle text-text-muted hover:border-brand-primary/20",
-                          (isSaving || isFreeTier) && "opacity-50 cursor-not-allowed"
-                        )}
-                      >
-                        <div>
-                          <Typography variant="label" className="text-[11px] font-black uppercase tracking-widest block">
-                            {effect.label}
-                          </Typography>
-                          <Typography variant="mono" className="text-[9px] text-text-muted">
-                            {effect.desc}
-                          </Typography>
-                        </div>
-                        <div className={cn(
-                          "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
-                          isActive ? "border-brand-primary bg-brand-primary" : "border-border-subtle"
-                        )}>
-                          {isActive && <div className="h-2 w-2 rounded-full bg-bg-deep" />}
-                        </div>
-                      </button>
-                    );
-                  })}
                 </div>
 
                 {isFreeTier && (

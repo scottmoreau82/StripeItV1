@@ -162,16 +162,39 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   if (isHorizontal) {
     return (
-      <Card 
+      <div 
         onClick={onClick}
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
         className={cn(
-          "bg-gradient-to-br from-white/[0.03] to-transparent border-border-subtle hover:border-white/20 transition-all group relative overflow-hidden p-3.5 min-h-[95px]",
+          "rounded-2xl border border-border-card bg-bg-card shadow-deal relative overflow-hidden",
+          "bg-gradient-to-br from-white/[0.03] to-transparent border-border-subtle hover:border-white/20 transition-all group p-3.5 min-h-[95px]",
           onClick && "cursor-pointer hover:border-white/20 transition-all"
         )}
       >
         {/* Atmospheric Scanlines */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-10" />
         
+        {hasSpotlight && spotPos && (
+          <div
+            className="absolute inset-0 pointer-events-none z-20"
+            style={{
+              background: `radial-gradient(160px circle at ${spotPos.x}px ${spotPos.y}px, color-mix(in srgb, var(--color-brand-primary) 10%, transparent), transparent 70%)`,
+            }}
+          />
+        )}
+        {hasScanline && (
+          <motion.div
+            animate={{ top: ['-15%', '115%'] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
+            className="absolute inset-x-0 h-12 pointer-events-none z-20"
+            style={{
+              background: 'linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-brand-primary) 6%, transparent), transparent)',
+            }}
+          />
+        )}
+
         <div className="flex items-center gap-4 h-full relative z-10">
           <div className={cn(
             "h-9 w-9 rounded-lg flex items-center justify-center border transition-transform group-hover:scale-105 shrink-0 shadow-sm",
@@ -224,7 +247,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           color === 'purple' ? 'text-purple-500' :
           color === 'orange' ? 'text-orange-500' : 'text-rose-500'
         )} />
-      </Card>
+      </div>
     );
   }
 
@@ -298,39 +321,27 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         onClick && "cursor-pointer hover:border-white/20 transition-all"
       )}
     >
-      {/* Spotlight effect */}
+      {/* Scanlines visual accent */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_8px] pointer-events-none opacity-20" />
+
       {hasSpotlight && spotPos && (
         <div
-          className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-300"
+          className="absolute inset-0 pointer-events-none z-20"
           style={{
-            background: `radial-gradient(180px circle at ${spotPos.x}px ${spotPos.y}px, color-mix(in srgb, var(--color-brand-primary) 10%, transparent), transparent 70%)`,
+            background: `radial-gradient(160px circle at ${spotPos.x}px ${spotPos.y}px, color-mix(in srgb, var(--color-brand-primary) 10%, transparent), transparent 70%)`,
           }}
         />
       )}
-
-      {/* Scanline effect */}
       {hasScanline && (
-        <>
-          <div
-            className="absolute inset-0 pointer-events-none z-10"
-            style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)',
-              backgroundSize: '100% 4px',
-            }}
-          />
-          <motion.div
-            animate={{ top: ['-15%', '115%'] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
-            className="absolute inset-x-0 h-12 pointer-events-none z-10"
-            style={{
-              background: 'linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-brand-primary) 6%, transparent), transparent)',
-            }}
-          />
-        </>
+        <motion.div
+          animate={{ top: ['-15%', '115%'] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-x-0 h-12 pointer-events-none z-20"
+          style={{
+            background: 'linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-brand-primary) 6%, transparent), transparent)',
+          }}
+        />
       )}
-
-      {/* Scanlines visual accent */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_8px] pointer-events-none opacity-20" />
 
       <div className="flex flex-col h-full relative z-10">
         <div className={cn(

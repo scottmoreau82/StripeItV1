@@ -174,9 +174,15 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "rounded-2xl border border-border-card bg-bg-card shadow-deal relative overflow-hidden",
-          "bg-gradient-to-br from-white/[0.03] to-transparent border-border-subtle hover:border-white/20 transition-all group p-3.5 min-h-[95px]",
-          onClick && "cursor-pointer hover:border-white/20 transition-all"
+          "rounded-2xl border bg-bg-card shadow-deal relative overflow-hidden",
+          "bg-gradient-to-br from-white/[0.03] to-transparent transition-all group p-3.5 min-h-[95px]",
+          color === 'cyan' ? 'border-brand-primary/20 hover:border-brand-primary/40' :
+          color === 'emerald' ? 'border-emerald-500/20 hover:border-emerald-500/40' :
+          color === 'amber' ? 'border-amber-500/20 hover:border-amber-500/40' :
+          color === 'purple' ? 'border-purple-500/20 hover:border-purple-500/40' :
+          color === 'orange' ? 'border-orange-500/20 hover:border-orange-500/40' :
+          'border-rose-500/20 hover:border-rose-500/40',
+          onClick && "cursor-pointer"
         )}
       >
         {/* Atmospheric Scanlines */}
@@ -194,12 +200,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           />
         )}
 
-        <div className="flex items-center gap-4 h-full relative z-10">
+        <div className="flex items-center gap-3 h-full relative z-10 pl-4">
           <div className={cn(
-            "h-9 w-9 rounded-lg flex items-center justify-center border transition-transform group-hover:scale-105 shrink-0 shadow-sm",
+            "h-10 w-10 rounded-lg flex items-center justify-center border transition-transform group-hover:scale-105 shrink-0 shadow-sm",
             colorMap[color as keyof typeof colorMap]
           )}>
-            <Icon className="h-4.5 w-4.5" />
+            <Icon className="h-5 w-5" />
           </div>
           
           <div className="flex-1 flex flex-col justify-center min-w-0">
@@ -239,10 +245,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         
         {/* Visual Accent */}
         <div className={cn(
-          "absolute inset-y-0 left-0 w-[2px] bg-current opacity-40",
-          color === 'cyan' ? 'text-brand-primary' : 
+          "absolute inset-y-0 left-0 w-[3px] rounded-r-full bg-current opacity-60",
+          color === 'cyan' ? 'text-brand-primary' :
           color === 'emerald' ? 'text-emerald-500' :
-          color === 'amber' ? 'text-amber-500' : 
+          color === 'amber' ? 'text-amber-500' :
           color === 'purple' ? 'text-purple-500' :
           color === 'orange' ? 'text-orange-500' : 'text-rose-500'
         )} />

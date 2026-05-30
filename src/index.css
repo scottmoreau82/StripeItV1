@@ -340,9 +340,17 @@
 @layer base {
   * {
     @apply border-border-subtle;
+    box-sizing: border-box;
+  }
+  html {
+    overflow-x: hidden;
+    max-width: 100vw;
   }
   body {
     @apply bg-bg-deep text-text-primary font-sans antialiased;
+    overflow-x: hidden;
+    max-width: 100vw;
+    position: relative;
   }
 
   /* Reset date input appearances to match Stripe It design */

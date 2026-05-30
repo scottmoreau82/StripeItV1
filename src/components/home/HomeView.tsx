@@ -851,6 +851,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <AnimatePresence>
         {showSuspensionDetails && (
           <Modal
+            key="suspension-modal"
             isOpen={showSuspensionDetails}
             onClose={() => setShowSuspensionDetails(false)}
             title="Dealership Access Details"
@@ -908,6 +909,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {selectedCompId && selectedComp && (
            isMobile ? (
             <FullscreenMobileFlow
+              key="comp-mobile-flow"
               isOpen={!!selectedCompId}
               onClose={() => setSelectedCompId(null)}
               title="Competition Leaderboard"
@@ -922,6 +924,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </FullscreenMobileFlow>
            ) : (
              <Modal
+               key="comp-modal"
                isOpen={!!selectedCompId}
                onClose={() => setSelectedCompId(null)}
                title={selectedComp.title}
@@ -937,6 +940,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {showPaycheckBreakdown && (
           isMobile ? (
             <FullscreenMobileFlow
+              key="paycheck-mobile-flow"
               isOpen={showPaycheckBreakdown}
               onClose={() => setShowPaycheckBreakdown(false)}
               title="PAYCHECK BREAKDOWN"
@@ -1137,6 +1141,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </FullscreenMobileFlow>
           ) : (
             <Modal
+              key="paycheck-modal"
               isOpen={showPaycheckBreakdown}
               onClose={() => setShowPaycheckBreakdown(false)}
               title="PAYCHECK BREAKDOWN"
@@ -1348,6 +1353,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {/* Front End Gross Breakdown Modal */}
         {showFrontModal && (
           <Modal
+            key="front-modal"
             isOpen={showFrontModal}
             onClose={() => setShowFrontModal(false)}
             title="Front-End Gross Breakdown"
@@ -1442,6 +1448,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {/* Back End Gross Breakdown Modal */}
         {showBackModal && (
           <Modal
+            key="back-modal"
             isOpen={showBackModal}
             onClose={() => setShowBackModal(false)}
             title="Back-End Gross Breakdown"
@@ -1533,6 +1540,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </Modal>
         )}
         <PayoutExplanationModal
+          key="explanation-modal"
           isOpen={!!explanationData}
           onClose={() => setExplanationData(null)}
           commission={explanationData?.commission || null}
@@ -1542,6 +1550,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           onDelete={async () => { setExplanationData(null); }}
         />
         <PayoutExplanationModal
+          key="selected-deal-modal"
           isOpen={!!selectedDeal}
           onClose={() => setSelectedDeal(null)}
           commission={selectedDealCommission}

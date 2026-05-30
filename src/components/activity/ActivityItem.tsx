@@ -8,10 +8,11 @@ import {
   TrendingUp,
   Circle 
 } from 'lucide-react';
-import { ActivityEvent, ActivityEventType } from '@/src/types';
+import { ActivityEvent, ActivityEventType, AmbientEffect } from '@/src/types';
 import { Typography } from '../ui/Typography';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/src/lib/utils';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 /**
  * StripeItActivityFeedSystem - ActivityItem
@@ -75,6 +76,8 @@ const getEventTheme = (type: ActivityEventType) => {
 
 export const ActivityItem: React.FC<ActivityItemProps> = ({ event, isFirst, isLast }) => {
   const theme = getEventTheme(event.type);
+  const { profile } = useAuth();
+  const hasGlass = profile?.preferences?.ambientEffects?.includes(AmbientEffect.GLASSMORPHISM) ?? false;
 
   return (
     <div className="relative pl-10 pb-8 last:pb-0">
@@ -105,7 +108,12 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ event, isFirst, isLa
           </Typography>
         </div>
 
-        <div className="relative p-4 rounded-2xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] hover:border-slate-500/30 transition-colors">
+        <div className={cn(
+          "relative p-4 rounded-2xl transition-colors hover:border-slate-500/30",
+          hasGlass
+            ? "bg-white/[0.04] backdrop-blur-xl border border-white/[0.08]"
+            : "bg-[var(--color-bg-elevated)] border border-[var(--color-border)]"
+        )}>
           <Typography variant="p" className="text-[var(--color-text-secondary)] text-sm leading-relaxed antialiased">
             {event.message}
           </Typography>

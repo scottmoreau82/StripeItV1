@@ -437,3 +437,42 @@ body.modal-open .global-mobile-log-deal-fab {
   from { transform: scaleX(1); }
   to   { transform: scaleX(0); }
 }
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  [data-theme] {
+    --color-bg-deep: #ffffff !important;
+    --color-bg-surface: #f5f5f5 !important;
+    --color-bg-card: #ffffff !important;
+    --color-bg-elevated: #ffffff !important;
+    --color-text-primary: #000000 !important;
+    --color-text-secondary: #333333 !important;
+    --color-text-muted: #666666 !important;
+    --color-border: rgba(0,0,0,0.15) !important;
+  }
+
+  .bg-bg-deep, .bg-bg-surface, .bg-bg-card, .bg-bg-elevated {
+    background-color: #ffffff !important;
+  }
+
+  .text-white, .text-text-primary {
+    color: #000000 !important;
+  }
+
+  .text-slate-400, .text-slate-500, .text-slate-600 {
+    color: #444444 !important;
+  }
+
+  nav, aside, .sidebar, [data-sidebar] {
+    display: none !important;
+  }
+}

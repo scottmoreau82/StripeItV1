@@ -97,6 +97,31 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedSpiff, setSelectedSpiff] = useState<MonthlySpiff | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const monthOptions = useMemo(() => {
+    const monthSet = new Set<string>();
+    deals.forEach(d => {
+      const date = new Date(d.date);
+      monthSet.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+    });
+    monthlySpiffs.forEach(s => { if (s.month) monthSet.add(s.month); });
+    const now = new Date();
+    monthSet.add(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+    return Array.from(monthSet).sort((a, b) => b.localeCompare(a)).map(key => {
+      const [year, month] = key.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1);
+      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const dealCount = deals.filter(d => {
+        const dDate = new Date(d.date);
+        return `${dDate.getFullYear()}-${String(dDate.getMonth() + 1).padStart(2, '0')}` === key;
+      }).length;
+      return { key, label, dealCount };
+    });
+  }, [deals, monthlySpiffs]);
 
   const [devTierOverride, setDevTierOverride] = useState<SubscriptionTier | null>(null);
   const [showSpiffs, setShowSpiffs] = useState(false);
@@ -245,7 +270,16 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         )
       );
       
-      return searchMatch;
+      let itemMonth: string;
+      if (!isDeal) {
+        // Spiffs have a month field directly e.g. "2026-05"
+        itemMonth = (item as MonthlySpiff).month || '';
+      } else {
+        // Parse date safely avoiding timezone shift
+        const dateParts = item.date.split('-');
+        itemMonth = `${dateParts[0]}-${dateParts[1]}`;
+      }
+      return searchMatch && itemMonth === selectedMonth;
     });
 
     // 2. Wrap for sorting to handle calculated payouts efficiently
@@ -294,7 +328,24 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       return sortConfig.direction === 'asc' ? result : -result;
     }).map(s => s.item);
 
-  }, [deals, monthlySpiffs, search, sortConfig, isBasicPlus, payPlan]);
+  }, [deals, monthlySpiffs, search, sortConfig, isBasicPlus, payPlan, selectedMonth]);
+
+  const filteredDeals = useMemo(() => sortedItems.filter(i => 'customerName' in i) as Deal[], [sortedItems]);
+  const filteredSpiffs = useMemo(() => sortedItems.filter(i => !('customerName' in i)) as MonthlySpiff[], [sortedItems]);
+  
+  const monthTally = useMemo(() => {
+    const totalDeals = filteredDeals.length;
+    const totalUnits = filteredDeals.reduce((sum, d) => sum + (d.isSplitDeal ? 0.5 : 1), 0);
+    const spiffTotal = filteredSpiffs.reduce((sum, s) => sum + (s.amount || 0), 0);
+    const commissionTotal = filteredDeals.reduce((sum, deal) => {
+      if (!payPlan) return sum;
+      const m = getCalendarMonth(deal.date);
+      const y = getCalendarYear(deal.date);
+      const monthlyDeals = deals.filter(d => getCalendarMonth(d.date) === m && getCalendarYear(d.date) === y);
+      return sum + calculateDealCommission(deal, payPlan, monthlyDeals).finalPayout;
+    }, 0);
+    return { totalDeals, totalUnits, totalPayout: commissionTotal + spiffTotal };
+  }, [filteredDeals, filteredSpiffs, payPlan, deals]);
 
   const sortedDeals = useMemo(() =>
     sortedItems.filter(item =>
@@ -337,10 +388,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     }
   };
 
+  const filteredDealCount = useMemo(() => sortedItems.filter(i => 'customerName' in i).length, [sortedItems]);
+  const filteredSpiffCount = useMemo(() => sortedItems.filter(i => !('customerName' in i)).length, [sortedItems]);
+
   const header = (
     <PageHeader
       title="Sales Log"
-      subtitle={`${currentMonthDeals.length} deals / ${currentMonthSpiffs.length} spiffs this month`}
+      subtitle={`${monthTally.totalDeals} deals · ${monthTally.totalUnits} units`}
       icon={() => <AppIcon name="salesLog" className="h-6 w-6 text-bg-deep" />}
     >
       {(isDeveloper || profile?.canCreateRandomDeals) && (
@@ -371,14 +425,47 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   const mainContent = (
     <div className="space-y-8 pb-32">
-      {/* Search Group */}
-      <div className="flex flex-col gap-3 md:gap-6">
-        <div className="w-full">
-          <DealSearch 
-            value={search} 
-            onChange={setSearch} 
-            placeholder={isMobile ? "Search customer, stock, or condition..." : undefined}
-          />
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <DealSearch
+              value={search}
+              onChange={setSearch}
+              placeholder={isMobile ? "Search customer, stock, or condition..." : undefined}
+            />
+          </div>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="shrink-0 bg-bg-card border border-border-subtle rounded-xl px-4 py-3 text-[11px] font-black text-text-primary uppercase tracking-wider focus:outline-none focus:border-brand-primary/50 transition-all appearance-none cursor-pointer h-[46px]"
+            style={{ minWidth: isMobile ? '140px' : '200px' }}
+          >
+            {monthOptions.map(opt => (
+              <option key={opt.key} value={opt.key}>
+                {opt.label} ({opt.dealCount})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Tally bar */}
+        <div className="flex items-center gap-4 px-4 py-2.5 rounded-xl bg-bg-card/40 border border-border-subtle">
+          <div className="flex items-center gap-1.5">
+            <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black tracking-widest">Deals</Typography>
+            <Typography variant="mono" className="text-[11px] text-text-primary font-black">{monthTally.totalDeals}</Typography>
+          </div>
+          <div className="h-3 w-px bg-border-subtle" />
+          <div className="flex items-center gap-1.5">
+            <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black tracking-widest">Units</Typography>
+            <Typography variant="mono" className="text-[11px] text-text-primary font-black">{monthTally.totalUnits}</Typography>
+          </div>
+          <div className="h-3 w-px bg-border-subtle" />
+          <div className="flex items-center gap-1.5 ml-auto">
+            <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black tracking-widest">Payout</Typography>
+            <Typography variant="mono" className="text-[11px] text-emerald-400 font-black">
+              ${monthTally.totalPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </Typography>
+          </div>
         </div>
       </div>
 

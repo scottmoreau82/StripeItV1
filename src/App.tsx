@@ -857,9 +857,8 @@ function AppContent() {
     return <LandingView isInitializing />;
   }
 
-  // 2. User is authenticated but profile is still hydrating
-  // We MUST wait for the profile to resolve (or fail) before mounting shells
-  if (user && !profile && loading) {
+  // 2. User is authenticated but profile is still hydrating (or null after tab resume)
+  if (user && !profile) {
     return <LandingView isInitializing />;
   }
 

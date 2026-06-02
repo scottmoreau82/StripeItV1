@@ -239,6 +239,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
   // Filtering & Sorting Logic
   const sortedItems = useMemo(() => {
+    if (!deals.length && isLoading) return [];
     // 1. Combine deals and spiffs into a unified log list
     const logItems: (Deal | MonthlySpiff)[] = [
       ...deals.map(d => ({ ...d, logType: 'deal' as const })),
@@ -330,7 +331,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       return sortConfig.direction === 'asc' ? result : -result;
     }).map(s => s.item);
 
-  }, [deals, monthlySpiffs, search, sortConfig, isBasicPlus, payPlan, selectedMonth]);
+  }, [deals, monthlySpiffs, search, sortConfig, isBasicPlus, payPlan, selectedMonth, isLoading]);
 
   useEffect(() => {
     if (!isLoading && sortedItems.length > 0) {
@@ -611,7 +612,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
       {/* Results List */}
       <div className="space-y-4">
-        {isLoading ? (
+        {(isLoading || !selectedMonth) ? (
           <>
             {/* Desktop skeleton */}
             <div className="hidden md:block overflow-x-auto">

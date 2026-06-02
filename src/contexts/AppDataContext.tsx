@@ -458,7 +458,6 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
         orgId: effectiveOrgId,
         month: data.month || new Date().toISOString().slice(0, 7)
       });
-      await loadStaticData(effectiveOrgId, user.uid);
       triggerSuccess('Monthly adjustment saved.');
     } catch (error: any) {
       console.error("Monthly Spiff Save Error:", error);
@@ -470,7 +469,6 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (!profile || !user || !effectiveOrgId) return;
     try {
       await spiffService.deleteMonthlySpiff(effectiveOrgId, id);
-      await loadStaticData(effectiveOrgId, user.uid);
       triggerSuccess('Adjustment deleted.');
     } catch (error) {
       triggerError('Failed to delete adjustment.');

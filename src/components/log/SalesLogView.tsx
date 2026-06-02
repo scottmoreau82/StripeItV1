@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Deal, DealStatus, PayPlan, UserProfile, SubscriptionTier, MonthlySpiff } from '@/src/types';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
@@ -97,6 +97,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedSpiff, setSelectedSpiff] = useState<MonthlySpiff | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
+  const hasAnimated = useRef(false);
   const [dismissedLockedBanner, setDismissedLockedBanner] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const now = new Date();
@@ -330,6 +331,12 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     }).map(s => s.item);
 
   }, [deals, monthlySpiffs, search, sortConfig, isBasicPlus, payPlan, selectedMonth]);
+
+  useEffect(() => {
+    if (!isLoading && sortedItems.length > 0) {
+      hasAnimated.current = true;
+    }
+  }, [isLoading, sortedItems.length]);
 
   const filteredDeals = useMemo(() => sortedItems.filter(i => 'customerName' in i) as Deal[], [sortedItems]);
   const filteredSpiffs = useMemo(() => sortedItems.filter(i => !('customerName' in i)) as MonthlySpiff[], [sortedItems]);
@@ -726,7 +733,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       return (
                         <motion.tr
                           key={deal.id}
-                          initial={{ opacity: 0, y: 8, scale: 0.99 }}
+                          initial={hasAnimated.current ? false : { opacity: 0, y: 8, scale: 0.99 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           transition={{ delay: index * 0.04, duration: 0.2, ease: 'easeOut' }}
                           onClick={() => {
@@ -901,7 +908,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                   return (
                     <motion.div
                       key={deal.id}
-                      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                      initial={hasAnimated.current ? false : { opacity: 0, y: 12, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       transition={{ delay: index * 0.04, duration: 0.2, ease: 'easeOut' }}
                       layout
@@ -1096,7 +1103,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                     {sortedSpiffs.map((spiff, index) => (
                       <motion.div
                         key={spiff.id}
-                        initial={{ opacity: 0, y: 5 }}
+                        initial={hasAnimated.current ? false : { opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.03 }}
                         onClick={() => window.dispatchEvent(

@@ -33,11 +33,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onL
 
   // StripeItLayoutTierSwitch - Direct Dealer users to their dedicated layout shell
   // We must have a profile to determine which shell to mount
-  if (!profile) {
-    return null; // Should be caught by ProtectedRoute/AppContent, but prevents flash
-  }
-
-  if (profile.subscriptionTier === SubscriptionTier.ORGANIZATION) {
+  if (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) {
     return <DealerLayout>{children}</DealerLayout>;
   }
 

@@ -97,6 +97,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedSpiff, setSelectedSpiff] = useState<MonthlySpiff | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
+  const [dismissedLockedBanner, setDismissedLockedBanner] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -347,6 +348,26 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     return { totalDeals, totalUnits, totalPayout: commissionTotal + spiffTotal };
   }, [filteredDeals, filteredSpiffs, payPlan, deals]);
 
+  const lockedDeals = useMemo(() => 
+    deals.filter(d => d.lockedByTier === true),
+  [deals]);
+
+  const currentMonthKey = selectedMonth;
+  
+  const lockedCurrentMonth = useMemo(() =>
+    lockedDeals.filter(d => {
+      const parts = d.date.split('-');
+      return `${parts[0]}-${parts[1]}` === currentMonthKey;
+    }),
+  [lockedDeals, currentMonthKey]);
+
+  const lockedPreviousMonths = useMemo(() =>
+    lockedDeals.filter(d => {
+      const parts = d.date.split('-');
+      return `${parts[0]}-${parts[1]}` !== currentMonthKey;
+    }),
+  [lockedDeals, currentMonthKey]);
+
   const sortedDeals = useMemo(() =>
     sortedItems.filter(item =>
       'customerName' in item) as Deal[],
@@ -498,28 +519,60 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
         </div>
       )}
 
-      {lockedDealsCount > 0 && (
-        <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-              <AppIcon name="lock" size={16} className="text-amber-400" />
+      {!dismissedLockedBanner && lockedDeals.length > 0 && (
+        <div className={cn(
+          "flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border",
+          lockedCurrentMonth.length > 0
+            ? "bg-amber-500/10 border-amber-500/20"
+            : "bg-white/[0.03] border-white/10"
+        )}>
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={cn(
+              "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+              lockedCurrentMonth.length > 0
+                ? "bg-amber-500/20 border border-amber-500/30"
+                : "bg-white/5 border border-white/10"
+            )}>
+              <AppIcon name="lock" size={14} className={lockedCurrentMonth.length > 0 ? "text-amber-400" : "text-slate-500"} />
             </div>
-            <div>
-              <Typography variant="mono" className="text-amber-400 text-[10px] font-black uppercase tracking-widest block">
-                {lockedDealsCount} Locked {lockedDealsCount === 1 ? 'Deal' : 'Deals'}
-              </Typography>
-              <Typography variant="mono" className="text-slate-500 text-[9px]">
-                Your data is safe — upgrade to Pro to unlock and include in metrics
-              </Typography>
+            <div className="min-w-0">
+              {lockedCurrentMonth.length > 0 ? (
+                <>
+                  <Typography variant="mono" className="text-[10px] text-amber-400 font-black uppercase tracking-widest block">
+                    {lockedCurrentMonth.length} Locked {lockedCurrentMonth.length === 1 ? 'Deal' : 'Deals'}
+                  </Typography>
+                  <Typography variant="mono" className="text-[9px] text-slate-500">
+                    Your data is safe — upgrade to PRO to unlock and include in metrics
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography variant="mono" className="text-[10px] text-slate-400 font-black uppercase tracking-widest block">
+                    {lockedPreviousMonths.length} Locked {lockedPreviousMonths.length === 1 ? 'Deal' : 'Deals'} from a previous month
+                  </Typography>
+                  <Typography variant="mono" className="text-[9px] text-slate-500">
+                    Upgrade to PRO — never lose track of a deal again
+                  </Typography>
+                </>
+              )}
             </div>
           </div>
-          <button
-            onClick={handleUpgrade}
-            disabled={isUpgrading}
-            className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all active:scale-95 shrink-0 disabled:opacity-50"
-          >
-            {isUpgrading ? 'Redirecting...' : 'Upgrade'}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {lockedCurrentMonth.length > 0 && (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'))}
+                className="px-3 py-1.5 rounded-lg bg-amber-500 text-black text-[9px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all active:scale-95"
+              >
+                Upgrade
+              </button>
+            )}
+            <button
+              onClick={() => setDismissedLockedBanner(true)}
+              className="h-7 w-7 rounded-lg bg-white/5 border border-white/10 text-slate-500 hover:text-white flex items-center justify-center transition-all active:scale-95"
+            >
+              <AppIcon name="close" size={12} />
+            </button>
+          </div>
         </div>
       )}
 

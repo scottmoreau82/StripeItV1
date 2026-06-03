@@ -565,12 +565,24 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     isHourlyActive: initialData?.isHourlyActive ?? false,
     miniTiers: getInitialMiniTiers(),
     customMinis: initialData?.customMinis || [] as CustomMini[],
-    hourlyConfig: initialData?.hourlyConfig || {
-      active: true,
-      rate: 15,
-      hoursWorked: 160,
-      model: HourlyPayoutModel.GUARANTEE
-    } as HourlyConfig,
+    hourlyConfig: (() => {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      if (initialData?.hourlyConfig) {
+        const matchesMonth = initialData.hourlyConfig.hoursMonth === currentMonth;
+        return {
+          ...initialData.hourlyConfig,
+          hoursWorked: matchesMonth ? (initialData.hourlyConfig.hoursWorked ?? 0) : 0,
+          hoursMonth: currentMonth
+        } as HourlyConfig;
+      }
+      return {
+        active: true,
+        rate: 15,
+        hoursWorked: 0,
+        model: HourlyPayoutModel.GUARANTEE,
+        hoursMonth: currentMonth
+      } as HourlyConfig;
+    })(),
 
     // Pack Deduction
     isPackActive: initialData?.isPackActive ?? false,
@@ -1260,7 +1272,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
         ...formData.hourlyConfig,
         rate: Number(formData.hourlyConfig?.rate) || 0,
         hoursWorked: Number(formData.hourlyConfig?.hoursWorked) || 0,
-        active: formData.hourlyConfig?.active ?? false
+        active: formData.hourlyConfig?.active ?? false,
+        hoursMonth: formData.hourlyConfig?.hoursMonth || new Date().toISOString().slice(0, 7)
       },
       frontDeficitRecoveryEnabled: formData.frontDeficitRecoveryEnabled,
       isPackActive: formData.isPackActive ?? false,
@@ -1687,7 +1700,11 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       <Typography variant="mono" className="text-[10px] text-slate-500 font-black tracking-widest uppercase">Hours Worked</Typography>
                       <MatrixInputGroup 
                         value={formData.hourlyConfig.hoursWorked} 
-                        onChange={(val) => handleChange('hourlyConfig', { ...formData.hourlyConfig, hoursWorked: parseInt(val) || 0 })}
+                        onChange={(val) => handleChange('hourlyConfig', { 
+                          ...formData.hourlyConfig, 
+                          hoursWorked: parseInt(val) || 0,
+                          hoursMonth: new Date().toISOString().slice(0, 7)
+                        })}
                         size="sm"
                       />
                     </div>

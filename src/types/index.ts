@@ -219,6 +219,7 @@ export interface HourlyConfig {
   rate: number;
   hoursWorked: number;
   model: HourlyPayoutModel;
+  hoursMonth?: string; // e.g. "2026-06" — the month these hours were entered for
 }
 
 export interface MiniLadderTier {

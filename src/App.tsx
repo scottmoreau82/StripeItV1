@@ -760,6 +760,28 @@ function AppContent() {
   const { user, profile, initialized, loading, connectionError, logout, retryHydration, addToast } = useAuth();
   const [showFallback, setShowFallback] = useState(false);
   const previousMemberState = useRef<{ isFrozen: boolean, orgId: string | null } | null>(null);
+  const [showLoadingFallback, setShowLoadingFallback] = useState(false);
+  const profileNullSince = useRef<number | null>(null);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    if (user && !profile) {
+      if (profileNullSince.current === null) {
+        profileNullSince.current = Date.now();
+      }
+      timer = setTimeout(() => {
+        if (!profile) {
+          setShowLoadingFallback(true);
+        }
+      }, 300);
+    } else {
+      profileNullSince.current = null;
+      setShowLoadingFallback(false);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [user, profile]);
 
   // StripeItEjectionNotificationSystem
   useEffect(() => {
@@ -858,7 +880,7 @@ function AppContent() {
   }
 
   // 2. User is authenticated but profile is still hydrating (or null after tab resume)
-  if (user && !profile) {
+  if (user && !profile && showLoadingFallback) {
     return <LandingView isInitializing />;
   }
 

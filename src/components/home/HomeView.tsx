@@ -53,9 +53,11 @@ import {
 import { AppIcon } from '../ui/AppIcon';
 import { DealerDashboard } from '../dealer/DealerDashboard';
 import { PageHeader } from '../ui/PageHeader';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, User as UserIcon, Hash as HashIcon, Calendar as CalendarIcon, Send as SendIcon, X as XIcon } from 'lucide-react';
 import { PayoutExplanationModal } from '../log/PayoutExplanationModal';
 import { MetricCardSkeleton } from '../ui/Skeleton';
+import { Input } from '../ui/Input';
+import { noteService } from '@/src/services/noteService';
 
 /**
  * StripeItDashboardMetricSystem
@@ -84,6 +86,171 @@ const CollapsibleHeader = ({
     }
   </button>
 );
+
+interface LocalNoteEntryFormProps {
+  deals?: Deal[];
+  onSubmit: (data: Partial<QuickNote>) => Promise<void>;
+  onCancel?: () => void;
+  isLoading?: boolean;
+  initialData?: QuickNote | null;
+}
+
+const NoteEntryForm: React.FC<LocalNoteEntryFormProps> = ({
+  deals = [],
+  onSubmit,
+  onCancel,
+  isLoading = false,
+  initialData,
+}) => {
+  const [text, setText] = useState(initialData?.text || '');
+  const [customerName, setCustomerName] = useState(initialData?.customerName || '');
+  const [stockNumber, setStockNumber] = useState(initialData?.stockNumber || '');
+  const [selectedDealId, setSelectedDealId] = useState(initialData?.dealId || '');
+  const [reminderDate, setReminderDate] = useState(initialData?.reminderDate || '');
+  const [isExpanded, setIsExpanded] = useState(
+    !!(initialData?.customerName || initialData?.stockNumber || initialData?.dealId || initialData?.reminderDate)
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+
+    await onSubmit({
+      text,
+      customerName: customerName || undefined,
+      stockNumber: stockNumber || undefined,
+      dealId: selectedDealId || undefined,
+      reminderDate: reminderDate || undefined,
+    });
+
+    // Reset form
+    setText('');
+    setCustomerName('');
+    setStockNumber('');
+    setSelectedDealId('');
+    setReminderDate('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Typography variant="label" className="text-slate-500 ml-1">What's on your mind?</Typography>
+          <div className="relative">
+            <textarea
+              className={cn(
+                "w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-text-primary placeholder:text-slate-600 focus:outline-none focus:border-brand-primary min-h-[120px] transition-all resize-none",
+                isLoading && "opacity-50 pointer-events-none"
+              )}
+              placeholder="e.g. Follow up on the F-150 trade, customer needs $2k more..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
+        {!isExpanded ? (
+          <button
+            type="button"
+            onClick={() => setIsExpanded(true)}
+            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-brand-primary hover:text-brand-primary/80 transition-colors ml-1"
+          >
+            + Add Details (Deal, Customer, Reminder)
+          </button>
+        ) : (
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Typography variant="label" className="text-slate-500 ml-1">Customer</Typography>
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
+                  <Input
+                    placeholder="Customer Name"
+                    className="pl-10 bg-white/[0.02]"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Typography variant="label" className="text-slate-500 ml-1">Stock #</Typography>
+                <div className="relative">
+                  <HashIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
+                  <Input
+                    placeholder="Stock Number"
+                    className="pl-10 bg-white/[0.02]"
+                    value={stockNumber}
+                    onChange={(e) => setStockNumber(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Typography variant="label" className="text-slate-500 ml-1">Related Deal</Typography>
+                <select
+                  className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 h-11 text-text-primary placeholder:text-slate-600 focus:outline-none focus:border-brand-primary appearance-none text-sm"
+                  value={selectedDealId}
+                  onChange={(e) => setSelectedDealId(e.target.value)}
+                >
+                  <option value="" className="bg-bg-deep text-text-primary">Select existing deal...</option>
+                  {deals.map(deal => (
+                    <option key={deal.id} value={deal.id} className="bg-bg-deep text-text-primary">
+                      {deal.customerName} - {deal.purchasedVehicle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Typography variant="label" className="text-slate-500 ml-1">Reminder Date</Typography>
+                <div className="relative">
+                  <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
+                  <Input
+                    type="date"
+                    className="pl-10 bg-white/[0.02]"
+                    value={reminderDate}
+                    onChange={(e) => setReminderDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <button
+              type="button"
+              onClick={() => setIsExpanded(false)}
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors ml-1"
+            >
+              <XIcon size={12} /> Hide Details
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 pt-4">
+        <Button
+          type="submit"
+          className="flex-1 bg-brand-primary text-bg-deep font-black uppercase tracking-widest shadow-glow h-12"
+          isLoading={isLoading}
+        >
+          <SendIcon className="mr-2 h-4 w-4" />
+          Save Quick Note
+        </Button>
+        {onCancel && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onCancel}
+            className="text-slate-500 hover:text-text-primary uppercase font-bold text-[10px] tracking-widest"
+          >
+            Discard
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+};
 
 interface HomeViewProps {
   onLogDeal: () => void;
@@ -132,6 +299,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [showBackModal, setShowBackModal] = useState(false);
   const [explanationData, setExplanationData] = useState<{ commission: CommissionResult; customerName: string; deal: Deal } | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [editingNote, setEditingNote] = useState<QuickNote | null>(null);
 
   const selectedDealCommission = React.useMemo(() => {
     if (!selectedDeal || !payPlan) return null;
@@ -763,6 +931,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   onAction={(action, payload) => {
                     if (action === 'delete_note') handleDeleteNote?.(payload);
                     if (action === 'view_competition') setSelectedCompId(payload);
+                    if (action === 'edit_note') setEditingNote(payload);
                   }}
                 />
               );
@@ -935,6 +1104,78 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </div>
              </Modal>
            )
+        )}
+
+        {editingNote && (
+          isMobile ? (
+            <FullscreenMobileFlow
+              key="edit-note-mobile"
+              isOpen={!!editingNote}
+              onClose={() => setEditingNote(null)}
+              title="Edit Quick Note"
+            >
+              <div className="p-4">
+                <NoteEntryForm
+                  deals={deals}
+                  initialData={editingNote}
+                  onSubmit={async (data) => {
+                    const orgId = profile?.orgId || profile?.id;
+                    if (orgId && editingNote) {
+                      try {
+                        await noteService.updateNote(orgId, editingNote.id, {
+                          text: data.text!,
+                          customerName: data.customerName,
+                          stockNumber: data.stockNumber,
+                          dealId: data.dealId,
+                          reminderDate: data.reminderDate,
+                        });
+                        addToast('Note updated successfully.', 'success');
+                        setEditingNote(null);
+                      } catch (err) {
+                        console.error(err);
+                        addToast('Failed to update note.', 'error');
+                      }
+                    }
+                  }}
+                  onCancel={() => setEditingNote(null)}
+                />
+              </div>
+            </FullscreenMobileFlow>
+          ) : (
+            <Modal
+              key="edit-note-modal"
+              isOpen={!!editingNote}
+              onClose={() => setEditingNote(null)}
+              title="Edit Quick Note"
+            >
+              <div className="py-4">
+                <NoteEntryForm
+                  deals={deals}
+                  initialData={editingNote}
+                  onSubmit={async (data) => {
+                    const orgId = profile?.orgId || profile?.id;
+                    if (orgId && editingNote) {
+                      try {
+                        await noteService.updateNote(orgId, editingNote.id, {
+                          text: data.text!,
+                          customerName: data.customerName,
+                          stockNumber: data.stockNumber,
+                          dealId: data.dealId,
+                          reminderDate: data.reminderDate,
+                        });
+                        addToast('Note updated successfully.', 'success');
+                        setEditingNote(null);
+                      } catch (err) {
+                        console.error(err);
+                        addToast('Failed to update note.', 'error');
+                      }
+                    }
+                  }}
+                  onCancel={() => setEditingNote(null)}
+                />
+              </div>
+            </Modal>
+          )
         )}
 
         {showPaycheckBreakdown && (

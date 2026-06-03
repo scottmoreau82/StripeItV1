@@ -148,7 +148,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
         <div className="space-y-4">
           <Typography variant="mono" className="text-[10px] text-slate-500 uppercase font-black tracking-widest px-2">Recent Notes</Typography>
           {notes.length > 0 ? (
-            <RecentNotesList notes={notes.slice(0, 3)} onDelete={(id) => onAction?.('delete_note', id)} isLoading={isLoading} />
+            <RecentNotesList notes={notes.slice(0, 3)} onDelete={(id) => onAction?.('delete_note', id)} onEdit={(note) => onAction?.('edit_note', note)} isLoading={isLoading} />
           ) : (
             <EmptyState
               icon={StickyNote}

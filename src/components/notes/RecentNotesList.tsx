@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { QuickNote } from '@/src/types';
 import { Typography } from '../ui/Typography';
 import { Card } from '../ui/Card';
-import { StickyNote, Trash2, Clock } from 'lucide-react';
+import { StickyNote, Trash2, Clock, Pencil } from 'lucide-react';
 import { formatDateSafe } from '@/src/lib/utils';
 
 /**
@@ -13,10 +13,13 @@ import { formatDateSafe } from '@/src/lib/utils';
 interface RecentNotesListProps {
   notes: QuickNote[];
   onDelete?: (id: string) => void;
+  onEdit?: (note: QuickNote) => void;
   isLoading?: boolean;
 }
 
-export const RecentNotesList: React.FC<RecentNotesListProps> = ({ notes, onDelete, isLoading }) => {
+export const RecentNotesList: React.FC<RecentNotesListProps> = ({ notes, onDelete, onEdit, isLoading }) => {
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
   if (notes.length === 0 && !isLoading) {
     return (
       <div className="py-10 text-center">
@@ -63,13 +66,44 @@ export const RecentNotesList: React.FC<RecentNotesListProps> = ({ notes, onDelet
                    </div>
                 )}
              </div>
-             {onDelete && (
-                <button 
-                  onClick={() => onDelete(note.id)}
-                  className="p-2 rounded-lg text-slate-700 hover:text-rose-500 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
-                >
-                   <Trash2 size={14} />
-                </button>
+             {(onDelete || onEdit) && (
+                <div className="shrink-0">
+                  {pendingDeleteId === note.id ? (
+                    <div className="flex items-center gap-1.5">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); onDelete?.(note.id); setPendingDeleteId(null); }}
+                        className="px-2 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                      >
+                         Confirm
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
+                        className="px-2 py-1.5 rounded-lg bg-bg-card hover:bg-bg-card/85 text-text-secondary border border-border-subtle text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                      >
+                         Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      {onEdit && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onEdit(note); }}
+                          className="p-2 rounded-lg text-slate-700 hover:text-brand-primary hover:bg-brand-primary/10 transition-all"
+                        >
+                           <Pencil size={14} />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setPendingDeleteId(note.id); }}
+                          className="p-2 rounded-lg text-slate-700 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                        >
+                           <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
              )}
           </div>
         </Card>

@@ -100,15 +100,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      } else {
-        document.documentElement.setAttribute('data-theme', theme);
-      }
-    });
-    return () => unsubscribe();
-  }, [theme]);
+    if (!user) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  }, [user, theme]);
 
   useEffect(() => {
     if (theme === 'custom') {

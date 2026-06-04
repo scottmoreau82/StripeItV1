@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FileText, 
   ChevronRight, 
   ChevronDown,
+  ChevronUp,
   Download, 
   Printer, 
   Edit, 
@@ -22,6 +23,20 @@ import { Deal, SubscriptionTier } from '@/src/types';
 import { cn, formatDateSafe } from '@/src/lib/utils';
 import { DashboardLayout } from '../layout/DashboardLayout';
 
+const getLastName = (fullName: string): string => {
+  if (!fullName) return '';
+  const suffixes = ['jr.', 'sr.', 'ii', 'iii',
+    'iv', 'v', 'jr', 'sr'];
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  const last = parts[parts.length - 1];
+  const secondLast = parts[parts.length - 2];
+  if (suffixes.includes(last.toLowerCase())) {
+     return `${secondLast} ${last}`;
+  }
+  return last;
+};
+
 export const ReportView: React.FC = () => {
   const { profile, user, addToast } = useAuth();
   const { deals, monthlySpiffs, payPlan, handleSaveDeal } = useAppData();
@@ -35,6 +50,68 @@ export const ReportView: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [actualPayoutInputs, setActualPayoutInputs] = useState<Record<string, string>>({});
+  const [reportSortConfig, setReportSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
+
+  const selectedMonthDeals = useMemo(() => {
+    if (!selectedMonth) return [];
+    return deals.filter(d => {
+      try {
+        return d.date && new Date(d.date).toISOString().slice(0, 7) === selectedMonth;
+      } catch (e) {
+        return false;
+      }
+    });
+  }, [deals, selectedMonth]);
+
+  const selectedMonthSpiffs = useMemo(() => {
+    if (!selectedMonth) return [];
+    return monthlySpiffs.filter(s => s.month === selectedMonth);
+  }, [monthlySpiffs, selectedMonth]);
+
+  const selectedMonthEarnings = useMemo(() => {
+    return calculatePeriodEarnings(selectedMonthDeals, payPlan, selectedMonthSpiffs);
+  }, [selectedMonthDeals, payPlan, selectedMonthSpiffs]);
+
+  const sortedMonthDeals = useMemo(() => {
+    const dealsToCopy = [...selectedMonthDeals];
+    const { key, direction } = reportSortConfig;
+
+    dealsToCopy.sort((a, b) => {
+      let valA: any = '';
+      let valB: any = '';
+
+      if (key === 'date') {
+        valA = a.date ? new Date(a.date).getTime() : 0;
+        valB = b.date ? new Date(b.date).getTime() : 0;
+      } else if (key === 'lastName') {
+        valA = getLastName(a.customerName || '').toLowerCase();
+        valB = getLastName(b.customerName || '').toLowerCase();
+      } else if (key === 'dealNumber') {
+        valA = (a.dealNumber || '').toLowerCase();
+        valB = (b.dealNumber || '').toLowerCase();
+      } else if (key === 'type') {
+        valA = (a.newOrUsed || '').toLowerCase();
+        valB = (b.newOrUsed || '').toLowerCase();
+      } else if (key === 'front') {
+        valA = a.frontEndGross || 0;
+        valB = b.frontEndGross || 0;
+      } else if (key === 'back') {
+        valA = a.backEndGross || 0;
+        valB = b.backEndGross || 0;
+      } else if (key === 'payout') {
+        const resA = selectedMonthEarnings.dealResults.find(r => r.dealId === a.id);
+        const resB = selectedMonthEarnings.dealResults.find(r => r.dealId === b.id);
+        valA = resA ? resA.finalPayout : 0;
+        valB = resB ? resB.finalPayout : 0;
+      }
+
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return dealsToCopy;
+  }, [selectedMonthDeals, reportSortConfig, selectedMonthEarnings]);
 
   useEffect(() => {
     if (selectedMonth) {
@@ -203,16 +280,6 @@ export const ReportView: React.FC = () => {
 
   // Rendering inside standard structures
   if (selectedMonth) {
-    const selectedMonthDeals = deals.filter(d => {
-      try {
-        return d.date && new Date(d.date).toISOString().slice(0, 7) === selectedMonth;
-      } catch (e) {
-        return false;
-      }
-    });
-    const selectedMonthSpiffs = monthlySpiffs.filter(s => s.month === selectedMonth);
-    const selectedMonthEarnings = calculatePeriodEarnings(selectedMonthDeals, payPlan, selectedMonthSpiffs);
-
     const selectedMonthUnits = selectedMonthDeals.reduce((sum, d) => sum + (d.isSplitDeal && payPlan?.isSplitBehaviorActive !== false ? (d.splitPercentage || 50) / 100 : 1), 0);
     const selectedMonthFrontGross = selectedMonthDeals.reduce((sum, d) => sum + (d.frontEndGross * (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1)), 0);
     const selectedMonthBackGross = selectedMonthDeals.reduce((sum, d) => sum + (d.backEndGross * (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1)), 0);
@@ -306,6 +373,44 @@ export const ReportView: React.FC = () => {
       </>
     );
 
+    const handleReportSort = (key: string) => {
+      setReportSortConfig(prev => {
+        if (prev.key === key) {
+          return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+        }
+        return { key, direction: 'desc' };
+      });
+    };
+
+    const renderHeader = (label: string, key: string) => {
+      const isActive = reportSortConfig.key === key;
+      return (
+        <th 
+          className="px-6 py-4 cursor-pointer hover:bg-white/5 select-none transition-colors"
+          onClick={() => handleReportSort(key)}
+        >
+          <div className="flex items-center gap-1">
+            <Typography 
+              variant="mono" 
+              className={cn(
+                "text-[9px] uppercase font-black tracking-widest", 
+                isActive ? "text-brand-primary font-black" : "text-text-muted"
+              )}
+            >
+              {label}
+            </Typography>
+            {isActive && (
+              reportSortConfig.direction === 'asc' ? (
+                <ChevronUp className="h-3.5 w-3.5 text-brand-primary" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-brand-primary" />
+              )
+            )}
+          </div>
+        </th>
+      );
+    };
+
     const mainComponent = (
       <div className="space-y-6">
         {/* Deal Table */}
@@ -318,13 +423,13 @@ export const ReportView: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-white/[0.03] border-b border-white/5">
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Date</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Customer</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Vehicle</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Type</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Front</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Back</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Est. Payout</Typography></th>
+                    {renderHeader('Date', 'date')}
+                    {renderHeader('Customer', 'lastName')}
+                    {renderHeader('Vehicle', 'dealNumber')}
+                    {renderHeader('Type', 'type')}
+                    {renderHeader('Front', 'front')}
+                    {renderHeader('Back', 'back')}
+                    {renderHeader('Est. Payout', 'payout')}
                     {!isCurrent && (
                       <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Actual Payout</Typography></th>
                     )}
@@ -332,7 +437,7 @@ export const ReportView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 font-sans">
-                  {selectedMonthDeals.map((deal) => {
+                  {sortedMonthDeals.map((deal) => {
                     const dealResult = selectedMonthEarnings.dealResults.find(r => r.dealId === deal.id);
                     const estPayout = dealResult ? dealResult.finalPayout : 0;
                     const splitRatio = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;

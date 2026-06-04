@@ -313,9 +313,15 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       if (sortConfig.key === 'date') {
         valA = new Date(a.item.date).getTime();
         valB = new Date(b.item.date).getTime();
-      } else if (sortConfig.key === 'customer') {
-        valA = isDealA ? (a.item as Deal).customerName.toLowerCase() : (a.item as MonthlySpiff).label?.toLowerCase() || 'spiff';
-        valB = isDealB ? (b.item as Deal).customerName.toLowerCase() : (b.item as MonthlySpiff).label?.toLowerCase() || 'spiff';
+      } else if (sortConfig.key === 'lastName') {
+        valA = isDealA ? getLastName((a.item as Deal).customerName).toLowerCase() : (a.item as MonthlySpiff).label?.toLowerCase() || 'spiff';
+        valB = isDealB ? getLastName((b.item as Deal).customerName).toLowerCase() : (b.item as MonthlySpiff).label?.toLowerCase() || 'spiff';
+      } else if (sortConfig.key === 'dealNumber') {
+        valA = isDealA ? ((a.item as Deal).dealNumber || '').toLowerCase() : '';
+        valB = isDealB ? ((b.item as Deal).dealNumber || '').toLowerCase() : '';
+      } else if (sortConfig.key === 'type') {
+        valA = isDealA ? ((a.item as Deal).newOrUsed || '').toLowerCase() : '';
+        valB = isDealB ? ((b.item as Deal).newOrUsed || '').toLowerCase() : '';
       } else if (sortConfig.key === 'vehicle') {
         valA = isDealA ? (a.item as Deal).purchasedVehicle.toLowerCase() : '---';
         valB = isDealB ? (b.item as Deal).purchasedVehicle.toLowerCase() : '---';
@@ -587,10 +593,12 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
 
       {isMobile && isBasicPlus && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest font-black shrink-0">Sort By:</Typography>
+          <Typography variant="mono" className="text-[9px] text-text-muted uppercase tracking-widest font-black shrink-0">Sort By:</Typography>
           {[
             { key: 'date', label: 'Date' },
-            { key: 'customer', label: 'Customer' },
+            { key: 'lastName', label: 'Last Name' },
+            { key: 'dealNumber', label: 'Deal #' },
+            { key: 'type', label: 'Type' },
             { key: 'frontEndGross', label: 'Front' },
             { key: 'backEndGross', label: 'Back' },
             { key: 'payout', label: 'Payout' },
@@ -602,7 +610,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                 "px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all whitespace-nowrap border",
                 sortConfig.key === opt.key 
                   ? "bg-brand-primary/20 border-brand-primary text-brand-primary" 
-                  : "bg-white/5 border-white/10 text-slate-500"
+                  : "bg-white/5 border-white/10 text-text-muted"
               )}
             >
               {opt.label}
@@ -735,11 +743,11 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                       </th>
                       <th 
                         className={cn("py-4 px-4 text-left", isBasicPlus && "cursor-pointer hover:bg-white/5 transition-colors")}
-                        onClick={() => handleSort('customer')}
+                        onClick={() => handleSort('lastName')}
                       >
                         <div className="flex items-center gap-1">
-                          <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Customer / Deal #</Typography>
-                          {isBasicPlus && sortConfig.key === 'customer' && (
+                          <Typography variant="mono" className="text-[10px] text-text-muted uppercase tracking-widest font-black">Customer / Deal #</Typography>
+                          {isBasicPlus && (sortConfig.key === 'lastName' || sortConfig.key === 'dealNumber') && (
                             <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
                           )}
                         </div>
@@ -755,8 +763,16 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                           )}
                         </div>
                       </th>
-                      <th className="py-4 px-4 text-left w-[100px]">
-                        <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Type</Typography>
+                      <th 
+                        className={cn("py-4 px-4 text-left w-[100px]", isBasicPlus && "cursor-pointer hover:bg-white/5 transition-colors")}
+                        onClick={() => handleSort('type')}
+                      >
+                        <div className="flex items-center gap-1">
+                          <Typography variant="mono" className="text-[10px] text-text-muted uppercase tracking-widest font-black">Type</Typography>
+                          {isBasicPlus && sortConfig.key === 'type' && (
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                          )}
+                        </div>
                       </th>
                       <th className="py-4 px-4 text-left w-[100px]">
                         <Typography variant="mono"

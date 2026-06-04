@@ -347,6 +347,7 @@ export interface Deal {
   splitPercentage?: number;
   splitPartnerName?: string;
   notes?: string;
+  actualPayout?: number; // User-entered actual payout for reconciliation
   status: DealStatus;
   lockedByTier?: boolean;
   lenderName?: string;

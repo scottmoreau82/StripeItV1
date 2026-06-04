@@ -10,7 +10,7 @@ import { AppIcon } from '../ui/AppIcon';
 import { PageHeader } from '../ui/PageHeader';
 import { Eye, Lock, Zap, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn, formatDateSafe, getCalendarMonth, getCalendarYear } from '@/src/lib/utils';
-import { calculateDealCommission } from '@/src/lib/commissionLogic';
+import { calculateDealCommission, calculatePeriodEarnings } from '@/src/lib/commissionLogic';
 import { Badge } from '../ui/Badge';
 
 import { useAppData } from '@/src/contexts/AppDataContext';
@@ -133,6 +133,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const [pendingDeleteMobileDealId, setPendingDeleteMobileDealId] = useState<string | null>(null);
 
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [showPayoutTooltip, setShowPayoutTooltip] = useState(false);
 
   const handleUpgrade = () => {
     window.dispatchEvent(new CustomEvent('stripeit:open-upgrade'));
@@ -143,6 +144,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
       setPendingDeleteDealId(null);
       setPendingDeleteSpiffId(null);
       setPendingDeleteMobileDealId(null);
+      setShowPayoutTooltip(false);
     };
     window.addEventListener('click', handleOutsideClick);
     return () => {
@@ -345,16 +347,60 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
   const monthTally = useMemo(() => {
     const totalDeals = filteredDeals.length;
     const totalUnits = filteredDeals.reduce((sum, d) => sum + (d.isSplitDeal ? 0.5 : 1), 0);
-    const spiffTotal = filteredSpiffs.reduce((sum, s) => sum + (s.amount || 0), 0);
-    const commissionTotal = filteredDeals.reduce((sum, deal) => {
-      if (!payPlan) return sum;
+    
+    if (!payPlan) {
+      const spiffTotal = filteredSpiffs.reduce((sum, s) => sum + (s.amount || 0), 0);
+      return {
+        totalDeals,
+        totalUnits,
+        totalPayout: spiffTotal,
+        baseCommission: 0,
+        unitBonuses: 0,
+        spiffs: spiffTotal,
+        total: spiffTotal
+      };
+    }
+
+    // 1. Calculate Base Commission for the filtered deals with full-month context for retroactive tiers
+    let baseCommission = 0;
+    filteredDeals.forEach(deal => {
       const m = getCalendarMonth(deal.date);
       const y = getCalendarYear(deal.date);
       const monthlyDeals = deals.filter(d => getCalendarMonth(d.date) === m && getCalendarYear(d.date) === y);
-      return sum + calculateDealCommission(deal, payPlan, monthlyDeals).finalPayout;
-    }, 0);
-    return { totalDeals, totalUnits, totalPayout: commissionTotal + spiffTotal };
-  }, [filteredDeals, filteredSpiffs, payPlan, deals]);
+      baseCommission += calculateDealCommission(deal, payPlan, monthlyDeals).finalPayout;
+    });
+
+    // 2. Calculate the corresponding portion of Spiffs
+    const spiffs = filteredSpiffs
+      .filter(s => s.includedInTotal !== false)
+      .reduce((sum, s) => sum + (s.isChargeback ? -(s.amount || 0) : (s.amount || 0)), 0);
+
+    // 3. Compute Unit/Volume Bonuses from the tiers using full-month un-searched deals
+    const activeParts = (selectedMonth || '').split('-');
+    const activeYear = activeParts[0] ? parseInt(activeParts[0]) : new Date().getFullYear();
+    const activeMonth = activeParts[1] ? parseInt(activeParts[1]) : new Date().getMonth() + 1;
+    
+    const fullMonthDeals = deals.filter(d => {
+      const dDate = new Date(d.date);
+      return dDate.getMonth() + 1 === activeMonth && dDate.getFullYear() === activeYear;
+    });
+    
+    const fullMonthSpiffs = monthlySpiffs.filter(s => s.month === selectedMonth);
+    const fullMonthEarnings = calculatePeriodEarnings(fullMonthDeals, payPlan, fullMonthSpiffs);
+    const unitBonuses = fullMonthEarnings.totalTierBonuses;
+
+    const total = baseCommission + unitBonuses + spiffs;
+
+    return {
+      totalDeals,
+      totalUnits,
+      totalPayout: total,
+      baseCommission,
+      unitBonuses,
+      spiffs,
+      total
+    };
+  }, [filteredDeals, filteredSpiffs, payPlan, deals, monthlySpiffs, selectedMonth]);
 
   const lockedDeals = useMemo(() => 
     deals.filter(d => d.lockedByTier === true),
@@ -489,11 +535,52 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
             <Typography variant="mono" className="text-[11px] text-text-primary font-black">{monthTally.totalUnits}</Typography>
           </div>
           <div className="h-3 w-px bg-border-subtle" />
-          <div className="flex items-center gap-1.5 ml-auto">
-            <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black tracking-widest">Payout</Typography>
-            <Typography variant="mono" className="text-[11px] text-emerald-400 font-black">
+          <div 
+            className="relative flex items-center gap-1.5 ml-auto cursor-pointer select-none group"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPayoutTooltip(prev => !prev);
+            }}
+            onMouseEnter={() => !isMobile && setShowPayoutTooltip(true)}
+            onMouseLeave={() => !isMobile && setShowPayoutTooltip(false)}
+          >
+            <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black tracking-widest group-hover:text-text-primary transition-colors">Payout</Typography>
+            <Typography variant="mono" className="text-[11px] text-emerald-400 font-black border-b border-dashed border-emerald-400/30 group-hover:border-emerald-400/60 pb-[1px] transition-colors leading-none flex items-center gap-0.5">
               ${monthTally.totalPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </Typography>
+
+            {/* Tooltip breakdown */}
+            <AnimatePresence>
+              {showPayoutTooltip && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 5 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 bottom-full mb-3 z-50 min-w-[240px] bg-bg-deep/95 backdrop-blur-md border border-border-subtle p-4 rounded-xl shadow-2xl text-left"
+                >
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center gap-4 text-[10px] font-black uppercase tracking-wider">
+                      <span className="text-text-muted">Commission</span>
+                      <span className="text-text-primary font-mono">${monthTally.baseCommission.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between items-center gap-4 text-[10px] font-black uppercase tracking-wider">
+                      <span className="text-text-muted">Unit Bonuses</span>
+                      <span className="text-text-primary font-mono">${monthTally.unitBonuses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between items-center gap-4 text-[10px] font-black uppercase tracking-wider">
+                      <span className="text-text-muted">Spiffs</span>
+                      <span className="text-text-primary font-mono">${monthTally.spiffs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="border-t border-border-subtle/40 my-2 pb-[1px]" />
+                    <div className="flex justify-between items-center gap-4 text-[11px] font-black uppercase tracking-widest text-emerald-400">
+                      <span>Total</span>
+                      <span className="font-mono">${monthTally.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

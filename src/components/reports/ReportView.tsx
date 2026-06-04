@@ -34,6 +34,7 @@ export const ReportView: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [actualPayoutInputs, setActualPayoutInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (selectedMonth) {
@@ -288,6 +289,14 @@ export const ReportView: React.FC = () => {
           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Est. Payout</Typography>
           <Typography variant="h3" className="text-emerald-400 font-black">${selectedMonthEstPayout.toLocaleString()}</Typography>
         </Card>
+        {!isCurrent && (
+          <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">
+            <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black mb-1 block">True Payout</Typography>
+            <Typography variant="h3" className="text-emerald-400 font-black">
+              ${selectedMonthDeals.reduce((sum, d) => sum + (d.actualPayout || 0), 0).toLocaleString()}
+            </Typography>
+          </Card>
+        )}
         <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md col-span-2 md:col-span-1">
           <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Spiffs & CBs</Typography>
           <Typography variant="h3" className={cn("font-black", selectedMonthSpiffsTotal >= 0 ? "text-cyan-400" : "text-rose-400")}>
@@ -309,14 +318,17 @@ export const ReportView: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-white/[0.03] border-b border-white/5">
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Date</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Customer</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Vehicle</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Type</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Front</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Back</Typography></th>
-                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Est. Payout</Typography></th>
-                    <th className="px-6 py-4 text-right print:hidden no-print"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest no-print">Action</Typography></th>
+                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Date</Typography></th>
+                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Customer</Typography></th>
+                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Vehicle</Typography></th>
+                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Type</Typography></th>
+                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Front</Typography></th>
+                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Back</Typography></th>
+                    <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Est. Payout</Typography></th>
+                    {!isCurrent && (
+                      <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Actual Payout</Typography></th>
+                    )}
+                    <th className="px-6 py-4 text-right print:hidden no-print"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest no-print">Action</Typography></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 font-sans">
@@ -327,8 +339,8 @@ export const ReportView: React.FC = () => {
 
                     return (
                       <tr key={deal.id} className="hover:bg-white/[0.02] transition-colors group">
-                        <td className="px-6 py-4 text-xs text-slate-400 font-medium font-mono">{formatDateSafe(deal.date, 'MM/dd/yyyy')}</td>
-                        <td className="px-6 py-4 text-sm text-white font-bold">{deal.customerName}</td>
+                        <td className="px-6 py-4 text-xs text-text-muted font-medium font-mono">{formatDateSafe(deal.date, 'MM/dd/yyyy')}</td>
+                        <td className="px-6 py-4 text-sm text-text-primary font-bold">{deal.customerName}</td>
                         <td className="px-6 py-4 text-xs text-slate-300">{deal.purchasedVehicle}</td>
                         <td className="px-6 py-4 text-xs">
                           <span className={cn(
@@ -354,12 +366,31 @@ export const ReportView: React.FC = () => {
                         <td className="px-6 py-4 text-sm text-emerald-400 font-bold font-mono">
                           ${estPayout.toLocaleString()}
                         </td>
+                        {!isCurrent && (
+                          <td className="px-6 py-4">
+                            <input
+                              type="text"
+                              className="h-8 w-28 bg-black/40 border border-white/10 rounded-lg px-2 text-xs font-mono text-emerald-400 focus:border-emerald-400/40 outline-none"
+                              value={actualPayoutInputs[deal.id] !== undefined ? actualPayoutInputs[deal.id] : (deal.actualPayout !== undefined && deal.actualPayout !== null ? String(deal.actualPayout) : '')}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9.]/g, '');
+                                setActualPayoutInputs(prev => ({ ...prev, [deal.id]: val }));
+                              }}
+                              onBlur={() => {
+                                const rawValue = actualPayoutInputs[deal.id];
+                                if (rawValue === undefined) return;
+                                const parsedValue = rawValue === '' ? undefined : Number(rawValue);
+                                handleSaveDeal({ actualPayout: parsedValue }, deal.id);
+                              }}
+                            />
+                          </td>
+                        )}
                         <td className="px-6 py-4 text-right print:hidden no-print">
                           <Button
                              variant="ghost"
                              size="sm"
                              onClick={() => handleEditDeal(deal)}
-                             className="h-8 w-8 text-slate-400 hover:text-cyan-400 p-1 rounded-lg transition-colors inline-flex items-center justify-center border border-transparent hover:border-white/5 hover:bg-white/5 no-print"
+                             className="h-8 w-8 text-text-muted hover:text-cyan-400 p-1 rounded-lg transition-colors inline-flex items-center justify-center border border-transparent hover:border-white/5 hover:bg-white/5 no-print"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -525,6 +556,11 @@ export const ReportView: React.FC = () => {
                     EST PAYOUT
                   </span>
                   <span className="text-cyan-400 font-black text-base">${estPayout.toLocaleString()}</span>
+                  {!isCurrent && monthDeals.some(d => d.actualPayout !== undefined && d.actualPayout !== null) && (
+                    <div className="mt-1 text-emerald-300 font-black text-sm">
+                      TRUE PAYOUT ${monthDeals.reduce((sum, d) => sum + (d.actualPayout || 0), 0).toLocaleString()}
+                    </div>
+                  )}
                 </div>
               </div>
 

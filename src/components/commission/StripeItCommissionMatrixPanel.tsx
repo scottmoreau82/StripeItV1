@@ -13,6 +13,7 @@ import {
   HourlyConfig,
   MiniLadderTier,
   CustomMini,
+  CustomUnitBonus,
 } from '@/src/types';
 import { Typography } from '../ui/Typography';
 import { Button } from '../ui/Button';
@@ -565,6 +566,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     isHourlyActive: initialData?.isHourlyActive ?? false,
     miniTiers: getInitialMiniTiers(),
     customMinis: initialData?.customMinis || [] as CustomMini[],
+    customUnitBonuses: initialData?.customUnitBonuses || [] as CustomUnitBonus[],
     hourlyConfig: (() => {
       const currentMonth = new Date().toISOString().slice(0, 7);
       if (initialData?.hourlyConfig) {
@@ -783,6 +785,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     minis_hourly: false,
     commission_matrix: false,
     volume_bonus: false,
+    custom_unit_bonus: false,
     rules: false,
     misc_defaults: false,
     sim_settings: false,
@@ -790,6 +793,8 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     sim_minis: false,
     sim_bonus: false
   });
+
+  const [pendingDeleteCustomBonusId, setPendingDeleteCustomBonusId] = useState<string | null>(null);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => {
@@ -1068,6 +1073,26 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     handleChange('customMinis', formData.customMinis.filter(m => m.id !== id));
   };
 
+  const addCustomUnitBonus = () => {
+    const newBonus: CustomUnitBonus = {
+      id: crypto.randomUUID(),
+      label: '',
+      threshold: 5,
+      amountPerUnit: 50,
+      isRetroactive: true,
+      active: true
+    };
+    handleChange('customUnitBonuses', [...(formData.customUnitBonuses || []), newBonus]);
+  };
+
+  const updateCustomUnitBonus = (id: string, updates: Partial<CustomUnitBonus>) => {
+    handleChange('customUnitBonuses', (formData.customUnitBonuses || []).map(b => b.id === id ? { ...b, ...updates } : b));
+  };
+
+  const removeCustomUnitBonus = (id: string) => {
+    handleChange('customUnitBonuses', (formData.customUnitBonuses || []).filter(b => b.id !== id));
+  };
+
   // CSV Export/Import Handlers
   const handleExport = () => {
     try {
@@ -1251,6 +1276,15 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
       rewardValue: Number(r.rewardValue) || 0
     }));
 
+    const cleanCustomUnitBonuses = (formData.customUnitBonuses || []).map(b => ({
+      ...b,
+      threshold: Number(b.threshold) || 0,
+      amountPerUnit: Number(b.amountPerUnit) || 0,
+      isRetroactive: b.isRetroactive ?? false,
+      active: b.active ?? true,
+      label: b.label || ""
+    }));
+
     const cleanData = {
       ...formData,
       frontEndPercentage: Number(formData.frontEndPercentage) || 0,
@@ -1261,6 +1295,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
       miniTiers: cleanMiniTiers,
       volumeBonuses: cleanVolumeBonuses,
       rules: cleanRules,
+      customUnitBonuses: cleanCustomUnitBonuses,
       isVolumeBonusEngineActive: formData.isVolumeBonusEngineActive || false,
       isSplitBehaviorActive: formData.isSplitBehaviorActive ?? true,
       isFlatPerUnitActive: formData.isFlatPerUnitActive ?? true,
@@ -2165,6 +2200,167 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                 </div>
               </div>
             )}
+          </div>
+        </MatrixSection>
+
+        {/* Custom Unit Bonuses Section */}
+        <MatrixSection
+          id="custom_unit_bonus"
+          title="Custom Unit Bonuses"
+          subtitle="NAMED PER-UNIT INCENTIVES"
+          isActive={formData.customUnitBonuses && formData.customUnitBonuses.some(b => b.active)}
+          onActiveChange={(active) => {
+            const updated = (formData.customUnitBonuses || []).map(b => ({ ...b, active }));
+            handleChange('customUnitBonuses', updated);
+          }}
+          isExpanded={expandedSections.custom_unit_bonus}
+          onToggle={() => toggleSection('custom_unit_bonus')}
+          icon={<Calculator className="h-6 w-6" />}
+          iconColor="cyan-500"
+          summary={
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-bg-elevated)] border border-[var(--color-border)]">
+                <Typography variant="mono" className="text-[10px] text-text-muted font-black uppercase">Active:</Typography>
+                <Typography variant="mono" className="text-[10px] text-text-primary font-black">{(formData.customUnitBonuses || []).filter(b => b.active).length}</Typography>
+              </div>
+            </div>
+          }
+        >
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="space-y-4">
+              {(formData.customUnitBonuses || []).length > 0 ? (
+                <div className="space-y-4">
+                  {(formData.customUnitBonuses || []).map((bonus) => (
+                    <div 
+                      key={bonus.id}
+                      className={cn(
+                        "group bg-[var(--color-bg-card)] border border-[var(--color-border)] p-4 md:p-5 rounded-2xl transition-all duration-300 relative",
+                        !bonus.active ? "opacity-40 grayscale-[0.5]" : "hover:border-[var(--color-border)]"
+                      )}
+                    >
+                      <div className="flex flex-col lg:flex-row gap-5 items-start lg:items-center">
+                        {/* Label Name */}
+                        <div className="flex-1 min-w-[200px]">
+                          <Input
+                            placeholder="e.g. Senior Bonus"
+                            value={bonus.label}
+                            onChange={(e) => updateCustomUnitBonus(bonus.id, { label: e.target.value })}
+                            className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] font-bold text-text-primary"
+                          />
+                        </div>
+
+                        {/* Threshold */}
+                        <div className="flex items-center gap-3 min-w-[150px]">
+                          <div className="w-[85px]">
+                            <MatrixInputGroup 
+                              value={bonus.threshold} 
+                              onChange={(val) => updateCustomUnitBonus(bonus.id, { threshold: parseInt(val) || 0 })} 
+                              size="sm"
+                              placeholder="0"
+                            />
+                          </div>
+                          <Typography variant="mono" className="text-[10px] font-black uppercase tracking-widest text-text-muted">Units</Typography>
+                        </div>
+
+                        {/* Amount Per Unit */}
+                        <div className="flex items-center gap-3">
+                           <Typography variant="mono" className="text-[9px] text-text-muted font-black uppercase tracking-widest">Payout</Typography>
+                           <div className="w-[120px]">
+                             <CurrencyInput
+                               value={bonus.amountPerUnit}
+                               onChange={(e) => updateCustomUnitBonus(bonus.id, { amountPerUnit: normalizeCurrencyNumber(e.target.value) })}
+                               hideLabel
+                               className="h-10 bg-[var(--color-bg-elevated)] border-[var(--color-border)] font-black text-text-primary"
+                             />
+                           </div>
+                           <Typography variant="mono" className="text-text-muted font-black tracking-widest text-[9px] mt-1">/ UNIT</Typography>
+                        </div>
+
+                        {/* Retroactive / Tier+ toggle */}
+                        <div className="flex items-center gap-2">
+                           <button
+                             type="button"
+                             onClick={() => updateCustomUnitBonus(bonus.id, { isRetroactive: !bonus.isRetroactive })}
+                             className={cn(
+                               "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
+                               bonus.isRetroactive 
+                                 ? "bg-purple-500/20 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.1)]" 
+                                 : "bg-[var(--color-bg-elevated)] text-text-muted border-[var(--color-border)] hover:border-[var(--color-border)] hover:text-text-secondary"
+                             )}
+                           >
+                             {bonus.isRetroactive ? 'RETRO' : 'TIER+'}
+                           </button>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex items-center gap-4 shrink-0 lg:ml-auto self-end lg:self-center">
+                          <ActiveChip 
+                            active={bonus.active} 
+                            onClick={() => updateCustomUnitBonus(bonus.id, { active: !bonus.active })} 
+                          />
+                          
+                          {pendingDeleteCustomBonusId === bonus.id ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  removeCustomUnitBonus(bonus.id);
+                                  setPendingDeleteCustomBonusId(null);
+                                }}
+                                className="bg-red-500 hover:bg-red-600 text-white font-black text-[9px] px-2.5 py-1 rounded-lg uppercase tracking-wider"
+                              >
+                                CONFIRM
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPendingDeleteCustomBonusId(null)}
+                                className="bg-slate-700 hover:bg-slate-600 text-text-muted font-black text-[9px] px-2.5 py-1 rounded-lg uppercase tracking-wider"
+                              >
+                                CANCEL
+                              </button>
+                            </div>
+                          ) : (
+                            <button 
+                              type="button"
+                              onClick={() => setPendingDeleteCustomBonusId(bonus.id)} 
+                              className="text-red-500/30 hover:text-red-400 transition-all p-2"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Card 
+                  className="bg-[var(--color-bg-surface)] border-[var(--color-border)] p-12 rounded-[2rem] border-dashed border-2 flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-bg-elevated)] transition-colors group"
+                  onClick={addCustomUnitBonus}
+                >
+                  <Settings2 className="h-12 w-12 text-text-muted mb-4 group-hover:text-brand-primary transition-colors" />
+                  <Typography className="text-text-muted font-bold mb-2">No custom unit bonuses initialized.</Typography>
+                  <Typography variant="small" className="text-text-muted text-center max-w-sm">
+                    Configure separate named per-unit incentives (e.g. Senior Bonus) with thresholds, rates, and retroactive calculation.
+                  </Typography>
+                  <Button type="button" variant="link" className="text-brand-primary mt-6 font-black uppercase tracking-widest text-[10px]">
+                    Initialize Now
+                  </Button>
+                </Card>
+              )}
+
+              <div className="flex justify-center mt-6">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={addCustomUnitBonus} 
+                  className="text-brand-primary h-10 px-6 hover:bg-brand-primary/5 rounded-xl border border-dashed border-brand-primary/20"
+                >
+                  <Plus size={16} className="mr-2" /> Add Custom Bonus
+                </Button>
+              </div>
+            </div>
           </div>
         </MatrixSection>
 

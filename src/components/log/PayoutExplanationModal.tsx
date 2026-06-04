@@ -18,6 +18,7 @@ interface PayoutExplanationModalProps {
   deal?: Deal;
   onEdit?: (deal: Deal) => void;
   onDelete?: (deal: Deal) => void;
+  tierBonuses?: { tierId: string; amount: number; label?: string }[];
 }
 
 export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
@@ -28,6 +29,7 @@ export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
   deal,
   onEdit,
   onDelete,
+  tierBonuses,
 }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -132,15 +134,15 @@ export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
           <section className="space-y-2">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-6 w-0.5 bg-amber-500 rounded-full" />
-              <Typography variant="mono" className="text-[11px] text-slate-400 uppercase tracking-widest font-black">Flat Units & Bonuses</Typography>
+              <Typography variant="mono" className="text-[11px] text-text-muted uppercase tracking-widest font-black">Flat Units & Bonuses</Typography>
             </div>
             <Card className="bg-white/[0.02] border-white/5 p-4 space-y-3">
               <div className="flex justify-between items-center text-[13px]">
-                <span className="text-slate-400">Flat Per Unit {explanation.isFlatActive ? '' : '(Inactive)'}</span>
+                <span className="text-text-muted">Flat Per Unit {explanation.isFlatActive ? '' : '(Inactive)'}</span>
                 <span className={cn("font-mono", explanation.isFlatActive ? "text-slate-200" : "text-slate-600")}>{formatCurrency(explanation.flatPerUnit)}</span>
               </div>
               <div className="flex justify-between items-center text-[13px]">
-                <span className="text-slate-400">Deal Rules & Bonuses</span>
+                <span className="text-text-muted">Deal Rules & Bonuses</span>
                 <div className="text-right">
                   <span className="text-slate-200 font-mono block">{formatCurrency(explanation.totalRuleBonuses)}</span>
                   {commission.appliedRules.length > 0 && (
@@ -154,6 +156,30 @@ export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
               </div>
             </Card>
           </section>
+
+          {/* Monthly Bonuses */}
+          {tierBonuses && tierBonuses.filter(b => b.amount > 0).length > 0 && (
+            <section className="space-y-2">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-6 w-0.5 bg-teal-500 rounded-full" />
+                <Typography variant="mono" className="text-[11px] text-text-muted uppercase tracking-widest font-black">Monthly Bonuses</Typography>
+              </div>
+              <Card className="bg-white/[0.02] border-white/5 p-4 space-y-3 font-sans">
+                {tierBonuses.filter(b => b.amount > 0).map((bonus) => (
+                  <div key={bonus.tierId} className="flex justify-between items-center text-[13px]">
+                    <span className="text-text-muted">{bonus.label || 'Volume Bonus'}</span>
+                    <span className="font-mono text-text-primary">{formatCurrency(bonus.amount)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between items-center pt-2 border-t border-white/5 text-[13px]">
+                  <span className="text-text-primary font-bold">Total Monthly Bonuses</span>
+                  <span className="text-text-primary font-mono font-black">
+                    {formatCurrency(tierBonuses.reduce((sum, b) => sum + (b.amount || 0), 0))}
+                  </span>
+                </div>
+              </Card>
+            </section>
+          )}
 
           {/* Mini Floor */}
           <section className="space-y-2">

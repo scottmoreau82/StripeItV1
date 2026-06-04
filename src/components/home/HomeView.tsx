@@ -307,6 +307,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
     return calculateDealCommission(selectedDeal, payPlan, monthlyDeals);
   }, [selectedDeal, payPlan, deals]);
 
+  const selectedMonthTierBonuses = React.useMemo(() => {
+    if (!selectedDeal || !payPlan) return [];
+    try {
+      const targetMonth = selectedDeal.date.slice(0, 7);
+      const monthlyDeals = deals.filter(d => d.date.startsWith(targetMonth));
+      const targetSpiffs = monthlySpiffs.filter(s => s.month === targetMonth);
+      const periodEarnings = calculatePeriodEarnings(monthlyDeals, payPlan, targetSpiffs);
+      return periodEarnings.tierBonuses || [];
+    } catch {
+      return [];
+    }
+  }, [selectedDeal, payPlan, deals, monthlySpiffs]);
+
+  const explanationDataMonthTierBonuses = React.useMemo(() => {
+    if (!explanationData?.deal || !payPlan) return [];
+    try {
+      const targetMonth = explanationData.deal.date.slice(0, 7);
+      const monthlyDeals = deals.filter(d => d.date.startsWith(targetMonth));
+      const targetSpiffs = monthlySpiffs.filter(s => s.month === targetMonth);
+      const periodEarnings = calculatePeriodEarnings(monthlyDeals, payPlan, targetSpiffs);
+      return periodEarnings.tierBonuses || [];
+    } catch {
+      return [];
+    }
+  }, [explanationData, payPlan, deals, monthlySpiffs]);
+
   const [metricsOpen, setMetricsOpen] = useState(true);
   const [dealsOpen, setDealsOpen] = useState(true);
   const [goalOpen, setGoalOpen] = useState(true);
@@ -1789,6 +1815,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           deal={explanationData?.deal}
           onEdit={(d) => { setExplanationData(null); window.dispatchEvent(new CustomEvent('stripeit:edit-deal', { detail: d })); }}
           onDelete={async () => { setExplanationData(null); }}
+          tierBonuses={explanationDataMonthTierBonuses}
         />
         <PayoutExplanationModal
           key="selected-deal-modal"
@@ -1796,6 +1823,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           onClose={() => setSelectedDeal(null)}
           commission={selectedDealCommission}
           customerName={selectedDeal?.customerName || ''}
+          tierBonuses={selectedMonthTierBonuses}
         />
       </AnimatePresence>
     </>

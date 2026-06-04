@@ -1,4 +1,4 @@
-import { Deal, PayPlan, PayPlanRule, PayPlanTier, VolumeBonus, VolumeBonusType, VolumeBonusScope, VolumeBonusFilter, MiniLadderTier, MonthlySpiff } from '../types';
+import { Deal, PayPlan, PayPlanRule, PayPlanTier, VolumeBonus, VolumeBonusType, VolumeBonusScope, VolumeBonusFilter, MiniLadderTier, MonthlySpiff, CustomUnitBonus } from '../types';
 import { parseCalendarDate } from './utils';
 
 /**
@@ -612,6 +612,33 @@ export const calculatePeriodEarnings = (deals: Deal[], plan: PayPlan, monthlySpi
         label: `${highestTier.threshold}+ Units Bonus`
       });
       totalTierBonuses = tierAmount;
+    }
+  }
+
+  // Custom Unit Bonuses
+  if (plan.customUnitBonuses && plan.customUnitBonuses.length > 0) {
+    const activeUnitBonuses = plan.customUnitBonuses.filter(b => b.active);
+    if (activeUnitBonuses.length > 0) {
+      const totalUnits = deals.reduce((sum, d) => sum + (d.isSplitDeal && plan?.isSplitBehaviorActive !== false ? (d.splitPercentage || 50) / 100 : 1), 0);
+      for (const bonus of activeUnitBonuses) {
+        if (totalUnits >= bonus.threshold) {
+          let bonusAmount = 0;
+          if (bonus.isRetroactive) {
+            bonusAmount = totalUnits * bonus.amountPerUnit;
+          } else {
+            const unitsAboveThreshold = Math.max(0, totalUnits - bonus.threshold);
+            bonusAmount = unitsAboveThreshold * bonus.amountPerUnit;
+          }
+          if (bonusAmount > 0) {
+            tierBonuses.push({
+              tierId: bonus.id,
+              amount: bonusAmount,
+              label: bonus.label
+            });
+            totalTierBonuses += bonusAmount;
+          }
+        }
+      }
     }
   }
 

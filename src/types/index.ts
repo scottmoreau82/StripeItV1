@@ -240,6 +240,15 @@ export interface CustomMini {
   filter: VolumeBonusFilter;
 }
 
+export interface CustomUnitBonus {
+  id: string;
+  label: string;
+  threshold: number;
+  amountPerUnit: number;
+  isRetroactive: boolean;
+  active: boolean;
+}
+
 export interface PayPlan {
   id: string;
   organizationId: string;
@@ -270,6 +279,7 @@ export interface PayPlan {
   isHourlyActive?: boolean;
   miniTiers?: MiniLadderTier[]; // New Mini Ladder System
   customMinis?: CustomMini[];
+  customUnitBonuses?: CustomUnitBonus[];
   hourlyConfig?: HourlyConfig;
 
   // Pack Deduction

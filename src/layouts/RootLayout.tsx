@@ -6,6 +6,8 @@ import { ContentContainer } from '../components/layout/ResponsiveGrid';
 import { useAuth } from '../contexts/AuthContext';
 import { SubscriptionTier } from '../types';
 import { DealerLayout } from './DealerLayout';
+import { useAppData } from '../contexts/AppDataContext';
+import { AlertTriangle, X } from 'lucide-react';
 
 /**
  * StripeItLayoutSystem - RootLayout
@@ -20,6 +22,8 @@ interface RootLayoutProps {
 
 export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onLogSpiff, onConfigPayPlan }) => {
   const { profile } = useAuth();
+  const { connectionBlocked } = useAppData();
+  const [dismissed, setDismissed] = React.useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('stripeit_sidebar_collapsed') === 'true';
@@ -34,7 +38,28 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onL
   // StripeItLayoutTierSwitch - Direct Dealer users to their dedicated layout shell
   // We must have a profile to determine which shell to mount
   if (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) {
-    return <DealerLayout>{children}</DealerLayout>;
+    return (
+      <DealerLayout>
+        {connectionBlocked && !dismissed && (
+          <div className="mb-6 flex items-start gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+            <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-amber-200/90 font-medium leading-relaxed">
+                Connection issue detected — your ad blocker may be blocking our database sync. StripeIt is 100% ad-free, so no blocker is needed here. Whitelist stripeit.app to restore live updates.
+              </p>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setDismissed(true)}
+              className="text-amber-500/40 hover:text-amber-400 transition-colors p-0.5"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+        {children}
+      </DealerLayout>
+    );
   }
 
   return (
@@ -57,6 +82,23 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onL
         
         <main className="flex-1 overflow-y-auto px-4 py-5 lg:px-10 lg:py-10">
           <ContentContainer>
+            {connectionBlocked && !dismissed && (
+              <div className="mb-6 flex items-start gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] text-amber-200/90 font-medium leading-relaxed">
+                    Connection issue detected — your ad blocker may be blocking our database sync. StripeIt is 100% ad-free, so no blocker is needed here. Whitelist stripeit.app to restore live updates.
+                  </p>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => setDismissed(true)}
+                  className="text-amber-500/40 hover:text-amber-400 transition-colors p-0.5"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
             {children}
           </ContentContainer>
         </main>

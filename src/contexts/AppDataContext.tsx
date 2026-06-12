@@ -31,6 +31,7 @@ interface AppDataContextType {
   monthlySpiffs: MonthlySpiff[];
   competitions: Competition[];
   isLoading: boolean;
+  connectionBlocked: boolean;
   dashboardLayout: DashboardLayout;
   handleSaveDeal: (dealData: Partial<Deal>, editingId?: string) => Promise<void>;
   handleSaveGoal: (goalData: Partial<Goal>) => Promise<void>;
@@ -62,6 +63,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [monthlySpiffs, setMonthlySpiffs] = useState<MonthlySpiff[]>([]);
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [connectionBlocked, setConnectionBlocked] = useState(false);
 
   // triggerSuccess now maps to global toast
   const triggerSuccess = useCallback((message: string = 'Action successful!') => {
@@ -180,7 +182,13 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       dealsQuery = query(dealsQuery, where('userId', '==', user.uid));
     }
 
+    const blockCheckTimeout = setTimeout(() => {
+      setConnectionBlocked(true);
+    }, 8000);
+
     const unsubDeals = onSnapshot(dealsQuery, (snapshot) => {
+      clearTimeout(blockCheckTimeout);
+      setConnectionBlocked(false);
       const dealData = snapshot.docs.map(doc => {
         const data = doc.data();
         return { 
@@ -213,7 +221,10 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       setIsLoading(false);
       clearTimeout(loadTimeout);
-    }, (error) => handleSubError(error, dealsCollectionPath));
+    }, (error) => {
+      clearTimeout(blockCheckTimeout);
+      handleSubError(error, dealsCollectionPath);
+    });
 
     // 2. Subscription to Notes
     const notesCollectionPath = `${COLLECTIONS.ORGANIZATIONS}/${effectiveOrgId}/${COLLECTIONS.NOTES}`;
@@ -280,6 +291,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, (error) => handleSubError(error, spiffsCollectionPath));
 
     return () => {
+      clearTimeout(blockCheckTimeout);
       unsubDeals();
       unsubNotes();
       unsubComps();
@@ -570,6 +582,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     monthlySpiffs,
     competitions,
     isLoading,
+    connectionBlocked,
     dashboardLayout,
     handleSaveDeal,
     handleSaveGoal,
@@ -596,6 +609,7 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
     monthlySpiffs,
     competitions,
     isLoading,
+    connectionBlocked,
     dashboardLayout,
     handleSaveDeal,
     handleSaveGoal,

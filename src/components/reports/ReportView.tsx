@@ -69,6 +69,19 @@ export const ReportView: React.FC = () => {
   }, [monthlySpiffs, selectedMonth]);
 
   const selectedMonthEarnings = useMemo(() => {
+    if (!payPlan) {
+      return {
+        dealResults: [],
+        totalDealPayout: 0,
+        tierBonuses: [],
+        totalTierBonuses: 0,
+        commissionTotal: 0,
+        finalGrandTotal: 0,
+        totalMonthlySpiffs: 0,
+        grandTotal: 0,
+        appliedSpiffs: []
+      };
+    }
     return calculatePeriodEarnings(selectedMonthDeals, payPlan, selectedMonthSpiffs);
   }, [selectedMonthDeals, payPlan, selectedMonthSpiffs]);
 
@@ -151,6 +164,16 @@ export const ReportView: React.FC = () => {
   }, [selectedMonth]);
 
   if (!profile || !user) return null;
+
+  if (!payPlan) {
+    return (
+      <DashboardLayout
+        header={<PageHeader title="Performance Reports" subtitle="Historical month-by-month tracking & reporting" icon={PieChart} />}
+        stats={null}
+        main={<div className="p-12 text-center"><Typography variant="small" className="text-text-muted">Loading pay plan...</Typography></div>}
+      />
+    );
+  }
 
   const currentMonthKey = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
 

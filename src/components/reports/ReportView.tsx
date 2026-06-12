@@ -331,21 +331,21 @@ export const ReportView: React.FC = () => {
 
     const statsComponent = (
       <>
-        <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">
-          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Units Sold</Typography>
-          <Typography variant="h3" className="text-white font-black">{selectedMonthUnits} Units</Typography>
+        <Card className="p-4 bg-bg-card/45 border border-border-subtle shadow-md relative group backdrop-blur-md">
+          <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black mb-1 block">Units Sold</Typography>
+          <Typography variant="h3" className="text-text-primary font-black">{selectedMonthUnits} Units</Typography>
         </Card>
-        <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">
-          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Front Gross</Typography>
+        <Card className="p-4 bg-bg-card/45 border border-border-subtle shadow-md relative group backdrop-blur-md">
+          <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black mb-1 block">Front Gross</Typography>
           <Typography variant="h3" className="text-cyan-400 font-black">${selectedMonthFrontGross.toLocaleString()}</Typography>
         </Card>
-        <Card className="p-6 bg-white/[0.03] border-white/10
+        <Card className="p-6 bg-bg-card border-border-subtle
           flex flex-col gap-3 items-center justify-center">
           <Button
             variant="outline"
             onClick={handleExportCSV}
             className="w-full text-xs font-black uppercase
-              tracking-widest hover:bg-white/5"
+              tracking-widest hover:bg-bg-card"
           >
             <Download className="mr-2 h-4 w-4" />
             Export CSV
@@ -364,31 +364,31 @@ export const ReportView: React.FC = () => {
             variant="outline"
             onClick={handlePrint}
             className="w-full text-xs font-black uppercase
-              tracking-widest text-slate-400
-              border-white/10 hover:bg-white/5 no-print"
+              tracking-widest text-text-muted
+              border-border-subtle hover:bg-bg-card no-print"
           >
             <Printer className="mr-2 h-4 w-4" />
             Print
           </Button>
         </Card>
-        <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">
-          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Back Gross</Typography>
+        <Card className="p-4 bg-bg-card/45 border border-border-subtle shadow-md relative group backdrop-blur-md">
+          <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black mb-1 block">Back Gross</Typography>
           <Typography variant="h3" className="text-purple-400 font-black">${selectedMonthBackGross.toLocaleString()}</Typography>
         </Card>
-        <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">
-          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Est. Payout</Typography>
+        <Card className="p-4 bg-bg-card/45 border border-border-subtle shadow-md relative group backdrop-blur-md">
+          <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black mb-1 block">Est. Payout</Typography>
           <Typography variant="h3" className="text-emerald-400 font-black">${selectedMonthEstPayout.toLocaleString()}</Typography>
         </Card>
         {!isCurrent && (
-          <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md">
+          <Card className="p-4 bg-bg-card/45 border border-border-subtle shadow-md relative group backdrop-blur-md">
             <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black mb-1 block">True Payout</Typography>
             <Typography variant="h3" className="text-emerald-400 font-black">
               ${selectedMonthDeals.reduce((sum, d) => sum + (d.actualPayout || 0), 0).toLocaleString()}
             </Typography>
           </Card>
         )}
-        <Card className="p-4 bg-bg-card/45 border border-white/5 shadow-md relative group backdrop-blur-md col-span-2 md:col-span-1">
-          <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black mb-1 block">Spiffs & CBs</Typography>
+        <Card className="p-4 bg-bg-card/45 border border-border-subtle shadow-md relative group backdrop-blur-md col-span-2 md:col-span-1">
+          <Typography variant="mono" className="text-[9px] text-text-muted uppercase font-black mb-1 block">Spiffs & CBs</Typography>
           <Typography variant="h3" className={cn("font-black", selectedMonthSpiffsTotal >= 0 ? "text-cyan-400" : "text-rose-400")}>
             {selectedMonthSpiffsTotal >= 0 ? '+' : ''}${selectedMonthSpiffsTotal.toLocaleString()}
           </Typography>
@@ -409,7 +409,7 @@ export const ReportView: React.FC = () => {
       const isActive = reportSortConfig.key === key;
       return (
         <th 
-          className="px-6 py-4 cursor-pointer hover:bg-white/5 select-none transition-colors"
+          className="px-6 py-4 cursor-pointer hover:bg-bg-card select-none transition-colors"
           onClick={() => handleReportSort(key)}
         >
           <div className="flex items-center gap-1">
@@ -441,11 +441,11 @@ export const ReportView: React.FC = () => {
           <Typography variant="mono" className="text-[10px] text-cyan-400 tracking-widest font-black uppercase block">
             Deals Recorded ({selectedMonthDeals.length})
           </Typography>
-          <Card className="overflow-hidden bg-bg-card/45 border border-white/5 rounded-2xl shadow-deal p-0">
+          <Card className="overflow-hidden bg-bg-card/45 border border-border-subtle rounded-2xl shadow-deal p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-white/[0.03] border-b border-white/5">
+                  <tr className="bg-bg-card border-b border-border-subtle">
                     {renderHeader('Date', 'date')}
                     {renderHeader('Customer', 'lastName')}
                     {renderHeader('Vehicle', 'dealNumber')}
@@ -459,17 +459,17 @@ export const ReportView: React.FC = () => {
                     <th className="px-6 py-4 text-right print:hidden no-print"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest no-print">Action</Typography></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 font-sans">
+                <tbody className="divide-y divide-border-subtle font-sans">
                   {sortedMonthDeals.map((deal) => {
                     const dealResult = selectedMonthEarnings.dealResults.find(r => r.dealId === deal.id);
                     const estPayout = dealResult ? dealResult.finalPayout : 0;
                     const splitRatio = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
 
                     return (
-                      <tr key={deal.id} className="hover:bg-white/[0.02] transition-colors group">
+                      <tr key={deal.id} className="hover:bg-bg-card transition-colors group">
                         <td className="px-6 py-4 text-xs text-text-muted font-medium font-mono">{formatDateSafe(deal.date, 'MM/dd/yyyy')}</td>
                         <td className="px-6 py-4 text-sm text-text-primary font-bold">{deal.customerName}</td>
-                        <td className="px-6 py-4 text-xs text-slate-300">{deal.purchasedVehicle}</td>
+                        <td className="px-6 py-4 text-xs text-text-secondary">{deal.purchasedVehicle}</td>
                         <td className="px-6 py-4 text-xs">
                           <span className={cn(
                             "px-2 py-0.5 rounded text-[10px] font-mono tracking-widest font-black uppercase badge-print-clean",
@@ -485,10 +485,10 @@ export const ReportView: React.FC = () => {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-xs text-slate-300 font-mono">
+                        <td className="px-6 py-4 text-xs text-text-secondary font-mono">
                           ${(deal.frontEndGross * splitRatio).toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 text-xs text-slate-300 font-mono">
+                        <td className="px-6 py-4 text-xs text-text-secondary font-mono">
                           ${(deal.backEndGross * splitRatio).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 text-sm text-emerald-400 font-bold font-mono">
@@ -498,7 +498,7 @@ export const ReportView: React.FC = () => {
                           <td className="px-6 py-4">
                             <input
                               type="text"
-                              className="h-8 w-28 bg-black/40 border border-white/10 rounded-lg px-2 text-xs font-mono text-emerald-400 focus:border-emerald-400/40 outline-none"
+                              className="h-8 w-28 bg-black/40 border border-border-subtle rounded-lg px-2 text-xs font-mono text-emerald-400 focus:border-emerald-400/40 outline-none"
                               value={actualPayoutInputs[deal.id] !== undefined ? actualPayoutInputs[deal.id] : (deal.actualPayout !== undefined && deal.actualPayout !== null ? String(deal.actualPayout) : '')}
                               onChange={(e) => {
                                 const val = e.target.value.replace(/[^0-9.]/g, '');
@@ -518,7 +518,7 @@ export const ReportView: React.FC = () => {
                              variant="ghost"
                              size="sm"
                              onClick={() => handleEditDeal(deal)}
-                             className="h-8 w-8 text-text-muted hover:text-cyan-400 p-1 rounded-lg transition-colors inline-flex items-center justify-center border border-transparent hover:border-white/5 hover:bg-white/5 no-print"
+                             className="h-8 w-8 text-text-muted hover:text-cyan-400 p-1 rounded-lg transition-colors inline-flex items-center justify-center border border-transparent hover:border-border-subtle hover:bg-bg-card no-print"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -531,7 +531,7 @@ export const ReportView: React.FC = () => {
             </div>
             {selectedMonthDeals.length === 0 && (
               <div className="p-12 text-center">
-                <Typography variant="small" className="text-slate-600">No deals logged for this month.</Typography>
+                <Typography variant="small" className="text-text-muted">No deals logged for this month.</Typography>
               </div>
             )}
           </Card>
@@ -543,21 +543,21 @@ export const ReportView: React.FC = () => {
             <Typography variant="mono" className="text-[10px] text-cyan-400 tracking-widest font-black uppercase block">
               Month Spiffs & Adjustments
             </Typography>
-            <Card className="overflow-hidden bg-bg-card/45 border border-white/5 rounded-2xl shadow-deal p-0">
+            <Card className="overflow-hidden bg-bg-card/45 border border-border-subtle rounded-2xl shadow-deal p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-white/[0.03] border-b border-white/5 font-mono">
-                      <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Date</Typography></th>
-                      <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Adjustments & Spiffs</Typography></th>
-                      <th className="px-6 py-4 text-right"><Typography variant="mono" className="text-[9px] uppercase text-slate-400 font-black tracking-widest">Amount</Typography></th>
+                    <tr className="bg-bg-card border-b border-border-subtle font-mono">
+                      <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Date</Typography></th>
+                      <th className="px-6 py-4"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Adjustments & Spiffs</Typography></th>
+                      <th className="px-6 py-4 text-right"><Typography variant="mono" className="text-[9px] uppercase text-text-muted font-black tracking-widest">Amount</Typography></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-border-subtle">
                     {selectedMonthSpiffs.map((spiff) => (
-                      <tr key={spiff.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-6 py-4 text-xs text-slate-400 font-mono">{formatDateSafe(spiff.date, 'MM/dd/yyyy')}</td>
-                        <td className="px-6 py-4 text-sm text-white font-semibold">
+                      <tr key={spiff.id} className="hover:bg-bg-card transition-colors">
+                        <td className="px-6 py-4 text-xs text-text-muted font-mono">{formatDateSafe(spiff.date, 'MM/dd/yyyy')}</td>
+                        <td className="px-6 py-4 text-sm text-text-primary font-semibold">
                           {spiff.label || spiff.notes || (spiff.isChargeback ? 'CHARGEBACK' : 'SPIFF')}
                         </td>
                         <td className={cn(
@@ -643,10 +643,10 @@ export const ReportView: React.FC = () => {
               key={mKey} 
               hoverable 
               onClick={() => setSelectedMonth(mKey)}
-              className="p-6 bg-bg-card/45 border border-white/5 shadow-md relative group hover:border-cyan-500/20 backdrop-blur-md transition-all duration-300 rounded-2xl cursor-pointer"
+              className="p-6 bg-bg-card/45 border border-border-subtle shadow-md relative group hover:border-cyan-500/20 backdrop-blur-md transition-all duration-300 rounded-2xl cursor-pointer"
             >
               <div className="flex items-center justify-between mb-6">
-                <Typography variant="h3" className="italic font-black text-white text-lg tracking-tight uppercase">
+                <Typography variant="h3" className="italic font-black text-text-primary text-lg tracking-tight uppercase">
                   {getMonthNameString(mKey)}
                 </Typography>
                 {isCurrent ? (
@@ -654,7 +654,7 @@ export const ReportView: React.FC = () => {
                     OPEN
                   </span>
                 ) : (
-                  <span className="bg-slate-800/80 border border-slate-700/50 text-slate-400 font-mono text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-bold">
+                  <span className="bg-bg-card border border-border-subtle text-text-muted font-mono text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-bold">
                     CLOSED
                   </span>
                 )}
@@ -662,25 +662,25 @@ export const ReportView: React.FC = () => {
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 font-mono text-xs">
                 <div>
-                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-slate-500 font-black block mb-1">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-text-muted font-black block mb-1">
                     VOLUME
                   </span>
-                  <span className="text-white font-black text-base">{unitCount} UNITS</span>
+                  <span className="text-text-primary font-black text-base">{unitCount} UNITS</span>
                 </div>
                 <div>
-                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-slate-500 font-black block mb-1">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-text-muted font-black block mb-1">
                     TOTAL FRONT
                   </span>
-                  <span className="text-slate-300 font-semibold text-base">${totalFront.toLocaleString()}</span>
+                  <span className="text-text-secondary font-semibold text-base">${totalFront.toLocaleString()}</span>
                 </div>
                 <div>
-                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-slate-500 font-black block mb-1">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-text-muted font-black block mb-1">
                     TOTAL BACK
                   </span>
-                  <span className="text-slate-300 font-semibold text-base">${totalBack.toLocaleString()}</span>
+                  <span className="text-text-secondary font-semibold text-base">${totalBack.toLocaleString()}</span>
                 </div>
                 <div>
-                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-slate-500 font-black block mb-1">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-text-muted font-black block mb-1">
                     EST PAYOUT
                   </span>
                   <span className="text-cyan-400 font-black text-base">${estPayout.toLocaleString()}</span>

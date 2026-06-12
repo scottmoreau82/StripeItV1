@@ -941,13 +941,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                 <div className="flex items-center gap-1">
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleDeleteDeal?.(deal.id); setPendingDeleteDealId(null); }}
-                                    className="px-2 py-1 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-400 text-[9px] font-black uppercase tracking-widest hover:bg-rose-500/30 transition-all"
+                                    className="px-2 py-1 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9px] font-black uppercase hover:bg-rose-500/20 transition-all"
                                   >
                                     Confirm
                                   </button>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); setPendingDeleteDealId(null); }}
-                                    className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                                    className="px-2 py-1 rounded bg-bg-card border border-border-subtle text-text-muted text-[9px] font-black uppercase hover:bg-bg-elevated transition-all"
                                   >
                                     Cancel
                                   </button>
@@ -1125,13 +1125,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                                     <div className="flex items-center gap-1">
                                       <button
                                         onClick={(e) => { e.stopPropagation(); handleDeleteDeal?.(deal.id); setPendingDeleteMobileDealId(null); }}
-                                        className="px-2 py-1 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-400 text-[9px] font-black uppercase tracking-widest"
+                                        className="px-2 py-1 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9px] font-black uppercase hover:bg-rose-500/20 transition-all"
                                       >
                                         Confirm
                                       </button>
                                       <button
                                         onClick={(e) => { e.stopPropagation(); setPendingDeleteMobileDealId(null); }}
-                                        className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest"
+                                        className="px-2 py-1 rounded bg-bg-card border border-border-subtle text-text-muted text-[9px] font-black uppercase hover:bg-bg-elevated transition-all"
                                       >
                                         Cancel
                                       </button>
@@ -1237,13 +1237,13 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                             <div className="flex items-center gap-1">
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleDeleteMonthlySpiff?.(spiff.id); setPendingDeleteSpiffId(null); }}
-                                className="px-2 py-1 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-400 text-[9px] font-black uppercase tracking-widest hover:bg-rose-500/30 transition-all"
+                                className="px-2 py-1 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[9px] font-black uppercase hover:bg-rose-500/20 transition-all"
                               >
                                 Confirm
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); setPendingDeleteSpiffId(null); }}
-                                className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                                className="px-2 py-1 rounded bg-bg-card border border-border-subtle text-text-muted text-[9px] font-black uppercase hover:bg-bg-elevated transition-all"
                               >
                                 Cancel
                               </button>

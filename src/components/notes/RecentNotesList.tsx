@@ -68,22 +68,7 @@ export const RecentNotesList: React.FC<RecentNotesListProps> = ({ notes, onDelet
              </div>
              {(onDelete || onEdit) && (
                 <div className="shrink-0">
-                  {pendingDeleteId === note.id ? (
-                    <div className="flex items-center gap-1.5">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); onDelete?.(note.id); setPendingDeleteId(null); }}
-                        className="px-2 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
-                      >
-                         Confirm
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
-                        className="px-2 py-1.5 rounded-lg bg-bg-card hover:bg-bg-card/85 text-text-secondary border border-border-subtle text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
-                      >
-                         Cancel
-                      </button>
-                    </div>
-                  ) : (
+                  {pendingDeleteId !== note.id && (
                     <div className="flex items-center gap-1">
                       {onEdit && (
                         <button 
@@ -106,6 +91,23 @@ export const RecentNotesList: React.FC<RecentNotesListProps> = ({ notes, onDelet
                 </div>
              )}
           </div>
+          
+          {pendingDeleteId === note.id && (
+            <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-border-subtle">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
+                className="text-[10px] uppercase font-black text-text-muted px-3 py-1.5 rounded-lg bg-bg-card border border-border-subtle transition-all active:scale-95"
+              >
+                 Cancel
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onDelete?.(note.id); setPendingDeleteId(null); }}
+                className="text-[10px] uppercase font-black text-rose-400 px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 transition-all active:scale-95"
+              >
+                 Delete
+              </button>
+            </div>
+          )}
         </Card>
       ))}
     </div>

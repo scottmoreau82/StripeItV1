@@ -761,26 +761,17 @@ function AppContent() {
   const [showFallback, setShowFallback] = useState(false);
   const previousMemberState = useRef<{ isFrozen: boolean, orgId: string | null } | null>(null);
   const [showLoadingFallback, setShowLoadingFallback] = useState(false);
-  const profileNullSince = useRef<number | null>(null);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
+    let timer: NodeJS.Timeout;
     if (user && !profile) {
-      if (profileNullSince.current === null) {
-        profileNullSince.current = Date.now();
-      }
       timer = setTimeout(() => {
-        if (!profile) {
-          setShowLoadingFallback(true);
-        }
+        setShowLoadingFallback(true);
       }, 300);
     } else {
-      profileNullSince.current = null;
       setShowLoadingFallback(false);
     }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [user, profile]);
 
   // StripeItEjectionNotificationSystem

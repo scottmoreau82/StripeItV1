@@ -9,7 +9,7 @@ import { cn } from '../../lib/utils';
  */
 interface DashboardLayoutProps {
   header: React.ReactNode;
-  stats: React.ReactNode;
+  stats?: React.ReactNode;
   main: React.ReactNode;
   aside?: React.ReactNode;
 }

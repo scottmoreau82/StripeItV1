@@ -737,7 +737,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         <div className="flex items-center gap-1">
                           <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Date</Typography>
                           {isBasicPlus && sortConfig.key === 'date' && (
-                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevronUp' : 'chevronDown'} size={10} className="text-brand-primary" />
                           )}
                         </div>
                       </th>
@@ -748,7 +748,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         <div className="flex items-center gap-1">
                           <Typography variant="mono" className="text-[10px] text-text-muted uppercase tracking-widest font-black">Customer / Deal #</Typography>
                           {isBasicPlus && (sortConfig.key === 'lastName' || sortConfig.key === 'dealNumber') && (
-                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevronUp' : 'chevronDown'} size={10} className="text-brand-primary" />
                           )}
                         </div>
                       </th>
@@ -759,7 +759,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         <div className="flex items-center gap-1">
                           <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Vehicle / Stock #</Typography>
                           {isBasicPlus && sortConfig.key === 'vehicle' && (
-                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevronUp' : 'chevronDown'} size={10} className="text-brand-primary" />
                           )}
                         </div>
                       </th>
@@ -770,7 +770,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         <div className="flex items-center gap-1">
                           <Typography variant="mono" className="text-[10px] text-text-muted uppercase tracking-widest font-black">Type</Typography>
                           {isBasicPlus && sortConfig.key === 'type' && (
-                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevronUp' : 'chevronDown'} size={10} className="text-brand-primary" />
                           )}
                         </div>
                       </th>
@@ -788,7 +788,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         <div className="flex items-center justify-end gap-1">
                           <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Front Gross</Typography>
                           {isBasicPlus && sortConfig.key === 'frontEndGross' && (
-                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevronUp' : 'chevronDown'} size={10} className="text-brand-primary" />
                           )}
                         </div>
                       </th>
@@ -799,7 +799,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         <div className="flex items-center justify-end gap-1">
                           <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Back Gross</Typography>
                           {isBasicPlus && sortConfig.key === 'backEndGross' && (
-                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevronUp' : 'chevronDown'} size={10} className="text-brand-primary" />
                           )}
                         </div>
                       </th>
@@ -810,7 +810,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
                         <div className="flex items-center justify-end gap-1">
                           <Typography variant="mono" className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Est. Payout</Typography>
                           {isBasicPlus && sortConfig.key === 'payout' && (
-                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevron-up' : 'chevron-down'} size={10} className="text-brand-primary" />
+                            <AppIcon name={sortConfig.direction === 'asc' ? 'chevronUp' : 'chevronDown'} size={10} className="text-brand-primary" />
                           )}
                         </div>
                       </th>

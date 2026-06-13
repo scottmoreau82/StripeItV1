@@ -269,7 +269,7 @@ export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
                   <Typography variant="mono" className="text-[10px] text-brand-primary uppercase tracking-[0.2em] font-black mb-1">Final Estimated Payout</Typography>
                   <Typography variant="h2" className="text-emerald-400 font-black">{formatCurrency(commission.finalPayout)}</Typography>
                 </div>
-                <AppIcon name="shield-check" className="h-10 w-10 text-emerald-500/20" />
+                <AppIcon name="shieldCheck" className="h-10 w-10 text-emerald-500/20" />
               </div>
             </div>
             <Typography variant="small" className="text-slate-600 text-center mt-4 text-[10px] uppercase tracking-widest">

@@ -155,6 +155,7 @@ export interface UserProfile {
   themePreference?: 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink' | 'prowarm' | 'custom';
   customTheme?: CustomThemeConfig;
   deskSettings?: DeskSettings;
+  canCreateRandomDeals?: boolean;
 }
 
 export interface PayPlanRule {

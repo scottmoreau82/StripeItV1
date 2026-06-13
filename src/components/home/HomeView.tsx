@@ -1155,7 +1155,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   deals={deals}
                   initialData={editingNote}
                   onSubmit={async (data) => {
-                    const orgId = profile?.orgId || profile?.id;
+                    const orgId = profile?.orgId || profile?.uid;
                     if (orgId && editingNote) {
                       try {
                         await noteService.updateNote(orgId, editingNote.id, {
@@ -1189,7 +1189,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   deals={deals}
                   initialData={editingNote}
                   onSubmit={async (data) => {
-                    const orgId = profile?.orgId || profile?.id;
+                    const orgId = profile?.orgId || profile?.uid;
                     if (orgId && editingNote) {
                       try {
                         await noteService.updateNote(orgId, editingNote.id, {

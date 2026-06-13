@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -33,23 +33,33 @@ import { useUpdateDetection } from './hooks/useUpdateDetection';
 import { UpdateNotificationBanner } from './components/ui/UpdateNotificationBanner';
 
 import { HomeView } from './components/home/HomeView';
-import { ActivityFeed } from './components/activity/ActivityFeed';
-import { SalesLogView } from './components/log/SalesLogView';
-import { ReportView } from './components/reports/ReportView';
-import { GoalsView } from './components/goals/GoalsView';
-import { AnalyticsView } from './components/analytics/AnalyticsView';
-import { SettingsView } from './components/settings/SettingsView';
-import { ManagerView } from './components/management/ManagerView';
 import { NoteEntryForm } from './components/notes/NoteEntryForm';
-import { DealDeskView } from './components/dealdesk/DealDeskView';
 import { SpiffEntryForm } from './components/log/SpiffEntryForm';
 import { CreateCompetitionForm } from './components/competitions/CreateCompetitionForm';
 import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { LandingView } from './components/landing/LandingView';
-import { DealerDashboard } from './components/dealer/DealerDashboard';
+
+// Route-level code-splitting: heavy views load on navigation, not at startup.
+const ActivityFeed = lazy(() => import('./components/activity/ActivityFeed').then(m => ({ default: m.ActivityFeed })));
+const SalesLogView = lazy(() => import('./components/log/SalesLogView').then(m => ({ default: m.SalesLogView })));
+const ReportView = lazy(() => import('./components/reports/ReportView').then(m => ({ default: m.ReportView })));
+const GoalsView = lazy(() => import('./components/goals/GoalsView').then(m => ({ default: m.GoalsView })));
+const AnalyticsView = lazy(() => import('./components/analytics/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
+const SettingsView = lazy(() => import('./components/settings/SettingsView').then(m => ({ default: m.SettingsView })));
+const ManagerView = lazy(() => import('./components/management/ManagerView').then(m => ({ default: m.ManagerView })));
+const DealDeskView = lazy(() => import('./components/dealdesk/DealDeskView').then(m => ({ default: m.DealDeskView })));
+const DealerDashboard = lazy(() => import('./components/dealer/DealerDashboard').then(m => ({ default: m.DealerDashboard })));
+const FeedbackReviewPage = lazy(() => import('./components/feedback/FeedbackReviewPage').then(m => ({ default: m.FeedbackReviewPage })));
+const AdminAnalyticsDashboard = lazy(() => import('./components/analytics/AdminAnalyticsDashboard').then(m => ({ default: m.AdminAnalyticsDashboard })));
+const UserManagementPage = lazy(() => import('./components/management/UserManagementPage').then(m => ({ default: m.UserManagementPage })));
+const DealerSalesLogView = lazy(() => import('./components/dealer/DealerSalesLogView').then(m => ({ default: m.DealerSalesLogView })));
+const DealerSettingsView = lazy(() => import('./components/dealer/DealerSettingsView').then(m => ({ default: m.DealerSettingsView })));
+const DealerUserManagementView = lazy(() => import('./components/dealer/DealerUserManagementView').then(m => ({ default: m.DealerUserManagementView })));
+const DealerLogBuilderView = lazy(() => import('./components/dealer/DealerLogBuilderView').then(m => ({ default: m.DealerLogBuilderView })));
+const DealerRequestsAdminView = lazy(() => import('./components/management/DealerRequestsAdminView').then(m => ({ default: m.DealerRequestsAdminView })));
+const EffectsPreview = lazy(() => import('./components/admin/EffectsPreview').then(m => ({ default: m.EffectsPreview })));
 import { UpgradePrompt } from './components/ui/UpgradePrompt';
 import { FeedbackSystem } from './components/feedback/FeedbackSystem';
-import { FeedbackReviewPage } from './components/feedback/FeedbackReviewPage';
 
 import { AppDataProvider, useAppData } from './contexts/AppDataContext';
 import { permissionService } from './services/permissionService';
@@ -61,15 +71,7 @@ import { WaitlistModal } from './components/subscription/WaitlistModal';
 import { FeedbackType } from './types';
 import { analyticsService } from './services/analyticsService';
 import { AnalyticsEventType } from './types';
-import { AdminAnalyticsDashboard } from './components/analytics/AdminAnalyticsDashboard';
-import { UserManagementPage } from './components/management/UserManagementPage';
-import { DealerSalesLogView } from './components/dealer/DealerSalesLogView';
-import { DealerSettingsView } from './components/dealer/DealerSettingsView';
-import { DealerUserManagementView } from './components/dealer/DealerUserManagementView';
-import { DealerLogBuilderView } from './components/dealer/DealerLogBuilderView';
 import { DealerAccessRequestFlow } from './components/dealer/DealerAccessRequestFlow';
-import { DealerRequestsAdminView } from './components/management/DealerRequestsAdminView';
-import { EffectsPreview } from './components/admin/EffectsPreview';
 import { AmbientEffectsLayer } from './components/effects/AmbientEffectsLayer';
 
 import { AuthHydrationFallback } from './components/auth/AuthHydrationFallback';
@@ -313,6 +315,7 @@ function MainAppFlow() {
           transition={{ duration: 0.25, ease: "easeOut" }}
           className="w-full"
         >
+          <Suspense fallback={<LoadingOverlay isLoading={true} />}>
           <Routes location={location}>
             <Route 
               path="/" 
@@ -551,6 +554,7 @@ function MainAppFlow() {
               } 
             />
           </Routes>
+          </Suspense>
         </motion.div>
       </AnimatePresence>
 

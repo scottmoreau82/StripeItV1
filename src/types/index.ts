@@ -117,6 +117,19 @@ export interface WidgetConfig {
   settings?: Record<string, any>;
 }
 
+export interface DeskSettings {
+  protection1Name?: string;
+  protection1Amount?: number;
+  protection2Name?: string;
+  protection2Amount?: number;
+  docFee?: number;
+  nonTaxFees?: number;
+  nonTaxFeeItems?: { id: string; description: string; amount: number; vltPct?: number; isVlt?: boolean }[];
+  taxRateState?: number;
+  taxRateCounty?: number;
+  taxRateCity?: number;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -141,6 +154,7 @@ export interface UserProfile {
   lastActive?: number;
   themePreference?: 'dark' | 'light' | 'lightTeal' | 'lightBlue' | 'prog' | 'propink' | 'prowarm' | 'custom';
   customTheme?: CustomThemeConfig;
+  deskSettings?: DeskSettings;
 }
 
 export interface PayPlanRule {

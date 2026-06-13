@@ -128,7 +128,6 @@ function MainAppFlow() {
   const { 
     deals,
     payPlan,
-    showSuccess, 
     isLoading,
     handleSaveDeal, 
     handleSavePayPlan,

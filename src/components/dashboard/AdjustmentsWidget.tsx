@@ -33,7 +33,7 @@ export const AdjustmentsWidget: React.FC<AdjustmentsWidgetProps> = ({
     setEditingSpiff({
       label: '',
       amount: 0,
-      note: ''
+      notes: ''
     });
     setIsModalOpen(true);
   };
@@ -82,8 +82,8 @@ export const AdjustmentsWidget: React.FC<AdjustmentsWidgetProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <Typography variant="label" className="text-white block">{spiff.label}</Typography>
-                    {spiff.note && (
-                      <Typography variant="small" className="text-slate-500 text-[11px] italic">{spiff.note}</Typography>
+                    {spiff.notes && (
+                      <Typography variant="small" className="text-slate-500 text-[11px] italic">{spiff.notes}</Typography>
                     )}
                   </div>
                   <div className="flex items-center gap-4">
@@ -149,8 +149,8 @@ export const AdjustmentsWidget: React.FC<AdjustmentsWidgetProps> = ({
                <textarea 
                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all min-h-[100px]"
                  placeholder="Context for this adjustment..."
-                 value={editingSpiff?.note || ''}
-                 onChange={(e) => setEditingSpiff(prev => ({ ...prev!, note: e.target.value }))}
+                 value={editingSpiff?.notes || ''}
+                 onChange={(e) => setEditingSpiff(prev => ({ ...prev!, notes: e.target.value }))}
                />
              </div>
           </div>

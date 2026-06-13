@@ -14,6 +14,7 @@ interface ModalProps {
   title?: string;
   children: React.ReactNode;
   className?: string;
+  maxWidth?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -22,6 +23,7 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   children,
   className,
+  maxWidth = 'max-w-lg',
 }) => {
   useEffect(() => {
     if (isOpen) {
@@ -56,7 +58,8 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className={cn(
-              "relative w-full max-w-lg rounded-[2rem] bg-bg-main shadow-2xl border border-border-card my-auto flex flex-col max-h-[calc(100vh-4rem)]",
+              "relative w-full rounded-[2rem] bg-bg-main shadow-2xl border border-border-card my-auto flex flex-col max-h-[calc(100vh-4rem)]",
+              maxWidth,
               className
             )}
           >

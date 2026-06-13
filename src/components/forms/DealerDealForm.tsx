@@ -128,7 +128,7 @@ export const DealerDealForm: React.FC<DealerDealFormProps> = ({
                 checked={!!formData[field.id]}
                 onCheckedChange={(checked) => handleChange(field.id, checked)}
              />
-             <Typography variant="label" htmlFor={field.id} className="text-slate-400 cursor-pointer">
+             <Typography variant="label" className="text-slate-400 cursor-pointer">
                 {field.label}
              </Typography>
           </div>

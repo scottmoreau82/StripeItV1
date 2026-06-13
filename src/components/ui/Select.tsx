@@ -11,7 +11,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   labelClassName?: string;
   hideLabel?: boolean;
-  error?: string;
+  error?: string | boolean;
   options: { value: string; label: string }[];
 }
 

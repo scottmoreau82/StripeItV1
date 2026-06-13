@@ -28,7 +28,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Dashboard Stats Section */}
       {stats && (
         <section>
-          <ResponsiveGrid cols={4} gap={3} className="lg:gap-6">
+          <ResponsiveGrid cols={4} gap={4} className="lg:gap-6">
             {stats}
           </ResponsiveGrid>
         </section>

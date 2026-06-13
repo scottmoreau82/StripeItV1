@@ -23,7 +23,7 @@ const CHECK_INTERVAL = 60 * 1000;
 export interface Toast {
   id: string;
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
 }
 
 interface AuthContextType {
@@ -34,7 +34,7 @@ interface AuthContextType {
   connectionError: string | null;
   logout: () => Promise<void>;
   updateProfileData: (data: Partial<UserProfile>) => Promise<void>;
-  addToast: (message: string, type: 'success' | 'error' | 'info') => void;
+  addToast: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
   sendVerificationEmail: () => Promise<void>;
   refreshUser: () => Promise<void>;
   retryHydration: () => void;
@@ -151,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTierOverrideState(tier);
   }, []);
 
-  const addToast = useCallback((message: string, type: 'success' | 'error' | 'info') => {
+  const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {

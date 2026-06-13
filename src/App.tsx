@@ -325,7 +325,6 @@ function MainAppFlow() {
                   <ManagerView 
                     onLogDeal={() => { setEditingDeal(null); setIsNewDealOpen(true); }}
                     onQuickNote={() => setIsQuickNoteOpen(true)}
-                    onConfigPayPlan={() => setIsPayPlanOpen(true)}
                     onDealClick={(deal) => {
                        setEditingDeal(deal);
                        setIsNewDealOpen(true);

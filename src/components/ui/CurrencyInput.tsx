@@ -13,7 +13,7 @@ interface CurrencyInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
   hideLabel?: boolean;
   extraLabel?: React.ReactNode;
   description?: string;
-  error?: string;
+  error?: string | boolean;
   value: number;
   onChange: (e: { target: { value: string, name?: string } }) => void;
 }

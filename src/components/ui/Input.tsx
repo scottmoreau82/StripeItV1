@@ -10,7 +10,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   labelClassName?: string;
   hideLabel?: boolean;
-  error?: string;
+  error?: string | boolean;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(

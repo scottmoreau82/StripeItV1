@@ -336,7 +336,7 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
                 </div>
               </div>
               <div className="shrink-0 flex items-center">
-                <TierBadge tier={profile?.subscriptionTier} size="sm" />
+                <TierBadge tier={profile?.subscriptionTier} />
               </div>
             </div>
             {/* Background Texture/Accents */}

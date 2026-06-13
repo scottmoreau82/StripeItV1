@@ -424,11 +424,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
     }
   }, [isFree, activeTab]);
 
-  // If Dealer, return specific Dealer Dashboard
-  if (isDealer) {
-    return <DealerDashboard />;
-  }
-
   const metrics = useMemo(() => calculateDashboardMetrics(deals, payPlan, monthlySpiffs), [deals, payPlan, monthlySpiffs]);
   const chartData = useMemo(() => getTrendsChartData(deals, payPlan), [deals, payPlan]);
 
@@ -1036,6 +1031,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
       )}
     </div>
   );
+
+  // If Dealer, render the dedicated Dealer Dashboard.
+  // (Placed after all hooks so the Rules of Hooks are not violated.)
+  if (isDealer) {
+    return <DealerDashboard />;
+  }
 
   return (
     <>

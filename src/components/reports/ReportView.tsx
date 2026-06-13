@@ -245,7 +245,7 @@ export const ReportView: React.FC = () => {
     exportService.downloadCSV(csvContent, `StripeIt_${activeKey}`);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (reportData.length === 0) return;
     const exportData = exportService.prepareDealExportData(
       reportData, payPlan
@@ -263,7 +263,7 @@ export const ReportView: React.FC = () => {
       { key: 'estCommission', label: 'Est. Payout' },
       { key: 'isSplit', label: 'Split Deal' }
     ];
-    exportService.downloadPDF(
+    await exportService.downloadPDF(
       exportData,
       headers,
       'Performance Report',

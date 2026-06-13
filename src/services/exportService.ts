@@ -1,7 +1,16 @@
 import { Deal, DealStatus, PayPlan } from '../types';
 import { calculateDealCommission } from '../lib/commissionLogic';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import type jsPDF from 'jspdf';
+
+// jsPDF and its plugin are heavy (~250KB incl. html2canvas). Load on demand so they
+// stay out of the initial bundle and only download when a PDF is actually generated.
+async function loadPdfLibs() {
+  const [{ default: jsPDFImpl }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
+  return { jsPDFImpl, autoTable };
+}
 
 /**
  * StripeItExportSystem
@@ -45,13 +54,14 @@ export const exportService = {
     }
   },
 
-  generatePDF(
+  async generatePDF(
     data: any[],
     headers: { key: string; label: string }[],
     title: string,
     dateRange: string
-  ): jsPDF {
-    const doc = new jsPDF({ orientation: 'landscape' });
+  ): Promise<jsPDF> {
+    const { jsPDFImpl, autoTable } = await loadPdfLibs();
+    const doc = new jsPDFImpl({ orientation: 'landscape' });
     const pageWidth = doc.internal.pageSize.getWidth();
 
     // Header bar
@@ -127,14 +137,14 @@ export const exportService = {
     return doc;
   },
 
-  downloadPDF(
+  async downloadPDF(
     data: any[],
     headers: { key: string; label: string }[],
     title: string,
     dateRange: string,
     fileName: string
-  ): void {
-    const doc = exportService.generatePDF(
+  ): Promise<void> {
+    const doc = await exportService.generatePDF(
       data, headers, title, dateRange
     );
     doc.save(`${fileName}.pdf`);

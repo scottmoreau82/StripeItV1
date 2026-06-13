@@ -18,5 +18,18 @@ export default defineConfig(({mode}) => {
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Split large, stable third-party libs into their own cached vendor chunks
+            // so they don't re-download on every app deploy.
+            'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+            'vendor-charts': ['recharts'],
+            'vendor-motion': ['motion'],
+          },
+        },
+      },
+    },
   };
 });

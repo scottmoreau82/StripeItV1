@@ -462,6 +462,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const isCarousel = dashboardLayout?.animationStyle === 'stack';
 
   const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState(1); // 1 = forward (right-to-left), -1 = backward (left-to-right)
 
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
@@ -506,9 +507,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
     }
 
     if (dx < 0) {
+      setSwipeDirection(1);
       setActiveCardIndex(i =>
         i === carouselCards.length - 1 ? 0 : i + 1);
     } else {
+      setSwipeDirection(-1);
       setActiveCardIndex(i =>
         i === 0 ? carouselCards.length - 1 : i - 1);
     }
@@ -542,12 +545,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
             e.changedTouches[0].clientY
           )}
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" custom={swipeDirection}>
           <motion.div
             key={activeCardIndex}
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -60 }}
+            custom={swipeDirection}
+            variants={{
+              enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 60 : -60 }),
+              center: { opacity: 1, x: 0 },
+              exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -60 : 60 }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="w-full flex-1 flex flex-col justify-center"
           >
@@ -567,7 +576,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       <div className="flex items-center justify-between mt-4 px-1 relative z-10 shrink-0">
         <button
-          onClick={() => setActiveCardIndex(i => i === 0 ? carouselCards.length - 1 : i - 1)}
+          onClick={() => { setSwipeDirection(-1); setActiveCardIndex(i => i === 0 ? carouselCards.length - 1 : i - 1); }}
           className={cn(
             "h-8 w-8 rounded-full flex items-center justify-center border transition-all",
             "border-white/10 text-slate-400 hover:border-brand-primary/40 hover:text-brand-primary active:scale-95"
@@ -586,7 +595,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {carouselCards.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setActiveCardIndex(i)}
+                onClick={() => { setSwipeDirection(i >= activeCardIndex ? 1 : -1); setActiveCardIndex(i); }}
                 className={cn(
                   "rounded-full transition-all",
                   i === activeCardIndex
@@ -599,7 +608,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
 
         <button
-          onClick={() => setActiveCardIndex(i => i === carouselCards.length - 1 ? 0 : i + 1)}
+          onClick={() => { setSwipeDirection(1); setActiveCardIndex(i => i === carouselCards.length - 1 ? 0 : i + 1); }}
           className={cn(
             "h-8 w-8 rounded-full flex items-center justify-center border transition-all",
             "border-white/10 text-slate-400 hover:border-brand-primary/40 hover:text-brand-primary active:scale-95"

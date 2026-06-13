@@ -1,3 +1,12 @@
+function timingSafeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
 async function verifyStripeSignature(body, sigHeader, secret) {
   const parts = sigHeader.split(',').reduce((acc, part) => {
     const [key, val] = part.split('=');
@@ -9,6 +18,10 @@ async function verifyStripeSignature(body, sigHeader, secret) {
   const signature = parts['v1'];
 
   if (!timestamp || !signature) return false;
+
+  // Reject replayed/stale webhooks (tolerance: 5 minutes), matching Stripe's recommendation.
+  const age = Math.floor(Date.now() / 1000) - parseInt(timestamp, 10);
+  if (!Number.isFinite(age) || age > 300 || age < -300) return false;
 
   const signedPayload = `${timestamp}.${body}`;
   const key = await crypto.subtle.importKey(
@@ -29,7 +42,7 @@ async function verifyStripeSignature(body, sigHeader, secret) {
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 
-  return expected === signature;
+  return timingSafeEqual(expected, signature);
 }
 
 export default {
@@ -91,7 +104,8 @@ export default {
         });
 
       } catch (err) {
-        return new Response(JSON.stringify({ error: 'Internal server error', detail: err.message }), {
+        console.error('Checkout session error:', err && err.message);
+        return new Response(JSON.stringify({ error: 'Internal server error' }), {
           status: 500,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
         });
@@ -119,6 +133,13 @@ export default {
         }
 
         const session = event.data.object;
+
+        // Only grant access when payment actually succeeded. A completed checkout
+        // session is not necessarily a paid one (e.g. async/delayed payment methods).
+        if (session.payment_status && session.payment_status !== 'paid') {
+          return new Response(JSON.stringify({ received: true, skipped: 'unpaid' }), { status: 200 });
+        }
+
         const userId = session.metadata?.userId || session.client_reference_id;
 
         if (!userId) {
@@ -139,13 +160,15 @@ export default {
 
         if (!patchRes.ok) {
           const err = await patchRes.text();
-          return new Response(JSON.stringify({ error: 'Firestore update failed', detail: err }), { status: 500 });
+          console.error('Firestore update failed:', err);
+          return new Response(JSON.stringify({ error: 'Firestore update failed' }), { status: 500 });
         }
 
         return new Response(JSON.stringify({ success: true }), { status: 200 });
 
       } catch (err) {
-        return new Response(JSON.stringify({ error: 'Internal server error', detail: err.message }), { status: 500 });
+        console.error('Webhook error:', err && err.message);
+        return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
       }
     }
 

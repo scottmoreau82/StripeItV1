@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useResponsive } from '@/src/hooks/useResponsive';
 import { AmbientEffect } from '@/src/types';
 import { cn } from '@/src/lib/utils';
 
@@ -89,11 +90,15 @@ const ParticleFieldEffect = () => {
 
 export const AmbientEffectsLayer: React.FC = () => {
   const { profile } = useAuth();
+  const { isMobile } = useResponsive();
   const activeEffects = profile?.preferences?.ambientEffects || [];
   const hasParticles = activeEffects.includes(AmbientEffect.PARTICLES);
   const hasAurora = activeEffects.includes(AmbientEffect.AURORA);
   const hasMesh = activeEffects.includes(AmbientEffect.GRADIENT_MESH);
 
+  // Heavy full-screen effects (canvas/animation) are disabled on mobile to avoid
+  // jank and battery drain on phones.
+  if (isMobile) return null;
   if (!hasParticles && !hasAurora && !hasMesh) return null;
 
   return (

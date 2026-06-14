@@ -798,6 +798,34 @@ export const HomeView: React.FC<HomeViewProps> = ({
               
               {/* Atmospheric Continuation Hint - Visual Fade for Mobile */}
             </div>
+
+            {/* Mobile-only: Avg performance directly under primary cards */}
+            {isMobile && !isFree && (
+            <Card className="p-4 bg-bg-card/40 border-border-subtle">
+              <div className="grid grid-cols-2 divide-x divide-border-subtle">
+                <div className="flex flex-col gap-0.5 pr-4">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Activity className="h-3 w-3 text-brand-primary shrink-0" />
+                    <Typography variant="mono" className="text-[8px] text-text-muted uppercase tracking-widest font-black leading-none">Avg Front</Typography>
+                  </div>
+                  <Typography variant="mono" className="text-text-primary text-base font-black leading-none">
+                    ${Math.round(metrics.frontEnd / metrics.units || 0).toLocaleString()}
+                  </Typography>
+                  <Typography variant="mono" className="text-[8px] text-text-muted">/unit</Typography>
+                </div>
+                <div className="flex flex-col gap-0.5 pl-4">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Award className="h-3 w-3 text-emerald-500 shrink-0" />
+                    <Typography variant="mono" className="text-[8px] text-text-muted uppercase tracking-widest font-black leading-none">Avg Payout</Typography>
+                  </div>
+                  <Typography variant="mono" className="text-emerald-400 text-base font-black leading-none">
+                    ${Math.round(metrics.avgCommission).toLocaleString()}
+                  </Typography>
+                  <Typography variant="mono" className="text-[8px] text-text-muted">/unit</Typography>
+                </div>
+              </div>
+            </Card>
+            )}
           </motion.div>
         ) : (
           <motion.div 
@@ -914,8 +942,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
         
         <div className="flex flex-col gap-6">
-          {/* Average Performance Static Card */}
-          {!isFree && (
+          {/* Average Performance Static Card (desktop sidebar; mobile renders it under primary cards) */}
+          {!isMobile && !isFree && (
             <Card className="p-4 bg-bg-card/40 border-border-subtle">
               <div className="grid grid-cols-2 divide-x divide-border-subtle">
                 <div className="flex flex-col gap-0.5 pr-4">

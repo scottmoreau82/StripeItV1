@@ -5,6 +5,7 @@ import { cn } from '@/src/lib/utils';
 import { LucideIcon, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useResponsive } from '@/src/hooks/useResponsive';
 import { AmbientEffect } from '@/src/types';
 
 /**
@@ -115,9 +116,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const animatedValue = useCountUp(loading ? 0 : value);
 
   const { profile } = useAuth();
+  const { isMobile } = useResponsive();
   const activeEffects = profile?.preferences?.ambientEffects || [];
-  const hasScanline = activeEffects.includes(AmbientEffect.SCANLINE);
-  const hasSpotlight = activeEffects.includes(AmbientEffect.SPOTLIGHT);
+  // Scanline (constant animation) and spotlight (pointer-follow, meaningless on touch)
+  // are disabled on mobile to keep cards smooth.
+  const hasScanline = !isMobile && activeEffects.includes(AmbientEffect.SCANLINE);
+  const hasSpotlight = !isMobile && activeEffects.includes(AmbientEffect.SPOTLIGHT);
   const [spotPos, setSpotPos] = useState<{x: number; y: number} | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 

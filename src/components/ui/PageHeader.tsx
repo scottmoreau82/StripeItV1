@@ -3,6 +3,7 @@ import { Typography } from '../ui/Typography';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useResponsive } from '@/src/hooks/useResponsive';
 import { AmbientEffect } from '@/src/types';
 
 /**
@@ -31,9 +32,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   className
 }) => {
   const { profile } = useAuth();
+  const { isMobile } = useResponsive();
   const activeEffects = profile?.preferences?.ambientEffects || [];
-  const hasScramble = activeEffects.includes(AmbientEffect.TEXT_SCRAMBLE);
-  const hasTypewriter = activeEffects.includes(AmbientEffect.TYPEWRITER);
+  // Text animations re-render the title every frame; disable on mobile to avoid stutter.
+  const hasScramble = !isMobile && activeEffects.includes(AmbientEffect.TEXT_SCRAMBLE);
+  const hasTypewriter = !isMobile && activeEffects.includes(AmbientEffect.TYPEWRITER);
   const titleStr = typeof title === 'string' ? title : '';
   const [displayTitle, setDisplayTitle] = useState(titleStr);
   const animRef = useRef<ReturnType<typeof setInterval> | null>(null);

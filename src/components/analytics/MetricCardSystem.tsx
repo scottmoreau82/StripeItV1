@@ -248,6 +248,18 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                   </Typography>
                 </div>
               )}
+
+              {goalTarget && !loading && (
+                <div className="flex items-center gap-2 mt-1.5 animate-in fade-in duration-500">
+                  <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-[6.5px] font-black uppercase tracking-widest border shrink-0", goalOnTrack ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/10" : "text-amber-400 border-amber-400/30 bg-amber-400/10")}>
+                    {goalOnTrack ? 'On Track' : 'Behind'}
+                  </span>
+                  <Typography variant="mono" className="text-[8px] text-slate-500 uppercase font-bold tracking-widest truncate">
+                    Goal {goalTarget}
+                    {typeof goalPercent === 'number' && <span className={cn("ml-1.5 not-italic", goalOnTrack ? "text-emerald-400" : "text-amber-400")}>{Math.round(goalPercent)}%</span>}
+                  </Typography>
+                </div>
+              )}
             </div>
           </div>
         </div>

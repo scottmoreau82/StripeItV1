@@ -480,12 +480,15 @@ interface StripeItCommissionMatrixPanelProps {
   initialData?: Partial<PayPlan>;
   onSubmit: (data: Omit<PayPlan, 'id' | 'createdAt' | 'updatedAt' | 'organizationId' | 'userId'>) => void;
   isLoading?: boolean;
+  /** Dealer tier: when provided, shows a "Save as Template" action (Owner only). */
+  onSaveAsTemplate?: (data: Omit<PayPlan, 'id' | 'createdAt' | 'updatedAt' | 'organizationId' | 'userId'>, templateName: string) => void;
 }
 
 export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPanelProps> = ({
   initialData,
   onSubmit,
-  isLoading
+  isLoading,
+  onSaveAsTemplate
 }) => {
   const { deals, triggerError, monthlySpiffs = [] } = useAppData();
   const { profile, addToast } = useAuth();
@@ -497,6 +500,10 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
   const [importPreview, setImportPreview] = useState<Partial<PayPlan> | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importErrors, setImportErrors] = useState<string[]>([]);
+
+  // Dealer tier: "Save as Template" inline naming (no nested modal — inline per house rule)
+  const [isNamingTemplate, setIsNamingTemplate] = useState(false);
+  const [templateNameDraft, setTemplateNameDraft] = useState('');
 
   // Ensure we have at least one default row if none exist
   const getInitialTiers = () => {
@@ -1170,9 +1177,9 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
     return simEarnings;
   }, [simEarnings]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // Validates the form and assembles the clean PayPlan payload.
+  // Returns the payload, or null if validation failed (errors already surfaced).
+  const buildValidatedPlan = (): Omit<PayPlan, 'id' | 'createdAt' | 'updatedAt' | 'organizationId' | 'userId'> | null => {
     // 1. Pre-submission Validation
     const tiers = formData.tiers;
     if (tiers.length === 0) {
@@ -1330,8 +1337,29 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
       return;
     }
 
-    onSubmit(cleanData);
+    return cleanData;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const plan = buildValidatedPlan();
+    if (!plan) return;
+    onSubmit(plan);
     setIsDirty(false);
+  };
+
+  // Dealer tier: save the current configuration as a reusable org template.
+  const handleSaveAsTemplate = () => {
+    const plan = buildValidatedPlan();
+    if (!plan) return;
+    const name = templateNameDraft.trim();
+    if (!name) {
+      triggerError('Give the template a name first.');
+      return;
+    }
+    onSaveAsTemplate?.(plan, name);
+    setTemplateNameDraft('');
+    setIsNamingTemplate(false);
   };
 
   return (
@@ -2651,6 +2679,51 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
           Lock Payplan
         </Button>
       </div>
+
+      {/* Dealer tier: Save as Template (Owner only). Inline naming — no nested modal. */}
+      {onSaveAsTemplate && (
+        <div className="pt-4">
+          {!isNamingTemplate ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsNamingTemplate(true)}
+              className="w-full h-14 border-white/10 text-text-secondary hover:border-brand-primary/40 hover:text-brand-primary font-black uppercase tracking-[0.2em] text-[11px] rounded-2xl transition-all"
+            >
+              Save as Template
+            </Button>
+          ) : (
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 p-4 rounded-2xl border border-brand-primary/20 bg-brand-primary/[0.04] animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <input
+                type="text"
+                value={templateNameDraft}
+                onChange={(e) => setTemplateNameDraft(e.target.value)}
+                placeholder="Template name (e.g. New Car Standard)"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSaveAsTemplate(); } }}
+                className="flex-1 h-12 rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm text-text-primary placeholder:text-slate-600 focus:outline-none focus:border-brand-primary/40 transition-all"
+              />
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  type="button"
+                  onClick={handleSaveAsTemplate}
+                  className="h-12 px-6 bg-brand-primary text-bg-deep font-black uppercase tracking-widest text-[10px] rounded-xl"
+                >
+                  Save Template
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => { setIsNamingTemplate(false); setTemplateNameDraft(''); }}
+                  className="h-12 px-4 text-slate-500 hover:text-text-primary font-black uppercase tracking-widest text-[10px]"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Import Confirmation Modal */}
       <Modal

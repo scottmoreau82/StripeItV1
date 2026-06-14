@@ -228,7 +228,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             
             <div className="flex flex-col">
               <div className="flex items-baseline gap-3">
-                <div className="font-display text-text-primary text-2xl sm:text-4xl tracking-tighter font-black italic leading-[1.3] pb-1 min-w-0">
+                <div className="font-display text-text-primary text-2xl sm:text-4xl tracking-tighter font-black italic leading-[1.3] pb-1 pr-2 min-w-0">
                   {loading ? '...' : animatedValue}
                 </div>
                 
@@ -298,7 +298,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             <Typography variant="label" className="text-slate-500 font-black tracking-widest block uppercase text-[9px] opacity-80">
               {label}
             </Typography>
-            <div className="font-display text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-[1.3] pb-1.5 w-full text-center break-all px-2">
+            <div className="font-display text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-[1.3] pb-1.5 pl-2 pr-4 w-full text-center break-all">
               {loading ? '...' : animatedValue}
             </div>
             {subValue && !loading && (
@@ -380,7 +380,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             {label}
           </Typography>
           
-          <div className={cn("font-display text-text-primary tracking-tighter font-black italic leading-[1.3] pb-1.5 w-full text-center", isTelemetry ? "text-2xl" : "text-3xl lg:text-4xl")}>
+          <div className={cn("font-display text-text-primary tracking-tighter font-black italic leading-[1.3] pb-1.5 pr-3 w-full text-center", isTelemetry ? "text-2xl" : "text-3xl lg:text-4xl")}>
             {loading ? '...' : animatedValue}
           </div>
 

@@ -44,6 +44,7 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
   const isUserManagementActive = location.pathname === '/dealer/users';
   const isLogBuilderActive = location.pathname === '/dealer/log-builder';
   const isSettingsActive = location.pathname === '/dealer/settings';
+  const isPayPlansActive = location.pathname === '/dealer/pay-plans';
 
   return (
     <aside className={cn(
@@ -254,6 +255,27 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
           <div className={cn("mt-8 mb-2 px-6 transition-all duration-300", isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible h-auto")}>
             <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">Configuration</span>
           </div>
+
+          <Link
+            to="/dealer/pay-plans"
+            className={cn(
+              "flex items-center w-full py-3 transition-all group relative",
+              isPayPlansActive ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
+            )}
+          >
+            <div className="w-16 shrink-0 flex items-center justify-center relative">
+              {isPayPlansActive && !isCollapsed && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+              )}
+              <AppIcon name="billing" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", isPayPlansActive ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+            </div>
+            <div className={cn(
+              "flex-1 overflow-hidden transition-all duration-300 pr-6",
+              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+            )}>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, isPayPlansActive ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Pay Plans</span>
+            </div>
+          </Link>
 
           <Link
             to="/dealer/settings"

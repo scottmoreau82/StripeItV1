@@ -43,6 +43,7 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
   const isSalesReportActive = location.pathname === '/dealer/sales-log';
   const isUserManagementActive = location.pathname === '/dealer/users';
   const isSettingsActive = location.pathname === '/dealer/settings';
+  const isPayPlansActive = location.pathname === '/dealer/pay-plans';
 
   return (
     <>
@@ -218,6 +219,24 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                     <div className="mt-8 mb-2 px-4">
                       <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-700">Configuration</span>
                     </div>
+
+                    <Link
+                      to="/dealer/pay-plans"
+                      onClick={closeDrawer}
+                      className={cn(
+                        "relative flex items-center gap-3 rounded-xl px-4 py-3 font-black uppercase tracking-[0.2em] transition-all text-left",
+                        SIDEBAR_NAV_TYPOGRAPHY,
+                        isPayPlansActive 
+                          ? "bg-brand-primary/[0.03] text-brand-primary" 
+                          : "text-slate-500 hover:bg-white/5 hover:text-white"
+                      )}
+                    >
+                      {isPayPlansActive && (
+                        <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                      )}
+                      <AppIcon name="billing" size={SIDEBAR_NAV_ICON_SIZE} className={cn(isPayPlansActive && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      Pay Plans
+                    </Link>
 
                     <Link
                       to="/dealer/settings"

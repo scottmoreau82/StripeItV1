@@ -93,7 +93,8 @@ export const AmbientEffectsLayer: React.FC = () => {
   const { isMobile } = useResponsive();
   const activeEffects = profile?.preferences?.ambientEffects || [];
   const hasParticles = activeEffects.includes(AmbientEffect.PARTICLES);
-  const hasAurora = activeEffects.includes(AmbientEffect.AURORA);
+  // Aurora disabled for all users — same blocky/static blur issue as Gradient Mesh. Hidden from Settings.
+  const hasAurora = false;
   // Gradient Mesh disabled for all users — rendered as blocky/static on some clients. Hidden from Settings.
   const hasMesh = false;
 

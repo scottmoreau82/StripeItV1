@@ -94,7 +94,8 @@ export const AmbientEffectsLayer: React.FC = () => {
   const activeEffects = profile?.preferences?.ambientEffects || [];
   const hasParticles = activeEffects.includes(AmbientEffect.PARTICLES);
   const hasAurora = activeEffects.includes(AmbientEffect.AURORA);
-  const hasMesh = activeEffects.includes(AmbientEffect.GRADIENT_MESH);
+  // Gradient Mesh disabled for all users — rendered as blocky/static on some clients. Hidden from Settings.
+  const hasMesh = false;
 
   // Heavy full-screen effects (canvas/animation) are disabled on mobile to avoid
   // jank and battery drain on phones.

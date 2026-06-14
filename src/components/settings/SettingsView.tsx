@@ -231,7 +231,6 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
             {([
               { id: AmbientEffect.PARTICLES, label: 'Particle Field', desc: 'Floating dots' },
               { id: AmbientEffect.AURORA, label: 'Aurora', desc: 'Color blobs' },
-              { id: AmbientEffect.GRADIENT_MESH, label: 'Gradient Mesh', desc: 'Color gradients' },
               { id: AmbientEffect.SCANLINE, label: 'Scanline', desc: 'Metric card sweep' },
               { id: AmbientEffect.SPOTLIGHT, label: 'Spotlight', desc: 'Cursor light' },
               { id: AmbientEffect.TEXT_SCRAMBLE, label: 'TEXT SCRAMBLE', desc: 'Title scramble' },

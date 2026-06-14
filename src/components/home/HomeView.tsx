@@ -769,11 +769,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   </div>
                 )
               ) : isLoading ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                   {[1,2,3,4].map(i => <MetricCardSkeleton key={i} />)}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:max-h-none overflow-y-auto lg:overflow-visible snap-y lg:snap-none snap-mandatory scrollbar-hide pr-2 pb-12 lg:pb-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 lg:max-h-none overflow-y-auto lg:overflow-visible snap-y lg:snap-none snap-mandatory scrollbar-hide pr-2 pb-12 lg:pb-0">
                   {[WidgetType.UNITS, WidgetType.COMMISSION,
                     WidgetType.FRONT_END_GROSS,
                     WidgetType.BACK_END_GROSS].map(type => {

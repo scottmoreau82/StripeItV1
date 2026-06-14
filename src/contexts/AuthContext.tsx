@@ -251,6 +251,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const isDeveloper = firebaseUser.email?.toLowerCase() === STRIPEIT_DEVELOPER_EMAIL.toLowerCase();
       analyticsService.trackEvent(AnalyticsEventType.LOGIN, { email: firebaseUser.email });
 
+      // Watchdog: the profile read below (getDoc) has no inherent timeout. If Firestore's
+      // connection stalls (flaky network, ad-blocker, long-poll hiccup), `initialized`
+      // would never flip and the app freezes on the loading screen (Chrome hangs; Safari
+      // recovers only when its transport times out ~30s). Guarantee the app becomes
+      // interactive within a few seconds regardless; the real profile load continues in
+      // the background and updates state when it arrives. setInitialized(true) is idempotent.
+      const initWatchdog = setTimeout(() => {
+        console.warn('AuthContext - profile load watchdog fired; releasing UI.');
+        setInitialized(true);
+        setLoading(false);
+      }, 6000);
+
       // 2. Setup Profile Sync
       const userDocRef = doc(db, COLLECTIONS.USERS, firebaseUser.uid);
       
@@ -263,6 +275,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const { getDoc } = await import('firebase/firestore');
           const initialSnap = await getDoc(userDocRef);
+          // Read returned — the stall risk has passed; cancel the watchdog.
+          clearTimeout(initWatchdog);
           
           if (!initialSnap.exists()) {
             // Only provision if we are SURE it doesn't exist

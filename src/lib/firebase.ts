@@ -21,9 +21,14 @@ import { initializeFirestore } from 'firebase/firestore';
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Use initializeFirestore to enable ignoreUndefinedProperties
+// Use initializeFirestore to enable ignoreUndefinedProperties and resilient transport.
+// experimentalAutoDetectLongPolling: the default WebChannel transport can stall on initial
+// connect on some networks/browsers (e.g. hangs in Chrome while Safari eventually recovers
+// after its transport times out). Auto-detect falls back to long-polling when WebChannel is
+// blocked, preventing the indefinite "stuck on loading screen" hang at login.
 export const db = initializeFirestore(app, {
   ignoreUndefinedProperties: true,
+  experimentalAutoDetectLongPolling: true,
 }, (firebaseConfig as any).firestoreDatabaseId || '(default)');
 
 export const auth = getAuth(app);

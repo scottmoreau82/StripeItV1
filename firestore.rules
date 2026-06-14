@@ -344,6 +344,15 @@ service cloud.firestore {
       match /users/{userId}/payPlans/{planId} {
         allow read, write: if (isOrgMember(orgId) && isOwner(userId)) || isBootstrapAdmin();
       }
+
+      // Dealer tier: org-level pay plan templates.
+      // Read: any org member (salespeople need it — the resolver reads the template
+      //   to compute their effective plan, and they get a read-only view of it).
+      // Write: admins/owner only (managers don't manage templates at launch).
+      match /payPlanTemplates/{templateId} {
+        allow get, list: if isOrgMember(orgId);
+        allow create, update, delete: if (isOrgMember(orgId) && isAnyAdmin()) || isBootstrapAdmin();
+      }
     }
 
     match /goals/{goalId} {

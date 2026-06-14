@@ -40,12 +40,30 @@ import { OnboardingFlow } from './components/onboarding/OnboardingFlow';
 import { LandingView } from './components/landing/LandingView';
 
 // Route-level code-splitting: heavy views load on navigation, not at startup.
-const ActivityFeed = lazy(() => import('./components/activity/ActivityFeed').then(m => ({ default: m.ActivityFeed })));
-const SalesLogView = lazy(() => import('./components/log/SalesLogView').then(m => ({ default: m.SalesLogView })));
-const ReportView = lazy(() => import('./components/reports/ReportView').then(m => ({ default: m.ReportView })));
-const GoalsView = lazy(() => import('./components/goals/GoalsView').then(m => ({ default: m.GoalsView })));
-const AnalyticsView = lazy(() => import('./components/analytics/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
-const SettingsView = lazy(() => import('./components/settings/SettingsView').then(m => ({ default: m.SettingsView })));
+// Importer fns kept as named refs so the same chunk can be PRELOADED (warmed) ahead of navigation.
+const importActivityFeed = () => import('./components/activity/ActivityFeed').then(m => ({ default: m.ActivityFeed }));
+const importSalesLogView = () => import('./components/log/SalesLogView').then(m => ({ default: m.SalesLogView }));
+const importReportView = () => import('./components/reports/ReportView').then(m => ({ default: m.ReportView }));
+const importGoalsView = () => import('./components/goals/GoalsView').then(m => ({ default: m.GoalsView }));
+const importAnalyticsView = () => import('./components/analytics/AnalyticsView').then(m => ({ default: m.AnalyticsView }));
+const importSettingsView = () => import('./components/settings/SettingsView').then(m => ({ default: m.SettingsView }));
+
+const ActivityFeed = lazy(importActivityFeed);
+const SalesLogView = lazy(importSalesLogView);
+const ReportView = lazy(importReportView);
+const GoalsView = lazy(importGoalsView);
+const AnalyticsView = lazy(importAnalyticsView);
+const SettingsView = lazy(importSettingsView);
+
+// Warm the core navigation chunks once the app is idle so screen switches don't flash a loader.
+const preloadCoreRoutes = () => {
+  importSalesLogView();
+  importActivityFeed();
+  importAnalyticsView();
+  importGoalsView();
+  importReportView();
+  importSettingsView();
+};
 const ManagerView = lazy(() => import('./components/management/ManagerView').then(m => ({ default: m.ManagerView })));
 const DealDeskView = lazy(() => import('./components/dealdesk/DealDeskView').then(m => ({ default: m.DealDeskView })));
 const DealerDashboard = lazy(() => import('./components/dealer/DealerDashboard').then(m => ({ default: m.DealerDashboard })));
@@ -112,6 +130,17 @@ function MainAppFlow() {
   useEffect(() => {
     analyticsService.trackEvent(AnalyticsEventType.PAGE_VIEW, { path: location.pathname });
   }, [location.pathname]);
+
+  // Preload core route chunks during idle time so navigating between screens is instant
+  // (no Suspense loader flash). Uses requestIdleCallback where available.
+  useEffect(() => {
+    const ric = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1500));
+    const id = ric(() => preloadCoreRoutes());
+    return () => {
+      const cic = (window as any).cancelIdleCallback;
+      if (cic) cic(id); else clearTimeout(id);
+    };
+  }, []);
 
   useEffect(() => {
     if (!profile) return;
@@ -360,7 +389,7 @@ function MainAppFlow() {
           transition={{ duration: 0.25, ease: "easeOut" }}
           className="w-full"
         >
-          <Suspense fallback={<LoadingOverlay isLoading={true} />}>
+          <Suspense fallback={null}>
           <Routes location={location}>
             <Route 
               path="/" 

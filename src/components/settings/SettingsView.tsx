@@ -26,7 +26,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, UserRole, SubscriptionTier, IconTheme, ButtonEffect, AmbientEffect } from '@/src/types';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { STRIPEIT_DEVELOPER_EMAIL } from '@/src/constants';
-import { AppIcon } from '../ui/AppIcon';
+import { AppIcon, type IconName } from '../ui/AppIcon';
 import { PageHeader } from '../ui/PageHeader';
 import { Settings } from 'lucide-react';
 
@@ -158,7 +158,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0">
-              <AppIcon name="sparkles" className="text-brand-primary" />
+              <AppIcon name="premium" className="text-brand-primary" />
             </div>
             <div>
               <Typography variant="label" className="text-[var(--color-text-primary)] block text-sm">Icon Pack</Typography>
@@ -173,7 +173,7 @@ const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobi
               <option value={IconTheme.HEROICONS}>Heroicons (v2)</option>
             </select>
             <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-4 py-2 shrink-0">
-              {[{name:'dashboard',label:'Home'},{name:'salesLog',label:'Log'},{name:'settings',label:'Config'}].map(item => (
+              {([{name:'dashboard',label:'Home'},{name:'salesLog',label:'Log'},{name:'settings',label:'Config'}] as {name: IconName; label: string}[]).map(item => (
                 <div key={item.name} className="flex flex-col items-center gap-1">
                   <div className="h-6 w-6 rounded-lg bg-white/5 flex items-center justify-center">
                     <AppIcon name={item.name} size={14} />

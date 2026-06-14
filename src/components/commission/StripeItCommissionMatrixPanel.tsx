@@ -1446,19 +1446,19 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="flex flex-col">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Projected Pay</Typography>
-                <Typography variant="sans" className="text-3xl font-black text-emerald-400 tracking-tight">
+                <Typography variant="p" className="text-3xl font-black text-emerald-400 tracking-tight">
                   ${Math.round(simEarnings.grandTotal).toLocaleString()}
                 </Typography>
               </div>
               <div className="flex flex-col">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Units MTD</Typography>
-                <Typography variant="sans" className="text-3xl font-black text-[var(--color-text-primary)] tracking-tight">
+                <Typography variant="p" className="text-3xl font-black text-[var(--color-text-primary)] tracking-tight">
                   {currentUnits}
                 </Typography>
               </div>
               <div className="flex flex-col">
                 <Typography variant="mono" className="text-[9px] text-slate-500 uppercase tracking-widest mb-1">Active Tier</Typography>
-                <Typography variant="sans" className="text-2xl font-black text-cyan-400 tracking-tight leading-9">
+                <Typography variant="p" className="text-2xl font-black text-cyan-400 tracking-tight leading-9">
                   {activeTierDisplay}
                 </Typography>
               </div>
@@ -1506,7 +1506,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       ADJUSTED PROJECTION
                     </Typography>
                     <Typography 
-                      variant="sans" 
+                      variant="p" 
                       className={cn(
                         "text-2xl font-black tracking-tight block",
                         (simEarnings.grandTotal - drawBalance) >= 0 ? "text-emerald-400" : "text-rose-400"
@@ -1515,7 +1515,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                       ${Math.round(simEarnings.grandTotal - drawBalance).toLocaleString()}
                     </Typography>
                   </div>
-                  <Typography variant="sans" className="text-slate-500 text-[10px] leading-relaxed block">
+                  <Typography variant="p" className="text-slate-500 text-[10px] leading-relaxed block">
                     Amount owed back before new commission is payable
                   </Typography>
                 </div>
@@ -2181,7 +2181,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                     <Typography variant="small" className="text-slate-600 text-center max-w-sm">
                       Configure flat bonuses, cumulative stackers, or retroactive per-unit payouts to incentivize high-volume months.
                     </Typography>
-                    <Button type="button" variant="link" className="text-brand-primary mt-6 font-black uppercase tracking-widest text-[10px]">
+                    <Button type="button" variant="ghost" className="text-brand-primary mt-6 font-black uppercase tracking-widest text-[10px]">
                       Initialize Now
                     </Button>
                   </Card>
@@ -2343,7 +2343,7 @@ export const StripeItCommissionMatrixPanel: React.FC<StripeItCommissionMatrixPan
                   <Typography variant="small" className="text-text-muted text-center max-w-sm">
                     Configure separate named per-unit incentives (e.g. Senior Bonus) with thresholds, rates, and retroactive calculation.
                   </Typography>
-                  <Button type="button" variant="link" className="text-brand-primary mt-6 font-black uppercase tracking-widest text-[10px]">
+                  <Button type="button" variant="ghost" className="text-brand-primary mt-6 font-black uppercase tracking-widest text-[10px]">
                     Initialize Now
                   </Button>
                 </Card>

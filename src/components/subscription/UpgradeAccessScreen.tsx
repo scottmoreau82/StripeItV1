@@ -99,7 +99,7 @@ export const UpgradeAccessScreen: React.FC<UpgradeAccessScreenProps> = ({
             <Typography variant="h1" className="text-white font-black italic uppercase tracking-tighter mb-4 text-3xl md:text-5xl leading-tight">
               {details.title}
             </Typography>
-            <Typography variant="body" className="text-slate-400 text-lg max-w-lg mx-auto">
+            <Typography variant="p" className="text-slate-400 text-lg max-w-lg mx-auto">
               {details.description}
             </Typography>
           </div>

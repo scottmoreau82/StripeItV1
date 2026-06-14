@@ -151,7 +151,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
             <RecentNotesList notes={notes.slice(0, 3)} onDelete={(id) => onAction?.('delete_note', id)} onEdit={(note) => onAction?.('edit_note', note)} isLoading={isLoading} />
           ) : (
             <EmptyState
-              icon={StickyNote}
+              icon="inbox"
               title="No recent notes"
               description="Capture customer details or inventory reminders here."
               className="py-8"
@@ -175,7 +175,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
               ))
             ) : (
               <EmptyState
-                icon={Trophy}
+                icon="trophy"
                 title="No active battles"
                 description="Your group doesn't have any active competitions right now."
                 className="py-8"

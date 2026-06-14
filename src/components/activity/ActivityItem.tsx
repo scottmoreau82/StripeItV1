@@ -13,6 +13,7 @@ import { Typography } from '../ui/Typography';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/src/lib/utils';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { categoryForEventType, categoryMeta } from './activityCategories';
 
 /**
  * StripeItActivityFeedSystem - ActivityItem
@@ -25,57 +26,30 @@ interface ActivityItemProps {
   isLast?: boolean;
 }
 
-const getEventTheme = (type: ActivityEventType) => {
+// Per-type glyph; color/background come from the shared category meta so the
+// node always has enough contrast against the dark card.
+const getEventIcon = (type: ActivityEventType) => {
   switch (type) {
     case ActivityEventType.DEAL_CREATED:
-      return {
-        icon: <PlusCircle className="h-4 w-4" />,
-        color: "text-emerald-400",
-        bg: "bg-emerald-400/10",
-        border: "border-emerald-400/20"
-      };
+      return <PlusCircle className="h-4 w-4" />;
     case ActivityEventType.DEAL_UPDATED:
     case ActivityEventType.DEAL_FINALIZED:
-      return {
-        icon: <RefreshCw className="h-4 w-4" />,
-        color: "text-brand-primary",
-        bg: "bg-brand-primary/10",
-        border: "border-brand-primary/20"
-      };
+      return <RefreshCw className="h-4 w-4" />;
     case ActivityEventType.GOAL_REACHED:
-      return {
-        icon: <TrendingUp className="h-4 w-4" />,
-        color: "text-indigo-400",
-        bg: "bg-indigo-400/10",
-        border: "border-indigo-400/20"
-      };
+      return <TrendingUp className="h-4 w-4" />;
     case ActivityEventType.COMPETITION_STARTED:
     case ActivityEventType.COMPETITION_ENDED:
-      return {
-        icon: <Award className="h-4 w-4" />,
-        color: "text-amber-400",
-        bg: "bg-amber-400/10",
-        border: "border-amber-400/20"
-      };
+      return <Award className="h-4 w-4" />;
     case ActivityEventType.ANNOUNCEMENT:
-      return {
-        icon: <Zap className="h-4 w-4" />,
-        color: "text-rose-400",
-        bg: "bg-rose-400/10",
-        border: "border-rose-400/20"
-      };
+      return <Zap className="h-4 w-4" />;
     default:
-      return {
-        icon: <MessageSquare className="h-4 w-4" />,
-        color: "text-slate-400",
-        bg: "bg-[var(--color-bg-elevated)]",
-        border: "border-[var(--color-border)]"
-      };
+      return <MessageSquare className="h-4 w-4" />;
   }
 };
 
 export const ActivityItem: React.FC<ActivityItemProps> = ({ event, isFirst, isLast }) => {
-  const theme = getEventTheme(event.type);
+  const meta = categoryMeta(categoryForEventType(event.type));
+  const icon = getEventIcon(event.type);
   const { profile } = useAuth();
   const hasGlass = profile?.preferences?.ambientEffects?.includes(AmbientEffect.GLASSMORPHISM) ?? false;
 
@@ -88,12 +62,12 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ event, isFirst, isLa
 
       {/* Timeline Node */}
       <div className={cn(
-        "absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-xl border z-10 transition-transform hover:scale-110",
-        theme.bg,
-        theme.color,
-        theme.border
+        "absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-xl border z-10 transition-transform hover:scale-110 shadow-lg",
+        meta.bg,
+        meta.text,
+        meta.border
       )}>
-        {theme.icon}
+        {icon}
       </div>
 
       {/* Content */}

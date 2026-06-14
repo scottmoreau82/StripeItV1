@@ -343,7 +343,7 @@ export const ReportView: React.FC = () => {
           flex flex-col gap-3 items-center justify-center">
           <Button
             variant="outline"
-            onClick={handleExportCSV}
+            onClick={() => handleExportCSV()}
             className="w-full text-xs font-black uppercase
               tracking-widest hover:bg-bg-card"
           >

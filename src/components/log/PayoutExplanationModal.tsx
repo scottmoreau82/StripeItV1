@@ -192,7 +192,7 @@ export const PayoutExplanationModal: React.FC<PayoutExplanationModalProps> = ({
                 <div className="flex justify-between items-center text-[13px]">
                   <div className="flex items-center gap-2">
                     <span className="text-slate-400">Mini Amount</span>
-                    {explanation.wasMiniApplied && <Badge variant="success" className="bg-emerald-500/20 text-emerald-400 border-none text-[8px] uppercase">Applied</Badge>}
+                    {explanation.wasMiniApplied && <Badge variant="ghost" className="bg-emerald-500/20 text-emerald-400 border-none text-[8px] uppercase">Applied</Badge>}
                   </div>
                   <span className="text-slate-200 font-mono">{formatCurrency(explanation.miniAmount)}</span>
                 </div>

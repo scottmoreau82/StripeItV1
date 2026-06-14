@@ -175,7 +175,7 @@ export const DealerKPIOverview: React.FC = () => {
   };
 
   if (isLoading && mtdDeals.length === 0) {
-    return <div className="h-64 flex items-center justify-center"><LoadingOverlay inline /></div>;
+    return <div className="h-64 flex items-center justify-center"><LoadingOverlay isLoading={true} /></div>;
   }
 
   return (

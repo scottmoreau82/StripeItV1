@@ -64,7 +64,7 @@ export const CreateCompetitionForm: React.FC<CreateCompetitionFormProps> = ({
              <Typography variant="label" className="text-slate-500 ml-1">Rank By Metric</Typography>
              <Select
                value={type}
-               onChange={(val) => setType(val as CompetitionType)}
+               onChange={(e) => setType(e.target.value as CompetitionType)}
                options={[
                  { label: 'Total Units', value: CompetitionType.UNITS },
                  { label: 'Front-End Gross', value: CompetitionType.FRONT_END_GROSS },

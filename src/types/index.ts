@@ -304,9 +304,25 @@ export interface PayPlan {
   frontPack?: number;
   backPack?: number;
   isPackActive?: boolean;
-  
+
+  // Dealer tier: template linkage (resolve-at-read)
+  sourceTemplateId?: string;      // If set, this plan is driven by an org template
+  override?: Partial<PayPlan>;    // Owner's per-person customizations layered over the template
+  isOverridden?: boolean;         // True once detached/customized away from the template
+
   createdAt: number;
   updatedAt: number;
+}
+
+/**
+ * Dealer tier: an org-level pay plan template.
+ * Structurally a PayPlan minus the per-user fields. Owners build these in
+ * Commission Architect ("Save as Template") and assign them to salespeople.
+ * Salespeople's plans reference one via sourceTemplateId and are resolved at read time.
+ */
+export interface PayPlanTemplate extends Omit<PayPlan, 'userId' | 'sourceTemplateId' | 'override' | 'isOverridden'> {
+  templateName: string;
+  assignedCount?: number;         // Denormalized convenience count of linked salespeople
 }
 
 export enum LogFieldType {

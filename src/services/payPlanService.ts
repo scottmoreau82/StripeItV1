@@ -2,6 +2,7 @@ import {
   collection, 
   doc, 
   setDoc, 
+  updateDoc,
   getDoc, 
   getDocs, 
   query, 
@@ -35,6 +36,35 @@ export const payPlanService = {
         userId: userId,
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp() 
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  },
+
+  /**
+   * Write ONLY the template-link fields on a user's primary pay plan
+   * (sourceTemplateId / override / isOverridden) without disturbing the rest.
+   * Used by the template service for assignment & override. Uses merge so a
+   * user with no prior plan doc still gets one created.
+   */
+  async savePayPlanLink(
+    orgId: string,
+    userId: string,
+    link: { sourceTemplateId?: string; override?: Partial<PayPlan>; isOverridden?: boolean }
+  ): Promise<void> {
+    const path = `${COLLECTIONS.ORGANIZATIONS}/${orgId}/${COLLECTIONS.USERS}/${userId}/payPlans/primary`;
+    const planRef = doc(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.USERS, userId, 'payPlans', 'primary');
+    try {
+      await setDoc(planRef, {
+        id: 'primary',
+        organizationId: orgId,
+        userId,
+        sourceTemplateId: link.sourceTemplateId ?? null,
+        override: link.override ?? null,
+        isOverridden: link.isOverridden ?? false,
+        updatedAt: serverTimestamp(),
       }, { merge: true });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);

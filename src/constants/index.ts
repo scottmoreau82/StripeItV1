@@ -26,6 +26,7 @@ export const DEFAULT_LOG_FIELDS: LogField[] = [
 export const COLLECTIONS = {
   USERS: 'users',
   ORGANIZATIONS: 'organizations',
+  PAY_PLAN_TEMPLATES: 'payPlanTemplates',
   DEALERSHIPS: 'dealerships',
   DEALS: 'deals',
   FEEDBACK_REPORTS: 'feedbackReports',

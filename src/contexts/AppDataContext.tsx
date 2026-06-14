@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { useAuth } from './AuthContext';
 import { dealService } from '../services/dealService';
 import { payPlanService } from '../services/payPlanService';
+import { payPlanTemplateService } from '../services/payPlanTemplateService';
 import { spiffService } from '../services/spiffService';
 import { goalService } from '../services/goalService';
 import { noteService } from '../services/noteService';
@@ -106,7 +107,9 @@ export const AppDataProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Static Data Fetching (Pay Plans, Goals)
   const loadStaticData = useCallback(async (orgId: string, userId: string) => {
     try {
-      const plan = await payPlanService.getPrimaryPayPlan(orgId, userId);
+      // Resolve-at-read: returns the template-driven plan (with any override) for org
+      // members, or the personal plan if not template-linked.
+      const plan = await payPlanTemplateService.resolveEffectivePayPlan(orgId, userId);
       if (plan) setPayPlan(plan);
       
       const currentMonth = new Date().toISOString().slice(0, 7);

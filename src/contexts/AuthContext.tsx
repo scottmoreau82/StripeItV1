@@ -124,7 +124,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return localStorage.getItem('stripeit_edit_mode') === 'true';
   });
   const [tierOverride, setTierOverrideState] = useState<SubscriptionTier | null>(() => {
-    return sessionStorage.getItem('stripeit_tier_override') as SubscriptionTier | null;
+    const stored = sessionStorage.getItem('stripeit_tier_override');
+    // Default the admin tier-preview to Pro on a fresh session so the app opens in the
+    // Pro view. The dropdown still switches freely; selecting Real Account stores an
+    // explicit 'real' marker so it survives reloads within the session. A brand-new
+    // session (no key) defaults to Pro. Inert for non-admins — the override only
+    // applies when underlyingIsAdmin is true.
+    if (stored === null) return SubscriptionTier.PRO;
+    if (stored === 'real') return null;
+    return stored as SubscriptionTier;
   });
   const [retryKey, setRetryKey] = useState(0);
 
@@ -143,11 +151,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const setTierOverride = useCallback((tier: SubscriptionTier | null) => {
-    if (tier) {
-      sessionStorage.setItem('stripeit_tier_override', tier);
-    } else {
-      sessionStorage.removeItem('stripeit_tier_override');
-    }
+    // Persist an explicit 'real' marker for Real Account so it survives reloads within
+    // the session (rather than reverting to the Pro default).
+    sessionStorage.setItem('stripeit_tier_override', tier ?? 'real');
     setTierOverrideState(tier);
   }, []);
 

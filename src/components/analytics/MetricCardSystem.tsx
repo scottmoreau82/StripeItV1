@@ -228,9 +228,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             
             <div className="flex flex-col">
               <div className="flex items-baseline gap-3">
-                <Typography variant="h1" className="text-text-primary text-2xl sm:text-4xl tracking-tighter font-black italic leading-[1.15] pb-0.5 min-w-0">
+                <div className="font-display text-text-primary text-2xl sm:text-4xl tracking-tighter font-black italic leading-[1.3] pb-1 min-w-0">
                   {loading ? '...' : animatedValue}
-                </Typography>
+                </div>
                 
                 {subValue && !loading && (
                   <div className="flex flex-col items-end shrink-0 ml-auto leading-none gap-0.5">
@@ -298,9 +298,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             <Typography variant="label" className="text-slate-500 font-black tracking-widest block uppercase text-[9px] opacity-80">
               {label}
             </Typography>
-            <Typography variant="h1" className="text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-[1.15] pb-1 w-full text-center break-all px-2">
+            <div className="font-display text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-[1.3] pb-1.5 w-full text-center break-all px-2">
               {loading ? '...' : animatedValue}
-            </Typography>
+            </div>
             {subValue && !loading && (
               <div className="flex items-center gap-1 mt-1">
                 <Typography variant="mono" className="text-[13px] text-brand-primary font-black italic tracking-tighter">
@@ -380,9 +380,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             {label}
           </Typography>
           
-          <Typography variant="h1" className={cn("text-text-primary tracking-tighter font-black italic leading-[1.15] pb-1 w-full text-center", isTelemetry ? "text-2xl" : "text-3xl lg:text-4xl")}>
+          <div className={cn("font-display text-text-primary tracking-tighter font-black italic leading-[1.3] pb-1.5 w-full text-center", isTelemetry ? "text-2xl" : "text-3xl lg:text-4xl")}>
             {loading ? '...' : animatedValue}
-          </Typography>
+          </div>
 
           {goalTarget && !loading && !isTelemetry && (
             <div className="w-full mt-2 space-y-1.5 animate-in fade-in slide-in-from-bottom-1 duration-500">

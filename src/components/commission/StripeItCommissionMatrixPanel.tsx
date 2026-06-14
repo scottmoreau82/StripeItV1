@@ -197,6 +197,7 @@ interface MatrixInputGroupProps {
   isError?: boolean;
   className?: string;
   size?: 'sm' | 'md';
+  onBlur?: () => void;
 }
 
 const ActiveChip: React.FC<{ active: boolean; onClick: () => void }> = ({ active, onClick }) => (
@@ -372,7 +373,8 @@ const MatrixInputGroup: React.FC<MatrixInputGroupProps> = ({
   disabled,
   isError,
   className,
-  size = 'md'
+  size = 'md',
+  onBlur: onBlurProp
 }) => {
   const [localValue, setLocalValue] = React.useState(value?.toString() || '');
   const [isFocused, setIsFocused] = React.useState(false);
@@ -417,12 +419,14 @@ const MatrixInputGroup: React.FC<MatrixInputGroupProps> = ({
     setIsFocused(false);
     if (localValue === '') {
       onChange('');
+      onBlurProp?.();
       return;
     }
     const normalized = normalizeMatrixNumber(localValue);
     const formatted = formatMatrixValue(normalized as number);
     setLocalValue(formatted);
     onChange(formatted);
+    onBlurProp?.();
   };
 
   const showGhost = !isFocused && (value === undefined || value === '' || value === null) && ghostValue !== undefined && ghostValue !== '';

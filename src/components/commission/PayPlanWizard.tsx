@@ -10,7 +10,7 @@ import { Button } from '../ui/Button';
 import { Typography } from '../ui/Typography';
 import { useResponsive } from '@/src/hooks/useResponsive';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { PayPlan, SubscriptionTier } from '@/src/types';
+import { PayPlan, SubscriptionTier, VolumeBonusType, VolumeBonusScope, VolumeBonusFilter, HourlyPayoutModel } from '@/src/types';
 
 interface PayPlanWizardProps {
   isOpen: boolean;
@@ -209,16 +209,16 @@ export const PayPlanWizard: React.FC<PayPlanWizardProps> = ({
         isMinisAndHourlyActive: hasMinis || hasHourly,
         isMinisActive: false,
         isHourlyActive: hasHourly,
-        hourlyConfig: hasHourly ? { active: true, rate: hourlyRate, hoursWorked, model: hourlyModel } : undefined,
+        hourlyConfig: hasHourly ? { active: true, rate: hourlyRate, hoursWorked, model: hourlyModel as HourlyPayoutModel } : undefined,
         isAdvanced: hasVolumeBonuses,
         isVolumeBonusEngineActive: hasVolumeBonuses,
         volumeBonuses: hasVolumeBonuses ? volumeTiers.map((t, i) => ({
           id: `wizard-tier-${i}`,
           threshold: t.threshold,
           amount: t.amount,
-          type: t.retro ? 'retro_per_unit' : 'flat',
-          scope: 'all_units',
-          filter: 'any',
+          type: t.retro ? VolumeBonusType.RETRO_PER_UNIT : VolumeBonusType.FLAT,
+          scope: VolumeBonusScope.ALL_UNITS,
+          filter: VolumeBonusFilter.ANY,
           active: true
         })) : [],
         tiers: hasVolumeBonuses ? volumeTiers.map((t, i) => ({

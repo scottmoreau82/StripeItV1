@@ -227,7 +227,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let unsubscribeProfile: (() => void) | null = null;
 
+    // Outer watchdog: covers the worst case where onAuthStateChanged never fires at all
+    // (e.g. Firebase Auth's own network init is blocked), so the inner watchdog inside the
+    // callback would never even arm. If we're still not initialized after 8s, release the UI
+    // so the user reaches an interactive screen (landing/login) instead of an endless splash.
+    const outerInitWatchdog = setTimeout(() => {
+      setInitialized((alreadyInit) => {
+        if (!alreadyInit) {
+          console.warn('AuthContext - outer init watchdog fired (auth never resolved); releasing UI.');
+          setLoading(false);
+        }
+        return true;
+      });
+    }, 8000);
+
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      // Auth resolved — the outer watchdog is no longer needed.
+      clearTimeout(outerInitWatchdog);
       // 1. Critical: Cleanup previous profile listener to prevent memory leaks and zombie updates
       if (unsubscribeProfile) {
         unsubscribeProfile();
@@ -495,6 +511,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => {
+      clearTimeout(outerInitWatchdog);
       unsubscribeAuth();
       if (unsubscribeProfile) unsubscribeProfile();
     };

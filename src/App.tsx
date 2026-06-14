@@ -941,16 +941,30 @@ function AppContent() {
   
   // 1. App is determining if a session exists
   if (!initialized) {
-    const isPublicLandingPath = window.location.pathname === '/' || window.location.pathname === '/dealer/request';
+    const path = window.location.pathname;
+    const isPublicLandingPath = path === '/' || path === '/dealer/request';
+    // Auth entry points must always be reachable, even mid-init or with a stale auth hint.
+    const isAuthEntryPath = path === '/login' || path === '/signup';
     const hasAuthHint = typeof window !== 'undefined' && Object.keys(localStorage).some(key => key.includes('firebase:authUser'));
-    
-    // If we are on the landing page and don't have an auth hint, show the landing page immediately
-    if (isPublicLandingPath && !hasAuthHint) {
+
+    // On public landing or auth-entry paths, ALWAYS show the interactive view immediately.
+    // A stale 'firebase:authUser' key (left from a previous session) must not trap a
+    // logged-out user on a non-clickable splash while auth tries — and fails — to resolve.
+    // Auth still resolves in the background; if it succeeds the app advances normally.
+    if (isPublicLandingPath) {
       return <LandingView />;
     }
-    
-    // If user has auth hint, show dark loading screen
-    // instead of landing page to prevent flash
+    if (isAuthEntryPath) {
+      return (
+        <Routes>
+          <Route path="/login" element={<LoginForm initialMode="signin" />} />
+          <Route path="/signup" element={<LoginForm initialMode="signup" />} />
+        </Routes>
+      );
+    }
+
+    // On PROTECTED deep-links with an auth hint, show the dark loading screen
+    // (prevents a landing-page flash before the app mounts).
     if (hasAuthHint) {
       return (
         <div className="fixed inset-0 bg-bg-deep

@@ -26,6 +26,24 @@ import { payPlanService } from './payPlanService';
  *   editing a template updates everyone on it automatically (overrides excluded).
  */
 
+// Firestore rejects any write containing `undefined`. The Commission Architect's
+// payload can include undefined optional fields (and the regular save path only
+// gets away with it because it uses setDoc merge:true). Strip them recursively.
+function stripUndefinedDeep<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((v) => stripUndefinedDeep(v)) as unknown as T;
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (v === undefined) continue;
+      out[k] = stripUndefinedDeep(v);
+    }
+    return out as T;
+  }
+  return value;
+}
+
 const templatesCol = (orgId: string) =>
   collection(db, COLLECTIONS.ORGANIZATIONS, orgId, COLLECTIONS.PAY_PLAN_TEMPLATES);
 
@@ -45,7 +63,7 @@ export const payPlanTemplateService = {
     const ref = doc(templatesCol(orgId));
     const path = `${COLLECTIONS.ORGANIZATIONS}/${orgId}/${COLLECTIONS.PAY_PLAN_TEMPLATES}/${ref.id}`;
     try {
-      await setDoc(ref, {
+      const payload = stripUndefinedDeep({
         ...plan,
         id: ref.id,
         organizationId: orgId,
@@ -54,6 +72,7 @@ export const payPlanTemplateService = {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      await setDoc(ref, payload);
       return ref.id;
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
@@ -72,10 +91,11 @@ export const payPlanTemplateService = {
   ): Promise<void> {
     const path = `${COLLECTIONS.ORGANIZATIONS}/${orgId}/${COLLECTIONS.PAY_PLAN_TEMPLATES}/${templateId}`;
     try {
-      await updateDoc(templateDoc(orgId, templateId), {
+      const payload = stripUndefinedDeep({
         ...updates,
         updatedAt: serverTimestamp(),
       });
+      await updateDoc(templateDoc(orgId, templateId), payload);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, path);
       throw error;

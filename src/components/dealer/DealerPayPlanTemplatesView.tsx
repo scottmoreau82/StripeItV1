@@ -61,8 +61,11 @@ export const DealerPayPlanTemplatesView: React.FC = () => {
       addToast(`Template "${templateName}" created.`, 'success');
       setMode({ kind: 'list' });
       await loadTemplates();
-    } catch {
-      addToast('Could not create template.', 'error');
+    } catch (error: any) {
+      console.error('Create template error:', error?.code, error?.message, error);
+      addToast(error?.code === 'permission-denied'
+        ? 'Permission denied creating template.'
+        : 'Could not create template.', 'error');
     } finally {
       setIsSaving(false);
     }

@@ -67,6 +67,7 @@ import { featureAccessService, Feature } from './services/featureAccessService';
 import { SubscriptionTier } from './types';
 import { UpgradeAccessScreen } from './components/subscription/UpgradeAccessScreen';
 import { TrialWelcomeModal } from './components/subscription/TrialWelcomeModal';
+import { MonthlyGoalCheckInModal } from './components/goals/MonthlyGoalCheckInModal';
 import { WaitlistModal } from './components/subscription/WaitlistModal';
 import { FeedbackType } from './types';
 import { analyticsService } from './services/analyticsService';
@@ -98,7 +99,7 @@ function MainAppFlow() {
   const [dismissedUpdate, setDismissedUpdate] = useState(false);
 
   const { isMobile } = useResponsive();
-  const { profile, user, isAdmin, isDeveloper, logout } = useAuth();
+  const { profile, user, isAdmin, isDeveloper, logout, addToast, updateProfileData } = useAuth();
   const location = useLocation();
 
   // StripeItAnalyticsSystem - Global Lifecycle Tracking
@@ -135,8 +136,53 @@ function MainAppFlow() {
     handleSaveNote,
     handleCreateCompetition,
     handleCreateRandomDeal,
+    handleSaveGoal,
+    goal,
+    monthlySpiffs,
     triggerError,
   } = useAppData();
+
+  // --- New-month goal check-in ---
+  const [isGoalCheckInOpen, setIsGoalCheckInOpen] = useState(false);
+  const [previousGoal, setPreviousGoal] = useState<Goal | null>(null);
+
+  useEffect(() => {
+    if (!profile || isLoading) return;
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    // Already prompted this month (synced via preferences) — don't show again.
+    if (profile.preferences?.goalPrompt?.lastPromptedMonth === currentMonth) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const [y, m] = currentMonth.split('-').map(Number);
+        const prev = new Date(y, m - 2, 1);
+        const prevKey = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+        const prevGoal = await goalService.getGoalForMonth(profile.uid, profile.orgId, prevKey);
+        if (cancelled) return;
+        setPreviousGoal(prevGoal);
+        setIsGoalCheckInOpen(true);
+      } catch {
+        // Non-blocking: if the lookup fails, simply don't prompt.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [profile?.uid, isLoading]);
+
+  const markGoalPromptSeen = () => {
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    updateProfileData({
+      preferences: {
+        ...(profile?.preferences as any),
+        goalPrompt: { lastPromptedMonth: currentMonth },
+      },
+    }).catch(() => {});
+  };
+
+  const handleGoalCheckInClose = () => {
+    setIsGoalCheckInOpen(false);
+    markGoalPromptSeen();
+  };
 
   useEffect(() => {
     const handleRandomDealEvent = () => {
@@ -752,6 +798,31 @@ function MainAppFlow() {
         onConfigPayPlan={() => { setIsTrialWelcomeOpen(false); setIsPayPlanOpen(true); }}
         onLogDeal={() => { setIsTrialWelcomeOpen(false); setEditingDeal(null); setIsNewDealOpen(true); }}
         onDismiss={() => setIsTrialWelcomeOpen(false)}
+      />
+
+      <MonthlyGoalCheckInModal
+        isOpen={isGoalCheckInOpen}
+        onClose={handleGoalCheckInClose}
+        currentMonth={new Date().toISOString().slice(0, 7)}
+        previousGoal={previousGoal}
+        deals={deals}
+        monthlySpiffs={monthlySpiffs}
+        payPlan={payPlan}
+        onSave={async (g) => {
+          if (!profile) return;
+          await handleSaveGoal({
+            userId: profile.uid,
+            orgId: profile.orgId,
+            month: new Date().toISOString().slice(0, 7),
+            unitGoal: g.unitGoal,
+            frontGoal: g.frontGoal,
+            backGoal: g.backGoal,
+            commissionGoal: g.commissionGoal,
+            enabledGoals: g.enabledGoals,
+          });
+          markGoalPromptSeen();
+          addToast('Goals saved.', 'success');
+        }}
       />
     </RootLayout>
     </>

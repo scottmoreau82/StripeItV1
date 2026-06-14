@@ -85,6 +85,9 @@ export interface UserPreferences {
   buttonEffect?: ButtonEffect;
   ambientEffects?: AmbientEffect[];
   onboarding?: OnboardingState;
+  goalPrompt?: {
+    lastPromptedMonth?: string; // e.g. "2026-06" — month the new-month goal check-in was last shown
+  };
   notifications: {
     dealReminders: boolean;
     goalAlerts: boolean;

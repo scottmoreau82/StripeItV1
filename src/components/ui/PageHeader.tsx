@@ -14,9 +14,10 @@ import { AmbientEffect } from '@/src/types';
 interface PageHeaderProps {
   title: string;
   subtitle: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string }>;
   iconColor?: string;
   children?: React.ReactNode;
+  actions?: React.ReactNode;
   className?: string;
 }
 
@@ -26,6 +27,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   icon: Icon,
   iconColor = "bg-brand-primary",
   children,
+  actions,
   className
 }) => {
   const { profile } = useAuth();
@@ -93,6 +95,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
       <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
         {children}
+        {actions}
       </div>
     </div>
   );

@@ -285,7 +285,7 @@ export const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ orgId 
                         {user.displayName || 'Anonymous User'}
                       </Typography>
                       {user.isAdmin && (
-                        <Shield className="h-3 w-3 text-brand-primary" title="Admin" />
+                        <Shield className="h-3 w-3 text-brand-primary" aria-label="Admin" />
                       )}
                       {user.uid === currentUser?.uid && (
                         <Badge variant="outline" className="text-[8px] px-1 py-0 border-blue-500/30 text-blue-400 bg-blue-500/10 font-black uppercase">

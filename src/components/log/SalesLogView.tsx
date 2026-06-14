@@ -164,7 +164,7 @@ export const SalesLogView: React.FC<SalesLogViewProps> = ({
     }
   }, [simulateDateStr, profile?.email]);
 
-  const { count: monthlyDealCount, loading: countLoading } = useMonthlyDealCount(user?.uid || '', debugDate);
+  const { count: monthlyDealCount, loading: countLoading } = useMonthlyDealCount(profile?.orgId || '', user?.uid || '', debugDate);
 
   const effectiveTier = devTierOverride ?? profile?.subscriptionTier;
   const isFreeUser = effectiveTier === SubscriptionTier.FREE;

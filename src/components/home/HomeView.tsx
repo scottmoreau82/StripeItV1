@@ -437,7 +437,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
   }, [selectedComp, deals]);
 
   const hasNotesAccess = featureAccessService.hasAccess(profile, Feature.QUICK_NOTES);
-  const hasGoalsAccess = featureAccessService.hasAccess(profile, Feature.GOALS);
   const hasCompetitionsAccess = featureAccessService.hasAccess(profile, Feature.COMPETITIONS);
 
   const activeCompetitionsWithLeaders = useMemo(() => 
@@ -856,17 +855,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {activeTab === 'overview' &&
-        hasGoalsAccess && !isFree &&
-        dashboardLayout.widgets.find(w =>
-          w.type === WidgetType.GOAL_PROGRESS &&
-          w.visible) && (
-        <WidgetRegistry
-          type={WidgetType.GOAL_PROGRESS}
-          data={widgetData}
-        />
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
         <div className="lg:col-span-2">

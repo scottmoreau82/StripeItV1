@@ -118,7 +118,8 @@ export const DashboardCustomizer: React.FC<
     .sort((a, b) => a.order - b.order);
 
   const listWidgets = localWidgets
-    .filter(w => !metricTypes.includes(w.type))
+    // GOAL_PROGRESS retired — KPI cards now show goal context inline.
+    .filter(w => !metricTypes.includes(w.type) && w.type !== WidgetType.GOAL_PROGRESS)
     .sort((a, b) => a.order - b.order);
 
   const content = (

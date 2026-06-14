@@ -134,7 +134,6 @@ export const widgetService = {
     return [
       WidgetType.UNITS,
       WidgetType.COMMISSION,
-      WidgetType.GOAL_PROGRESS,
       WidgetType.FRONT_END_GROSS,
       WidgetType.BACK_END_GROSS,
       WidgetType.RECENT_DEALS,

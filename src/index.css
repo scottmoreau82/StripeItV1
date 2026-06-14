@@ -354,6 +354,7 @@
   html {
     overflow-x: hidden;
     max-width: 100vw;
+    height: 100%;
   }
   body {
     @apply bg-bg-deep text-text-primary font-sans antialiased;
@@ -361,6 +362,13 @@
     overscroll-behavior-y: none;
     max-width: 100vw;
     position: relative;
+    height: 100%;
+  }
+  /* Root fills the viewport so app layouts can use h-screen reliably. Overflow is
+     left to each layout: app shells (RootLayout/DealerLayout) use h-screen +
+     overflow-hidden and scroll inside <main>; the marketing landing scrolls normally. */
+  #root {
+    height: 100%;
   }
 
   /* Reset date input appearances to match Stripe It design */

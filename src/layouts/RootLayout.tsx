@@ -63,7 +63,7 @@ export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onL
   }
 
   return (
-    <div className="flex h-screen overflow-hidden flex-col lg:flex-row bg-bg-deep select-none">
+    <div className="flex h-dvh overflow-hidden flex-col lg:flex-row bg-bg-deep select-none">
       {/* Desktop Sidebar System */}
       <Sidebar 
         onLogDeal={onLogDeal} 

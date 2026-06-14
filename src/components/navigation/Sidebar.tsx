@@ -153,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className={cn(
-      "hidden h-screen flex-col border-r border-border-subtle bg-bg-deep lg:flex sticky top-0 shrink-0 transition-all duration-300 ease-in-out z-30 overflow-hidden",
+      "hidden h-dvh flex-col border-r border-border-subtle bg-bg-deep lg:flex sticky top-0 shrink-0 transition-all duration-300 ease-in-out z-30 overflow-hidden",
       isCollapsed ? "w-20" : "w-72"
     )}>
       {/* Brand Identity / Top Area (Pinned) */}

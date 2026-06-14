@@ -31,7 +31,7 @@ export const DealerLayout: React.FC<DealerLayoutProps> = ({ children }) => {
   }, [isSidebarCollapsed]);
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row bg-bg-deep select-none">
+    <div className="flex h-dvh overflow-hidden flex-col lg:flex-row bg-bg-deep select-none">
       {/* Dealer Desktop Sidebar */}
       <DealerSidebar 
         isCollapsed={isSidebarCollapsed}

@@ -43,6 +43,35 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
   const { profile } = useAuth();
   const isFree = profile?.subscriptionTier === SubscriptionTier.FREE;
 
+  // --- Monthly-goal context for KPI cards (honest, pace-based) ---
+  const now = new Date();
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const monthProgress = dayOfMonth / daysInMonth; // fraction of month elapsed
+
+  const buildGoalContext = (
+    enabled: boolean | undefined,
+    target: number | undefined,
+    actual: number,
+    isCurrency: boolean,
+    unitSuffix?: string
+  ) => {
+    if (!enabled || !target || target <= 0) return {};
+    const percent = (actual / target) * 100;
+    const remaining = Math.max(0, target - actual);
+    const fmt = (n: number) =>
+      isCurrency ? `$${Math.round(n).toLocaleString()}` : `${Math.round(n * 10) / 10}${unitSuffix ? ` ${unitSuffix}` : ''}`;
+    // On track if current pace projects to hit the target by month end.
+    const projected = monthProgress > 0 ? actual / monthProgress : actual;
+    const onTrack = projected >= target;
+    return {
+      goalTarget: fmt(target),
+      goalToGo: fmt(remaining),
+      goalPercent: percent,
+      goalOnTrack: onTrack,
+    };
+  };
+
   switch (type) {
     case WidgetType.UNITS:
       return (
@@ -53,6 +82,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           icon={Activity}
           loading={isLoading}
           variant={variant}
+          {...buildGoalContext(goal?.enabledGoals?.units, goal?.unitGoal, metrics.units, false, 'units')}
         />
       );
     case WidgetType.COMMISSION:
@@ -70,6 +100,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
             loading={isLoading}
             color="emerald"
             variant={variant}
+            {...buildGoalContext(goal?.enabledGoals?.payout, goal?.commissionGoal, metrics.commission, true)}
           />
         </div>
       );
@@ -86,6 +117,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           color="purple"
           variant={variant}
           onClick={onClick}
+          {...buildGoalContext(goal?.enabledGoals?.front, goal?.frontGoal, metrics.frontEnd, true)}
         />
       );
     case WidgetType.BACK_END_GROSS:
@@ -101,6 +133,7 @@ export const WidgetRegistry: React.FC<WidgetRegistryProps> = ({ type, data, onAc
           color="orange"
           variant={variant}
           onClick={onClick}
+          {...buildGoalContext(goal?.enabledGoals?.back, goal?.backGoal, metrics.backEnd, true)}
         />
       );
     case WidgetType.TOTAL_GROSS:

@@ -27,6 +27,11 @@ interface MetricCardProps {
   lockMessage?: string;
   variant?: 'hero' | 'telemetry' | 'hero-horizontal' | 'carousel';
   onClick?: () => void;
+  /** Optional monthly-goal context (shown on hero/carousel cards only). */
+  goalTarget?: string;       // formatted, e.g. "$6,000" or "12"
+  goalToGo?: string;         // formatted remaining, e.g. "$5,091" or "8 units"
+  goalPercent?: number;      // 0-100+
+  goalOnTrack?: boolean;     // honest pace-based status
 }
 
 const colorMap = {
@@ -98,7 +103,11 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   onUnlock,
   lockMessage,
   variant = 'hero',
-  onClick
+  onClick,
+  goalTarget,
+  goalToGo,
+  goalPercent,
+  goalOnTrack
 }) => {
   const isTelemetry = variant === 'telemetry';
   const isHorizontal = variant === 'hero-horizontal';
@@ -358,6 +367,37 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <Typography variant="h1" className={cn("text-text-primary tracking-tighter font-black italic leading-none w-full text-center", isTelemetry ? "text-2xl" : "text-3xl lg:text-4xl")}>
             {loading ? '...' : animatedValue}
           </Typography>
+
+          {goalTarget && !loading && !isTelemetry && (
+            <div className="w-full mt-2 space-y-1.5 animate-in fade-in slide-in-from-bottom-1 duration-500">
+              <div className="flex items-center justify-between gap-2">
+                <Typography variant="mono" className="text-[9px] text-slate-500 uppercase font-black tracking-[0.1em]">
+                  Goal: {goalTarget}
+                </Typography>
+                {typeof goalPercent === 'number' && (
+                  <Typography variant="mono" className={cn("text-[11px] font-black italic tracking-tighter", goalOnTrack ? "text-emerald-400" : "text-amber-400")}>
+                    {Math.round(goalPercent)}%
+                  </Typography>
+                )}
+              </div>
+              <div className="h-1 w-full rounded-full bg-white/5 overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all duration-700", goalOnTrack ? "bg-emerald-400" : "bg-amber-400")}
+                  style={{ width: `${Math.min(100, Math.max(0, goalPercent || 0))}%` }}
+                />
+              </div>
+              {goalToGo && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border", goalOnTrack ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/10" : "text-amber-400 border-amber-400/30 bg-amber-400/10")}>
+                    {goalOnTrack ? 'On Track' : 'Behind'}
+                  </span>
+                  <Typography variant="mono" className="text-[9px] text-slate-500 font-bold tracking-wide">
+                    {goalToGo} to go
+                  </Typography>
+                </div>
+              )}
+            </div>
+          )}
 
           {secondaryValue && !loading && (
             <div className={cn("flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1 duration-500", isTelemetry ? "pb-1" : "")}>

@@ -16,6 +16,7 @@ export const navigationConfig = {
     { id: 'dealer-managers', label: 'MANAGERS', icon: 'users', path: '/dealer/users?tab=managers', featureId: Feature.ORG_SETTINGS },
     { id: 'dealer-permissions', label: 'PERMISSIONS', icon: 'shield', path: '/dealer/users?tab=permissions', featureId: Feature.ORG_SETTINGS },
     { id: 'dealer-codes', label: 'INVITES / JOIN CODES', icon: 'userPlus', path: '/dealer/users?tab=codes', featureId: Feature.ORG_SETTINGS },
+    { id: 'dealer-payplans', label: 'PAY PLANS', icon: 'billing', path: '/dealer/pay-plans', featureId: Feature.ORG_SETTINGS },
     { id: 'dealer-builder', label: 'LOG BUILDER', icon: 'logBuilder', path: '/dealer/log-builder', featureId: Feature.ORG_SETTINGS },
     { id: 'dealer-config', label: 'DEALER SETTINGS', icon: 'tuning', path: '/dealer/settings', featureId: Feature.ORG_SETTINGS },
 

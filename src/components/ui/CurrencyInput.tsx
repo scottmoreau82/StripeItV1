@@ -89,6 +89,19 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
 
     const isNegative = value < 0;
 
+    const handleToggleSign = () => {
+      // Flip the sign of whatever is currently typed or the committed value
+      const cleaned = inputValue.replace(/[^0-9.]/g, '');
+      if (!cleaned || cleaned === '0') return;
+      const num = parseFloat(cleaned);
+      if (isNaN(num) || num === 0) return;
+      const flipped = isNegative ? num : -num;
+      const display = formatForDisplay(flipped);
+      setInputValue(display);
+      isInternalUpdate.current = true;
+      onChange({ target: { value: flipped.toString(), name: props.name } });
+    };
+
     return (
       <div className="relative">
         {!hideLabel && label && (
@@ -110,7 +123,7 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
             onChange={handleChange}
             onBlur={handleBlur}
             className={cn(
-              "flex h-11 w-full rounded-xl border border-border-subtle bg-bg-card pl-10 pr-4 py-2 text-sm text-text-primary ring-offset-bg-deep placeholder:text-text-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary/50 transition-all disabled:cursor-not-allowed disabled:opacity-50",
+              "flex h-11 w-full rounded-xl border border-border-subtle bg-bg-card pl-10 pr-10 py-2 text-sm text-text-primary ring-offset-bg-deep placeholder:text-text-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-primary/20 focus-visible:border-brand-primary/50 transition-all disabled:cursor-not-allowed disabled:opacity-50",
               error && "border-orange-500/50 bg-orange-500/5 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.1)]",
               className
             )}
@@ -120,6 +133,22 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
             {isNegative && <span className="mr-0.5 text-red-400 font-bold">-</span>}
             $
           </span>
+          {/* ± toggle — lets mobile users flip sign without needing the keyboard minus key */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()} // prevent blur before toggle fires
+            onClick={handleToggleSign}
+            className={cn(
+              "absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-6 w-6 rounded-md text-[11px] font-black transition-all select-none",
+              isNegative
+                ? "text-red-400 bg-red-400/10 hover:bg-red-400/20"
+                : "text-text-muted hover:text-text-primary hover:bg-white/[0.06]"
+            )}
+            tabIndex={-1}
+            title="Toggle negative"
+          >
+            ±
+          </button>
         </div>
         {description && !error && (
           <Typography variant="small" className="text-text-muted mt-1.5 block opacity-60">

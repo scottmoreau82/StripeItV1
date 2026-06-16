@@ -707,67 +707,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
           >
             {/* Dynamic Metric Widgets */}
             <div className="relative group/metrics">
-              {isCarousel ? (
+              {(isCarousel || isMobile) ? (
                 carouselContent
-              ) : isMobile ? (
-                isLoading ? (
-                  <div className="flex flex-col gap-2.5">
-                    {[1,2].map(i => <MetricCardSkeleton key={i} />)}
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {[1,2,3,4].map(i => <MetricCardSkeleton key={i} />)}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <div className="grid grid-cols-1 gap-2.5">
-                      {[WidgetType.UNITS, WidgetType.COMMISSION]
-                        .map(type => {
-                        const widget = dashboardLayout.widgets
-                          .find(w => w.type === type);
-                        if (!widget || !widget.visible) return null;
-                        return (
-                          <WidgetRegistry
-                            key={type}
-                            type={type as WidgetType}
-                            data={widgetData}
-                            variant="hero-horizontal"
-                            onUpgrade={() => {
-                              window.location.hash = '#settings';
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {[WidgetType.FRONT_END_GROSS,
-                        WidgetType.BACK_END_GROSS,
-                        WidgetType.TOTAL_GROSS,
-                        WidgetType.AVERAGE_GROSS]
-                        .map(type => {
-                        const widget = dashboardLayout.widgets
-                          .find(w => w.type === type);
-                        if (!widget || !widget.visible) return null;
-                        const isWidgetLocked = isFree &&
-                          widget.type !== WidgetType.UNITS;
-                        return (
-                          <div key={type} className={cn(
-                            isWidgetLocked
-                              ? "col-span-2" : "col-span-1"
-                          )}>
-                            <WidgetRegistry
-                              type={type as WidgetType}
-                              data={widgetData}
-                              variant="telemetry"
-                              onUpgrade={() => {
-                                window.location.hash = '#settings';
-                              }}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )
               ) : isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                   {[1,2,3,4].map(i => <MetricCardSkeleton key={i} />)}

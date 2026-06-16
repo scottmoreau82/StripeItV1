@@ -355,14 +355,19 @@
     overflow-x: hidden;
     max-width: 100vw;
     height: 100%;
+    /* iOS Safari ignores overflow-x:hidden on body — touch-action restricts
+       to vertical-only panning, blocking accidental horizontal swipe scroll */
+    touch-action: pan-y;
   }
   body {
     @apply bg-bg-deep text-text-primary font-sans antialiased;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
     overscroll-behavior-y: none;
     max-width: 100vw;
     position: relative;
     height: 100%;
+    touch-action: pan-y;
   }
   /* Root fills the viewport so app layouts can use h-screen reliably. Overflow is
      left to each layout: app shells (RootLayout/DealerLayout) use h-screen +

@@ -283,22 +283,22 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   if (isCarousel) {
     return (
-      <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative p-5 sm:p-8 min-h-[220px] flex flex-col">
+      <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative p-5 h-[220px] flex flex-col">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-10" />
 
-        <div className="flex flex-col items-center text-center gap-4 relative z-10 w-full flex-1 justify-center">
+        <div className="flex flex-col items-center text-center gap-3 relative z-10 w-full flex-1 justify-center overflow-hidden">
           <div className={cn(
-            "h-12 w-12 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-105 shadow-sm",
+            "h-10 w-10 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-105 shadow-sm shrink-0",
             colorMap[color as keyof typeof colorMap]
           )}>
-            <Icon className="h-6 w-6" />
+            <Icon className="h-5 w-5" />
           </div>
 
           <div className="flex flex-col items-center gap-1">
             <Typography variant="label" className="text-slate-500 font-black tracking-widest block uppercase text-[9px] opacity-80">
               {label}
             </Typography>
-            <div className="font-display text-text-primary text-4xl sm:text-5xl tracking-tighter font-black italic leading-[1.3] pb-1.5 pl-2 pr-4 w-full text-center break-all">
+            <div className="font-display text-text-primary text-4xl tracking-tighter font-black italic leading-[1.3] pb-1 pr-3 w-full text-center break-all">
               {loading ? '...' : animatedValue}
             </div>
             {subValue && !loading && (

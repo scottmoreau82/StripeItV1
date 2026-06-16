@@ -39,6 +39,8 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
     };
 
     const [inputValue, setInputValue] = useState(formatForDisplay(value));
+    // Track sign locally so toggle is immediate — don't rely on prop round-trip
+    const [isNegativeLocal, setIsNegativeLocal] = useState(value < 0);
     const isInternalUpdate = useRef(false);
 
     // Sync input value when external value changes
@@ -48,6 +50,7 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
         return;
       }
       setInputValue(formatForDisplay(value));
+      setIsNegativeLocal(value < 0);
     }, [value]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,40 +65,43 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
     };
 
     const handleBlur = () => {
-      // Parse the local value
-      // Remove everything except numbers, decimal point, and leading minus
-      const cleaned = inputValue.replace(/[^0-9.-]/g, '');
+      // Remove everything except digits and decimal point
+      const cleaned = inputValue.replace(/[^0-9.]/g, '');
       
       // Handle multiple decimal points (keep only first)
       const parts = cleaned.split('.');
       const sanitized = parts[0] + (parts.length > 1 ? '.' + parts.slice(1).join('') : '');
       
-      if (sanitized === '' || sanitized === '-' || sanitized === '.') {
+      if (sanitized === '' || sanitized === '.') {
         setInputValue("0");
+        setIsNegativeLocal(false);
         isInternalUpdate.current = true;
         onChange({ target: { value: "0", name: props.name } });
         return;
       }
 
-      const num = parseFloat(sanitized);
-      const truncated = truncateToDecimal(num, 2);
+      const absNum = parseFloat(sanitized);
+      const signed = isNegativeLocal ? -Math.abs(absNum) : Math.abs(absNum);
+      const truncated = truncateToDecimal(signed, 2);
       
       const finalDisplay = formatForDisplay(truncated);
       setInputValue(finalDisplay);
+      setIsNegativeLocal(truncated < 0);
       
       isInternalUpdate.current = true;
       onChange({ target: { value: truncated.toString(), name: props.name } });
     };
 
-    const isNegative = value < 0;
+    const isNegative = isNegativeLocal;
 
     const handleToggleSign = () => {
-      // Flip the sign of whatever is currently typed or the committed value
       const cleaned = inputValue.replace(/[^0-9.]/g, '');
       if (!cleaned || cleaned === '0') return;
       const num = parseFloat(cleaned);
       if (isNaN(num) || num === 0) return;
-      const flipped = isNegative ? num : -num;
+      const newNegative = !isNegativeLocal;
+      const flipped = newNegative ? -Math.abs(num) : Math.abs(num);
+      setIsNegativeLocal(newNegative);
       const display = formatForDisplay(flipped);
       setInputValue(display);
       isInternalUpdate.current = true;

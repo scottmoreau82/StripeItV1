@@ -3,6 +3,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfi
 import { auth, mapAuthError } from '@/src/lib/firebase';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { analyticsService } from '@/src/services/analyticsService';
+import { inviteService } from '@/src/services/inviteService';
 import { AnalyticsEventType, UserRole } from '@/src/types';
 import { Button } from '@/src/components/ui/Button';
 import { Input } from '@/src/components/ui/Input';
@@ -34,6 +35,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
   const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [joinCode, setJoinCode] = useState('');
   
   const { addToast, connectionError } = useAuth();
 
@@ -93,6 +95,29 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
           const { sendEmailVerification } = await import('firebase/auth');
           await sendEmailVerification(userCredential.user);
           addToast('Verification email sent! Please check your inbox.', 'success');
+
+          // StripeItDealerOnboarding — join code or email invite claim
+          const uid = userCredential.user.uid;
+          const trimmedCode = joinCode.trim().toUpperCase();
+          if (trimmedCode) {
+            try {
+              const org = await inviteService.claimJoinCode(uid, trimmedCode);
+              addToast(`Joined ${org.orgName}!`, 'success');
+            } catch {
+              addToast('Join code not recognised — you can enter it later in Settings.', 'warning');
+            }
+          } else {
+            // Auto-check for a pending email invite
+            try {
+              const invite = await inviteService.lookupInviteByEmail(email);
+              if (invite) {
+                await inviteService.claimInvite(uid, invite);
+                addToast('Invite accepted — welcome to the team!', 'success');
+              }
+            } catch {
+              // Non-fatal — user joins as regular account
+            }
+          }
         }
       }
     } catch (err: any) {
@@ -212,6 +237,23 @@ export const LoginForm: React.FC<LoginFormProps> = ({ initialMode = 'signin' }) 
                 className="bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)]"
                 disabled={loading}
               />
+            )}
+
+            {!showForgotPassword && mode === 'signup' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
+                  Join Code <span className="text-slate-600 font-normal normal-case tracking-normal">(optional — from your dealer)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="STRIPE-XXXXXX"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  disabled={loading}
+                  maxLength={14}
+                  className="w-full h-12 px-4 rounded-xl border bg-[var(--color-bg-elevated)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-slate-600 focus:outline-none focus:border-brand-primary/50 transition-all text-sm font-mono tracking-widest uppercase"
+                />
+              </div>
             )}
             
             {mode === 'signin' && (

@@ -1,0 +1,27 @@
+name: Deploy Firestore Rules
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'firebase.json'
+      - '.firebaserc'
+
+jobs:
+  deploy-firestore-rules:
+    name: Deploy to Firebase
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Deploy Firestore rules
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only firestore:rules --project gen-lang-client-0971954368
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

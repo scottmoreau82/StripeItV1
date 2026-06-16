@@ -42,6 +42,7 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
     // Track sign locally so toggle is immediate — don't rely on prop round-trip
     const [isNegativeLocal, setIsNegativeLocal] = useState(value < 0);
     const isInternalUpdate = useRef(false);
+    const toggleTouchHandled = useRef(false);
 
     // Sync input value when external value changes
     useEffect(() => {
@@ -139,13 +140,26 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
             {isNegative && <span className="mr-0.5 text-red-400 font-bold">-</span>}
             $
           </span>
-          {/* ± toggle — lets mobile users flip sign without needing the keyboard minus key */}
+          {/* ± toggle — lets mobile users flip sign without needing the keyboard minus key.
+              iOS: onTouchStart fires before blur; preventDefault keeps keyboard open.
+              A touchHandled ref prevents the synthesized click from double-firing. */}
           <button
             type="button"
-            onMouseDown={(e) => e.preventDefault()} // prevent blur before toggle fires
-            onClick={handleToggleSign}
+            onMouseDown={(e) => { e.preventDefault(); }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              toggleTouchHandled.current = true;
+              handleToggleSign();
+            }}
+            onClick={() => {
+              if (toggleTouchHandled.current) {
+                toggleTouchHandled.current = false;
+                return;
+              }
+              handleToggleSign();
+            }}
             className={cn(
-              "absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-6 w-6 rounded-md text-[11px] font-black transition-all select-none",
+              "absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-7 w-7 rounded-md text-[13px] font-black transition-all select-none",
               isNegative
                 ? "text-red-400 bg-red-400/10 hover:bg-red-400/20"
                 : "text-text-muted hover:text-text-primary hover:bg-white/[0.06]"

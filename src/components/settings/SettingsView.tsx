@@ -48,7 +48,7 @@ interface SettingsViewProps {
   onLogout: () => void;
 }
 
-const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobile?: boolean }) => {
+export const ThemePanel = ({ profile, isMobile }: { profile: UserProfile | null; isMobile?: boolean }) => {
   const { updateProfileData, addToast } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isSaving, setIsSaving] = useState(false);

@@ -5,7 +5,6 @@ import { Typography } from '../ui/Typography';
 import { Link, useLocation } from 'react-router-dom';
 import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { useTheme } from '@/src/contexts/ThemeContext';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
 import { TierBadge } from './TierBadge';
 import { Sparkles } from 'lucide-react';
@@ -28,7 +27,6 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
   onLogDeal
 }) => {
   const { profile, isAdmin, isDeveloper } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
   const handleLogout = async () => {
@@ -319,32 +317,6 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
             </div>
           </Link>
 
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className={cn(
-              "flex items-center w-full py-3.5 transition-all group relative hover:bg-white/[0.02] text-left"
-            )}
-            title={isCollapsed ? "Toggle Appearance" : undefined}
-          >
-            <div className="w-16 shrink-0 flex items-center justify-center relative">
-              <AppIcon 
-                name={theme === 'dark' ? 'moon' : 'sun'} 
-                className={cn(
-                  SIDEBAR_NAV_ICON_SIZE_CLASS, 
-                  "shrink-0 transition-all text-brand-primary drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]"
-                )} 
-              />
-            </div>
-            <div className={cn(
-              "flex-1 overflow-hidden transition-all duration-300 pr-6",
-              isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
-            )}>
-              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, "text-slate-500 group-hover:text-slate-300")}>
-                Theme
-              </span>
-            </div>
-          </button>
         </nav>
       </div>
 

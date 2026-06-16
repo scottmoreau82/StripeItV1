@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { DealerInviteManagerModal } from './DealerInviteManagerModal';
+import { ThemePanel } from '../settings/SettingsView';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../ui/PageHeader';
 
@@ -290,6 +291,8 @@ export const DealerSettingsView: React.FC = () => {
              </div>
           </div>
        </Card>
+
+       <ThemePanel profile={profile} />
 
        <DealerInviteManagerModal 
           isOpen={isInviteModalOpen}

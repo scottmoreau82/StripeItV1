@@ -350,7 +350,7 @@ service cloud.firestore {
       //   to compute their effective plan, and they get a read-only view of it).
       // Write: admins/owner only (managers don't manage templates at launch).
       match /payPlanTemplates/{templateId} {
-        allow get, list: if isOrgMember(orgId);
+        allow get, list: if isOrgMember(orgId) || isBootstrapAdmin();
         allow create, update, delete: if (isOrgMember(orgId) && isAnyAdmin()) || isBootstrapAdmin();
       }
     }

@@ -5,7 +5,7 @@ import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { dealerRequestService } from '@/src/services/dealerRequestService';
-import { DealerAccessRequest, DealerRequestStatus } from '@/src/types';
+import { DealerAccessRequest, DealerRequestStatus, SubscriptionTier } from '@/src/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, 
@@ -32,6 +32,32 @@ import { COLLECTIONS } from '@/src/constants';
  */
 export const DealerAccessRequestFlow: React.FC = () => {
   const { profile, user, addToast } = useAuth();
+
+  // Already a dealer — no need to request access
+  if (profile?.subscriptionTier === SubscriptionTier.ORGANIZATION) {
+    return (
+      <div className="max-w-2xl mx-auto py-12">
+        <Card className="bg-bg-card/40 border-white/10 backdrop-blur-xl p-10 text-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-brand-primary/50" />
+          <div className="h-20 w-20 rounded-full bg-brand-primary/10 flex items-center justify-center mx-auto mb-8 shadow-glow glow-primary">
+            <CheckCircle2 className="h-10 w-10 text-brand-primary" />
+          </div>
+          <Typography variant="h2" className="text-white italic font-black uppercase tracking-tighter mb-4 text-3xl">
+            Already Active
+          </Typography>
+          <Typography variant="p" className="text-slate-400 text-lg mb-8">
+            Your account already has full dealer access. Head to your dealership console.
+          </Typography>
+          <Button
+            className="w-full h-14 bg-brand-primary text-bg-deep font-black uppercase tracking-widest shadow-glow glow-primary"
+            onClick={() => window.location.href = '/'}
+          >
+            Enter Dealership Console
+          </Button>
+        </Card>
+      </div>
+    );
+  }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingRequest, setExistingRequest] = useState<DealerAccessRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);

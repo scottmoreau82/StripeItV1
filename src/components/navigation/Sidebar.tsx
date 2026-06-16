@@ -14,7 +14,7 @@ import { navigationConfig } from './NavigationItems';
 import { SIDEBAR_NAV_TYPOGRAPHY, SIDEBAR_NAV_ICON_SIZE_CLASS } from '@/src/constants';
 import { TierBadge } from './TierBadge';
 import { useResponsive } from '@/src/hooks/useResponsive';
-import { SubscriptionTier } from '@/src/types';
+import { SubscriptionTier, UserRole } from '@/src/types';
 import { AdminAnalyticsCard } from './AdminAnalyticsCard';
 import { useAppData } from '@/src/contexts/AppDataContext';
 import { useTheme } from '@/src/contexts/ThemeContext';
@@ -185,6 +185,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar overflow-x-hidden">
         <nav className="flex flex-col gap-1 py-6">
           {mainNavItems.map((item) => renderNavItem(item))}
+
+          {/* My Pay Plan — shown to org members who are not the Owner (they have a dealer-assigned plan) */}
+          {profile?.orgId && !profile.orgId.startsWith('PERSONAL-') && profile.role !== UserRole.DEALER_OWNER && (
+            <Link
+              to="/my-pay-plan"
+              title={isCollapsed ? 'MY PAY PLAN' : undefined}
+              className={cn(
+                "flex items-center w-full py-3.5 transition-all group relative text-left",
+                location.pathname === '/my-pay-plan' ? "bg-bg-elevated" : "hover:bg-bg-elevated/50"
+              )}
+            >
+              <div className="w-16 shrink-0 flex items-center justify-center relative">
+                {location.pathname === '/my-pay-plan' && (
+                  <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
+                )}
+                <AppIcon
+                  name="billing"
+                  className={cn(
+                    "h-[15px] w-[15px] shrink-0 transition-all",
+                    location.pathname === '/my-pay-plan'
+                      ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]"
+                      : "text-slate-600 group-hover:text-slate-400"
+                  )}
+                />
+              </div>
+              <div className={cn(
+                "flex-1 overflow-hidden transition-all duration-300",
+                isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
+              )}>
+                <span className={cn(
+                  "font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all text-[10px] leading-[15px]",
+                  location.pathname === '/my-pay-plan' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300"
+                )}>
+                  My Pay Plan
+                </span>
+              </div>
+            </Link>
+          )}
 
           {profile?.email?.toLowerCase() === 'scottmoreau82@gmail.com' && (
             <div className="flex flex-col gap-1">

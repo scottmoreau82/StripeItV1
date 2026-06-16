@@ -78,6 +78,7 @@ const DealerLogBuilderView = lazy(() => import('./components/dealer/DealerLogBui
 const DealerPayPlanTemplatesView = lazy(() => import('./components/dealer/DealerPayPlanTemplatesView').then(m => ({ default: m.DealerPayPlanTemplatesView })));
 const DealerInvitesView = lazy(() => import('./components/dealer/DealerInvitesView').then(m => ({ default: m.DealerInvitesView })));
 const DealerRosterView = lazy(() => import('./components/dealer/DealerRosterView').then(m => ({ default: m.DealerRosterView })));
+const MyPayPlanView = lazy(() => import('./components/commission/MyPayPlanView').then(m => ({ default: m.MyPayPlanView })));
 const DealerRequestsAdminView = lazy(() => import('./components/management/DealerRequestsAdminView').then(m => ({ default: m.DealerRequestsAdminView })));
 const EffectsPreview = lazy(() => import('./components/admin/EffectsPreview').then(m => ({ default: m.EffectsPreview })));
 import { UpgradePrompt } from './components/ui/UpgradePrompt';

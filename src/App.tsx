@@ -77,6 +77,7 @@ const DealerUserManagementView = lazy(() => import('./components/dealer/DealerUs
 const DealerLogBuilderView = lazy(() => import('./components/dealer/DealerLogBuilderView').then(m => ({ default: m.DealerLogBuilderView })));
 const DealerPayPlanTemplatesView = lazy(() => import('./components/dealer/DealerPayPlanTemplatesView').then(m => ({ default: m.DealerPayPlanTemplatesView })));
 const DealerInvitesView = lazy(() => import('./components/dealer/DealerInvitesView').then(m => ({ default: m.DealerInvitesView })));
+const DealerRosterView = lazy(() => import('./components/dealer/DealerRosterView').then(m => ({ default: m.DealerRosterView })));
 const DealerRequestsAdminView = lazy(() => import('./components/management/DealerRequestsAdminView').then(m => ({ default: m.DealerRequestsAdminView })));
 const EffectsPreview = lazy(() => import('./components/admin/EffectsPreview').then(m => ({ default: m.EffectsPreview })));
 import { UpgradePrompt } from './components/ui/UpgradePrompt';
@@ -557,6 +558,14 @@ function MainAppFlow() {
               element={
                 featureAccessService.hasAccess(profile, Feature.ORG_SETTINGS) 
                   ? <DealerInvitesView /> 
+                  : <Navigate to="/" />
+              } 
+            />
+            <Route 
+              path="/dealer/roster" 
+              element={
+                featureAccessService.hasAccess(profile, Feature.ORG_SETTINGS) 
+                  ? <DealerRosterView /> 
                   : <Navigate to="/" />
               } 
             />

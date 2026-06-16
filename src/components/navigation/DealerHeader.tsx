@@ -198,20 +198,20 @@ export const DealerHeader: React.FC<DealerHeaderProps> = ({ onLogDeal }) => {
                     </Link>
 
                     <Link
-                      to="/dealer/users?tab=invites"
+                      to="/dealer/invites"
                       onClick={closeDrawer}
                       className={cn(
                         "relative flex items-center gap-3 rounded-xl px-4 py-3 font-black uppercase tracking-[0.2em] transition-all text-left",
                         SIDEBAR_NAV_TYPOGRAPHY,
-                        location.search === '?tab=invites' 
+                        location.pathname === '/dealer/invites' 
                           ? "bg-brand-primary/[0.03] text-brand-primary" 
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
                       )}
                     >
-                      {location.search === '?tab=invites' && (
+                      {location.pathname === '/dealer/invites' && (
                         <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-brand-primary rounded-r shadow-glow glow-primary" />
                       )}
-                      <AppIcon name="mail" size={SIDEBAR_NAV_ICON_SIZE} className={cn(location.search === '?tab=invites' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
+                      <AppIcon name="mail" size={SIDEBAR_NAV_ICON_SIZE} className={cn(location.pathname === '/dealer/invites' && "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]")} />
                       Invites
                     </Link>
 

@@ -195,23 +195,23 @@ export const DealerSidebar: React.FC<DealerSidebarProps> = ({
           </Link>
 
           <Link
-            to="/dealer/users?tab=invites"
+            to="/dealer/invites"
             className={cn(
               "flex items-center w-full py-3 transition-all group relative",
-              location.search === '?tab=invites' ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
+              location.pathname === '/dealer/invites' ? "bg-brand-primary/[0.03]" : "hover:bg-white/[0.02]"
             )}
           >
             <div className="w-16 shrink-0 flex items-center justify-center relative">
-              {location.search === '?tab=invites' && !isCollapsed && (
+              {location.pathname === '/dealer/invites' && !isCollapsed && (
                 <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-brand-primary rounded-r shadow-glow glow-primary" />
               )}
-              <AppIcon name="mail" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", location.search === '?tab=invites' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
+              <AppIcon name="mail" className={cn(SIDEBAR_NAV_ICON_SIZE_CLASS, "shrink-0 transition-all", location.pathname === '/dealer/invites' ? "text-brand-primary drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]" : "text-slate-600 group-hover:text-slate-400")} />
             </div>
             <div className={cn(
               "flex-1 overflow-hidden transition-all duration-300 pr-6",
               isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-full"
             )}>
-              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, location.search === '?tab=invites' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Invites</span>
+              <span className={cn("font-bold uppercase tracking-[0.25em] truncate whitespace-nowrap transition-all", SIDEBAR_NAV_TYPOGRAPHY, location.pathname === '/dealer/invites' ? "text-brand-primary" : "text-slate-500 group-hover:text-slate-300")}>Invites</span>
             </div>
           </Link>
           

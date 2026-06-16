@@ -21,6 +21,7 @@ import { FullscreenMobileFlow } from './components/layout/MobileFullscreenFlow';
 import { Plus, TrendingUp, Users, DollarSign, Car, ArrowUpRight, CheckCircle2, Calculator, Target, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useResponsive } from './hooks/useResponsive';
+import { useEruda } from './hooks/useEruda';
 import { cn } from './lib/utils';
 import { DealForm } from './components/forms/DealForm';
 import { dealService } from './services/dealService';
@@ -119,6 +120,10 @@ function MainAppFlow() {
 
   const { isMobile } = useResponsive();
   const { profile, user, isAdmin, isDeveloper, logout, addToast, updateProfileData } = useAuth();
+
+  // Dev-only mobile console — loads Eruda for the developer account only,
+  // completely inert (script never injected) for all other users.
+  useEruda(isDeveloper);
   const location = useLocation();
 
   // StripeItAnalyticsSystem - Global Lifecycle Tracking

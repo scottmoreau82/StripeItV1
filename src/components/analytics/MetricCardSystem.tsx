@@ -283,10 +283,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   if (isCarousel) {
     return (
-      <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative p-8 min-h-[220px] flex items-center justify-center">
+      <Card className="bg-gradient-to-br from-white/[0.03] to-transparent border-white/[0.05] hover:border-white/10 transition-all group relative p-5 sm:p-8 min-h-[220px] flex flex-col">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none opacity-10" />
 
-        <div className="flex flex-col items-center text-center gap-4 relative z-10 w-full">
+        <div className="flex flex-col items-center text-center gap-4 relative z-10 w-full flex-1 justify-center">
           <div className={cn(
             "h-12 w-12 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-105 shadow-sm",
             colorMap[color as keyof typeof colorMap]

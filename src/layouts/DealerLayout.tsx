@@ -39,14 +39,14 @@ export const DealerLayout: React.FC<DealerLayoutProps> = ({ children }) => {
         onLogDeal={handleLogDeal}
       />
       
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex flex-1 flex-col min-w-0 min-h-0">
         {/* Dealer Mobile Header */}
         <DealerHeader onLogDeal={handleLogDeal} />
         
         {/* Shared Desktop TopBar System */}
         <TopBar />
         
-        <main className="flex-1 overflow-y-auto px-6 py-8 lg:px-10 lg:py-10">
+        <main className="flex-1 min-h-0 overflow-y-auto px-6 py-8 lg:px-10 lg:py-10">
           <ContentContainer>
             {children}
           </ContentContainer>

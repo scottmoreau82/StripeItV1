@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogDeal, onConfigPayPlan }) =>
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border-subtle bg-bg-main/80 backdrop-blur-md px-6 lg:hidden">
+      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-border-subtle bg-bg-main/80 backdrop-blur-md px-6 lg:hidden">
         <Link to="/" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-deep flex items-center justify-center shadow-glow glow-primary">
             <AppIcon name="trending" className="text-white h-5 w-5" />

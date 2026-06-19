@@ -165,6 +165,7 @@ export const NotificationTray: React.FC = () => {
                     {feedbackReports.map((report) => (
                       <div 
                         key={report.id}
+                        onClick={() => { setIsOpen(false); navigate('/admin/feedback'); }}
                         className="group relative p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-brand-primary/20 transition-all cursor-pointer"
                       >
                         <div className="flex gap-4">

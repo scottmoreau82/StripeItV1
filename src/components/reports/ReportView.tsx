@@ -273,8 +273,105 @@ export const ReportView: React.FC = () => {
   };
 
   const handlePrint = () => {
-    setTimeout(() => window.print(), 100);
+    if (!selectedMonth) return;
+    const monthName = getMonthNameString(selectedMonth);
+    const isCurrent = selectedMonth === currentMonthKey;
+
+    // Compute stats inline
+    const frontGross = selectedMonthDeals.reduce((sum, d) => sum + (d.frontEndGross * (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1)), 0);
+    const backGross = selectedMonthDeals.reduce((sum, d) => sum + (d.backEndGross * (d.isSplitDeal ? (d.splitPercentage || 50) / 100 : 1)), 0);
+    const estPayout = selectedMonthEarnings.grandTotal;
+    const spiffsTotal = selectedMonthEarnings.totalMonthlySpiffs;
+    const units = selectedMonthDeals.reduce((sum, d) =>
+      sum + (d.isSplitDeal && payPlan?.isSplitBehaviorActive !== false ? (d.splitPercentage || 50) / 100 : 1), 0);
+    const truePayout = selectedMonthDeals.reduce((sum, d) => sum + (d.actualPayout || 0), 0);
+
+    const deals = [...selectedMonthDeals].sort((a, b) => {
+      const resA = selectedMonthEarnings.dealResults.find(r => r.dealId === a.id);
+      const resB = selectedMonthEarnings.dealResults.find(r => r.dealId === b.id);
+      return (resB?.totalCommission ?? 0) - (resA?.totalCommission ?? 0);
+    });
+
+    const dealRows = deals.map(deal => {
+      const splitRatio = deal.isSplitDeal ? (deal.splitPercentage || 50) / 100 : 1;
+      const result = selectedMonthEarnings.dealResults.find(r => r.dealId === deal.id);
+      const payout = result?.totalCommission ?? 0;
+      return `<tr>
+          <td>${formatDateSafe(deal.date, 'MM/dd/yyyy')}</td>
+          <td><strong>${deal.customerName}</strong></td>
+          <td>${deal.purchasedVehicle || '—'}</td>
+          <td>${deal.newOrUsed?.toUpperCase() || '—'}</td>
+          <td style="text-align:right">$${(deal.frontEndGross * splitRatio).toLocaleString()}</td>
+          <td style="text-align:right">$${(deal.backEndGross * splitRatio).toLocaleString()}</td>
+          <td style="text-align:right;color:#059669"><strong>$${payout.toLocaleString()}</strong></td>
+          ${!isCurrent ? `<td style="text-align:right">$${(deal.actualPayout || 0).toLocaleString()}</td>` : ''}
+        </tr>`;
+    }).join('');
+
+    const spiffRows = selectedMonthSpiffs.map(s =>
+      `<tr>
+        <td>${formatDateSafe(s.date, 'MM/dd/yyyy')}</td>
+        <td>${s.label || s.notes || (s.isChargeback ? 'CHARGEBACK' : 'SPIFF')}</td>
+        <td style="text-align:right;color:${s.isChargeback ? '#e11d48' : '#0891b2'}">${s.isChargeback ? '-' : '+'}$${s.amount.toLocaleString()}</td>
+      </tr>`
+    ).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<title>StripeIt — ${monthName}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#111;background:white;padding:32px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;border-bottom:2px solid #111;padding-bottom:16px}
+.hdr h1{font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:-0.02em}
+.hdr p{font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#666;margin-top:2px}
+.hdr-r{font-size:10px;color:#666;text-align:right}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:24px}
+.stat{border:1px solid #ddd;border-radius:8px;padding:10px}
+.stat-l{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:#888;margin-bottom:3px}
+.stat-v{font-size:16px;font-weight:900;color:#111}
+.stat-v.g{color:#059669}.stat-v.b{color:#0891b2}
+.sec{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:#888;margin:20px 0 8px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead tr{background:#f5f5f5}
+th{padding:7px 10px;text-align:left;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#666;border-bottom:1px solid #ddd}
+td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.ftr{margin-top:28px;font-size:9px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:10px}
+@media print{body{padding:16px}}
+</style></head><body>
+<div class="hdr">
+  <div><h1>StripeIt — ${monthName}</h1><p>Month-by-Month Financial Statement &amp; Deal Ledger</p></div>
+  <div class="hdr-r"><div>Printed ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div><div>${isCurrent ? 'OPEN MONTH' : 'CLOSED'}</div></div>
+</div>
+<div class="stats">
+  <div class="stat"><div class="stat-l">Units Sold</div><div class="stat-v">${units.toFixed(1)} Units</div></div>
+  <div class="stat"><div class="stat-l">Front Gross</div><div class="stat-v">$${frontGross.toLocaleString()}</div></div>
+  <div class="stat"><div class="stat-l">Back Gross</div><div class="stat-v">$${backGross.toLocaleString()}</div></div>
+  <div class="stat"><div class="stat-l">Est. Payout</div><div class="stat-v g">$${estPayout.toLocaleString()}</div></div>
+  ${!isCurrent ? `<div class="stat"><div class="stat-l">True Payout</div><div class="stat-v g">$${truePayout.toLocaleString()}</div></div>` : ''}
+  ${spiffsTotal !== 0 ? `<div class="stat"><div class="stat-l">Spiffs &amp; CBs</div><div class="stat-v ${spiffsTotal >= 0 ? 'b' : ''}">${spiffsTotal >= 0 ? '+' : ''}$${spiffsTotal.toLocaleString()}</div></div>` : ''}
+</div>
+<div class="sec">Deals Recorded (${deals.length})</div>
+<table><thead><tr>
+  <th>Date</th><th>Customer</th><th>Vehicle</th><th>Type</th>
+  <th style="text-align:right">Front Gross</th>
+  <th style="text-align:right">Back Gross</th>
+  <th style="text-align:right">Est. Payout</th>
+  ${!isCurrent ? '<th style="text-align:right">Actual Payout</th>' : ''}
+</tr></thead><tbody>${dealRows}</tbody></table>
+${selectedMonthSpiffs.length > 0 ? `<div class="sec">Spiffs &amp; Adjustments (${selectedMonthSpiffs.length})</div>
+<table><thead><tr><th>Date</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>${spiffRows}</tbody></table>` : ''}
+<div class="ftr">StripeIt Performance Log &bull; stripeit.app &bull; Confidential</div>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { addToast('Pop-up blocked — allow pop-ups for stripeit.app to print.', 'error'); return; }
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 300);
   };
+
 
   const handleEditDeal = (deal: Deal) => {
     const dealMonth = new Date(deal.date).toISOString().slice(0, 7);

@@ -112,12 +112,13 @@ export const NotificationTray: React.FC = () => {
         )}
       >
         <AppIcon name="bell" className={cn("h-5 w-5", unreadCount > 0 && "animate-tada")} />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-primary text-[9px] font-black text-bg-deep shadow-glow glow-primary">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
       </Button>
+      {/* Badge sits on the wrapper div (not inside Button) so Button's overflow-hidden can't clip it */}
+      {unreadCount > 0 && (
+        <span className="pointer-events-none absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-primary text-[9px] font-black text-bg-deep shadow-glow glow-primary z-10">
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      )}
 
       <AnimatePresence>
         {isOpen && (

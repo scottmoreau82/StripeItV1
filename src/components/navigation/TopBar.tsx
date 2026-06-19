@@ -14,7 +14,7 @@ export const TopBar = () => {
   const { isAdmin, tierOverride, setTierOverride } = useAuth();
 
   return (
-    <header className="hidden h-14 items-center justify-end border-b border-white/5 bg-bg-main/20 backdrop-blur-md px-10 lg:flex sticky top-0 z-30 transition-all duration-300">
+    <header className="hidden h-14 items-center justify-end border-b border-white/5 bg-bg-main/20 backdrop-blur-md px-6 lg:flex sticky top-0 z-30 transition-all duration-300 overflow-visible">
       <div className="flex items-center gap-6">
         {isAdmin && (
           <div className="flex items-center gap-3 bg-white/[0.03] border border-white/5 pl-3 pr-1 py-1 rounded-xl group hover:border-purple-500/30 transition-colors">

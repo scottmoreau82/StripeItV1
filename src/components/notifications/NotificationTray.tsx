@@ -101,7 +101,7 @@ export const NotificationTray: React.FC = () => {
   };
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative overflow-visible pr-1" ref={containerRef}>
       <Button
         variant="ghost"
         size="icon"

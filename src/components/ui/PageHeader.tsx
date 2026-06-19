@@ -38,9 +38,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   const hasScramble = !isMobile && activeEffects.includes(AmbientEffect.TEXT_SCRAMBLE);
   const hasTypewriter = !isMobile && activeEffects.includes(AmbientEffect.TYPEWRITER);
   const titleStr = typeof title === 'string' ? title : '';
-  const [displayTitle, setDisplayTitle] = useState(titleStr);
-  const animRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+  // Initialize to empty for typewriter (avoids flash of full text before typing starts),
+  // or a scrambled string for scramble, so the first render already shows the effect state.
+  const getInitialDisplay = () => {
+    if (hasTypewriter) return '';
+    if (hasScramble) return titleStr.split('').map(c => c === ' ' ? ' ' : chars[Math.floor(Math.random() * chars.length)]).join('');
+    return titleStr;
+  };
+  const [displayTitle, setDisplayTitle] = useState(getInitialDisplay);
+  const animRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!titleStr) return;

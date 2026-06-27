@@ -98,6 +98,7 @@ import { AnalyticsEventType } from './types';
 import { DealerAccessRequestFlow } from './components/dealer/DealerAccessRequestFlow';
 import { AmbientEffectsLayer } from './components/effects/AmbientEffectsLayer';
 
+import { GuestSheetHome } from './components/guestsheet/GuestSheetHome';
 import { AuthHydrationFallback } from './components/auth/AuthHydrationFallback';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 import { PageHeader } from './components/ui/PageHeader';
@@ -630,6 +631,14 @@ function MainAppFlow() {
                   ? <DealDeskView />
                   : <Navigate to="/" />
               } 
+            />
+            <Route
+              path="/GuestSheet"
+              element={
+                profile?.email === 'scottmoreau82@gmail.com'
+                  ? <GuestSheetHome />
+                  : <Navigate to="/" />
+              }
             />
             <Route 
               path="*" 

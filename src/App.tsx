@@ -99,6 +99,7 @@ import { DealerAccessRequestFlow } from './components/dealer/DealerAccessRequest
 import { AmbientEffectsLayer } from './components/effects/AmbientEffectsLayer';
 
 import { GuestSheetHome } from './components/guestsheet/GuestSheetHome';
+import { GuestSheetForm } from './components/guestsheet/GuestSheetForm';
 import { AuthHydrationFallback } from './components/auth/AuthHydrationFallback';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 import { PageHeader } from './components/ui/PageHeader';
@@ -637,6 +638,22 @@ function MainAppFlow() {
               element={
                 profile?.email === 'scottmoreau82@gmail.com'
                   ? <GuestSheetHome />
+                  : <Navigate to="/" />
+              }
+            />
+            <Route
+              path="/GuestSheet/new"
+              element={
+                profile?.email === 'scottmoreau82@gmail.com'
+                  ? <GuestSheetForm mode="create" />
+                  : <Navigate to="/" />
+              }
+            />
+            <Route
+              path="/GuestSheet/:id/edit"
+              element={
+                profile?.email === 'scottmoreau82@gmail.com'
+                  ? <GuestSheetForm mode="edit" />
                   : <Navigate to="/" />
               }
             />

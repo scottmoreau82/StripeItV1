@@ -798,22 +798,29 @@ export interface GuestSheet {
 export interface SalesMenuLineItem {
   id: string;
   label: string;
-  sublabel?: string;
   amount: number;
-  enabled: boolean;
-  isNegative?: boolean; // e.g. Discount, Trade Allowance
-  isReadOnly?: boolean; // e.g. calculated tax
+  isNegative?: boolean;
+  isSubtotal?: boolean;
+  isOverridable?: boolean;
+  taxable?: boolean;
+}
+
+export interface AddendumItem {
+  id: string;
+  description: string;
+  price: number;
+  taxable: boolean;
 }
 
 export interface SalesMenuTaxConfig {
-  cityRate: number;    // %
-  stateRate: number;   // %
-  countyRate: number;  // %
+  cityRate: number;
+  stateRate: number;
+  countyRate: number;
 }
 
 export interface SalesMenuPaymentConfig {
-  term: number;        // months
-  apr: number;         // %
+  term: number;
+  apr: number;
   downPayment: number;
 }
 
@@ -824,6 +831,7 @@ export interface SalesMenu {
   guestName?: string;
   vehicleDescription?: string;
   lineItems: SalesMenuLineItem[];
+  addendumItems: AddendumItem[];
   taxConfig: SalesMenuTaxConfig;
   paymentConfig: SalesMenuPaymentConfig;
   createdAt: number;

@@ -100,6 +100,7 @@ import { AmbientEffectsLayer } from './components/effects/AmbientEffectsLayer';
 
 import { GuestSheetHome } from './components/guestsheet/GuestSheetHome';
 import { GuestSheetForm } from './components/guestsheet/GuestSheetForm';
+import { GuestSheetDetail } from './components/guestsheet/GuestSheetDetail';
 import { AuthHydrationFallback } from './components/auth/AuthHydrationFallback';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 import { PageHeader } from './components/ui/PageHeader';
@@ -654,6 +655,14 @@ function MainAppFlow() {
               element={
                 profile?.email === 'scottmoreau82@gmail.com'
                   ? <GuestSheetForm mode="edit" />
+                  : <Navigate to="/" />
+              }
+            />
+            <Route
+              path="/GuestSheet/:id"
+              element={
+                profile?.email === 'scottmoreau82@gmail.com'
+                  ? <GuestSheetDetail />
                   : <Navigate to="/" />
               }
             />

@@ -102,6 +102,7 @@ import { GuestSheetHome } from './components/guestsheet/GuestSheetHome';
 import { GuestSheetForm } from './components/guestsheet/GuestSheetForm';
 import { GuestSheetDetail } from './components/guestsheet/GuestSheetDetail';
 import { SalesMenuForm } from './components/guestsheet/SalesMenuForm';
+import { SalesMenuDetail } from './components/guestsheet/SalesMenuDetail';
 import { AuthHydrationFallback } from './components/auth/AuthHydrationFallback';
 import { LoadingOverlay } from './components/ui/LoadingOverlay';
 import { PageHeader } from './components/ui/PageHeader';
@@ -680,6 +681,14 @@ function MainAppFlow() {
               element={
                 profile?.email === 'scottmoreau82@gmail.com'
                   ? <SalesMenuForm mode="edit" />
+                  : <Navigate to="/" />
+              }
+            />
+            <Route
+              path="/GuestSheet/sales-menu/:id"
+              element={
+                profile?.email === 'scottmoreau82@gmail.com'
+                  ? <SalesMenuDetail />
                   : <Navigate to="/" />
               }
             />

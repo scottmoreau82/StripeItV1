@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronRight, Calculator, Plus, Pencil, Trash2, X } from '
 import { useAuth } from '../../contexts/AuthContext';
 import {
   createSalesMenu, updateSalesMenu, getSalesMenu,
-  buildDefaultLineItems, buildDefaultAZFees, defaultTaxConfig,
+  buildDefaultLineItems, buildDefaultAddendumItems, buildDefaultAZFees, defaultTaxConfig,
   defaultPaymentConfig, recalcSubtotals, calcVLT, calcAZFeesTotal,
 } from '../../services/guestSheetService';
 import {
@@ -49,7 +49,7 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
   const [guestName, setGuestName]                 = useState(passed.guestName ?? '');
   const [vehicleDesc, setVehicleDesc]             = useState(passed.vehicleDescription ?? '');
   const [lineItems, setLineItems]                 = useState<SalesMenuLineItem[]>(buildDefaultLineItems);
-  const [addendumItems, setAddendumItems]         = useState<AddendumItem[]>([]);
+  const [addendumItems, setAddendumItems]         = useState<AddendumItem[]>(buildDefaultAddendumItems);
   const [azFees, setAzFees]                       = useState<AZFeesConfig>(() => buildDefaultAZFees(0));
   const [taxConfig, setTaxConfig]                 = useState<SalesMenuTaxConfig>(defaultTaxConfig);
   const [paymentConfig, setPaymentConfig]         = useState<SalesMenuPaymentConfig>(defaultPaymentConfig);

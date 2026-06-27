@@ -55,6 +55,13 @@ export function calcAZFeesTotal(fees: AZFeesConfig): number {
 
 // ─── Default line items ───────────────────────────────────────────────────
 
+export function buildDefaultAddendumItems(): AddendumItem[] {
+  return [
+    { id: 'add_desert_protection', description: 'Desert Protection Package', price: 997.00, taxable: true },
+    { id: 'add_window_etching',    description: 'Window Etching',            price: 289.00, taxable: true },
+  ];
+}
+
 export function buildDefaultLineItems(): SalesMenuLineItem[] {
   return [
     { id: 'vehicle_price',   label: 'Vehicle Price',        amount: 0,      taxable: true },

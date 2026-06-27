@@ -73,9 +73,9 @@ export function buildDefaultLineItems(): SalesMenuLineItem[] {
 }
 
 export const defaultTaxConfig: SalesMenuTaxConfig = {
-  cityRate:   0,
-  stateRate:  0,
-  countyRate: 0,
+  stateRate:  5.6,
+  cityRate:   2.8,
+  countyRate: 0.7,
 };
 
 export const defaultPaymentConfig: SalesMenuPaymentConfig = {

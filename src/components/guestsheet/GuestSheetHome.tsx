@@ -82,17 +82,9 @@ export function GuestSheetHome() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
-        <div className="w-8" /> {/* spacer */}
-        <h1 className="text-base font-semibold text-gray-900">Sands Kia CRM</h1>
-        <div className="w-8" /> {/* spacer */}
-      </div>
+
 
       <div className="flex-1 px-4 pt-5 pb-8 space-y-6 max-w-lg mx-auto w-full">
-        {/* Welcome */}
-        <p className="text-lg font-bold text-gray-900">Welcome, {firstName}</p>
-
         {/* Action Cards */}
         <div className="space-y-3">
           <button

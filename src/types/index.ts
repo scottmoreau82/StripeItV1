@@ -759,3 +759,73 @@ export interface Invite {
   createdAt: number;
   acceptedAt?: number;
 }
+
+// ─── Guest Sheet / CRM Types ───────────────────────────────────────────────
+
+export type VehicleInterestType = 'new' | 'used' | 'trade';
+
+export interface GuestSheet {
+  id: string;
+  userId: string;
+  // Guest Information
+  guestName: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  cellPhone?: string;
+  email?: string;
+  // Vehicle Considered
+  vehicleInterest: VehicleInterestType;
+  stockNumber?: string;
+  model?: string;
+  vehicleRequirements?: string;
+  // Trade Information
+  tradeYear?: string;
+  tradeMake?: string;
+  tradeModel?: string;
+  tradeMiles?: string;
+  tradeEstPayoff?: string;
+  tradeWhereFinanced?: string;
+  tradeReason?: string;
+  // Monthly Budget
+  desiredMonthlyBudget?: string;
+  downPayment?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface SalesMenuLineItem {
+  id: string;
+  label: string;
+  sublabel?: string;
+  amount: number;
+  enabled: boolean;
+  isNegative?: boolean; // e.g. Discount, Trade Allowance
+  isReadOnly?: boolean; // e.g. calculated tax
+}
+
+export interface SalesMenuTaxConfig {
+  cityRate: number;    // %
+  stateRate: number;   // %
+  countyRate: number;  // %
+}
+
+export interface SalesMenuPaymentConfig {
+  term: number;        // months
+  apr: number;         // %
+  downPayment: number;
+}
+
+export interface SalesMenu {
+  id: string;
+  userId: string;
+  guestSheetId?: string;
+  guestName?: string;
+  vehicleDescription?: string;
+  lineItems: SalesMenuLineItem[];
+  taxConfig: SalesMenuTaxConfig;
+  paymentConfig: SalesMenuPaymentConfig;
+  createdAt: number;
+  updatedAt: number;
+}

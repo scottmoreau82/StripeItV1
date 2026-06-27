@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { Sidebar } from '../components/navigation/Sidebar';
 import { Header } from '../components/navigation/Header';
 import { TopBar } from '../components/navigation/TopBar';
@@ -21,6 +22,13 @@ interface RootLayoutProps {
 }
 
 export const RootLayout: React.FC<RootLayoutProps> = ({ children, onLogDeal, onLogSpiff, onConfigPayPlan }) => {
+  const location = useLocation();
+
+  // Bare pass-through for Guest Sheet CRM — no Stripe It chrome
+  if (location.pathname.startsWith('/GuestSheet')) {
+    return <>{children}</>;
+  }
+
   const { profile } = useAuth();
   const { connectionBlocked } = useAppData();
   const [dismissed, setDismissed] = React.useState(false);

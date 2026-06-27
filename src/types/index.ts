@@ -812,6 +812,18 @@ export interface AddendumItem {
   taxable: boolean;
 }
 
+export interface AZFeesConfig {
+  licenseFee: number;
+  postage: number;
+  tireFee: number;
+  airQuality: number;
+  titleFee: number;
+  vltMsrp: number;
+  vltAge: number;
+  vltIsNew: boolean;
+  vltAmount: number;
+}
+
 export interface SalesMenuTaxConfig {
   cityRate: number;
   stateRate: number;
@@ -832,6 +844,7 @@ export interface SalesMenu {
   vehicleDescription?: string;
   lineItems: SalesMenuLineItem[];
   addendumItems: AddendumItem[];
+  azFees: AZFeesConfig;
   taxConfig: SalesMenuTaxConfig;
   paymentConfig: SalesMenuPaymentConfig;
   createdAt: number;

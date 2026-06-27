@@ -1,26 +1,31 @@
 /**
- * SalesMenuForm.tsx
- * Sales Menu builder — all lines always visible, addendum modal, VLT modal.
+ * SalesMenuForm.tsx — Sales Menu builder
+ * All lines always visible. AZ fees combined row with formula modal.
+ * VLT auto-calculates from vehicle price live.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Calculator, Plus, Pencil, Trash2, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   createSalesMenu, updateSalesMenu, getSalesMenu,
-  buildDefaultLineItems, defaultTaxConfig, defaultPaymentConfig,
-  recalcSubtotals, calcVLT,
+  buildDefaultLineItems, buildDefaultAZFees, defaultTaxConfig,
+  defaultPaymentConfig, recalcSubtotals, calcVLT, calcAZFeesTotal,
 } from '../../services/guestSheetService';
-import { SalesMenu, SalesMenuLineItem, AddendumItem, SalesMenuTaxConfig, SalesMenuPaymentConfig } from '../../types';
+import {
+  SalesMenu, SalesMenuLineItem, AddendumItem,
+  SalesMenuTaxConfig, SalesMenuPaymentConfig, AZFeesConfig,
+} from '../../types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 function fmt(n: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n);
 }
-function parse(s: string): number {
-  const n = parseFloat(s.replace(/[^0-9.\-]/g, ''));
+function parse(s: string | number): number {
+  if (typeof s === 'number') return s;
+  const n = parseFloat(String(s).replace(/[^0-9.\-]/g, ''));
   return isNaN(n) ? 0 : n;
 }
 function calcPayment(due: number, cfg: SalesMenuPaymentConfig): number {
@@ -34,17 +39,18 @@ function calcPayment(due: number, cfg: SalesMenuPaymentConfig): number {
 interface LocationState { guestSheetId?: string; guestName?: string; vehicleDescription?: string; }
 
 export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' }) {
-  const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  const location = useLocation();
-  const { user } = useAuth();
-  const passed = (location.state as LocationState) || {};
+  const navigate      = useNavigate();
+  const { id }        = useParams<{ id: string }>();
+  const location      = useLocation();
+  const { user }      = useAuth();
+  const passed        = (location.state as LocationState) || {};
 
   const [guestSheetId, setGuestSheetId]           = useState(passed.guestSheetId ?? '');
   const [guestName, setGuestName]                 = useState(passed.guestName ?? '');
   const [vehicleDesc, setVehicleDesc]             = useState(passed.vehicleDescription ?? '');
   const [lineItems, setLineItems]                 = useState<SalesMenuLineItem[]>(buildDefaultLineItems);
   const [addendumItems, setAddendumItems]         = useState<AddendumItem[]>([]);
+  const [azFees, setAzFees]                       = useState<AZFeesConfig>(() => buildDefaultAZFees(0));
   const [taxConfig, setTaxConfig]                 = useState<SalesMenuTaxConfig>(defaultTaxConfig);
   const [paymentConfig, setPaymentConfig]         = useState<SalesMenuPaymentConfig>(defaultPaymentConfig);
   const [subtotalOverrides, setSubtotalOverrides] = useState<Record<string, number | null>>({});
@@ -55,7 +61,7 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
   const [noGuestShown, setNoGuestShown]           = useState(false);
   const [showAddendumModal, setShowAddendumModal] = useState(false);
   const [editingAddendum, setEditingAddendum]     = useState<AddendumItem | null>(null);
-  const [showVltModal, setShowVltModal]           = useState(false);
+  const [showAZModal, setShowAZModal]             = useState(false);
   const [saving, setSaving]                       = useState(false);
   const [loadingExisting, setLoadingExisting]     = useState(mode === 'edit');
   const [error, setError]                         = useState('');
@@ -77,6 +83,7 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
       setVehicleDesc(menu.vehicleDescription ?? '');
       setLineItems(menu.lineItems);
       setAddendumItems(menu.addendumItems ?? []);
+      setAzFees(menu.azFees ?? buildDefaultAZFees(0));
       setTaxConfig(menu.taxConfig);
       setPaymentConfig(menu.paymentConfig);
       setLoadingExisting(false);
@@ -84,12 +91,21 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
     return () => { cancelled = true; };
   }, [id, mode]);
 
-  // Recompute subtotals whenever inputs change
-  const computed = recalcSubtotals(lineItems, addendumItems, taxConfig, subtotalOverrides);
+  // Auto-update VLT when vehicle price changes (only if vltMsrp tracks vehicle price)
+  function handleVehiclePriceChange(raw: string) {
+    const amount = parse(raw);
+    setLineItems(prev => prev.map(i => i.id === 'vehicle_price' ? { ...i, amount } : i));
+    // Update VLT using vehicle price as MSRP proxy
+    setAzFees(prev => {
+      const newVlt = calcVLT(amount, prev.vltAge, prev.vltIsNew);
+      return { ...prev, vltMsrp: amount, vltAmount: newVlt };
+    });
+  }
+
+  const computed = recalcSubtotals(lineItems, addendumItems, taxConfig, subtotalOverrides, azFees);
 
   function setAmount(itemId: string, raw: string) {
     const amount = parse(raw);
-    // If it's a subtotal, store as override
     const item = lineItems.find(i => i.id === itemId);
     if (item?.isSubtotal) {
       setSubtotalOverrides(prev => ({ ...prev, [itemId]: amount }));
@@ -120,15 +136,11 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
     setShowAddendumModal(false);
     setEditingAddendum(null);
   }
-  function removeAddendum(id: string) {
-    setAddendumItems(prev => prev.filter(a => a.id !== id));
-  }
+  function removeAddendum(id: string) { setAddendumItems(prev => prev.filter(a => a.id !== id)); }
 
   // ── Tax ───────────────────────────────────────────────────────────────
   function handleTaxChange(field: keyof SalesMenuTaxConfig, raw: string) {
     setTaxConfig(prev => ({ ...prev, [field]: parseFloat(raw) || 0 }));
-    // Clear sales_tax override so it recalculates
-    setSubtotalOverrides(prev => { const n = { ...prev }; delete n['sales_tax']; return n; });
   }
 
   // ── Save ──────────────────────────────────────────────────────────────
@@ -143,6 +155,7 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
         vehicleDescription: vehicleDesc || undefined,
         lineItems: computed,
         addendumItems,
+        azFees,
         taxConfig,
         paymentConfig,
       };
@@ -159,13 +172,11 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
     }
   }
 
-  if (loadingExisting) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p className="text-sm text-gray-400">Loading…</p></div>;
-  }
+  if (loadingExisting) return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p className="text-sm text-gray-400">Loading…</p></div>;
 
-  const totalTaxRate = (taxConfig.cityRate || 0) + (taxConfig.stateRate || 0) + (taxConfig.countyRate || 0);
-  const balanceDue   = computed.find(i => i.id === 'balance_due')?.amount ?? 0;
-  const monthly      = calcPayment(balanceDue, paymentConfig);
+  const totalTaxRate  = (taxConfig.cityRate || 0) + (taxConfig.stateRate || 0) + (taxConfig.countyRate || 0);
+  const balanceDue    = computed.find(i => i.id === 'balance_due')?.amount ?? 0;
+  const monthly       = calcPayment(balanceDue, paymentConfig);
   const addendumTotal = addendumItems.reduce((s, a) => s + a.price, 0);
 
   return (
@@ -205,14 +216,14 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
           </div>
         )}
 
-        {/* ── Line Items Table ── */}
+        {/* ── Line Items ── */}
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
-          {computed.map((item, idx) => {
-            const isOverridden = item.isSubtotal && subtotalOverrides[item.id] !== undefined && subtotalOverrides[item.id] !== null;
+          {computed.map(item => {
+            const isOverridden = item.isSubtotal && subtotalOverrides[item.id] != null;
 
             return (
               <React.Fragment key={item.id}>
-                {/* Insert addendum block after vehicle_price */}
+                {/* Addendum block after vehicle_price */}
                 {item.id === 'savings' && (
                   <AddendumSection
                     items={addendumItems}
@@ -224,7 +235,6 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
                 )}
 
                 {item.isSubtotal ? (
-                  // Subtotal row
                   <div className="px-4 py-3 bg-gray-50 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <p className="text-sm font-bold text-gray-800">{item.label}</p>
@@ -237,7 +247,7 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
                       <div className="border border-gray-300 rounded-lg overflow-hidden w-32">
                         <input
                           defaultValue={item.amount.toFixed(2)}
-                          key={`${item.id}-${item.amount}`}
+                          key={`${item.id}-${item.amount}-${isOverridden}`}
                           onBlur={e => setAmount(item.id, e.target.value)}
                           onFocus={e => e.target.select()}
                           inputMode="decimal"
@@ -246,14 +256,37 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
                       </div>
                     </div>
                   </div>
+                ) : item.id === 'az_fees' ? (
+                  // AZ Registration Fees — tap to open modal
+                  <button
+                    onClick={() => setShowAZModal(true)}
+                    className="w-full px-4 py-3 flex items-center justify-between gap-3 active:bg-gray-50 text-left"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <p className="text-sm text-gray-800">AZ Registration Fees</p>
+                      <span className="text-[10px] text-blue-500 border border-blue-200 rounded px-1 py-0.5">Edit</span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 flex-shrink-0">{fmt(calcAZFeesTotal(azFees))}</p>
+                  </button>
+                ) : item.id === 'vehicle_price' ? (
+                  <div className={`px-4 py-3 flex items-center justify-between gap-3`}>
+                    <p className="text-sm text-gray-800 flex-1">{item.label}</p>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden w-32 flex-shrink-0">
+                      <input
+                        defaultValue={item.amount !== 0 ? item.amount.toFixed(2) : ''}
+                        key={`vehicle_price_${item.amount}`}
+                        onBlur={e => handleVehiclePriceChange(e.target.value)}
+                        onFocus={e => e.target.select()}
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        className="w-full px-2 py-1.5 text-sm text-right text-gray-900 outline-none bg-white"
+                      />
+                    </div>
+                  </div>
                 ) : (
-                  // Regular row
                   <div className={`px-4 py-3 flex items-center justify-between gap-3 ${item.isNegative ? 'bg-red-50/30' : ''}`}>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <p className={`text-sm text-gray-800 ${item.isNegative ? 'text-red-600' : ''}`}>{item.label}</p>
-                      {item.id === 'lieu_tax' && (
-                        <button onClick={() => setShowVltModal(true)} className="text-[10px] text-blue-500 border border-blue-200 rounded px-1 py-0.5">VLT Calc</button>
-                      )}
+                      <p className={`text-sm ${item.isNegative ? 'text-red-600' : 'text-gray-800'}`}>{item.label}</p>
                       {item.id === 'sales_tax' && totalTaxRate > 0 && (
                         <span className="text-[10px] text-gray-400">{totalTaxRate.toFixed(2)}%</span>
                       )}
@@ -261,7 +294,7 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
                     <div className="border border-gray-200 rounded-lg overflow-hidden w-32 flex-shrink-0">
                       <input
                         defaultValue={item.amount !== 0 ? item.amount.toFixed(2) : ''}
-                        key={`${item.id}-${item.id === 'sales_tax' ? item.amount : 'static'}`}
+                        key={`${item.id}_${item.id === 'sales_tax' ? item.amount : 'static'}`}
                         onBlur={e => setAmount(item.id, e.target.value)}
                         onFocus={e => e.target.select()}
                         inputMode="decimal"
@@ -323,10 +356,10 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
           {showPaymentEditor && (
             <div className="border-t border-gray-100 divide-y divide-gray-100">
               {[
-                { label: 'Term (months)', field: 'term' as const, mode: 'numeric' as const },
-                { label: 'APR (%)',        field: 'apr'  as const, mode: 'decimal' as const },
-                { label: 'Down Payment',   field: 'downPayment' as const, mode: 'decimal' as const, prefix: '$' },
-              ].map(({ label, field, mode: imode, prefix }) => (
+                { label: 'Term (months)', field: 'term'        as const, imode: 'numeric'  as const },
+                { label: 'APR (%)',       field: 'apr'         as const, imode: 'decimal'  as const },
+                { label: 'Down Payment',  field: 'downPayment' as const, imode: 'decimal'  as const, prefix: '$' },
+              ].map(({ label, field, imode, prefix }) => (
                 <div key={field} className="px-4 py-3 flex items-center justify-between">
                   <p className="text-sm text-gray-700">{label}</p>
                   <div className="flex items-center gap-1 border border-gray-200 rounded-lg overflow-hidden">
@@ -346,7 +379,6 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
           )}
         </div>
 
-        {/* Save button */}
         <button onClick={handleSave} disabled={saving} className="w-full bg-blue-600 text-white text-sm font-semibold py-4 rounded-2xl shadow-sm active:opacity-80 disabled:opacity-40">
           {saving ? 'Saving…' : 'Save Sales Menu'}
         </button>
@@ -357,7 +389,7 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <p className="text-base font-bold text-gray-900 mb-2">No Guest Sheet Attached</p>
-            <p className="text-sm text-gray-500 mb-5">For best results, create a Guest Sheet first so customer details pre-fill here.</p>
+            <p className="text-sm text-gray-500 mb-5">For best results, create a Guest Sheet first.</p>
             <div className="flex gap-3">
               <button onClick={() => setShowNoGuestModal(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Continue Anyway</button>
               <button onClick={() => navigate('/GuestSheet/new')} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold">Create Guest Sheet</button>
@@ -375,50 +407,26 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
               <button onClick={() => { setShowAddendumModal(false); setEditingAddendum(null); }}><X size={20} className="text-gray-400" /></button>
             </div>
             <div className="space-y-3">
-              <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-                <label className="block px-3 pt-2 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Description</label>
-                <input
-                  value={editingAddendum.description}
-                  onChange={e => setEditingAddendum(a => a ? { ...a, description: e.target.value } : a)}
-                  placeholder="Tint, Door Edge Guards, etc."
-                  className="w-full px-3 pb-2 pt-0.5 text-sm text-gray-900 bg-transparent outline-none"
-                />
-              </div>
-              <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-                <label className="block px-3 pt-2 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Price</label>
-                <input
-                  value={editingAddendum.price || ''}
-                  onChange={e => setEditingAddendum(a => a ? { ...a, price: parse(e.target.value) } : a)}
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  className="w-full px-3 pb-2 pt-0.5 text-sm text-gray-900 bg-transparent outline-none"
-                />
-              </div>
+              <FloatField label="Description" value={editingAddendum.description} onChange={v => setEditingAddendum(a => a ? { ...a, description: v } : a)} placeholder="Tint, Door Edge Guards…" />
+              <FloatField label="Price" value={editingAddendum.price || ''} onChange={v => setEditingAddendum(a => a ? { ...a, price: parse(v) } : a)} placeholder="0.00" inputMode="decimal" />
               <div className="flex items-center justify-between px-1">
                 <p className="text-sm text-gray-700">Taxable</p>
-                <button
-                  onClick={() => setEditingAddendum(a => a ? { ...a, taxable: !a.taxable } : a)}
-                  className={`w-12 h-6 rounded-full transition-colors ${editingAddendum.taxable ? 'bg-blue-600' : 'bg-gray-300'} relative`}
-                >
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${editingAddendum.taxable ? 'left-6' : 'left-0.5'}`} />
+                <button onClick={() => setEditingAddendum(a => a ? { ...a, taxable: !a.taxable } : a)} className={`w-12 h-6 rounded-full transition-colors relative ${editingAddendum.taxable ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${editingAddendum.taxable ? 'left-6' : 'left-0.5'}`} />
                 </button>
               </div>
             </div>
-            <button onClick={saveAddendum} className="w-full bg-blue-600 text-white text-sm font-semibold py-3.5 rounded-xl">
-              Save Item
-            </button>
+            <button onClick={saveAddendum} className="w-full bg-blue-600 text-white text-sm font-semibold py-3.5 rounded-xl">Save Item</button>
           </div>
         </div>
       )}
 
-      {/* ── VLT Modal ── */}
-      {showVltModal && (
-        <VltModal
-          onApply={amount => {
-            setLineItems(prev => prev.map(i => i.id === 'lieu_tax' ? { ...i, amount } : i));
-            setShowVltModal(false);
-          }}
-          onClose={() => setShowVltModal(false)}
+      {/* ── AZ Registration Fees Modal ── */}
+      {showAZModal && (
+        <AZFeesModal
+          fees={azFees}
+          onChange={setAzFees}
+          onClose={() => setShowAZModal(false)}
         />
       )}
     </div>
@@ -427,34 +435,24 @@ export function SalesMenuForm({ mode = 'create' }: { mode?: 'create' | 'edit' })
 
 // ─── Addendum Section ─────────────────────────────────────────────────────
 
-function AddendumSection({
-  items, total, onAdd, onEdit, onRemove,
-}: {
-  items: AddendumItem[];
-  total: number;
-  onAdd: () => void;
-  onEdit: (item: AddendumItem) => void;
-  onRemove: (id: string) => void;
+function AddendumSection({ items, total, onAdd, onEdit, onRemove }: {
+  items: AddendumItem[]; total: number;
+  onAdd: () => void; onEdit: (i: AddendumItem) => void; onRemove: (id: string) => void;
 }) {
+  function fmt(n: number) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n); }
   return (
     <>
-      {/* Addendum header row */}
       <div className="px-4 py-2 bg-blue-50 flex items-center justify-between">
         <p className="text-xs font-bold text-blue-600 uppercase tracking-wide">Addendum</p>
-        <button onClick={onAdd} className="flex items-center gap-1 text-xs text-blue-600 font-medium">
-          <Plus size={13} /> Add Item
-        </button>
+        <button onClick={onAdd} className="flex items-center gap-1 text-xs text-blue-600 font-medium"><Plus size={13} /> Add Item</button>
       </div>
-
       {items.length === 0 ? (
-        <div className="px-4 py-3 border-b border-gray-100">
-          <p className="text-xs text-gray-400 italic">No addendum items</p>
-        </div>
+        <div className="px-4 py-3"><p className="text-xs text-gray-400 italic">No addendum items</p></div>
       ) : (
         items.map(item => (
-          <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-3 border-b border-gray-100">
+          <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-800 truncate">{item.description || 'Unnamed item'}</p>
+              <p className="text-sm text-gray-800 truncate">{item.description || 'Unnamed'}</p>
               {item.taxable && <p className="text-[10px] text-gray-400 mt-0.5">Taxable</p>}
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
@@ -465,10 +463,8 @@ function AddendumSection({
           </div>
         ))
       )}
-
-      {/* Addendum subtotal */}
       {items.length > 0 && (
-        <div className="px-4 py-2 bg-blue-50/50 flex items-center justify-between border-b border-gray-100">
+        <div className="px-4 py-2 bg-blue-50/50 flex items-center justify-between">
           <p className="text-xs text-gray-500">Addendum Total</p>
           <p className="text-sm font-semibold text-gray-700">{fmt(total)}</p>
         </div>
@@ -477,61 +473,154 @@ function AddendumSection({
   );
 }
 
-// ─── VLT Modal ────────────────────────────────────────────────────────────
+// ─── AZ Fees Modal ────────────────────────────────────────────────────────
 
-function VltModal({ onApply, onClose }: { onApply: (amount: number) => void; onClose: () => void }) {
-  const [msrp, setMsrp]       = useState('');
-  const [age, setAge]         = useState('');
-  const [isNew, setIsNew]     = useState(true);
+function AZFeesModal({ fees, onChange, onClose }: {
+  fees: AZFeesConfig;
+  onChange: (f: AZFeesConfig) => void;
+  onClose: () => void;
+}) {
+  const [local, setLocal] = useState<AZFeesConfig>({ ...fees });
 
-  const msrpNum = parse(msrp);
-  const ageNum  = parseInt(age) || 0;
-  const result  = calcVLT(msrpNum, ageNum, isNew);
+  function set(field: keyof AZFeesConfig, value: string | number | boolean) {
+    setLocal(prev => {
+      const next = { ...prev, [field]: value };
+      // Recalculate VLT whenever its inputs change
+      if (['vltMsrp', 'vltAge', 'vltIsNew'].includes(field as string)) {
+        next.vltAmount = calcVLT(
+          field === 'vltMsrp' ? Number(value) : next.vltMsrp,
+          field === 'vltAge'  ? Number(value) : next.vltAge,
+          field === 'vltIsNew' ? Boolean(value) : next.vltIsNew,
+        );
+      }
+      return next;
+    });
+  }
+
+  function fmt(n: number) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n); }
+
+  const total = (local.licenseFee || 0) + (local.postage || 0) + (local.tireFee || 0) + (local.airQuality || 0) + (local.titleFee || 0) + (local.vltAmount || 0);
+
+  const vltFormula = local.vltMsrp > 0
+    ? `${fmt(local.vltMsrp)} × 60% × (1−16.25%)^${local.vltAge} × ${local.vltIsNew ? '$2.80' : '$2.89'}/$100`
+    : 'Enter MSRP to calculate';
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40">
-      <div className="bg-white rounded-t-2xl w-full max-w-lg p-6 space-y-4">
+      <div className="bg-white rounded-t-2xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
-          <p className="text-base font-bold text-gray-900">VLT Calculator</p>
+          <p className="text-base font-bold text-gray-900">AZ Registration Fees</p>
           <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
         </div>
-        <p className="text-xs text-gray-400">AZ Vehicle License Tax — 60% of MSRP × depreciation × rate/100</p>
 
-        {/* New / Used toggle */}
-        <div className="bg-gray-100 rounded-xl p-1 flex gap-1">
-          {['New', 'Used'].map(label => (
-            <button
-              key={label}
-              onClick={() => setIsNew(label === 'New')}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${(label === 'New') === isNew ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-3">
-          <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-            <label className="block px-3 pt-2 text-[10px] text-gray-400 font-medium uppercase tracking-wide">MSRP</label>
-            <input value={msrp} onChange={e => setMsrp(e.target.value)} inputMode="decimal" placeholder="$49,095.00" className="w-full px-3 pb-2 pt-0.5 text-sm text-gray-900 bg-transparent outline-none" />
+        {/* Flat fees */}
+        {([
+          { label: 'License Fee',  field: 'licenseFee' as const },
+          { label: 'Postage',      field: 'postage'    as const },
+          { label: 'Tire Fee',     field: 'tireFee'    as const },
+          { label: 'Air Quality',  field: 'airQuality' as const },
+          { label: 'Title Fee',    field: 'titleFee'   as const },
+        ]).map(({ label, field }) => (
+          <div key={field} className="flex items-center justify-between">
+            <p className="text-sm text-gray-700">{label}</p>
+            <div className="flex items-center gap-1 border border-gray-200 rounded-lg overflow-hidden">
+              <span className="pl-2 text-sm text-gray-400">$</span>
+              <input
+                value={local[field] || ''}
+                onChange={e => set(field, parseFloat(e.target.value) || 0)}
+                onFocus={e => e.target.select()}
+                inputMode="decimal"
+                placeholder="0.00"
+                className="w-20 px-2 py-1.5 text-sm text-right text-gray-900 outline-none bg-white"
+              />
+            </div>
           </div>
-          <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-            <label className="block px-3 pt-2 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Vehicle Age (years since first registered in AZ)</label>
-            <input value={age} onChange={e => setAge(e.target.value)} inputMode="numeric" placeholder="0" className="w-full px-3 pb-2 pt-0.5 text-sm text-gray-900 bg-transparent outline-none" />
+        ))}
+
+        {/* VLT — formula section */}
+        <div className="border-t border-gray-100 pt-4 space-y-3">
+          <p className="text-sm font-bold text-gray-800">Lieu Tax (VLT)</p>
+
+          {/* New / Used toggle */}
+          <div className="bg-gray-100 rounded-xl p-1 flex gap-1">
+            {['New', 'Used'].map(label => (
+              <button
+                key={label}
+                onClick={() => set('vltIsNew', label === 'New')}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${(label === 'New') === local.vltIsNew ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-700">MSRP</p>
+            <div className="flex items-center gap-1 border border-gray-200 rounded-lg overflow-hidden">
+              <span className="pl-2 text-sm text-gray-400">$</span>
+              <input
+                value={local.vltMsrp || ''}
+                onChange={e => set('vltMsrp', parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0)}
+                onFocus={e => e.target.select()}
+                inputMode="decimal"
+                placeholder="0.00"
+                className="w-24 px-2 py-1.5 text-sm text-right text-gray-900 outline-none bg-white"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-700">Vehicle Age (years)</p>
+            <div className="flex items-center gap-1 border border-gray-200 rounded-lg overflow-hidden">
+              <input
+                value={local.vltAge || ''}
+                onChange={e => set('vltAge', parseInt(e.target.value) || 0)}
+                onFocus={e => e.target.select()}
+                inputMode="numeric"
+                placeholder="0"
+                className="w-16 px-2 py-1.5 text-sm text-right text-gray-900 outline-none bg-white"
+              />
+            </div>
+          </div>
+
+          {/* Formula display */}
+          <div className="bg-gray-50 rounded-xl px-3 py-2">
+            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide mb-1">Formula</p>
+            <p className="text-xs text-gray-500 font-mono leading-relaxed">{vltFormula}</p>
+          </div>
+
+          {/* Result */}
+          <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between">
+            <p className="text-sm font-semibold text-gray-700">Calculated VLT</p>
+            <p className="text-lg font-bold text-blue-600">{fmt(local.vltAmount)}</p>
           </div>
         </div>
 
-        {/* Result */}
-        <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between">
-          <p className="text-sm font-semibold text-gray-700">Calculated VLT</p>
-          <p className="text-lg font-bold text-blue-600">{fmt(result)}</p>
+        {/* Total */}
+        <div className="border-t border-gray-200 pt-3 flex items-center justify-between">
+          <p className="text-sm font-bold text-gray-800">Total AZ Fees</p>
+          <p className="text-base font-bold text-gray-900">{fmt(total)}</p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 pt-1">
           <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600">Cancel</button>
-          <button onClick={() => onApply(result)} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold">Apply to Lieu Tax</button>
+          <button onClick={() => { onChange(local); onClose(); }} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold">Apply</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Shared field component ───────────────────────────────────────────────
+
+function FloatField({ label, value, onChange, placeholder, inputMode }: {
+  label: string; value: string | number; onChange: (v: string) => void;
+  placeholder?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+}) {
+  return (
+    <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+      <label className="block px-3 pt-2 text-[10px] text-gray-400 font-medium uppercase tracking-wide">{label}</label>
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} inputMode={inputMode} className="w-full px-3 pb-2 pt-0.5 text-sm text-gray-900 bg-transparent outline-none placeholder-gray-300" />
     </div>
   );
 }

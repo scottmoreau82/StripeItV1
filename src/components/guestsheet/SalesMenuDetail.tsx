@@ -6,8 +6,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, Pencil, Calculator, Trash2 } from 'lucide-react';
-import { getSalesMenu, deleteSalesMenu } from '../../services/guestSheetService';
-import { SalesMenu, SalesMenuLineItem } from '../../types';
+import { getSalesMenu, deleteSalesMenu, calcAZFeesTotal, buildDefaultAZFees } from '../../services/guestSheetService';
+import { SalesMenu, SalesMenuLineItem, AZFeesConfig } from '../../types';
 
 function fmt(n: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n);

@@ -62,10 +62,7 @@ export const DealForm: React.FC<DealFormProps> = ({
 
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  // Negative deal toggle — lets mobile users enter positive numbers and flip sign at submit
-  const [isNegativeDeal, setIsNegativeDeal] = useState(
-    () => (initialData?.frontEndGross ?? 0) < 0 || (initialData?.backEndGross ?? 0) < 0
-  );
+
 
   const handleChange = (field: keyof DealFormState, value: any) => {
     setFormData(prev => {
@@ -105,8 +102,8 @@ export const DealForm: React.FC<DealFormProps> = ({
     // 1. Prepare data with numeric types
     const baseData = {
       ...formData,
-      frontEndGross: (Number(formData.frontEndGross) || 0) * (isNegativeDeal ? -1 : 1),
-      backEndGross: (Number(formData.backEndGross) || 0) * (isNegativeDeal ? -1 : 1),
+      frontEndGross: (Number(formData.frontEndGross) || 0),
+      backEndGross: (Number(formData.backEndGross) || 0),
     };
 
     // 2. Conditional data cleaning
@@ -411,7 +408,7 @@ export const DealForm: React.FC<DealFormProps> = ({
         <div className="grid grid-cols-2 gap-4">
           <CurrencyInput
             label="Front End Gross"
-            value={isNegativeDeal ? Math.abs(Number(formData.frontEndGross) || 0) : formData.frontEndGross}
+            value={formData.frontEndGross}
             onChange={(e) => handleNumericChange('frontEndGross', e.target.value)}
             extraLabel={renderRatePill(projectedFrontRate, 'cyan')}
             error={getError('frontEndGross')}
@@ -419,7 +416,7 @@ export const DealForm: React.FC<DealFormProps> = ({
           />
           <CurrencyInput
             label="Back End Gross"
-            value={isNegativeDeal ? Math.abs(Number(formData.backEndGross) || 0) : formData.backEndGross}
+            value={formData.backEndGross}
             onChange={(e) => handleNumericChange('backEndGross', e.target.value)}
             extraLabel={renderRatePill(projectedBackRate, 'purple')}
             error={getError('backEndGross')}
@@ -428,42 +425,7 @@ export const DealForm: React.FC<DealFormProps> = ({
         </div>
 
         {/* Negative deal toggle — no keyboard fighting, works on all devices */}
-        <button
-          type="button"
-          onClick={() => setIsNegativeDeal(v => !v)}
-          className={cn(
-            "flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-all text-left",
-            isNegativeDeal
-              ? "bg-rose-500/10 border-rose-500/30"
-              : "bg-white/[0.02] border-white/10 hover:border-white/20"
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "h-7 w-7 rounded-lg flex items-center justify-center text-sm font-black shrink-0 transition-all",
-              isNegativeDeal ? "bg-rose-500/20 text-rose-400" : "bg-white/[0.04] text-slate-500"
-            )}>
-              −
-            </div>
-            <div>
-              <Typography variant="mono" className={cn("text-[10px] font-black uppercase tracking-widest block", isNegativeDeal ? "text-rose-400" : "text-slate-400")}>
-                Negative Deal
-              </Typography>
-              <Typography variant="mono" className="text-[9px] text-slate-600">
-                {isNegativeDeal ? "Values will be saved as negative (chargeback/loss)" : "Tap to mark this deal as a loss or chargeback"}
-              </Typography>
-            </div>
-          </div>
-          <div className={cn(
-            "h-5 w-9 rounded-full transition-all relative shrink-0",
-            isNegativeDeal ? "bg-rose-500" : "bg-white/10"
-          )}>
-            <div className={cn(
-              "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all",
-              isNegativeDeal ? "left-[18px]" : "left-0.5"
-            )} />
-          </div>
-        </button>
+
 
         {formData.isSplitDeal && (
           (Number(formData.frontEndGross) !== 0 ||
